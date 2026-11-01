@@ -43,6 +43,11 @@ test('rouge : ${{ }} dans un run', () => {
   assert.ok(analyserWorkflow(bloc, 'essai.yml').some((p) => p.includes('run:')));
 });
 
+test('rouge : contournement par # dans un run', () => {
+  const pb = analyserWorkflow(vert.replace('run: echo "$TITRE"', 'run: echo " #${{ github.head_ref }}"'), 'essai.yml');
+  assert.ok(pb.some((p) => p.includes('run:')));
+});
+
 test('rouge : permissions absentes, écriture, timeout manquant ou trop long, persist-credentials', () => {
   assert.ok(analyserWorkflow(vert.replace(/permissions:\n {2}contents: read\n/, ''), 'e.yml').some((p) => p.includes('permissions')));
   assert.ok(analyserWorkflow(vert.replace('contents: read', 'contents: write'), 'e.yml').some((p) => p.includes('écriture')));

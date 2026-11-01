@@ -38,7 +38,8 @@ export function analyserWorkflow(texte, nom) {
 
   // ${{ }} dans un run:
   for (let i = 0; i < lignes.length; i++) {
-    const m = sansCommentaire(lignes[i]).match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
+    if (/^s*#/.test(lignes[i])) continue;
+    const m = lignes[i].match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
     if (!m) continue;
     const base = indent(lignes[i]);
     const reste = m[2];
