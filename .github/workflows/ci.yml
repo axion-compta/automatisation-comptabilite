@@ -1,0 +1,208 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  types:
+    name: types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r exec tsc --noEmit
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tests
+
+  gardes:
+    name: gardes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Gardes et leurs tests
+        env:
+          TITRE_PR: ${{ github.event.pull_request.title }}
+          CORPS_PR: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/verifier.mjs --gardes
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: E2E chromium seul (ignoré tant que apps/web n'a pas de configuration Playwright)
+        run: |
+          if [ -f apps/web/playwright.config.ts ]; then
+            pnpm --filter @axion/web exec playwright install --with-deps chromium
+            pnpm --filter @axion/web run e2e
+          else
+            echo "Pas encore de configuration Playwright : étape ignorée."
+          fi
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
+  licences:
+    name: licences
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Inventaire des licences (la garde et le SBOM CycloneDX arrivent avec L00-T17)
+        run: pnpm licenses list --prod --json > licences.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: licences
+          path: licences.json
+          retention-days: 14
+
+  stryker:
+    name: stryker
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Le code de l'argent a-t-il changé ?
+        id: changement
+        env:
+          BASE_PR: ${{ github.event.pull_request.base.sha }}
+          BASE_PUSH: ${{ github.event.before }}
+        run: |
+          BASE="${BASE_PR:-$BASE_PUSH}"
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "argent=false" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE" HEAD | grep -q '^packages/noyau/src/argent/'; then
+            echo "argent=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "argent=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        if: steps.changement.outputs.argent == 'true'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.changement.outputs.argent == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.changement.outputs.argent == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.changement.outputs.argent == 'true'
+        run: pnpm --filter @axion/noyau exec stryker run
+
+  verifier:
+    name: verifier
+    needs: [types, lint, tests, gardes, e2e, gitleaks, licences, stryker]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Toutes les tâches doivent être vertes
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          node -e '
+            const needs = JSON.parse(process.env.NEEDS);
+            let ko = 0;
+            for (const [nom, r] of Object.entries(needs)) {
+              const ok = r.result === "success" || (nom === "stryker" && r.result === "skipped");
+              console.log(nom + " : " + r.result);
+              if (!ok) ko += 1;
+            }
+            process.exit(ko ? 1 : 0);
+          '
