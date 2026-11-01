@@ -1,0 +1,10 @@
+title = "Règles gitleaks du dépôt public"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fichiers générés dont les empreintes d'intégrité ressemblent à des secrets"
+paths = [
+  '''pnpm-lock\.yaml''',
+]

@@ -1,0 +1,46 @@
+{
+  "name": "automatisation-comptabilite",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev:simule": "pnpm --filter @axion/web run dev:simule",
+    "dev:reel": "pnpm --filter @axion/serveur run dev:reel",
+    "contrat:openapi": "node packages/contrat/scripts/openapi.mjs",
+    "contrat:diff": "node packages/contrat/scripts/diff.mjs",
+    "donnees:generer": "pnpm --filter @axion/donnees-fictives run generer",
+    "verifier": "node scripts/verifier.mjs",
+    "e2e:pannes": "pnpm --filter @axion/web run e2e:pannes",
+    "garde:fictif": "node outils/gardes/fictif.mjs",
+    "garde:couleurs": "node outils/gardes/couleurs.mjs",
+    "garde:textes": "node outils/gardes/textes.mjs",
+    "garde:actions": "node outils/gardes/actions.mjs",
+    "garde:interrupteurs": "node outils/gardes/interrupteurs.mjs",
+    "garde:appels": "node outils/gardes/appels.mjs",
+    "garde:ci": "node outils/gardes/ci.mjs",
+    "garde:perimetre": "node outils/gardes/perimetre.mjs",
+    "garde:tests": "node outils/gardes/tests.mjs",
+    "garde:termine": "node outils/gardes/termine.mjs",
+    "garde:licences": "node outils/gardes/licences.mjs",
+    "types": "pnpm -r exec tsc --noEmit",
+    "lint": "eslint .",
+    "tests": "vitest run --passWithNoTests",
+    "tests:gardes": "node --test \"outils/gardes/test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.64.1",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "4.1.12",
+    "eslint": "9.39.5",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "4.1.12"
+  }
+}
