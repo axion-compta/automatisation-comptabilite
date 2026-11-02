@@ -1,0 +1,23 @@
+/* Fichier généré depuis jetons.ts : ne pas modifier à la main. */
+:root {
+  --couleur-fond: #faf8f5;
+  --couleur-surface: #ffffff;
+  --couleur-texte: #1f1b16;
+  --couleur-texte-discret: #5c554c;
+  --couleur-accent: #2f5d50;
+  --couleur-accent-texte: #ffffff;
+  --couleur-bordure: #ddd6cc;
+  --couleur-succes: #2e7d4f;
+  --couleur-alerte: #b26a00;
+  --couleur-erreur: #b3261e;
+  --espace-xs: 4px;
+  --espace-s: 8px;
+  --espace-m: 16px;
+  --espace-l: 24px;
+  --espace-xl: 40px;
+  --rayon-s: 4px;
+  --rayon-m: 8px;
+  --rayon-l: 16px;
+  --police-titre: 'Fraunces', Georgia, serif;
+  --police-texte: 'Manrope', system-ui, sans-serif;
+}
