@@ -1,0 +1,19 @@
+{
+  "roles": ["lecteur", "preparateur", "validateur", "administrateur"],
+  "interrupteurs": ["lecture", "ecriture", "validation", "export"],
+  "outils": ["outil_lire", "outil_lister", "outil_proposer", "outil_valider", "outil_annuler"],
+  "actions": [
+    { "id": "lire", "interrupteur": "lecture", "outil": "outil_lire" },
+    { "id": "lister", "interrupteur": "lecture", "outil": "outil_lister" },
+    { "id": "proposer", "interrupteur": "ecriture", "outil": "outil_proposer" },
+    { "id": "valider", "interrupteur": "validation", "outil": "outil_valider" },
+    { "id": "annuler", "interrupteur": "ecriture", "outil": "outil_annuler" },
+    { "id": "exporter", "interrupteur": "export", "exclusion": "Pas d'outil à ce stade : export réservé à une fiche ultérieure." }
+  ],
+  "matrice": {
+    "lecteur": ["outil_lire", "outil_lister"],
+    "preparateur": ["outil_lire", "outil_lister", "outil_proposer", "outil_annuler"],
+    "validateur": ["outil_lire", "outil_lister", "outil_valider"],
+    "administrateur": ["outil_lire", "outil_lister", "outil_proposer", "outil_valider", "outil_annuler"]
+  }
+}
