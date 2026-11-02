@@ -35,3 +35,7 @@ test('lecture de node_modules/.pnpm fictif', () => {
   assert.equal(analyserLicences(p).length, 1);
   assert.deepEqual(lirePaquets(join(r, 'vide')), []);
 });
+
+test('vert : MIT-0 est permise', () => {
+  assert.equal(licencePermise('MIT-0'), true);
+});

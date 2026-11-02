@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const PERMISES = new Set([
-  'MIT', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0', '0BSD', 'BlueOak-1.0.0',
+  'MIT', 'MIT-0', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0', '0BSD', 'BlueOak-1.0.0',
   'CC0-1.0', 'CC-BY-4.0', 'Python-2.0', 'Unlicense', 'OFL-1.1', 'MPL-2.0',
 ]);
 
