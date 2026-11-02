@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fr } from './fr.ts';
+import { fr } from './fr.js';
 
 function feuilles(o: Record<string, unknown>): string[] {
   return Object.values(o).flatMap((v) => (typeof v === 'string' ? [v] : feuilles(v as Record<string, unknown>)));

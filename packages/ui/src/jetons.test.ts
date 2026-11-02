@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { genererCss, jetons } from './jetons.ts';
-import { polices } from './polices.ts';
+import { genererCss, jetons } from './jetons.js';
+import { polices } from './polices.js';
 
 describe('jetons', () => {
   it('génère une variable CSS par jeton', () => {
