@@ -1,0 +1,29 @@
+import { oc } from '@orpc/contract';
+import { z } from 'zod';
+import {
+  Ecriture,
+  EnTeteEcriture,
+  ErreurConflit,
+  ModificationEcriture,
+  NouvelleEcriture,
+} from './schemas.js';
+
+/** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
+export const lister = oc
+  .route({ method: 'GET', path: '/ecritures', inputStructure: 'detailed', operationId: 'listerEcritures' })
+  .input(z.object({ query: z.object({ limite: z.coerce.number().int().min(1).max(100).optional() }).optional() }))
+  .output(z.object({ body: z.array(Ecriture) }));
+
+export const creer = oc
+  .route({ method: 'POST', path: '/ecritures', inputStructure: 'detailed', operationId: 'creerEcriture' })
+  .input(z.object({ headers: EnTeteEcriture, body: NouvelleEcriture }))
+  .output(z.object({ body: Ecriture }));
+
+export const modifier = oc
+  .route({ method: 'PUT', path: '/ecritures/{id}', inputStructure: 'detailed', operationId: 'modifierEcriture' })
+  .errors({ CONFLIT_VERSION: { status: 409, data: ErreurConflit } })
+  .input(z.object({ params: z.object({ id: z.string().min(1) }), headers: EnTeteEcriture, body: ModificationEcriture }))
+  .output(z.object({ body: Ecriture }));
+
+export const contrat = { ecritures: { lister, creer, modifier } };
+export type Contrat = typeof contrat;
