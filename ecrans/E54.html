@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>E54 · Bien démarrer · Démonstration</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="../assets/css/composants.css">
+  <link rel="stylesheet" href="../assets/css/navigation.css">
+  <link rel="stylesheet" href="../assets/css/navigation-pages.css">
+  <link rel="stylesheet" href="../assets/css/A-entreprises.css">
+  <link rel="stylesheet" href="../assets/css/coque-t9.css">
+  <link rel="stylesheet" href="../assets/css/refonte-2027.css">
+  <link rel="stylesheet" href="../assets/css/demo.css">
+  <style>
+/* Lot G : s'appuie sur les jetons rv de refonte-2027.css. Aucune couleur en dur. */
+.refonte.rv .G-hero-seg { display: grid; gap: var(--rv-pas-2); }
+.refonte.rv .rv-vide { display: grid; justify-items: center; gap: var(--rv-pas-3); padding: var(--rv-pas-5); border: 2px dashed var(--c-bord-fort); border-radius: var(--rv-rayon-carte); background: var(--c-creuse); text-align: center; }
+/* Choix de l'étape (E54) : cartes à cocher, cibles de 44 px au moins */
+.refonte.rv .G-choix-liste { display: grid; gap: var(--rv-pas-2); margin: 0; padding: 0; list-style: none; }
+.refonte.rv .G-choix { display: flex; align-items: center; gap: var(--rv-pas-3); width: 100%; min-height: 64px; padding: var(--rv-pas-2) var(--rv-pas-3); border: 1.5px solid var(--c-bord); border-radius: var(--rv-rayon-bloc); background: var(--c-surface); color: var(--c-texte); font: 800 16px/1.25 var(--police-famille-texte); text-align: left; cursor: pointer; }
+.refonte.rv .G-choix:hover { border-color: var(--c-bord-fort); background: var(--c-creuse); }
+.refonte.rv .G-choix[aria-pressed="true"] { border-color: var(--c-ia-l); background: var(--c-ia-f); color: var(--c-ia-t); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-ia-f) 70%, transparent); }
+.refonte.rv .G-radio { flex: none; width: 24px; height: 24px; border-radius: 999px; border: 2px solid var(--c-bord-fort); background: var(--c-surface); display: grid; place-items: center; }
+.refonte.rv .G-choix[aria-pressed="true"] .G-radio { border-color: var(--c-ia-l); background: var(--c-ia-l); color: var(--couleur-texte-inverse); }
+.refonte.rv .G-radio .ico { width: 14px; height: 14px; }
+.refonte.rv .G-choix-texte { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.refonte.rv .G-choix-sous { font-weight: 500; font-size: 14px; color: var(--c-texte-3); }
+.refonte.rv .G-etapes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.refonte.rv .G-etape { height: 10px; border-radius: 999px; background: var(--c-ne-f); border: 1px solid var(--c-bord); }
+.refonte.rv .G-etape--fait { background: var(--c-ok-l); border-color: var(--c-ok-l); }
+.refonte.rv .G-etape--cours { background: var(--c-ia-l); border-color: var(--c-ia-l); }
+.refonte.rv .G-etapes-noms { display: flex; justify-content: space-between; gap: var(--rv-pas-2); font-size: 13px; font-weight: 700; color: var(--c-texte-3); }
+.refonte.rv .rv-heros-fin { flex-direction: row; flex-wrap: wrap; }
+.refonte.rv .chat--discussion .chat-bas { background: transparent; }
+.refonte.rv .chat--discussion .rv-surtitre { font: 800 13px/1.2 var(--police-famille-texte); font-style: normal; color: var(--c-ro-t); }
+.refonte.rv .G-suite { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rv-pas-3); }
+.refonte.rv .G-suite .btn-gris-inactif { min-height: 48px; padding: 0 var(--rv-pas-4); border-radius: 999px; border: 0; background: var(--c-ne-f); color: var(--c-texte-3); font: 800 16px/1 var(--police-famille-texte); }
+/* Cartes d'entreprise (E55) */
+.refonte.rv .G-ent { display: grid; gap: var(--rv-pas-3); align-content: start; }
+.refonte.rv .G-ent--ouverte { border-top: 4px solid var(--rv-menu); }
+.refonte.rv .G-ent-tete { display: flex; align-items: center; gap: var(--rv-pas-3); flex-wrap: wrap; }
+.refonte.rv .G-ent-tete .rv-bloc-titre { flex: 1 1 160px; }
+.refonte.rv .G-ent-chiffres { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--rv-pas-3); }
+.refonte.rv .G-ent-chiffres > div { display: grid; gap: 2px; padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-creuse); }
+.refonte.rv .G-ent-val { font-family: var(--police-famille-titre); font-weight: 600; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.refonte.rv .G-ent-lib { font-size: 13px; font-weight: 700; color: var(--c-texte-3); }
+.refonte.rv .G-ini { flex: none; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; background: var(--c-peche-f); color: var(--c-peche-t); }
+.refonte.rv .G-ini--marceau { background: var(--c-sauge-f); color: var(--c-sauge-t); }
+.refonte.rv .G-total { display: flex; align-items: baseline; gap: var(--rv-pas-3); flex-wrap: wrap; }
+/* Discussion plein écran (E25) : l'assistant est la pièce maîtresse */
+.refonte.rv .chat--discussion { background: var(--c-fond); }
+.refonte.rv .chat--discussion .chat-tete { display: flex; align-items: center; gap: var(--rv-pas-3); padding: var(--rv-pas-3) var(--rv-pas-4); background: linear-gradient(180deg, var(--c-ia-f), var(--c-surface)); border-bottom: 1px solid var(--c-ia-b); }
+.refonte.rv .chat--discussion .revenir { order: 2; margin-left: auto; min-height: 44px; padding: 0 var(--rv-pas-3); border: 1px solid var(--c-ia-b); border-radius: 999px; background: var(--c-surface); color: var(--c-ia-t); font: 800 14px/1 var(--police-famille-texte); text-decoration: none; }
+.refonte.rv .chat--discussion .chat-titre { order: 1; margin: 0; font: italic 500 28px/1.1 var(--police-famille-titre); color: var(--c-ia-t); display: flex; align-items: center; gap: var(--rv-pas-3); }
+.refonte.rv .chat--discussion .pastille-ia { width: 44px; height: 44px; }
+.refonte.rv .chat--discussion .disc-liste { background: var(--c-surface); border-right: 1px solid var(--c-bord); padding: var(--rv-pas-3); }
+.refonte.rv .chat--discussion .disc-liste .btn-contour { width: 100%; min-height: 48px; border-radius: 999px; border-color: var(--c-ia-l); color: var(--c-ia-t); background: var(--c-ia-f); font-weight: 800; }
+.refonte.rv .chat--discussion .disc-liste h3 { font: 800 13px/1 var(--police-famille-texte); color: var(--c-texte-3); }
+.refonte.rv .chat--discussion .disc-liste a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--rv-pas-3); border-radius: var(--rv-rayon-petit); color: var(--c-texte); text-decoration: none; font-weight: 700; }
+.refonte.rv .chat--discussion .disc-liste li.actif a { background: var(--c-ia-f); color: var(--c-ia-t); border: 1px solid var(--c-ia-b); box-shadow: none; }
+.refonte.rv .chat--discussion .chat-contexte { display: none; }
+.refonte.rv .chat--discussion .chat-fil { max-width: 760px; margin: 0 auto; width: 100%; padding: var(--rv-pas-5) var(--rv-pas-4); }
+.refonte.rv .chat--discussion .msg-ia-corps > p:first-child { font: italic 500 26px/1.2 var(--police-famille-titre); }
+.refonte.rv .chat--discussion .msg-ia-corps { padding: var(--rv-pas-4); }
+.refonte.rv .chat--discussion .G-carte-heros { display: grid; gap: var(--rv-pas-3); margin-top: var(--rv-pas-3); padding: var(--rv-pas-4); border-radius: var(--rv-rayon-bloc); background: var(--c-surface); border: 1px solid var(--c-ia-b); box-shadow: var(--o-elevee); }
+.refonte.rv .chat--discussion .G-carte-heros .rv-ligne-texte { display: grid; }
+.refonte.rv .chat--discussion .G-carte-tete { display: flex; align-items: center; gap: var(--rv-pas-3); }
+.refonte.rv .chat--discussion .G-carte-titre { font: 600 22px/1.2 var(--police-famille-titre); color: var(--c-texte); }
+.refonte.rv .chat--discussion .G-carte-heros .btn-plein { justify-self: start; }
+.refonte.rv .chat--discussion .suggestions-chat .sugg { min-height: 48px; padding: 0 var(--rv-pas-3); font-size: 15px; }
+.refonte.rv .chat--discussion .chat-bas { max-width: 760px; margin: 0 auto; width: 100%; padding: 0 var(--rv-pas-4) var(--rv-pas-4); }
+.refonte.rv .chat--discussion .composeur { border-width: 2px; border-color: var(--c-ia-l); box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-ia-f) 80%, transparent), var(--o-elevee); }
+/* « Autres états » : cartes, boutons et choix du décor ancien mis aux couleurs de la refonte */
+.refonte.rv .autre-etat .carte-action, .refonte.rv .autre-etat .carte-liste, .refonte.rv .autre-etat .vide-accueillant, .refonte.rv .autre-etat .bandeau-annuler { background: var(--c-surface); border: 1px solid var(--c-bord); border-radius: var(--rv-rayon-carte); box-shadow: var(--o-carte); }
+.refonte.rv .autre-etat .btn-plein { border-radius: 999px; background: var(--c-action); color: var(--c-action-texte); box-shadow: 0 6px 16px rgb(194 74 27 / 0.28); font-weight: 800; }
+.refonte.rv .autre-etat .btn-contour { border-radius: 999px; font-weight: 800; }
+.refonte.rv .autre-etat .choix { border-radius: var(--rv-rayon-bloc); border: 1.5px solid var(--c-bord); background: var(--c-surface); min-height: 44px; }
+.refonte.rv .autre-etat .choix--sel { border-color: var(--c-ia-l); background: var(--c-ia-f); color: var(--c-ia-t); }
+.refonte.rv .autre-etat .progression-v2-barre { background: var(--c-ne-f); border-radius: 999px; }
+.refonte.rv .autre-etat .progression-v2-barre > span { background: var(--c-ia-l); border-radius: 999px; }
+.refonte.rv .autre-etat .titre-etape, .refonte.rv .autre-etat .carte-action-titre, .refonte.rv .autre-etat .titre-bloc { font-family: var(--police-famille-titre); font-weight: 600; }
+.refonte.rv .autre-etat .voix-etat { border-radius: var(--rv-rayon-bloc); background: var(--c-ia-f); border: 1px solid var(--c-ia-b); color: var(--c-ia-t); }
+@media (max-width: 1023px) {
+  .refonte.rv .cadre:not(.cadre--maquette) > .chat.chat--discussion { display: flex; position: fixed; inset: 0; z-index: 5; width: auto; height: auto; }
+  .refonte.rv .chat--discussion .chat-titre { font-size: 22px; }
+  .refonte.rv .chat--discussion .chat-fil { padding: var(--rv-pas-3); }
+  .refonte.rv .chat--discussion .msg-ia-corps > p:first-child { font-size: 22px; }
+  .refonte.rv .chat--discussion .revenir { font-size: 0; width: 44px; padding: 0; justify-content: center; }
+  .refonte.rv .chat--discussion .revenir .ico { width: 20px; height: 20px; }
+  .refonte.rv .chat--discussion .chat-bas { padding: 0 var(--rv-pas-3) 88px; }
+}
+@container rv-centre (max-width: 560px) { .refonte.rv .G-ent-chiffres { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-demo-page="E54" class="refonte rv" data-ecran="E54">
+<svg width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="lu-message-circle" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="lu-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="lu-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+  <symbol id="lu-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="lu-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="lu-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="lu-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
+  <symbol id="lu-arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+  <symbol id="lu-square" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="lu-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/></symbol>
+  <symbol id="lu-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="lu-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="lu-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="lu-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+  <symbol id="lu-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></symbol>
+  <symbol id="lu-file-text" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+  <symbol id="lu-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></symbol>
+  <symbol id="lu-landmark" viewBox="0 0 24 24"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="m12 2 8 5H4Z"/></symbol>
+  <symbol id="lu-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="lu-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="lu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="lu-circle-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
+  <symbol id="lu-pencil" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/></symbol>
+  <symbol id="lu-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+  <symbol id="lu-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="lu-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+  <symbol id="lu-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.64l-19 6.5a.5.5 0 0 0-.03.94l7.93 3.18a2 2 0 0 1 1.11 1.11z"/><path d="m21.85 2.15-10.94 10.94"/></symbol>
+  <symbol id="lu-wifi-off" viewBox="0 0 24 24"><path d="M12 20h.01"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.18-2.65"/><path d="M19 12.86a10 10 0 0 0-2.29-1.68"/><path d="M22 8.82a15 15 0 0 0-11.29-3.76"/><path d="M5 12.86a10 10 0 0 1 5.17-2.69"/><path d="m2 2 20 20"/></symbol>
+  <symbol id="lu-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="lu-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="lu-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  <symbol id="lu-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></symbol>
+  <symbol id="lu-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="lu-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="lu-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="lu-archive" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol>
+  <symbol id="lu-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></symbol>
+  <symbol id="lu-arrow-down-left" viewBox="0 0 24 24"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></symbol>
+  <symbol id="lu-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+  <symbol id="lu-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="lu-list-checks" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  <symbol id="lu-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="lu-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/></symbol>
+  <symbol id="lu-chart-column" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="lu-life-buoy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="lu-chevrons-left" viewBox="0 0 24 24"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></symbol>
+  <symbol id="lu-chevrons-right" viewBox="0 0 24 24"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></symbol>
+  <symbol id="lu-maximize-2" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/><path d="M9 21H3v-6"/></symbol>
+  <symbol id="lu-minimize-2" viewBox="0 0 24 24"><path d="m14 10 7-7"/><path d="M20 10h-6V4"/><path d="m3 21 7-7"/><path d="M4 14h6v6"/></symbol>
+  <symbol id="lu-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="lu-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="lu-circle-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+  <symbol id="lu-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="lu-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="lu-square-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+  <symbol id="lu-file-plus" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 12v6"/></symbol>
+  <symbol id="lu-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="lu-git-compare" viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></symbol>
+  <symbol id="lu-skip-forward" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></symbol>
+  <symbol id="lu-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></symbol>
+  <symbol id="lu-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+  <symbol id="lu-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="lu-paperclip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="lu-ellipsis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="lu-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></symbol>
+  <symbol id="lu-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></symbol>
+  <symbol id="lu-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="lu-eye-off" viewBox="0 0 24 24"><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol>
+  <symbol id="lu-list-tree" viewBox="0 0 24 24"><path d="M21 12h-8"/><path d="M21 6H8"/><path d="M21 18h-8"/><path d="M3 6v4c0 1.1.9 2 2 2h3"/><path d="M3 10v6c0 1.1.9 2 2 2h3"/></symbol>
+  <symbol id="lu-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+  <symbol id="lu-calendar-check" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></symbol>
+  <symbol id="lu-stamp" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z"/><path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-3-3c-1.66 0-3 1-3 3s1 2 1 3.5V13"/></symbol>
+  <symbol id="lu-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="lu-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="lu-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+</svg>
+  <a class="evitement" href="#contenu">Aller au contenu</a>
+  <div class="cadre cadre--install" data-composant="Ossature" data-memorise="menu chat">
+    <nav class="nav nav2 nav--grise" data-composant="Menu" aria-label="Navigation principale" tabindex="0" aria-disabled="true">
+      <div class="nav-haut"><button class="nav-reduire" type="button" title="Réduire le menu (Ctrl + B)" aria-label="Réduire le menu" aria-keyshortcuts="Control+B"><svg class="ico ico-reduire" aria-hidden="true"><use href="#lu-chevrons-left"/></svg><svg class="ico ico-agrandir" aria-hidden="true"><use href="#lu-chevrons-right"/></svg></button></div>
+      <div class="bloc-ent" data-composant="BlocEntreprise">
+        <button class="ent-l1 nav-entreprise" type="button" aria-haspopup="listbox" aria-expanded="false" title="Lemoine Rénovation" aria-label="Lemoine Rénovation" data-composant="SelecteurEntreprise" data-vers="E55.html"><span class="ent-init ent-init--lemoine" aria-hidden="true">LR</span><span class="ent-nom nav-entreprise-nom" data-fictif="org">Lemoine Rénovation</span></button>
+        
+        <button class="ent-l3 nav-annee" type="button" aria-haspopup="listbox" aria-expanded="false" data-composant="SelecteurAnnee" data-vers="E07.html"><span class="nav-annee-texte"><span class="nav-annee-etiquette" title="Année comptable">Année</span><span class="nav-annee-dates">01/07/2026 → 30/06/2027</span></span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg><span class="ent-aide" role="img" aria-label="Aussi appelée exercice comptable ; elle peut ne pas commencer en janvier ni durer 12 mois." title="Aussi appelée exercice comptable ; elle peut ne pas commencer en janvier ni durer 12 mois.">?</span></button>
+      </div>
+      <p class="r5-verrou" role="note">Le menu s'ouvre à la fin de l'installation</p>
+      <button class="bouton-ajouter" type="button" data-composant="BoutonAjouter" title="Ajouter une facture, un relevé, une note de frais…" disabled data-vers="E03.html"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg><span class="nav-libelle">Ajouter</span></button>
+      <ul class="nav-entrees">
+        <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span></a></li>
+        <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span></a></li>
+        <li><a class="nav-entree" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span></a></li>
+        <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span></a></li>
+        <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
+      </ul>
+      <div class="nav-pied">
+        <a class="nav-entree nav-pied-lien" title="Réglages" href="#" data-toast="Les réglages ne sont pas détaillés dans la démonstration."><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
+        <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
+        <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="E55.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+      </div>
+    </nav>
+    <div class="page">
+      <div class="entete-mobile bandeau-mobile" data-composant="BandeauMobile"><button class="pastille-ent" type="button" aria-haspopup="listbox" aria-expanded="false" data-composant="SelecteurEntreprise" title="Lemoine Rénovation" data-vers="E55.html"><span class="ent-init ent-init--lemoine" aria-hidden="true">LR</span><span class="pastille-ent-texte"><strong data-fictif="org">Lemoine Rénovation</strong></span></button><span class="coin-demo coin-demo--mobile">Démo</span></div>
+      
+      <div class="bande-centre" data-composant="BandeCentre" role="toolbar" aria-label="Outils de la page">
+        <p class="bande-texte"><span class="bande-ent" data-fictif="org">Lemoine Rénovation</span> <span class="bande-sep">·</span> <span>Octobre 2026</span></p>
+
+        <span class="coin-demo coin-demo--barre">Démo</span>
+      </div>
+      <main class="page-corps-v2 page-corps-v2--tdb rv-corps" id="contenu" data-zone="contenu" data-composant="Contenu">
+        <header class="rv-entete" data-composant="Contenu"><div class="rv-entete-texte"><div class="rv-titre-ligne"><h1 class="rv-titre">Bien démarrer</h1><button class="rv-aide" type="button" aria-label="Trois étapes, guidées par la discussion. Vous pouvez fermer l'outil : il reprend là où vous en étiez." title="Trois étapes, guidées par la discussion. Vous pouvez fermer l'outil : il reprend là où vous en étiez."><span aria-hidden="true">?</span></button></div><p class="rv-sous"><span class="rv-sous-texte">Lemoine Rénovation</span></p></div></header>
+        <section class="rv-carte rv-heros" data-composant="Progression" aria-labelledby="h-etape">
+          <div class="rv-heros-haut">
+            <div class="rv-heros-chiffre"><span class="rv-gros" aria-hidden="true">2<span class="rv-gros-sur">/3</span></span><h2 id="h-etape" class="rv-heros-titre">Vos réglages : dates et façon de travailler<span class="evitement"> : étape 2 sur 3</span></h2></div>
+            <div class="rv-heros-fin"><button class="btn-plein rv-btn" type="button"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-check"/></svg>Oui, c'est ça</button>
+            <button class="btn-texte rv-btn-texte" type="button"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-arrow-left"/></svg>Étape précédente</button><button class="btn-texte rv-btn-texte" type="button">Finir plus tard</button></div>
+          </div>
+          <p class="rv-criteres"><span class="r3-mention" data-composant="Statut"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-sparkles"/></svg>Préparé par IA, à valider</span></p>
+          <div class="G-etapes" role="img" aria-label="Étape 2 sur 3"><span class="G-etape G-etape--fait"></span><span class="G-etape G-etape--cours"></span><span class="G-etape"></span></div>
+          <div class="G-etapes-noms" aria-hidden="true"><span>Entreprise</span><span>Vos réglages</span><span>Banque</span></div>
+        </section>
+        <section class="rv-carte rv-bloc" data-composant="CarteAction" aria-labelledby="h-annee">
+          <div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-annee">Vos dates d'année <button class="rv-aide" type="button" aria-label="Trouvée avec votre entreprise." title="Trouvée avec votre entreprise."><span aria-hidden="true">?</span></button></h2></div>
+          <ul class="G-choix-liste" aria-label="Dates d'année"><li><button class="G-choix" type="button" aria-pressed="true"><span class="G-radio"><svg class="ico" aria-hidden="true"><use href="#lu-check"/></svg></span><span class="G-choix-texte"><span>Du 1er juillet au 30 juin</span></span></button></li><li><button class="G-choix" type="button" aria-pressed="false"><span class="G-radio"></span><span class="G-choix-texte"><span>Autre date</span></span></button></li></ul>
+        </section>
+        <section class="rv-carte rv-bloc" data-composant="QuestionIA" aria-labelledby="h-mode">
+          <div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-mode">Façon de travailler <button class="rv-aide" type="button" aria-label="Modifiable dans Réglages > Qui fait quoi." title="Modifiable dans Réglages > Qui fait quoi."><span aria-hidden="true">?</span></button></h2></div>
+          <ul class="G-choix-liste" aria-label="Façon de travailler"><li><button class="G-choix" type="button" aria-pressed="true"><span class="G-radio"><svg class="ico" aria-hidden="true"><use href="#lu-check"/></svg></span><span class="G-choix-texte"><span>Je fais tout avec l'assistant</span><span class="G-choix-sous">Il prépare, vous confirmez</span></span></button></li></ul>
+          <details class="rv-repli" data-composant="PanneauRepliable"><summary>Autres façons de travailler<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><ul class="G-choix-liste" aria-label="Autres façons de travailler"><li><button class="G-choix" type="button" aria-pressed="false"><span class="G-radio"></span><span class="G-choix-texte"><span>Je tiens mes comptes</span><span class="G-choix-sous">Mon comptable termine l'année</span></span></button></li><li><button class="G-choix" type="button" aria-pressed="false"><span class="G-radio"></span><span class="G-choix-texte"><span>Mon comptable déclare tout</span><span class="G-choix-sous">Il contrôle, vous confirmez</span></span></button></li></ul></div></details>
+        </section>
+      </main>
+    </div>
+    <aside class="chat" data-composant="PanneauChat" id="chat" aria-label="Discussion avec l'assistant">
+      <span class="chat-bordure" aria-hidden="true" title="Glisser pour élargir"></span>
+      <div class="chat-tete">
+        <h2 class="chat-titre"><span class="pastille-ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span><span class="chat-titre-texte"><span class="chat-titre-ent" data-fictif="org">Lemoine Rénovation</span> · <span class="nowrap">Octobre 2026</span></span></h2>
+        <div class="chat-outils"><button class="outil chat-probleme" type="button" title="Signaler un problème" aria-label="Signaler un problème" data-vers="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg></button><button class="outil chat-reduire" type="button" title="Réduire la discussion" aria-label="Réduire la discussion"><svg class="ico" aria-hidden="true"><use href="#lu-chevrons-right"/></svg></button><button class="outil chat-agrandir" type="button" title="Agrandir la discussion (moitié de l'écran)" aria-label="Agrandir la discussion (moitié de l'écran)"><svg class="ico" aria-hidden="true"><use href="#lu-maximize-2"/></svg></button><button class="outil chat-plein-ecran" type="button" title="Plein écran" aria-label="Plein écran"><svg class="ico" aria-hidden="true"><use href="#lu-maximize-2"/></svg></button><button class="outil chat-revenir" type="button" title="Revenir" aria-label="Revenir"><svg class="ico" aria-hidden="true"><use href="#lu-minimize-2"/></svg></button></div>
+      </div>
+      <div class="chat-barre"><button class="btn-texte petit" type="button" data-vers="E25.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-square-pen"/></svg>Nouvelle discussion</button><button class="btn-texte petit" type="button" data-vers="E25.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-message-circle"/></svg>Mes discussions</button><button class="btn-texte petit" type="button" title="Historique de l'assistant (dans Réglages)" aria-label="Historique de l'assistant" data-vers="E09.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-history"/></svg>Historique de l'assistant</button></div>
+      <p class="chat-contexte"><span class="chat-contexte-texte">Vous regardez : <strong>Bien démarrer · étape 2 sur 3</strong></span><button class="btn-texte petit" type="button" data-toast="La discussion suit l&#x27;écran que vous regardez. Non détaillé dans la démonstration.">Changer</button></p>
+      <div class="chat-fil" aria-live="polite" tabindex="0">
+        <div class="msg-ia" data-composant="MessageIA"><span class="pastille-ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span><div class="msg-ia-corps"><p><strong>Bienvenue, <span data-fictif="personne">Claire</span>.</strong> Axion Compta est prêt pour votre entreprise. Je vous guide en 3 étapes.</p></div></div>
+        <div class="msg-moi" data-composant="MessageMoi"><p>Oui, c'est bien mon entreprise</p></div>
+        <div class="msg-ia" data-composant="MessageIA"><span class="pastille-ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span><div class="msg-ia-corps"><p>Parfait : <strong>Lemoine Rénovation, SARL</strong>. Étape 2 sur 3 : votre façon de travailler, au centre.</p></div></div>
+        <ul class="suggestions-chat" data-composant="Suggestions" aria-label="Suggestions"><li><button class="sugg" type="button"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-calendar"/></svg>Pourquoi ces dates d'année ?</button></li><li><button class="sugg" type="button"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-circle-help"/></svg>Quelle différence entre les façons de travailler ?</button></li><li><button class="sugg" type="button"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-clock"/></svg>Je finirai plus tard</button></li><li><button class="sugg" type="button"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-circle-alert"/></svg>Qu'est-ce qui manque pour valider octobre ?</button></li></ul>
+      </div>
+      <div class="chat-bas">
+        <form class="composeur" data-composant="SaisieChat" aria-label="Écrire à l'assistant">
+          <div class="composeur-ligne">
+            <button class="outil" type="button" aria-label="Ajouter un document" title="Ajouter un document, ou glisser, ou coller"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button>
+            <label class="evitement" for="message-1">Votre message</label>
+            <textarea id="message-1" rows="1" placeholder="Écrivez ou déposez un document ici"></textarea>
+            <button class="outil" type="button" aria-label="Parler" title="Parler"><svg class="ico" aria-hidden="true"><use href="#lu-mic"/></svg></button>
+            <button class="envoyer" type="button" aria-label="Envoyer" title="Envoyer" disabled><svg class="ico" aria-hidden="true"><use href="#lu-send"/></svg></button>
+          </div>
+        </form>
+        <p class="composeur-mention">Rien n'est enregistré sans votre accord.</p>
+      </div>
+    </aside>
+    
+  </div>
+  
+  <script src="../assets/js/demo.js" defer></script>
+</body>
+</html>

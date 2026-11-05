@@ -1,0 +1,24 @@
+/* Lot F de la refonte visuelle : E24, E19, E08, E03. Propre au lot (aucun fichier commun modifié). Jetons rv uniquement. */
+.refonte.rv .rv-lien-banque { display: flex; gap: var(--rv-pas-2); align-items: center; font-weight: 700; color: var(--c-texte); }
+.refonte.rv .rv-ligne--choix { min-height: 56px; }
+/* E08 : le papier et les 4 valeurs clés côte à côte, empilés si le centre est étroit */
+.refonte.rv .rf-doc { display: flex; flex-wrap: wrap; gap: var(--rv-pas-4); align-items: flex-start; }
+.refonte.rv .rf-papier { flex: 0 0 200px; max-width: 100%; border-radius: var(--rv-rayon-bloc); border: 1px solid var(--c-bord); background: var(--c-creuse); padding: var(--rv-pas-3); font-size: 13px; margin: 0; aspect-ratio: auto; height: auto; min-height: 0; align-self: flex-start; }
+.refonte.rv .rf-valeurs { flex: 1 1 220px; margin: 0; display: grid; grid-template-columns: 1fr; gap: var(--rv-pas-2); }
+.refonte.rv .rf-valeurs dt { font-size: 13px; font-weight: 700; color: var(--c-texte-3); }
+.refonte.rv .rf-valeurs dd { margin: 0; font-family: var(--police-famille-titre); font-weight: 600; font-size: 18px; color: var(--c-texte); overflow-wrap: anywhere; }
+/* E03 : zone de dépôt en tirets, dominante de l'écran */
+.refonte.rv .rf-depot { border-style: dashed; border-width: 2px; border-color: var(--c-bord-fort); }
+.refonte.rv .rf-depot-zone { display: grid; justify-items: center; text-align: center; gap: var(--rv-pas-2); padding: var(--rv-pas-4) var(--rv-pas-2); }
+.refonte.rv .rf-depot-ic { width: 72px; height: 72px; border-radius: 22px; }
+.refonte.rv .rf-depot-ic .ico { width: 32px; height: 32px; }
+.refonte.rv .rf-depot-actions { justify-content: center; }
+@media (max-width: 480px) {
+  .refonte.rv .rf-valeurs { grid-template-columns: 1fr; }
+  .refonte.rv .rf-papier { flex-basis: 100%; }
+}
+/* E19 : « ≈ 1 860 € » reste sur une ligne, le titre passe dessous si besoin */
+.refonte.rv [aria-labelledby="h-tva"] .rv-heros-chiffre { flex-wrap: wrap; }
+.refonte.rv [aria-labelledby="h-tva"] .rv-gros { white-space: nowrap; font-size: 60px; }
+/* Téléphone : les onglets passent à la ligne au lieu d'être coupés */
+@media (max-width: 480px) { .refonte.rv .rv-onglets { flex-wrap: wrap; width: 100%; border-radius: var(--rv-rayon-bloc); } .refonte.rv .rv-onglet { flex: 1 1 auto; justify-content: center; } }

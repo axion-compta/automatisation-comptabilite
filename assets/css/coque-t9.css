@@ -1,0 +1,124 @@
+/* ===================================================================================================
+   COQUE, TOUR 9 (auteur intégrateur) : dernier mot sur la disposition, chargé après tous les autres fichiers.
+   1. Menu déplié par défaut dès 1280 px ; rail seulement quand la discussion est élargie ou sous 1280 px.
+   2. Menu et discussion occupent toute la hauteur ; le champ de saisie est toujours collé en bas de la discussion.
+   3. L'en-tête de la discussion tient sur une ligne, « Vous regardez » juste dessous, le fil défile.
+   4. L'orange de la marque ne marque jamais un état (cadres, bande, mois en cours, zone de dépôt) : le gris et les 3 états font ce travail.
+   5. Un seul bouton plein orange par vue ; sur mobile, seul le « + » est plein.
+   =================================================================================================== */
+
+/* 1. Largeurs : menu 240 px dès 1280 px */
+@media (min-width: 1280px) {
+  .refonte .cadre:not(.cadre--maquette):not(.cadre--menu-reduit):not(.cadre--chat-plein):not(.cadre--chat-reduit):not(.cadre--chat-moitie) { --col-nav: 240px; --col-chat: 380px; }
+}
+
+/* 2. Hauteurs : la coque des états remplit toute la hauteur, le champ est collé en bas */
+.refonte .cadre--maquette > .nav, .refonte .cadre--maquette > .chat { position: static; height: auto; align-self: stretch; }
+.refonte .cadre--maquette > .chat { display: flex; flex-direction: column; min-height: 0; }
+.refonte .cadre--maquette > .chat .chat-fil { flex: 1 1 auto; min-height: 120px; overflow: hidden; }
+.refonte .cadre--maquette > .chat .chat-bas { margin-top: auto; flex: none; position: static; }
+.refonte .cadre--maquette > .chat > .chat-bordure { display: none; }
+.refonte .cadre:not(.cadre--maquette) > .chat { display: flex; flex-direction: column; }
+.refonte .cadre:not(.cadre--maquette) > .chat .chat-fil { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.refonte .cadre:not(.cadre--maquette) > .chat .chat-bas { flex: none; }
+
+/* 3. En-tête de discussion : une ligne ; « Vous regardez » directement dessous */
+.refonte .chat .chat-tete { order: 1; flex: none; }
+.refonte .chat .chat-contexte { order: 2; flex: none; }
+.refonte .chat .chat-barre { order: 3; flex: none; }
+.refonte .chat .chat-fil { order: 4; }
+.refonte .chat .chat-bas { order: 5; }
+.refonte .chat .chat-sous-titre { display: none; }
+.refonte .chat .chat-titre-texte { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.refonte .chat .chat-titre-texte .chat-titre-ent { white-space: nowrap; }
+.refonte .chat .chat-plein-ecran, .refonte .cadre--chat-moitie .chat-agrandir, .refonte .cadre--chat-plein .chat-agrandir { display: none; }
+.refonte .cadre--chat-moitie .chat .chat-plein-ecran { display: inline-grid; }
+
+/* Discussion élargie ou en plein écran : le menu passe en rail, le centre garde au moins 480 px */
+.refonte .cadre--chat-moitie { --col-nav: 72px; --col-chat: minmax(360px, 42%); }
+.refonte .cadre--chat-moitie .onglets-page { overflow-x: auto; flex-wrap: nowrap; white-space: nowrap; }
+.refonte .cadre--chat-moitie .onglet-page { flex: none; }
+.refonte .cadre--chat-moitie .titre-page-v2 { overflow-wrap: anywhere; white-space: normal; }
+
+/* Les onglets défilent à l'horizontale au lieu de s'empiler */
+.refonte .onglets-page { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+.refonte .onglets-page .onglet-page { flex: none; white-space: nowrap; }
+
+/* Bande du haut : une seule ligne, gris foncé, points de suspension */
+.refonte .bande-centre .bande-texte { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--texte-doux, #4a443d); }
+.refonte .bande-centre .bande-nombre { color: var(--texte-doux, #4a443d); font-weight: 600; }
+.refonte .bande-centre .bande-texte .bande-ent { color: var(--texte); }
+
+/* 4. L'orange n'est jamais un état */
+.refonte .carte-liste--prochaine { border: 2px solid var(--texte); background: var(--surface); }
+.refonte .prochaine-titre { color: var(--texte); }
+.refonte .mois--cours { border: 2px solid var(--texte); }
+.refonte .mois--cours .mois-etat { color: var(--texte); }
+.refonte .zone-depot { border: 2px dashed var(--bord); background: var(--surface-2); }
+.refonte .zone-depot--voile { background: var(--surface-2); border: 2px solid var(--bord); }
+.refonte .carte-decl--urgente, .refonte .carte-decl { border-color: var(--bord); }
+.refonte .groupe-confirmer { border-color: var(--bord); background: var(--surface); }
+.refonte .bandeau-indicatif .ico, .refonte .pastille-etat--attention { color: var(--texte-doux); }
+
+/* 5. Bouton plein : orange partout (un seul par vue) ; en mobile, seul le « + » reste plein */
+.refonte .telephone .btn-plein:not(.bm-plus), .refonte .tel-cadre .btn-plein { background: transparent; color: var(--texte); border: 2px solid var(--texte); }
+@media (max-width: 1023px) {
+  .refonte .page .carte-liste .btn-plein, .refonte .page .carte-action .btn-plein, .refonte .page .carte-decl .btn-plein { background: transparent; color: var(--texte); border: 2px solid var(--texte); }
+}
+
+/* États : rouge + icône sur fond neutre */
+.refonte .carte-liste--manque { border-color: var(--bord); background: var(--surface); }
+.refonte .carte-liste--manque .carte-liste-titre, .refonte .carte-liste--manque .carte-liste-titre .ico { color: var(--manque); }
+.refonte .nowrap { white-space: nowrap; }
+.refonte .chat .chat-titre-texte { white-space: normal; overflow: visible; text-overflow: clip; font-size: 15px; }
+.refonte .chat .chat-tete .chat-outils { flex: none; }
+
+/* Une seule icône de taille, avec libellé */
+.refonte .cadre--chat-moitie .chat .chat-revenir { display: none; }
+.refonte .cadre--chat-moitie .chat .chat-plein-ecran, .refonte .cadre--chat-plein .chat .chat-revenir { width: auto; padding: 0 12px; gap: 6px; }
+.refonte .cadre--chat-moitie .chat .chat-plein-ecran::after { content: "Plein écran"; font-size: 15px; }
+.refonte .cadre--chat-plein .chat .chat-revenir::after { content: "Revenir"; font-size: 15px; }
+/* Le témoin de l'assistant garde son texte */
+.refonte .cadre--chat-moitie .bande-assistant .bande-ass-texte { display: grid; }
+.refonte .cadre--chat-moitie .bande-assistant .bande-ass-sous { display: none; }
+.refonte .fil-ariane { margin: 0 0 4px; font-size: 15px; color: var(--texte-doux); }
+.refonte .retour-page { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; min-height: 44px; color: var(--texte); font-size: 16px; text-decoration: underline; }
+.refonte .nav2 .bouton-ajouter[aria-current="page"] { box-shadow: 0 0 0 3px var(--nav-fond), 0 0 0 5px var(--surface); font-weight: 700; }
+.refonte .seul-mobile { display: none; }
+@media (max-width: 1023px) { .refonte .seul-mobile { display: inline-flex; } }
+.refonte .cadre--maquette > .chat .chat-fil { overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 1023px) { .refonte .lu-bloc dl { display: grid; grid-template-columns: 1fr; gap: 2px; } .refonte .lu-bloc dt { font-weight: 700; margin-top: 8px; } .refonte .lu-bloc dd { margin: 0; } }
+
+/* Discussion en plein écran (liste + fil) : l'ordre des quatre parties du fil de discussion ne touche pas cette coque */
+.refonte .chat--discussion .chat-tete, .refonte .chat--discussion .chat-contexte, .refonte .chat--discussion .chat-fil, .refonte .chat--discussion .chat-bas { order: 0; }
+.refonte .chat--discussion > .chat-tete { order: -1; display: flex; align-items: center; gap: 16px; flex: none; }
+.refonte .chat--discussion .disc-corps { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+.refonte .chat--discussion .disc-fil { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.refonte .chat--discussion .disc-fil .chat-contexte { order: -1; flex: none; }
+.refonte .chat--discussion .disc-fil .chat-fil { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.refonte .chat--discussion .disc-fil .chat-bas { flex: none; margin-top: auto; }
+.refonte .chat--discussion .chat-contexte { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 12px; }
+.refonte .chat--discussion .chat-contexte-texte { white-space: nowrap; }
+@media (max-width: 1023px) { .refonte .chat--discussion .disc-corps { grid-template-columns: 1fr; } }
+.refonte .bande-centre .bouton-retour { width: auto; padding: 0 12px; gap: 6px; }
+.refonte .bande-centre .bouton-retour .retour-texte { display: inline; font-size: 16px; text-decoration: underline; white-space: nowrap; }
+@media (max-width: 1023px) { .refonte .fil-ariane { display: none; } }
+
+/* ---- Téléphone (390 px) ---- */
+.refonte .pastille-ent-texte { display: grid; text-align: left; line-height: 1.2; min-width: 0; }
+.refonte .pastille-ent-annee { font-size: 13px; font-weight: 400; color: var(--texte-doux); white-space: nowrap; }
+@media (max-width: 1023px) {
+  .refonte main.page-corps-v2, .refonte .page-corps-v2 { padding-left: 16px; padding-right: 16px; }
+  .refonte .bandeau-mobile .bm-pastille, .refonte .tel-cadre .bandeau-mobile .bm-pastille { color: var(--texte-doux) !important; background: var(--surface-2); border: 1px solid var(--bord); font-weight: 600; white-space: nowrap; }
+  .refonte .case-ligne input[type="checkbox"], .refonte .case-ligne input[type="radio"] { width: 24px; height: 24px; flex: none; }
+  .refonte .mobile-discuter { right: 16px; bottom: 80px; }
+  .refonte .bm-lib { font-size: 12px; white-space: nowrap; }
+  .refonte .barre-mobile .nav-compteur { background: var(--nav-fond); }
+}
+.refonte .bande-centre { flex-wrap: nowrap; }
+.refonte .bande-centre .bande-texte { flex: 1 1 0; min-width: 0; }
+.refonte .bande-centre .loupe { flex: 0 0 44px; width: 44px; }
+.refonte .bande-centre .bande-assistant { flex: 0 0 auto; }
+.refonte .bande-centre .bouton-retour { flex: 0 0 auto; }
+/* Les états hauts : la discussion va jusqu'en bas de la coque, comme le menu (plus de 900 px plafonnés) */
+.refonte .cadre--maquette.cadre--haut > .chat { max-height: none; }

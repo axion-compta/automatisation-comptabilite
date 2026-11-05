@@ -1,0 +1,152 @@
+/* Démonstration cliquable : surcouche légère. Aucune ressource externe.
+   Couleurs : jetons de la refonte (--c-*) déjà définis sur body.refonte.rv. */
+:root { --demo-h: 38px; }
+html { scroll-padding-top: calc(var(--demo-h) + 12px); }
+body { padding-top: var(--demo-h); }
+.coin-demo { display: none !important; }
+
+/* ---- Bandeau permanent ---- */
+.demo-bandeau {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 2000; height: var(--demo-h);
+  display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 12px;
+  background: var(--c-texte, #1f1a17); color: var(--c-fond, #f4ece3);
+  font: 700 14px/1.2 var(--police-famille-texte, system-ui, sans-serif); text-align: center;
+}
+.demo-bandeau strong { font-weight: 800; letter-spacing: .02em; }
+.demo-bandeau .demo-bandeau-ia { opacity: .85; font-weight: 600; }
+.demo-bandeau a { color: inherit; text-decoration: underline; font-weight: 700; }
+@media (max-width: 640px) { .demo-bandeau .demo-bandeau-ia { display: none; } .demo-bandeau { font-size: 13px; } }
+
+/* ---- Mise en page : le bandeau pousse le contenu sous lui ---- */
+@media (min-width: 1024px) {
+  .refonte .cadre:not(.cadre--maquette) > .nav,
+  .refonte .cadre:not(.cadre--maquette) > .chat { top: var(--demo-h); height: calc(100vh - var(--demo-h)); }
+  .cadre > .page { min-height: calc(100vh - var(--demo-h)); }
+}
+@media (max-width: 1023px) {
+  .refonte .cadre--chat-plein > .chat { top: var(--demo-h) !important; }
+  body[data-demo-page="E25"] .demo-pres { bottom: auto; top: calc(var(--demo-h) + 6px); }
+}
+.refonte .cadre--connexion, .rv-connexion { min-height: calc(100vh - var(--demo-h)); }
+body[data-demo-pres] { padding-bottom: 190px; }
+@media (max-width: 1023px) { body[data-demo-pres] { padding-bottom: 260px; } }
+
+/* ---- Message court ---- */
+.demo-toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index: 2100;
+  max-width: min(560px, calc(100vw - 32px)); padding: 12px 18px; border-radius: 16px;
+  background: var(--c-texte, #1f1a17); color: var(--c-fond, #fff); font: 600 15px/1.4 var(--police-famille-texte, system-ui);
+  box-shadow: 0 10px 30px rgb(0 0 0 / .28);
+}
+body[data-demo-pres] .demo-toast { bottom: 200px; }
+@media (max-width: 1023px) { .demo-toast { bottom: 90px; } body[data-demo-pres] .demo-toast { bottom: 270px; } }
+
+/* ---- Mode Présentation ---- */
+.demo-pres {
+  position: fixed; z-index: 1900; left: 50%; transform: translateX(-50%); bottom: 16px;
+  width: min(720px, calc(100vw - 24px)); box-sizing: border-box; padding: 14px 18px 16px; border-radius: 22px;
+  background: var(--c-surface, #fff); color: var(--c-texte, #1f1a17);
+  border: 2px solid var(--c-ia-l, #6b4aa0); box-shadow: 0 16px 44px rgb(0 0 0 / .26);
+  display: grid; gap: 8px; font-family: var(--police-famille-texte, system-ui);
+}
+@media (max-width: 1023px) { .demo-pres { bottom: 84px; padding: 12px 14px 14px; } }
+@media (min-width: 1024px) {
+  .demo-pres { width: min(1040px, calc(100vw - 32px)); grid-template-columns: 1fr auto; column-gap: 20px; align-items: center; padding: 12px 18px 14px; }
+  .demo-pres-tete, .demo-pres-texte { grid-column: 1; }
+  .demo-pres-barre { grid-column: 1 / -1; grid-row: 3; }
+  .demo-pres-actions { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; gap: 6px; }
+  .demo-pres-actions .demo-sp { display: none; }
+  .demo-pres-actions button { min-height: 40px; }
+  body[data-demo-pres] { padding-bottom: 150px; }
+  body[data-demo-pres] .demo-toast { bottom: 160px; }
+}
+/* À partir de 1280 px la discussion occupe la colonne de droite : la fiche reste à gauche pour ne pas la masquer */
+@media (min-width: 1280px) {
+  .demo-pres { left: 12px; transform: none; width: min(880px, calc(100vw - 420px)); }
+  body[data-demo-page="E25"] .demo-pres { left: 50%; transform: translateX(-50%); width: min(880px, calc(100vw - 120px)); bottom: auto; top: calc(var(--demo-h) + 84px); }
+}
+.demo-pres-tete { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.demo-pres-etape { font: 800 13px/1.2 var(--police-famille-texte); color: var(--c-ia-t, #4a2f7a); letter-spacing: .02em; text-transform: uppercase; }
+.demo-pres-titre { font: 700 20px/1.2 var(--police-famille-titre, Georgia, serif); margin: 0; flex: 1; min-width: 0; }
+.demo-pres-texte { margin: 0; font-size: 16px; line-height: 1.45; color: var(--c-texte-2, #3a332e); }
+.demo-pres-barre { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 2px 0 2px; }
+.demo-pres-barre span { height: 8px; border-radius: 4px; background: var(--c-bord, #d9cfc4); }
+.demo-pres-barre span.fait { background: var(--c-ia-l, #6b4aa0); }
+.demo-pres-barre span.en-cours { background: var(--c-action, #b23f16); }
+.demo-pres-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.demo-pres-actions .demo-sp { flex: 1; }
+.demo-pres button {
+  min-height: 44px; padding: 0 20px; border-radius: 999px; border: 0; cursor: pointer;
+  font: 800 16px/1 var(--police-famille-texte); background: transparent; color: var(--c-lien, #8a2f0f); text-decoration: underline;
+}
+.demo-pres button.demo-suivant { background: var(--c-action, #b23f16); color: #fff; text-decoration: none; padding: 0 28px; box-shadow: 0 4px 14px rgb(0 0 0 / .2); }
+.demo-pres button.demo-suivant:hover { filter: brightness(1.08); }
+.demo-pres button:focus-visible, .demo-fin button:focus-visible, .demo-accueil a:focus-visible { outline: 3px solid var(--c-ia-l, #6b4aa0); outline-offset: 2px; }
+.demo-pres button[disabled] { opacity: .45; cursor: default; }
+.demo-pres .demo-quitter { min-height: 44px; min-width: 44px; padding: 0 10px; font-size: 14px; }
+.demo-pas { outline: 3px solid var(--c-ia-l, #6b4aa0); outline-offset: 4px; border-radius: 12px; transition: outline-color .3s; }
+
+/* ---- Fin de présentation ---- */
+.demo-fin { position: fixed; inset: 0; z-index: 2200; background: rgb(20 14 10 / .62); display: grid; place-items: center; padding: 16px; }
+.demo-fin > div { background: var(--c-surface, #fff); color: var(--c-texte); border-radius: 26px; padding: 32px 28px; max-width: 520px; width: 100%; text-align: center; display: grid; gap: 14px; box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
+.demo-fin h2 { margin: 0; font: 600 34px/1.1 var(--police-famille-titre, Georgia, serif); font-style: italic; }
+.demo-fin p { margin: 0; font-size: 17px; line-height: 1.45; color: var(--c-texte-2); }
+.demo-fin button, .demo-fin a { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 0 24px; border-radius: 999px; font: 800 16px/1 var(--police-famille-texte); cursor: pointer; border: 0; text-decoration: none; }
+.demo-fin .demo-suivant { background: var(--c-action, #b23f16); color: #fff; }
+.demo-fin .demo-lien { background: transparent; color: var(--c-lien, #8a2f0f); text-decoration: underline; }
+
+/* ---- Dépôt simulé (écran Ajouter) ---- */
+.demo-depot { display: grid; gap: 14px; padding: 8px 4px; text-align: left; }
+.demo-depot h2 { margin: 0; font: 600 26px/1.15 var(--police-famille-titre, Georgia, serif); }
+.demo-depot-fichier { font-size: 15px; color: var(--c-texte-3); margin: 0; }
+.demo-prog { height: 16px; border-radius: 10px; background: var(--c-creuse, #eee); overflow: hidden; border: 1px solid var(--c-bord); }
+.demo-prog > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--c-ia-l, #6b4aa0), var(--c-action, #b23f16)); transition: width .15s linear; }
+.demo-depot-etat { font-weight: 700; color: var(--c-texte-2); margin: 0; }
+.demo-depot-resume { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.demo-depot-resume .demo-gros { font: 600 64px/1 var(--police-famille-titre, Georgia, serif); }
+.demo-depot-resume .demo-lib { font: 600 24px/1.2 var(--police-famille-titre, Georgia, serif); }
+.demo-depot-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.demo-depot-liste li { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--c-creuse, #f1e9e0); font-weight: 600; }
+.demo-depot-liste li.verif { background: var(--c-am-f, #f8e7c2); color: var(--c-am-t, #6b4300); }
+.demo-depot-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.demo-depot-actions a.btn-plein { text-decoration: none; display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 999px; background: var(--c-action); color: #fff; font-weight: 800; }
+
+/* ---- Carte d'action du chat (état validé) ---- */
+.demo-carte-ok { display: grid; gap: 6px; }
+.demo-carte-ok .demo-ok { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: var(--c-ok-t, #1d5b34); }
+.demo-carte-ok a { color: var(--c-lien); font-weight: 700; }
+.msg-attente { padding: 8px 12px; color: var(--c-texte-3); font-style: italic; }
+
+.demo-ok { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 800; color: var(--c-ok-t, #1d5b34); }
+.demo-confirme { cursor: default; }
+
+/* ---- Page d'accueil de la démo ---- */
+.demo-accueil { max-width: 880px; margin: 0 auto; padding: 32px 20px 64px; display: grid; gap: 28px; }
+.demo-accueil h1 { margin: 0; font: 500 clamp(30px, 6vw, 40px)/1.05 var(--police-famille-titre, Georgia, serif); font-style: italic; }
+.demo-accueil .demo-sous { font-size: 19px; line-height: 1.45; color: var(--c-texte-2); margin: 0; }
+.demo-accueil .demo-choix { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.demo-carte-choix { display: grid; gap: 8px; padding: 22px; border-radius: 22px; background: var(--c-surface); border: 1px solid var(--c-bord); box-shadow: var(--o-carte); text-decoration: none; color: var(--c-texte); }
+.demo-carte-choix:hover { border-color: var(--c-action); }
+.demo-carte-choix strong { font: 600 24px/1.15 var(--police-famille-titre, Georgia, serif); }
+.demo-carte-choix span { color: var(--c-texte-2); font-size: 16px; line-height: 1.4; }
+.demo-carte-choix.principal { background: var(--c-action); color: #fff; border-color: var(--c-action); }
+.demo-carte-choix.principal span { color: #fff; opacity: .92; }
+.demo-accueil h2 { margin: 0; font: 600 22px/1.2 var(--police-famille-titre, Georgia, serif); }
+.demo-accueil ol, .demo-accueil ul { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 16px; line-height: 1.45; }
+.demo-accueil a { color: var(--c-lien); font-weight: 700; }
+.demo-accueil .demo-note { font-size: 15px; color: var(--c-texte-3); }
+.demo-ecrans { columns: 2 260px; column-gap: 28px; list-style: none; padding: 0; }
+.demo-ecrans li { break-inside: avoid; padding: 4px 0; }
+.demo-carte .G-carte-titre { font-size: 24px !important; line-height: 1.2 !important; }
+
+/* Haut de page : la recherche et « Assistant actif » ne se chevauchent plus sur écran étroit */
+@media (max-width: 1300px) {
+  .refonte .page > .bande-centre { flex-wrap: nowrap; }
+  .refonte .bande-centre .bande-texte { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .refonte .bande-centre .loupe, .refonte .bande-centre .bande-assistant { flex: 0 0 auto; white-space: nowrap; }
+}
+
+
+/* La loupe reste une icône seule (évite le chevauchement avec « Assistant actif ») */
+.refonte .bande-centre .loupe { flex: 0 0 44px; width: 44px; padding: 0; justify-content: center; overflow: hidden; }
+.refonte .bande-centre .loupe .loupe-texte, .refonte .bande-centre .loupe kbd { display: none; }

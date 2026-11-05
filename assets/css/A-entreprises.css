@@ -1,0 +1,69 @@
+/* Lot 1, tour 8, lot A : sélecteur d'entreprise et « Voir toutes mes entreprises ». Jetons de premier niveau seulement.
+   Le tableau passe en cartes selon la largeur de SON conteneur (et non celle de la fenêtre), pour tenir quand la discussion s'élargit. */
+.A-zone { container-type: inline-size; }
+.A-tab { display: grid; border: 1px solid var(--bord); border-radius: var(--rayon-bloc); background: var(--surface); overflow: hidden; }
+.A-lig { display: grid; grid-template-columns: minmax(150px, 1.5fr) minmax(140px, 1.4fr) 64px minmax(110px, 1.1fr) 88px 84px; gap: var(--pas-8); align-items: center; padding: var(--pas-16) var(--pas-8) var(--pas-16) var(--pas-16); border-top: 1px solid var(--bord); }
+.A-lig--tete { border-top: 0; background: var(--surface-2); font-weight: var(--graisse-forte); color: var(--texte-doux); font-size: var(--taille-mention); }
+.A-lig--total { background: var(--surface-2); font-weight: var(--graisse-forte); border-top: 2px solid var(--bord); }
+.A-lig--ouverte { box-shadow: inset 4px 0 0 var(--accent); }
+.A-cel { display: grid; gap: 4px; min-width: 0; justify-items: start; }
+.A-cel--nom { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--pas-16); justify-items: stretch; }
+.A-cel--montant { justify-items: end; text-align: right; }
+.A-nom-bloc { display: grid; gap: 4px; min-width: 0; }
+.A-nom { font-weight: var(--graisse-forte); overflow-wrap: anywhere; }
+.A-sous { font-size: var(--taille-mention); color: var(--texte-doux); font-weight: var(--graisse-normale); }
+.A-note { margin: var(--pas-16) 0 0; padding: 0 var(--pas-16) var(--pas-16); }
+.A-tab + .A-note { padding-top: 0; }
+.A-zone .ent-init, .A-opt .ent-init { flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--rayon-bouton); font-weight: var(--graisse-forte); }
+@container (max-width: 760px) {
+  .A-lig { grid-template-columns: minmax(0, 1fr); gap: var(--pas-8); }
+  .A-lig--tete { display: none; }
+  .A-tab { border: 0; background: transparent; gap: var(--pas-16); overflow: visible; }
+  .A-lig { border: 1px solid var(--bord); border-radius: var(--rayon-bloc); background: var(--surface); }
+  .A-lig--total { border: 2px solid var(--bord); background: var(--surface-2); }
+  .A-cel[data-etiquette] { grid-template-columns: minmax(110px, 38%) minmax(0, 1fr); align-items: start; gap: var(--pas-8); }
+  .A-cel[data-etiquette]::before { content: attr(data-etiquette); font-size: var(--taille-mention); color: var(--texte-doux); }
+  .A-cel[data-etiquette] > * { grid-column: 2; }
+  .A-cel--montant { justify-items: start; text-align: left; }
+  .A-cel--action .btn-contour, .A-cel--action .btn-texte { width: 100%; justify-content: center; min-height: var(--hauteur-cible-mobile); }
+}
+/* Sélecteur ouvert (ordinateur) : sous le bloc entreprise, à droite du menu. */
+.A-sel { position: absolute; z-index: 5; top: 72px; left: 16px; width: 400px; max-width: calc(100% - 32px); display: grid; gap: var(--pas-8); padding: var(--pas-16); border: 1px solid var(--bord); border-radius: var(--rayon-bloc); background: var(--surface); box-shadow: var(--ombre-douce); }
+.A-sel-titre { margin: 0; font-weight: var(--graisse-forte); font-size: var(--taille-bloc); }
+.A-sel-liste { display: grid; gap: var(--pas-8); margin: 0; padding: 0; list-style: none; }
+.A-opt { display: flex; gap: var(--pas-16); align-items: flex-start; min-height: var(--hauteur-cible); padding: var(--pas-16); border: 1px solid var(--bord); border-radius: var(--rayon-bouton); }
+.A-opt--actif { border-color: var(--accent); background: var(--accent-doux); }
+.A-opt-texte { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.A-opt-nom { font-weight: var(--graisse-forte); }
+.A-sel-pied { display: grid; gap: 0; border-top: 1px solid var(--bord); padding-top: var(--pas-8); }
+.A-sel-pied .btn-texte { justify-content: flex-start; min-height: var(--hauteur-cible); }
+.A-confirme { display: flex; gap: var(--pas-8); align-items: center; padding: var(--pas-8) var(--pas-16); border-radius: var(--rayon-bouton); background: var(--ok-fond); color: var(--texte); }
+.A-confirme p { margin: 0; }
+/* Cadre de téléphone (états dessinés à 390 px de large, quelle que soit la fenêtre). */
+.A-tel { position: relative; width: 100%; max-width: 390px; min-height: 560px; margin: 0 auto; border: 1px solid var(--bord); border-radius: var(--rayon-bloc); overflow: hidden; background: var(--fond); }
+.A-tel-haut { display: flex; align-items: center; gap: var(--pas-8); height: 56px; padding: 0 var(--pas-16); border-bottom: 1px solid var(--bord); background: var(--surface); }
+.A-tel-haut .ent-init { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: var(--rayon-bouton); color: var(--fond); font-weight: var(--graisse-forte); font-size: var(--taille-mention); }
+.A-tel-fond, .A-tel-corps { padding: var(--pas-16); }
+.A-tel-voile { position: absolute; inset: 56px 0 0; background: color-mix(in srgb, var(--texte) 45%, transparent); }
+.A-tel .A-feuille { position: absolute; left: 0; right: 0; bottom: 0; border-radius: var(--rayon-bloc) var(--rayon-bloc) 0 0; max-height: 80%; overflow: hidden; }
+.A-tel--page { min-height: 0; }
+/* Couleurs propres aux sociétés, tirées des jetons (voir demandes-A.md : jetons --ent-* à créer). */
+.A-zone .ent-init--lemoine, .A-opt .ent-init--lemoine, .A-tel-haut .ent-init--lemoine { background: color-mix(in srgb, var(--nav-fond) 60%, var(--marque-sombre)); }
+.A-zone .ent-init--marceau, .A-opt .ent-init--marceau, .A-tel-haut .ent-init--marceau { background: var(--info); }
+.A-zone .statut { white-space: normal; text-align: left; height: auto; }
+.A-cel--nom .pastille-ouverte { justify-self: start; }
+.A-cel--nom { grid-template-columns: auto minmax(0, 1fr); gap: var(--pas-8); }
+.A-opt .statut, .A-tel .statut { white-space: normal; text-align: left; height: auto; }
+.A-feuille > *, .A-sel > *, .A-opt, .A-sel-liste { min-width: 0; }
+.A-cel--action .btn-texte, .A-cel--action .btn-contour { white-space: nowrap; padding: 0 var(--pas-8); }
+.A-zone .ent-init, .A-opt .ent-init, .A-tel-haut .ent-init { color: var(--fond) !important; }
+/* N08 : les résultats passent à la ligne (pas de points de suspension), avec une sous-ligne qui dit où ils vivent. */
+.refonte .palette li .palette-texte { display: grid; gap: 2px; flex: 1; min-width: 0; white-space: normal; overflow: visible; text-overflow: clip; }
+.refonte .palette li a { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+.palette .A-res-titre { overflow-wrap: anywhere; }
+.palette .montant { flex: none; }
+.refonte .palette li .palette-texte, .refonte .palette li .palette-texte > * { line-height: 1.35; }
+.refonte .palette li a { line-height: 1.35; }
+/* N08 : le voile ne couvre que l'écran, pas les états dessinés dessous (il était fixe sur toute la fenêtre). */
+.refonte .cadre:not(.cadre--maquette) { position: relative; }
+.refonte .cadre:not(.cadre--maquette) > .voile-40 { position: absolute; inset: 0; }
