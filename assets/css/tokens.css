@@ -56,9 +56,9 @@
     --police-inter: Inter, system-ui, "Segoe UI", sans-serif;
     --graisse-normale: 400;
     --graisse-forte: 600;
-    --taille-mention: 14px;
-    --taille-courant: 16px;
-    --taille-chat: 17px;
+    --taille-mention: 12px;
+    --taille-courant: 14px;
+    --taille-chat: 15px;
     --taille-bloc: 20px;
     --taille-page: 28px;
     --taille-page-mobile: 24px;
@@ -146,9 +146,9 @@
     --police-famille-titre: Fraunces, Georgia, serif;
     --police-famille-texte: Manrope, system-ui, "Segoe UI", sans-serif;
     --police-famille-code: Inconsolata, ui-monospace, Consolas, monospace;
-    --police-taille-precision: 13px;
-    --police-taille-texte: 15px;
-    --police-taille-texte-mobile: 16px;
+    --police-taille-precision: 12px;
+    --police-taille-texte: 14px;
+    --police-taille-texte-mobile: 15px;
     --police-taille-titre-carte: 24px;
     --police-taille-titre-page: 40px;
     --police-taille-titre-page-mobile: 30px;

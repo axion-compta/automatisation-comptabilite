@@ -12,9 +12,9 @@ body { padding-top: var(--demo-h); }
   background: var(--c-texte, #1f1a17); color: var(--c-fond, #f4ece3);
   font: 700 14px/1.2 var(--police-famille-texte, system-ui, sans-serif); text-align: center;
 }
-.demo-bandeau strong { font-weight: 800; letter-spacing: .02em; }
+.demo-bandeau strong { font-weight: 600; letter-spacing: .02em; }
 .demo-bandeau .demo-bandeau-ia { opacity: .85; font-weight: 600; }
-.demo-bandeau a { color: inherit; text-decoration: underline; font-weight: 700; }
+.demo-bandeau a { color: inherit; text-decoration: underline; font-weight: 600; }
 @media (max-width: 640px) { .demo-bandeau .demo-bandeau-ia { display: none; } .demo-bandeau { font-size: 13px; } }
 
 /* ---- Mise en page : le bandeau pousse le contenu sous lui ---- */
@@ -101,7 +101,7 @@ body[data-demo-pres] .demo-toast { bottom: 200px; }
 .demo-depot-fichier { font-size: 15px; color: var(--c-texte-3); margin: 0; }
 .demo-prog { height: 16px; border-radius: 10px; background: var(--c-creuse, #eee); overflow: hidden; border: 1px solid var(--c-bord); }
 .demo-prog > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--c-ia-l, #6b4aa0), var(--c-action, #b23f16)); transition: width .15s linear; }
-.demo-depot-etat { font-weight: 700; color: var(--c-texte-2); margin: 0; }
+.demo-depot-etat { font-weight: 600; color: var(--c-texte-2); margin: 0; }
 .demo-depot-resume { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .demo-depot-resume .demo-gros { font: 600 64px/1 var(--police-famille-titre, Georgia, serif); }
 .demo-depot-resume .demo-lib { font: 600 24px/1.2 var(--police-famille-titre, Georgia, serif); }
@@ -109,15 +109,15 @@ body[data-demo-pres] .demo-toast { bottom: 200px; }
 .demo-depot-liste li { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--c-creuse, #f1e9e0); font-weight: 600; }
 .demo-depot-liste li.verif { background: var(--c-am-f, #f8e7c2); color: var(--c-am-t, #6b4300); }
 .demo-depot-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-.demo-depot-actions a.btn-plein { text-decoration: none; display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 999px; background: var(--c-action); color: #fff; font-weight: 800; }
+.demo-depot-actions a.btn-plein { text-decoration: none; display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 999px; background: var(--c-action); color: #fff; font-weight: 600; }
 
 /* ---- Carte d'action du chat (état validé) ---- */
 .demo-carte-ok { display: grid; gap: 6px; }
-.demo-carte-ok .demo-ok { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: var(--c-ok-t, #1d5b34); }
-.demo-carte-ok a { color: var(--c-lien); font-weight: 700; }
+.demo-carte-ok .demo-ok { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--c-ok-t, #1d5b34); }
+.demo-carte-ok a { color: var(--c-lien); font-weight: 600; }
 .msg-attente { padding: 8px 12px; color: var(--c-texte-3); font-style: italic; }
 
-.demo-ok { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 800; color: var(--c-ok-t, #1d5b34); }
+.demo-ok { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 600; color: var(--c-ok-t, #1d5b34); }
 .demo-confirme { cursor: default; }
 
 /* ---- Page d'accueil de la démo ---- */
@@ -133,7 +133,7 @@ body[data-demo-pres] .demo-toast { bottom: 200px; }
 .demo-carte-choix.principal span { color: #fff; opacity: .92; }
 .demo-accueil h2 { margin: 0; font: 600 22px/1.2 var(--police-famille-titre, Georgia, serif); }
 .demo-accueil ol, .demo-accueil ul { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 16px; line-height: 1.45; }
-.demo-accueil a { color: var(--c-lien); font-weight: 700; }
+.demo-accueil a { color: var(--c-lien); font-weight: 600; }
 .demo-accueil .demo-note { font-size: 15px; color: var(--c-texte-3); }
 .demo-ecrans { columns: 2 260px; column-gap: 28px; list-style: none; padding: 0; }
 .demo-ecrans li { break-inside: avoid; padding: 4px 0; }

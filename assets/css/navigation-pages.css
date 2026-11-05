@@ -3,30 +3,30 @@
 /* ---- Boutons : un seul bouton plein par écran, en orange ---- */
 .refonte .btn-plein { background: #b23f16; color: #fff; }
 .refonte .btn-plein:hover { background: #8f3210; }
-.refonte .btn-neutre { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface-2); color: var(--texte-doux); font: inherit; font-weight: 700; cursor: not-allowed; }
+.refonte .btn-neutre { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surface-2); color: var(--texte-doux); font: inherit; font-weight: 600; cursor: not-allowed; }
 
 /* ---- Mon mois ---- */
 .refonte .onglets-page { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 16px; border-bottom: 1px solid var(--bord); }
 .refonte .onglet-page { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; color: var(--texte); text-decoration: none; font-size: 16px; border-bottom: 3px solid transparent; }
-.refonte .onglet-page[aria-selected="true"] { font-weight: 700; color: #8a3010; border-bottom-color: #b23f16; }
+.refonte .onglet-page[aria-selected="true"] { font-weight: 600; color: #8a3010; border-bottom-color: #b23f16; }
 .refonte .ligne-argent { display: grid; gap: 6px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid var(--bord); border-radius: 14px; background: var(--surface); }
 .refonte .argent-formule { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0; font-size: 16px; color: var(--texte-doux); }
 .refonte .argent-sep { color: var(--texte-doux); }
 .refonte .argent-total { margin: 0; font-size: 22px; line-height: 1.3; }
-.refonte .argent-total .nb { font-weight: 800; }
+.refonte .argent-total .nb { font-weight: 600; }
 .refonte .argent-gagne { margin: 0; font-size: 16px; }
-.refonte .aide-bulle { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-left: 6px; border: 1.5px solid var(--texte-doux); border-radius: 50%; background: transparent; color: var(--texte-doux); font-size: 15px; font-weight: 700; cursor: help; vertical-align: middle; }
+.refonte .aide-bulle { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-left: 6px; border: 1.5px solid var(--texte-doux); border-radius: 50%; background: transparent; color: var(--texte-doux); font-size: 15px; font-weight: 600; cursor: help; vertical-align: middle; }
 .refonte .titre-pour-valider { margin: 8px 0 12px; font-size: 24px; line-height: 1.25; }
 .refonte .fin-de-mois { display: grid; gap: 8px; justify-items: start; margin-bottom: 20px; }
-.refonte .fin-raison { margin: 0; font-size: 16px; font-weight: 700; color: var(--texte); }
+.refonte .fin-raison { margin: 0; font-size: 16px; font-weight: 600; color: var(--texte); }
 .refonte .fin-phrase { margin: 0; max-width: 70ch; font-size: 16px; color: var(--texte-doux); }
 .refonte .liste-fin { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
 .refonte .ligne-fin { border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); }
 .refonte .ligne-fin > details > summary { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; min-height: 56px; padding: 10px 16px; cursor: pointer; list-style: none; }
 .refonte .ligne-fin > details > summary::-webkit-details-marker { display: none; }
-.refonte .ligne-fin-n { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); font-size: 15px; font-weight: 700; }
+.refonte .ligne-fin-n { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); font-size: 15px; font-weight: 600; }
 .refonte .ligne-fin-titre { font-size: 16px; font-weight: 600; line-height: 1.35; }
-.refonte .etat-ligne { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; width: fit-content; font-size: 15px; font-weight: 700; }
+.refonte .etat-ligne { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; width: fit-content; font-size: 15px; font-weight: 600; }
 .refonte .etat-ligne--fait { color: #1b6b3b; }
 .refonte .etat-ligne--afaire { color: #1f4e8c; }
 .refonte .etat-ligne--manque { color: #b3261e; }
@@ -35,13 +35,13 @@
 .refonte .ligne-fin-cartes:empty { display: none; }
 .refonte .carte-liste { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface-2); font-size: 16px; }
 .refonte .carte-liste--prochaine { border: 2px solid #b23f16; background: #fff; }
-.refonte .prochaine-titre { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: 0.02em; color: #8a3010; text-transform: uppercase; }
-.refonte .carte-liste-titre { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 17px; font-weight: 700; line-height: 1.3; }
+.refonte .prochaine-titre { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: #8a3010; text-transform: uppercase; }
+.refonte .carte-liste-titre { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 17px; font-weight: 600; line-height: 1.3; }
 .refonte .carte-liste-texte { margin: 0; color: var(--texte); }
 .refonte .carte-liste-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
 .refonte .carte-liste-alt { margin: 0; font-size: 15px; color: var(--texte-doux); }
 .refonte .se-traite { margin: 0; font-size: 14px; color: var(--texte-doux); }
-.refonte .comment-obtenir summary { cursor: pointer; font-weight: 700; text-decoration: underline; min-height: 32px; }
+.refonte .comment-obtenir summary { cursor: pointer; font-weight: 600; text-decoration: underline; min-height: 32px; }
 .refonte .comment-obtenir p { margin: 6px 0 0; }
 .refonte .ops-courtes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .refonte .ops-courtes li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--bord); }
@@ -54,21 +54,21 @@
 .refonte .frise-mois { list-style: none; margin: 0 0 20px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .refonte .mois { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); }
 .refonte .mois--cours { border: 2px solid #b23f16; }
-.refonte .mois-nom { font-weight: 700; font-size: 16px; }
+.refonte .mois-nom { font-weight: 600; font-size: 16px; }
 .refonte .mois-etat { display: inline-flex; gap: 4px; align-items: center; font-size: 15px; }
 .refonte .mois--valide .mois-etat { color: #1b6b3b; }
-.refonte .mois-gagne { font-size: 15px; font-weight: 700; }
+.refonte .mois-gagne { font-size: 15px; font-weight: 600; }
 .refonte .fin-annee-carte { display: grid; gap: 8px; justify-items: start; padding: 16px; border: 1px solid var(--bord); border-radius: 12px; }
 .refonte .equipes-liste { list-style: none; margin: 8px 0 16px; padding: 0; display: grid; gap: 8px; }
 .refonte .equipes-liste li { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(0, 2fr) minmax(170px, 1fr); gap: 2px 16px; padding: 12px 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); font-size: 16px; }
-.refonte .eq-nom { font-weight: 700; }
+.refonte .eq-nom { font-weight: 600; }
 .refonte .eq-role { color: var(--texte-doux); font-size: 15px; }
-.refonte .eq-etat { display: inline-flex; gap: 4px; align-items: center; font-weight: 700; color: #1b6b3b; }
+.refonte .eq-etat { display: inline-flex; gap: 4px; align-items: center; font-weight: 600; color: #1b6b3b; }
 .refonte .eq-etat--attend { color: #1f4e8c; }
 .refonte .eq-heure { grid-column: 3; font-size: 14px; color: var(--texte-doux); }
 .refonte .trois-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .refonte .mode-carte { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); align-content: start; }
-.refonte .mode-libelle { margin: 0; font-weight: 800; font-size: 16px; }
+.refonte .mode-libelle { margin: 0; font-weight: 600; font-size: 16px; }
 
 /* ---- Ma banque ---- */
 .refonte .banque-resume { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); font-size: 16px; }
@@ -77,18 +77,18 @@
 .refonte .liste-ops { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
 .refonte .op { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; padding: 12px 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); font-size: 16px; }
 .refonte .op-principal { display: grid; gap: 2px; min-width: 0; }
-.refonte .op-lib { font-weight: 700; }
+.refonte .op-lib { font-weight: 600; }
 .refonte .op-sous { font-size: 15px; color: var(--texte-doux); }
-.refonte .op-montant { font-weight: 800; white-space: nowrap; text-align: right; }
+.refonte .op-montant { font-weight: 600; white-space: nowrap; text-align: right; }
 .refonte .op-etat { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .refonte .op-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 12px; }
-.refonte .pastille-etat { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 700; background: var(--surface-2); color: var(--texte); border: 1px solid var(--bord); }
+.refonte .pastille-etat { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; background: var(--surface-2); color: var(--texte); border: 1px solid var(--bord); }
 .refonte .pastille-etat--ok { color: #1b6b3b; }
 .refonte .pastille-etat--propose { color: #1f4e8c; }
 .refonte .pastille-etat--manque { color: #b3261e; }
 .refonte .filtre-etats { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
 .refonte .filtre-etats .puce { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--bord); border-radius: 22px; background: var(--surface); font-size: 15px; color: var(--texte); text-decoration: none; }
-.refonte .filtre-etats .puce[aria-pressed="true"] { border-color: #b23f16; color: #8a3010; font-weight: 700; }
+.refonte .filtre-etats .puce[aria-pressed="true"] { border-color: #b23f16; color: #8a3010; font-weight: 600; }
 .refonte .tableau-soldes { width: 100%; border-collapse: collapse; font-size: 16px; background: var(--surface); border: 1px solid var(--bord); }
 .refonte .tableau-soldes th, .refonte .tableau-soldes td { padding: 10px 12px; border-bottom: 1px solid var(--bord); text-align: left; vertical-align: top; }
 .refonte .tableau-soldes th { font-size: 15px; background: var(--surface-2); }
@@ -99,11 +99,11 @@
 /* ---- Mes déclarations ---- */
 .refonte .carte-decl { display: grid; gap: 8px; margin-bottom: 12px; padding: 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); }
 .refonte .carte-decl--proche { border: 2px solid #b23f16; }
-.refonte .carte-decl-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.refonte .carte-decl-titre { margin: 0; font-size: 18px; font-weight: 600; }
 .refonte .carte-decl-bloque { margin: 0; font-size: 16px; }
 .refonte .liste-dates { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 8px; }
 .refonte .date-ligne { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; padding: 12px 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); font-size: 16px; }
-.refonte .date-nom { font-weight: 700; }
+.refonte .date-nom { font-weight: 600; }
 .refonte .date-pourquoi { grid-column: 1 / -1; font-size: 15px; color: var(--texte-doux); }
 .refonte .mois-titre { margin: 16px 0 8px; font-size: 18px; }
 .refonte .mentions-fixes { display: grid; gap: 4px; margin: 16px 0; font-size: 15px; color: var(--texte-doux); }
@@ -118,7 +118,7 @@
 .refonte .choix-ajout { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .refonte .choix-ajout a { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 2px 12px; align-items: start; padding: 12px 16px; border: 1px solid var(--bord); border-radius: 12px; color: var(--texte); text-decoration: none; min-height: 56px; }
 .refonte .choix-ajout .ico { grid-row: 1 / span 2; margin-top: 2px; color: #8a3010; }
-.refonte .choix-titre { font-weight: 700; font-size: 16px; }
+.refonte .choix-titre { font-weight: 600; font-size: 16px; }
 .refonte .choix-aide { font-size: 15px; color: var(--texte-doux); }
 .refonte .ligne-connecter { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--bord); font-size: 16px; }
 .refonte .tri-assistant { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface-2); font-size: 16px; }
@@ -154,12 +154,12 @@
 .refonte .doc-ligne { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--bord); }
 .refonte .doc-icone { color: var(--texte-doux); padding-top: 2px; }
 .refonte .doc-texte { display: grid; gap: 2px; min-width: 0; }
-.refonte .doc-titre { font-weight: 700; font-size: 16px; }
+.refonte .doc-titre { font-weight: 600; font-size: 16px; }
 .refonte .doc-sous { font-size: 15px; color: var(--texte-doux); }
 .refonte .doc-droite { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: flex-end; text-align: right; max-width: 360px; }
 .refonte .etiquette-source { display: inline-block; padding: 1px 8px; border: 1px solid var(--bord); border-radius: 999px; font-size: 14px; color: var(--texte); background: var(--surface-2); }
-.refonte .reliee-op--non { color: #b3261e; font-weight: 700; }
-.refonte .bandeau-indicatif { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; padding: 10px 14px; border: 1px solid #b3261e; border-radius: 10px; background: #fdf1ef; font-weight: 700; font-size: 16px; }
+.refonte .reliee-op--non { color: #b3261e; font-weight: 600; }
+.refonte .bandeau-indicatif { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; padding: 10px 14px; border: 1px solid #b3261e; border-radius: 10px; background: #fdf1ef; font-weight: 600; font-size: 16px; }
 .refonte .bloc-fixe { margin-top: 8px; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); font-size: 16px; }
 @media (max-width: 1023px) {
   .refonte .doc-ligne { grid-template-columns: 28px minmax(0, 1fr); }
@@ -198,4 +198,4 @@
 .refonte .ligne-fin > .figee-details > .figee-summary { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; min-height: 56px; padding: 10px 16px; }
 .refonte .cadre--maquette .ligne-fin > .figee-details > .figee-summary { grid-template-columns: 32px minmax(0, 1fr); }
 .refonte .figee-details:not([open]) > .ligne-fin-cartes, .refonte .figee-details:not([open]) > .figee-summary ~ * { display: none; }
-.refonte .figee-details .figee-summary { font-weight: 700; }
+.refonte .figee-details .figee-summary { font-weight: 600; }

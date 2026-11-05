@@ -83,11 +83,11 @@
 .refonte .cadre--chat-moitie .bande-assistant .bande-ass-sous { display: none; }
 .refonte .fil-ariane { margin: 0 0 4px; font-size: 15px; color: var(--texte-doux); }
 .refonte .retour-page { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; min-height: 44px; color: var(--texte); font-size: 16px; text-decoration: underline; }
-.refonte .nav2 .bouton-ajouter[aria-current="page"] { box-shadow: 0 0 0 3px var(--nav-fond), 0 0 0 5px var(--surface); font-weight: 700; }
+.refonte .nav2 .bouton-ajouter[aria-current="page"] { box-shadow: 0 0 0 3px var(--nav-fond), 0 0 0 5px var(--surface); font-weight: 600; }
 .refonte .seul-mobile { display: none; }
 @media (max-width: 1023px) { .refonte .seul-mobile { display: inline-flex; } }
 .refonte .cadre--maquette > .chat .chat-fil { overflow-y: auto; scrollbar-width: thin; }
-@media (max-width: 1023px) { .refonte .lu-bloc dl { display: grid; grid-template-columns: 1fr; gap: 2px; } .refonte .lu-bloc dt { font-weight: 700; margin-top: 8px; } .refonte .lu-bloc dd { margin: 0; } }
+@media (max-width: 1023px) { .refonte .lu-bloc dl { display: grid; grid-template-columns: 1fr; gap: 2px; } .refonte .lu-bloc dt { font-weight: 600; margin-top: 8px; } .refonte .lu-bloc dd { margin: 0; } }
 
 /* Discussion en plein écran (liste + fil) : l'ordre des quatre parties du fil de discussion ne touche pas cette coque */
 .refonte .chat--discussion .chat-tete, .refonte .chat--discussion .chat-contexte, .refonte .chat--discussion .chat-fil, .refonte .chat--discussion .chat-bas { order: 0; }

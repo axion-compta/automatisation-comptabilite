@@ -1381,7 +1381,7 @@
 .refonte .carte-chat { background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon-bloc); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
 .refonte .carte-action--anomalie { border-left: 4px solid var(--attention); }
 .refonte .carte-action--manque { border-left: 4px solid var(--manque); }
-.refonte .type-carte { display: flex; align-items: center; gap: 8px; font-weight: 700; margin: 0; }
+.refonte .type-carte { display: flex; align-items: center; gap: 8px; font-weight: 600; margin: 0; }
 .refonte .type-carte--anomalie { color: var(--attention); }
 .refonte .type-carte--manque { color: var(--manque); }
 .refonte .raison { margin: 4px 0; color: var(--texte); }
@@ -1408,7 +1408,7 @@
 @media (min-width: 1024px) {
   .refonte .barre-haut { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 24px; }
   .refonte .barre-haut-gauche { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 12px; }
-  .refonte .barre-titre { font-weight: 700; font-size: 18px; white-space: nowrap; }
+  .refonte .barre-titre { font-weight: 600; font-size: 18px; white-space: nowrap; }
   .refonte .barre-haut .loupe { flex: 0 1 300px; min-width: 240px; }
   .refonte .barre-haut .annee-mobile { display: none; }
   .refonte .coin-demo--barre { position: static; transform: none; flex: none; white-space: nowrap; }
@@ -1463,7 +1463,7 @@
 .refonte .tuile-lien { color: inherit; text-decoration: none; }
 .refonte .tuile-lien::after { content: ""; position: absolute; inset: 0; }
 .refonte .tuile-titre .demander-ia { margin-left: auto; position: relative; z-index: 1; }
-.refonte .tuile-chiffre { margin: 0; font-size: 28px; line-height: 1.15; font-weight: 700; font-variant-numeric: tabular-nums; }
+.refonte .tuile-chiffre { margin: 0; font-size: 28px; line-height: 1.15; font-weight: 600; font-variant-numeric: tabular-nums; }
 .refonte .chiffre-sep { color: var(--texte-doux); font-weight: 400; }
 .refonte .tuile-pied { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0; }
 .refonte .tuile-sous { font-size: 14px; color: var(--texte-doux); margin: 0; }
@@ -1502,7 +1502,7 @@
 .refonte .champs-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .refonte .champs-grille .champ-v2 { margin: 0; }
 .refonte input.num { text-align: right; font-variant-numeric: tabular-nums; }
-.refonte .champ-total input { font-weight: 700; background: var(--surface-2); }
+.refonte .champ-total input { font-weight: 600; background: var(--surface-2); }
 .refonte .filtre-liste { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--bord); border-radius: var(--rayon-saisie); background: var(--surface); color: var(--texte); white-space: nowrap; }
 @media (max-width: 1023px) { .refonte .champs-grille { grid-template-columns: 1fr; } .refonte .pile-liste li { grid-template-columns: 20px minmax(0, 1fr) auto; } .refonte .pile-liste .pl-type { display: none; } .refonte .lu-replie dl { grid-template-columns: 1fr; } }
 
@@ -1563,7 +1563,7 @@
 .refonte .entete-feuille { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .refonte .entete-feuille .titre-page-v2 { margin: 0; }
 .refonte .papier--haut { min-height: 480px; }
-.refonte .papier-gros { font-size: 20px; font-weight: 700; margin: 16px 0; }
+.refonte .papier-gros { font-size: 20px; font-weight: 600; margin: 16px 0; }
 .refonte .piece-outils { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 .refonte .piece-nom { margin-left: auto; color: var(--texte-doux); }
 .refonte .doute-expl { margin: 4px 0 0; display: flex; align-items: flex-start; gap: 8px; color: var(--info); font-size: 14px; }
@@ -1571,7 +1571,7 @@
 
 /* ---- E54 ---- */
 .refonte .etapes-haut { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.refonte .etapes-haut .compteur-meme { margin: 0; font-weight: 700; }
+.refonte .etapes-haut .compteur-meme { margin: 0; font-weight: 600; }
 .refonte .lignes-comptes { list-style: none; margin: 8px 0; padding: 0; border: 1px solid var(--bord); border-radius: var(--rayon-bloc); }
 .refonte .ligne-compte { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 48px; padding: 4px 16px; }
 .refonte .ligne-compte + .ligne-compte { border-top: 1px solid var(--bord); }
@@ -1627,7 +1627,7 @@
 @media (max-width: 1023px) { .refonte .disc-corps { grid-template-columns: 1fr; } .refonte .disc-liste { display: none; } .refonte .cadre--chat-plein > .chat { position: fixed; inset: 0; z-index: 40; background: var(--surface); } .refonte .cadre--chat-plein > .nav, .refonte .cadre--chat-plein ~ .mobile-discuter { display: none; } }
 
 /* ---- Voix et états ---- */
-.refonte .btn-arreter { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; padding: 0 16px; border: 2px solid var(--manque); border-radius: 999px; background: var(--surface); color: var(--manque); font-weight: 700; }
+.refonte .btn-arreter { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; padding: 0 16px; border: 2px solid var(--manque); border-radius: 999px; background: var(--surface); color: var(--manque); font-weight: 600; }
 .refonte .voix-etat { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .refonte .bandeau-annuler--chat { background: transparent; padding: 0; border: 0; }
 .refonte .vignette-doc { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); max-width: 100%; }
@@ -1643,7 +1643,7 @@
 /* ---- E10 : carte centrée de 400 px, nom du produit, erreur en rouge ---- */
 .refonte .carte-connexion { width: min(400px, calc(100% - 32px)); margin: 48px auto 24px; padding: 32px 24px; background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; box-shadow: var(--ombre-douce); display: flex; flex-direction: column; gap: 12px; }
 .refonte .carte-connexion .bloc { border: 0; padding: 0; box-shadow: none; background: transparent; display: flex; flex-direction: column; gap: 12px; }
-.refonte .marque { display: flex; align-items: center; gap: 12px; margin: 0; font-weight: 800; font-size: 20px; }
+.refonte .marque { display: flex; align-items: center; gap: 12px; margin: 0; font-weight: 600; font-size: 20px; }
 .refonte .carte-connexion .btn-plein { width: 100%; }
 .refonte .carte-connexion .btn-texte { align-self: center; min-height: 44px; }
 .refonte .creer, .refonte .pied-probleme { text-align: center; margin: 0; }
@@ -1944,7 +1944,7 @@
 /* Trois états seulement : vert / bleu / rouge. L'orange de #b23f16 reste réservé au logo et au menu. */
 .refonte { --attention: var(--manque); --attention-fond: var(--manque-fond); }
 .refonte .frise li.proche { border-color: var(--bord); }
-.refonte .frise li.proche strong { font-weight: 800; color: var(--texte); }
+.refonte .frise li.proche strong { font-weight: 600; color: var(--texte); }
 .refonte .carte-action--anomalie, .refonte .carte-action--manque { border-left: 4px solid var(--manque); }
 .refonte .type-carte--anomalie, .refonte .type-carte--manque { color: var(--manque); }
 .refonte .pastille-ouverte { background: none; padding: 0; color: var(--texte-doux); font-weight: 600; }
@@ -2332,7 +2332,7 @@
 .refonte .encadre--indicatif { background: var(--surface-2); border: 1px solid var(--bord); border-radius: 12px; padding: 10px 16px; margin: 0 0 12px; }
 .refonte .encadre--indicatif p { margin: 0; }
 .refonte .filigrane-indicatif { position: relative; overflow: hidden; }
-.refonte .filigrane-indicatif::after { content: "Indicatif"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 800; letter-spacing: .2em; color: rgba(60, 50, 40, .07); transform: rotate(-12deg); pointer-events: none; }
+.refonte .filigrane-indicatif::after { content: "Indicatif"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 600; letter-spacing: .2em; color: rgba(60, 50, 40, .07); transform: rotate(-12deg); pointer-events: none; }
 /* Mobile : une ligne de document sans montant garde toute la largeur pour son texte. */
 @media (max-width: 1023px) {
   .refonte .ligne-doc { grid-template-columns: 40px minmax(0, 1fr) auto; }
@@ -2358,7 +2358,7 @@
 .refonte .plus-lib { flex: 1 1 auto; min-width: 0; font-weight: 600; }
 .refonte .plus-valeur { flex: 0 1 auto; min-width: 0; color: var(--texte-doux); font-size: 14px; text-align: right; }
 .refonte .plus-fleche { flex: none; width: 20px; height: 20px; color: var(--texte-doux); }
-.refonte .plus-ligne .nav-compteur { flex: none; position: static; display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #b23f16; color: #fff; font-size: 14px; font-weight: 700; }
+.refonte .plus-ligne .nav-compteur { flex: none; position: static; display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #b23f16; color: #fff; font-size: 14px; font-weight: 600; }
 /* Feuille d'ajout en bas d'écran */
 .refonte .tel-cadre--voile { position: relative; background: #5b524b; }
 .refonte .tel-cadre--voile .bandeau-mobile, .refonte .tel-cadre--voile .barre-mobile { opacity: .45; }
@@ -2369,7 +2369,7 @@
 .refonte .feuille-ajout-bas .phrase-page { margin: 0; }
 .refonte .fb-depot { display: grid; gap: 8px; padding: 12px; margin: 4px 0; border: 2px dashed var(--bord); border-radius: 12px; background: var(--surface-2); }
 .refonte .fb-depot .btn-contour { width: 100%; min-height: 48px; justify-content: center; gap: 8px; }
-.refonte .fb-depot .fb-photo { min-height: 56px; font-weight: 700; }
+.refonte .fb-depot .fb-photo { min-height: 56px; font-weight: 600; }
 .refonte .fb-depot .mention { margin: 0; }
 .refonte .fb-choix { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 0; color: var(--texte); text-decoration: none; }
 .refonte .fb-liste li + li { border-top: 1px solid var(--bord); }
