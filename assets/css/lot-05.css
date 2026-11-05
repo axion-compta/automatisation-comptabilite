@@ -1,0 +1,40 @@
+/* Lot 05 : clôture, associés, reprise, démarrage. Jetons existants seulement. */
+.refonte.rv .l5-barre{height:10px;border-radius:999px;background:var(--c-creuse);overflow:hidden}
+.refonte.rv .l5-barre span{display:block;height:100%;width:calc(100% * var(--l5-n) / var(--l5-t));background:var(--c-texte)}
+.refonte.rv .l5-blocage{display:flex;gap:8px;align-items:flex-start;margin:0;padding:12px 16px;border-radius:14px;background:var(--c-ro-f);color:var(--c-ro-t);font-weight:600}
+.refonte.rv .l5-etat{display:flex;gap:8px;align-items:center;margin:0;padding:10px 14px;border-radius:14px;font-weight:600}
+.refonte.rv .l5-etat--brique{background:var(--c-ro-f);color:var(--c-ro-t)}
+.refonte.rv .l5-bienvenue{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:14px 18px;border-radius:22px;background:var(--c-peche-f);color:var(--c-texte)}
+.refonte.rv .l5-grille{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.refonte.rv .l5-grille--4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.refonte.rv .l5-tuile{display:grid;gap:4px;justify-items:start;text-align:left;min-height:88px;padding:14px 16px;border:1px solid var(--c-bord);border-radius:18px;background:var(--c-surface);color:var(--c-texte);font:inherit;cursor:pointer}
+.refonte.rv .l5-tuile strong{font-weight:600}
+.refonte.rv .l5-tuile small{color:var(--c-texte-2)}
+.refonte.rv .l5-tuile--sel{border:2px solid var(--c-texte)}
+.refonte.rv .l5-champ{display:grid;gap:4px}
+.refonte.rv .l5-champ input{min-height:44px;padding:0 14px;border:1px solid var(--c-bord);border-radius:14px;background:var(--c-surface);color:var(--c-texte);font:inherit}
+.refonte.rv .l5-champ small{color:var(--c-texte-2)}
+.refonte.rv .l5-deux{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.refonte.rv .l5-case{display:flex;gap:10px;align-items:center;min-height:44px}
+.refonte.rv .l5-a4{position:relative;display:grid;gap:8px;align-content:start;aspect-ratio:210/297;padding:16px;border:1px solid var(--c-bord);border-radius:12px;background:var(--c-surface);overflow:hidden}
+.refonte.rv .l5-a4 small{color:var(--c-texte-2)}
+.refonte.rv .l5-a4 i{display:block;height:8px;border-radius:4px;background:var(--c-bord)}
+.refonte.rv .l5-filigrane{position:absolute;inset:0;display:grid;place-items:center;transform:rotate(-24deg);font-size:28px;font-weight:600;color:var(--c-texte-3,#b9b1a8);opacity:.5;pointer-events:none}
+.refonte.rv .l5-pile{display:grid;gap:0}
+.refonte.rv .l5-pile span{padding:10px 14px;border:1px solid var(--c-bord);border-radius:14px;background:var(--c-surface)}
+.refonte.rv .l5-pile span+span{margin-top:-4px;margin-left:10px}
+.refonte.rv .l5-conf{display:grid;gap:12px;padding:14px;border:1px dashed var(--c-bord-fort,var(--c-bord));border-radius:18px}
+.refonte.rv .l5-conf p{display:flex;gap:8px;margin:0}
+.refonte.rv .l5-init{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--c-creuse);font-weight:600}
+.refonte.rv .l5-depot{display:grid;gap:10px;justify-items:center;text-align:center;padding:24px;border:2px dashed var(--c-bord);border-radius:22px}
+.refonte.rv .l5-frise{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.refonte.rv .l5-jalon{display:grid;gap:6px}
+.refonte.rv .l5-jalon>span{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--c-texte);color:var(--c-surface);font-weight:600}
+.refonte.rv .l5-chiffre{display:grid;gap:4px;justify-items:start;padding:14px;border:1px solid var(--c-bord);border-radius:18px}
+.refonte.rv .l5-chiffre strong{font-size:24px;font-weight:600}
+.refonte.rv .l5-chiffre small{color:var(--c-texte-2)}
+.refonte.rv .l5-toast{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:720px){
+ .refonte.rv .l5-grille,.refonte.rv .l5-grille--4,.refonte.rv .l5-frise,.refonte.rv .l5-deux{grid-template-columns:1fr}
+ .refonte.rv .l5-a4{aspect-ratio:auto;min-height:120px}
+}

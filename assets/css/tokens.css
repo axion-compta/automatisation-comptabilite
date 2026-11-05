@@ -9,9 +9,9 @@
     --texte: #1f1d1a;
     --texte-doux: #5f5a53;
     --bord: #ece8e1;
-    --accent: #0f766e;
-    --accent-survol: #115e59;
-    --accent-doux: #e6f4f1;
+    --accent: #c24a1b;
+    --accent-survol: #a83e15;
+    --accent-doux: #fbeee8;
     --ok: #15803d;
     --ok-fond: #e8f5ec;
     --attention: #b45309;
@@ -155,8 +155,8 @@
     --police-taille-grand-chiffre: 48px;
     --police-graisse-normale: 500;
     --police-graisse-forte: 600;
-    --police-graisse-libelle: 700;
-    --police-graisse-libelle-fort: 800;
+    --police-graisse-libelle: 600;
+    --police-graisse-libelle-fort: 600;
     --espace-1: 4px;
     --espace-2: 8px;
     --espace-3: 12px;
@@ -191,7 +191,7 @@
     --action-survol: #9a3812;
     --action-doux: #fbeee8;
     --sur-action: #ffffff;
-    --ia: #0f766e;
+    --ia: #c24a1b;
     --focus-sur-nav: #ffffff;
     --voile: rgb(31 29 26 / 0.4);
     --rv-fond: #f3ece2;

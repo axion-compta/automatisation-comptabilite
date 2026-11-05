@@ -1,0 +1,68 @@
+/* Lot 06 : Réglages. Compléments de style uniquement (aucun fichier existant modifié). */
+.refonte.rv strong { font-weight: 600; }
+.refonte.rv .l6-sections { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.refonte.rv .l6-sections a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--c-bord, #ece8e1); border-radius: 999px; font-size: 13px; text-decoration: none; color: var(--c-texte-2, #4a463f); background: var(--c-surface, #fff); }
+.refonte.rv .l6-sections a[aria-current="page"] { background: var(--c-creuse, #f3f1ec); font-weight: 600; border-color: var(--c-bord-fort, #d6d0c6); }
+.refonte.rv .l6-carte { display: grid; gap: 12px; }
+.refonte.rv .l6-h2 { margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.refonte.rv .l6-p { margin: 0; font-size: 14px; color: var(--c-texte-2, #4a463f); }
+.refonte.rv .l6-effet { margin: 0; font-size: 13px; color: var(--c-texte-3, #5f5a53); }
+.refonte.rv .l6-mention { margin: 0; font-size: 13px; color: var(--c-texte-3, #5f5a53); display: flex; align-items: center; gap: 6px; }
+.refonte.rv .l6-etat { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.refonte.rv .l6-etat .ico { flex: none; }
+.refonte.rv .l6-boutons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.refonte.rv .l6-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.refonte.rv .l6-champ { display: grid; gap: 4px; font-size: 13px; font-weight: 600; min-width: 0; }
+.refonte.rv .l6-champ input[type="text"], .refonte.rv .l6-champ input[type="email"], .refonte.rv .l6-champ select, .refonte.rv .l6-confirm-corps input[type="text"] { min-height: 44px; padding: 0 12px; border: 1px solid var(--c-bord-fort, #d6d0c6); border-radius: 12px; background: var(--c-surface, #fff); font: inherit; font-size: 14px; font-weight: 400; color: inherit; min-width: 0; }
+.refonte.rv .l6-masque { letter-spacing: 2px; }
+.refonte.rv .l6-choix { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px; border: 1px solid var(--c-bord, #ece8e1); border-radius: 16px; cursor: pointer; }
+.refonte.rv .l6-choix:has(input:checked) { border-color: var(--c-bord-fort, #8a847a); background: var(--c-creuse, #f3f1ec); }
+.refonte.rv .l6-choix input { width: 22px; height: 22px; margin-top: 2px; }
+.refonte.rv .l6-choix-titre { font-weight: 600; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.refonte.rv .l6-choix-sous { display: block; font-size: 13px; color: var(--c-texte-3, #5f5a53); margin-top: 2px; }
+.refonte.rv .l6-liste { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.refonte.rv .l6-liste li { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.refonte.rv .l6-liste .ico { flex: none; margin-top: 2px; }
+.refonte.rv .l6-table-cadre { overflow-x: auto; }
+.refonte.rv .l6-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.refonte.rv .l6-table th, .refonte.rv .l6-table td { padding: 10px 8px; text-align: left; border-top: 1px solid var(--c-bord, #ece8e1); font-weight: 400; vertical-align: middle; }
+.refonte.rv .l6-table th { font-weight: 600; font-size: 13px; color: var(--c-texte-3, #5f5a53); border-top: 0; }
+.refonte.rv .l6-avatar { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: var(--c-creuse, #f3f1ec); border: 1px solid var(--c-bord-fort, #d6d0c6); font-size: 12px; font-weight: 600; margin-right: 8px; flex: none; }
+.refonte.rv .l6-nom { display: inline-flex; align-items: center; }
+.refonte.rv .l6-jauge { width: 100%; height: 12px; accent-color: var(--c-action); }
+.refonte.rv .l6-confirm { border: 1px dashed var(--c-bord-fort, #d6d0c6); border-radius: 16px; padding: 4px; }
+.refonte.rv .l6-confirm > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; font-weight: 600; font-size: 14px; }
+.refonte.rv .l6-confirm > summary::-webkit-details-marker { display: none; }
+.refonte.rv .l6-confirm[open] > summary { margin-bottom: 4px; }
+.refonte.rv .l6-confirm-corps { display: grid; gap: 10px; padding: 8px 12px 12px; }
+.refonte.rv .l6-confirm-corps p { margin: 0; font-size: 14px; }
+.refonte.rv .l6-confirm-corps ul { margin: 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
+.refonte.rv .l6-repere { border-left: 3px solid var(--c-bord-fort, #8a847a); padding-left: 12px; }
+.refonte.rv .l6-cases { display: grid; gap: 8px; }
+.refonte.rv .l6-case { display: flex; gap: 10px; align-items: center; font-size: 14px; min-height: 36px; }
+.refonte.rv .l6-case input { width: 22px; height: 22px; }
+.refonte.rv details.l6-sujet { border: 1px solid var(--c-bord, #ece8e1); border-radius: 16px; padding: 0 14px; }
+.refonte.rv details.l6-sujet > summary { cursor: pointer; min-height: 48px; display: flex; align-items: center; font-weight: 600; font-size: 14px; }
+.refonte.rv details.l6-sujet > div { padding: 0 0 14px; display: grid; gap: 8px; font-size: 14px; }
+.refonte.rv details.l6-sujet p { margin: 0; }
+.refonte.rv .l6-etapes { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.refonte.rv .l6-etapes li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--c-bord, #ece8e1); border-radius: 999px; font-size: 13px; }
+.refonte.rv .l6-etapes li[aria-current="step"] { font-weight: 600; background: var(--c-creuse, #f3f1ec); }
+.refonte.rv .l6-sections a:focus-visible, .refonte.rv .l6-confirm > summary:focus-visible, .refonte.rv .l6-choix:focus-within, .refonte.rv .l6-table-cadre :focus-visible { outline: 3px solid var(--c-action); outline-offset: 2px; }
+@media (max-width: 720px) {
+  .refonte.rv .l6-grille { grid-template-columns: 1fr; }
+  .refonte.rv .l6-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .refonte.rv .l6-table, .refonte.rv .l6-table tbody, .refonte.rv .l6-table tr, .refonte.rv .l6-table td { display: block; width: 100%; }
+  .refonte.rv .l6-table tr { padding: 8px 0; border-top: 1px solid var(--c-bord, #ece8e1); }
+  .refonte.rv .l6-table td { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 0; padding: 4px 0; text-align: right; }
+  .refonte.rv .l6-table td::before { content: attr(data-label); font-weight: 600; font-size: 13px; color: var(--c-texte-3, #5f5a53); text-align: left; }
+  .refonte.rv .l6-table td:first-child { justify-content: flex-start; text-align: left; }
+  .refonte.rv .l6-table td:first-child::before { content: none; }
+  .refonte.rv .l6-table td:empty { display: none; }
+}
+
+/* Relecture : 13 pastilles regroupées en 4 familles */
+.refonte.rv .l6-sections--familles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 20px; }
+.refonte.rv .l6-famille { list-style: none; display: grid; gap: 6px; align-content: start; }
+.refonte.rv .l6-famille-titre { font-size: 13px; font-weight: 600; color: var(--c-texte-3, #5f5a53); }
+.refonte.rv .l6-famille-liste { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }

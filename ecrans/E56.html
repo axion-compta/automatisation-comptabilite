@@ -25,7 +25,7 @@
 .refonte.rv .H-contexte { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--rv-pas-2); font-size: 14px; font-weight: 600; color: var(--c-texte-3); }
 .refonte.rv .H-heros .rv-heros-haut { display: grid; gap: var(--rv-pas-2); }
 .refonte.rv .H-heros-droite { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rv-pas-2); }
-.refonte.rv .H-legende-courbes { display: flex; flex-wrap: wrap; gap: var(--rv-pas-3); font-size: 13px; font-weight: 700; color: var(--c-texte-2); }
+.refonte.rv .H-legende-courbes { display: flex; flex-wrap: wrap; gap: var(--rv-pas-3); font-size: 13px; font-weight: 600; color: var(--c-texte-2); }
 .refonte.rv .H-legende-courbes span { display: inline-flex; align-items: center; gap: 6px; }
 .refonte.rv .H-cle { display: inline-block; width: 22px; height: 0; border-top: 3px solid var(--rv-menu); border-radius: 2px; }
 .refonte.rv .H-cle--n1 { border-top: 2px dashed var(--c-texte-3); opacity: .8; }
@@ -50,7 +50,7 @@
 .refonte.rv .H-bulle { position: absolute; transform: translate(-50%, calc(-100% - 12px)); padding: 3px 9px; border-radius: 999px; background: var(--c-surface); border: 1px solid var(--c-bord-fort); font: 800 14px/1.3 var(--police-famille-texte); color: var(--c-texte); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--o-carte); }
 .refonte.rv .H-bulle--gauche { transform: translate(calc(-100% + 14px), calc(-100% - 12px)); }
 .refonte.rv .H-zone-estimee { position: absolute; top: 0; bottom: 0; border-radius: 10px; background: repeating-linear-gradient(135deg, var(--c-creuse) 0 6px, transparent 6px 12px); border-left: 1px dashed var(--c-bord-fort); }
-.refonte.rv .H-zone-estimee span { position: absolute; bottom: 2px; right: 4px; font-size: 13px; font-weight: 700; font-style: italic; color: var(--c-texte-3); }
+.refonte.rv .H-zone-estimee span { position: absolute; bottom: 2px; right: 4px; font-size: 13px; font-weight: 600; font-style: italic; color: var(--c-texte-3); }
 /* Blocs */
 .refonte.rv .H-bento { align-items: stretch; }
 .refonte.rv .H-bloc { gap: var(--rv-pas-2); grid-template-rows: auto auto; }
@@ -60,21 +60,21 @@
 .refonte.rv .H-val-sauge { color: var(--c-sauge-t); }
 .refonte.rv .H-bloc .rv-mini { width: 168px; height: 76px; max-width: 100%; overflow: visible; }
 .refonte.rv .H-barres { display: grid; grid-template-columns: max-content minmax(48px, 1fr) auto; gap: 10px var(--rv-pas-2); margin: var(--rv-pas-1) 0 0; padding: 0; list-style: none; }
-.refonte.rv .H-barres li { display: contents; font-size: 14px; font-weight: 700; color: var(--c-texte-2); }
-.refonte.rv .H-barre-lib, .refonte.rv .H-barre-val { font-size: 14px; font-weight: 700; color: var(--c-texte-2); white-space: nowrap; align-self: center; }
+.refonte.rv .H-barres li { display: contents; font-size: 14px; font-weight: 600; color: var(--c-texte-2); }
+.refonte.rv .H-barre-lib, .refonte.rv .H-barre-val { font-size: 14px; font-weight: 600; color: var(--c-texte-2); white-space: nowrap; align-self: center; }
 .refonte.rv .H-barre-piste { align-self: center; height: 14px; border-radius: 999px; background: var(--c-creuse); border: 1px solid var(--c-bord); overflow: hidden; }
 .refonte.rv .H-barre { display: block; height: 100%; border-radius: 999px; }
 .refonte.rv .H-b-ok { background: var(--c-ok-l); } .refonte.rv .H-b-ambre { background: var(--c-am-l); }
 .refonte.rv .H-b-rouge { background: var(--c-ro-l); } .refonte.rv .H-b-rouge-fort { background: var(--c-ro-t); }
 .refonte.rv .H-b-miel { background: color-mix(in srgb, var(--c-miel-t) 55%, var(--c-miel-f)); }
 .refonte.rv .H-barre-val { min-width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; color: var(--c-texte); }
-.refonte.rv .H-retard { margin: 0; display: flex; align-items: center; gap: var(--rv-pas-2); padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-ro-f); color: var(--c-ro-t); font-size: 14px; font-weight: 700; }
+.refonte.rv .H-retard { margin: 0; display: flex; align-items: center; gap: var(--rv-pas-2); padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-ro-f); color: var(--c-ro-t); font-size: 14px; font-weight: 600; }
 .refonte.rv .H-retard--calme { background: var(--c-creuse); color: var(--c-texte-2); }
 .refonte.rv .H-retard .ico { flex: none; width: 16px; height: 16px; }
-.refonte.rv .H-prevision { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--rv-pas-2); font-size: 14px; font-weight: 700; color: var(--c-texte-2); }
+.refonte.rv .H-prevision { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--rv-pas-2); font-size: 14px; font-weight: 600; color: var(--c-texte-2); }
 .refonte.rv .H-tva { margin: var(--rv-pas-1) 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--rv-pas-3); padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-creuse); }
 .refonte.rv .H-tva-texte { display: grid; gap: 2px; flex: 1 1 8em; min-width: 8em; }
-.refonte.rv .H-tva-lib { font-weight: 800; font-size: 15px; }
+.refonte.rv .H-tva-lib { font-weight: 600; font-size: 15px; }
 .refonte.rv .H-tva-val { flex: none; font: 600 24px/1 var(--police-famille-titre); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .refonte.rv .H-tva-sous { font-size: 13px; font-weight: 600; color: var(--c-texte-3); }
 .refonte.rv .H-pied { display: flex; justify-content: flex-end; margin-top: auto; }
@@ -82,7 +82,7 @@
 .refonte.rv .H-ia { flex-wrap: wrap; border-radius: var(--rv-rayon-bloc); }
 .refonte.rv .H-ia p { margin: 0; min-width: 12em; }
 .refonte.rv .H-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-.refonte.rv .H-table caption { text-align: left; font-weight: 800; padding-bottom: var(--rv-pas-1); }
+.refonte.rv .H-table caption { text-align: left; font-weight: 600; padding-bottom: var(--rv-pas-1); }
 .refonte.rv .H-table th, .refonte.rv .H-table td { padding: 6px 8px; border-bottom: 1px solid var(--c-bord); text-align: right; }
 .refonte.rv .H-table th[scope="row"], .refonte.rv .H-table th:first-child { text-align: left; font-weight: 600; }
 .refonte.rv .rv-carte .nb { font-variant-numeric: tabular-nums; }
@@ -241,6 +241,7 @@
       </div>
       <button class="bouton-ajouter" type="button" data-composant="BoutonAjouter" title="Ajouter une facture, un relevé, une note de frais…" data-vers="E03.html"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg><span class="nav-libelle">Ajouter</span></button>
       <ul class="nav-entrees">
+        <li><a class="nav-entree" aria-current="page" title="Mon activité" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="nav-libelle">Mon activité</span></a></li>
         <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span><span class="nav-compteur" aria-label="5 choses avant de valider octobre" role="img">5</span></a></li>
         <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span><span class="nav-compteur" aria-label="4 à traiter en banque" role="img">4</span></a></li>
         <li><a class="nav-entree" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a></li>
@@ -248,10 +249,10 @@
         <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
       </ul>
       <div class="nav-pied">
-        <a class="nav-entree nav-pied-lien" title="Réglages" href="#" data-toast="Les réglages ne sont pas détaillés dans la démonstration."><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
+        <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
         <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
         <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="E55.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
       </div>
     </nav>
     <div class="page">
@@ -381,6 +382,7 @@
             <div class="H-pied"><a class="btn-texte rv-btn-texte H-detail" href="E24.html" aria-label="Voir le détail : Mes factures">Voir le détail<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-arrow-right"/></svg></a></div>
           </section>
         </div>
+        <!-- demo-integ --><section class="rv-carte rv-bloc demo-aussi" aria-labelledby="h-demo-aussi"><div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-demo-aussi">Aller plus loin</h2></div><ul class="demo-aussi-liste"><li><a class="demo-aussi-lien" href="E59.html"><span>Mon bénéfice et mes impôts</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E23.html"><span>Mes alertes</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E15.html"><span>Le détail de ma compta</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="M01.html"><span>Voir sur téléphone</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li></ul></section><!-- demo-integ -->
       </main>
     </div>
     <aside class="chat" data-composant="PanneauChat" id="chat" aria-label="Discussion avec l'assistant">
@@ -415,7 +417,7 @@
     <li><a class="bm-item" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="bm-lib">Ma banque</span><span class="nav-compteur" role="img" aria-label="4 à traiter en banque">4</span></a></li>
     <li class="bm-plus"><button class="bm-ajouter" type="button" aria-label="Ajouter : prendre une facture en photo, déposer un fichier, saisir" title="Ajouter"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button></li>
     <li><a class="bm-item" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="bm-lib">Mes factures</span><span class="nav-compteur" role="img" aria-label="1 à suivre dans les factures">1</span></a></li>
-    <li><a class="bm-item" href="#" data-simule="1"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
+    <li><a class="bm-item" aria-current="page" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
   </ul></nav>
   <script src="../assets/js/demo.js" defer></script>
 </body>

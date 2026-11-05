@@ -31,7 +31,7 @@
 .refonte.rv .G-etape { height: 10px; border-radius: 999px; background: var(--c-ne-f); border: 1px solid var(--c-bord); }
 .refonte.rv .G-etape--fait { background: var(--c-ok-l); border-color: var(--c-ok-l); }
 .refonte.rv .G-etape--cours { background: var(--c-ia-l); border-color: var(--c-ia-l); }
-.refonte.rv .G-etapes-noms { display: flex; justify-content: space-between; gap: var(--rv-pas-2); font-size: 13px; font-weight: 700; color: var(--c-texte-3); }
+.refonte.rv .G-etapes-noms { display: flex; justify-content: space-between; gap: var(--rv-pas-2); font-size: 13px; font-weight: 600; color: var(--c-texte-3); }
 .refonte.rv .rv-heros-fin { flex-direction: row; flex-wrap: wrap; }
 .refonte.rv .chat--discussion .chat-bas { background: transparent; }
 .refonte.rv .chat--discussion .rv-surtitre { font: 800 13px/1.2 var(--police-famille-texte); font-style: normal; color: var(--c-ro-t); }
@@ -45,8 +45,8 @@
 .refonte.rv .G-ent-chiffres { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--rv-pas-3); }
 .refonte.rv .G-ent-chiffres > div { display: grid; gap: 2px; padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-creuse); }
 .refonte.rv .G-ent-val { font-family: var(--police-famille-titre); font-weight: 600; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.refonte.rv .G-ent-lib { font-size: 13px; font-weight: 700; color: var(--c-texte-3); }
-.refonte.rv .G-ini { flex: none; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; background: var(--c-peche-f); color: var(--c-peche-t); }
+.refonte.rv .G-ent-lib { font-size: 13px; font-weight: 600; color: var(--c-texte-3); }
+.refonte.rv .G-ini { flex: none; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-weight: 600; background: var(--c-peche-f); color: var(--c-peche-t); }
 .refonte.rv .G-ini--marceau { background: var(--c-sauge-f); color: var(--c-sauge-t); }
 .refonte.rv .G-total { display: flex; align-items: baseline; gap: var(--rv-pas-3); flex-wrap: wrap; }
 /* Discussion plein écran (E25) : l'assistant est la pièce maîtresse */
@@ -56,9 +56,9 @@
 .refonte.rv .chat--discussion .chat-titre { order: 1; margin: 0; font: italic 500 28px/1.1 var(--police-famille-titre); color: var(--c-ia-t); display: flex; align-items: center; gap: var(--rv-pas-3); }
 .refonte.rv .chat--discussion .pastille-ia { width: 44px; height: 44px; }
 .refonte.rv .chat--discussion .disc-liste { background: var(--c-surface); border-right: 1px solid var(--c-bord); padding: var(--rv-pas-3); }
-.refonte.rv .chat--discussion .disc-liste .btn-contour { width: 100%; min-height: 48px; border-radius: 999px; border-color: var(--c-ia-l); color: var(--c-ia-t); background: var(--c-ia-f); font-weight: 800; }
+.refonte.rv .chat--discussion .disc-liste .btn-contour { width: 100%; min-height: 48px; border-radius: 999px; border-color: var(--c-ia-l); color: var(--c-ia-t); background: var(--c-ia-f); font-weight: 600; }
 .refonte.rv .chat--discussion .disc-liste h3 { font: 800 13px/1 var(--police-famille-texte); color: var(--c-texte-3); }
-.refonte.rv .chat--discussion .disc-liste a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--rv-pas-3); border-radius: var(--rv-rayon-petit); color: var(--c-texte); text-decoration: none; font-weight: 700; }
+.refonte.rv .chat--discussion .disc-liste a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--rv-pas-3); border-radius: var(--rv-rayon-petit); color: var(--c-texte); text-decoration: none; font-weight: 600; }
 .refonte.rv .chat--discussion .disc-liste li.actif a { background: var(--c-ia-f); color: var(--c-ia-t); border: 1px solid var(--c-ia-b); box-shadow: none; }
 .refonte.rv .chat--discussion .chat-contexte { display: none; }
 .refonte.rv .chat--discussion .chat-fil { max-width: 760px; margin: 0 auto; width: 100%; padding: var(--rv-pas-5) var(--rv-pas-4); }
@@ -74,8 +74,8 @@
 .refonte.rv .chat--discussion .composeur { border-width: 2px; border-color: var(--c-ia-l); box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-ia-f) 80%, transparent), var(--o-elevee); }
 /* « Autres états » : cartes, boutons et choix du décor ancien mis aux couleurs de la refonte */
 .refonte.rv .autre-etat .carte-action, .refonte.rv .autre-etat .carte-liste, .refonte.rv .autre-etat .vide-accueillant, .refonte.rv .autre-etat .bandeau-annuler { background: var(--c-surface); border: 1px solid var(--c-bord); border-radius: var(--rv-rayon-carte); box-shadow: var(--o-carte); }
-.refonte.rv .autre-etat .btn-plein { border-radius: 999px; background: var(--c-action); color: var(--c-action-texte); box-shadow: 0 6px 16px rgb(194 74 27 / 0.28); font-weight: 800; }
-.refonte.rv .autre-etat .btn-contour { border-radius: 999px; font-weight: 800; }
+.refonte.rv .autre-etat .btn-plein { border-radius: 999px; background: var(--c-action); color: var(--c-action-texte); box-shadow: 0 6px 16px rgb(194 74 27 / 0.28); font-weight: 600; }
+.refonte.rv .autre-etat .btn-contour { border-radius: 999px; font-weight: 600; }
 .refonte.rv .autre-etat .choix { border-radius: var(--rv-rayon-bloc); border: 1.5px solid var(--c-bord); background: var(--c-surface); min-height: 44px; }
 .refonte.rv .autre-etat .choix--sel { border-color: var(--c-ia-l); background: var(--c-ia-f); color: var(--c-ia-t); }
 .refonte.rv .autre-etat .progression-v2-barre { background: var(--c-ne-f); border-radius: 999px; }
@@ -184,6 +184,7 @@
       <p class="r5-verrou" role="note">Le menu s'ouvre à la fin de l'installation</p>
       <button class="bouton-ajouter" type="button" data-composant="BoutonAjouter" title="Ajouter une facture, un relevé, une note de frais…" disabled data-vers="E03.html"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg><span class="nav-libelle">Ajouter</span></button>
       <ul class="nav-entrees">
+        <li><a class="nav-entree" title="Mon activité" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="nav-libelle">Mon activité</span></a></li>
         <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span></a></li>
         <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span></a></li>
         <li><a class="nav-entree" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span></a></li>
@@ -191,10 +192,10 @@
         <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
       </ul>
       <div class="nav-pied">
-        <a class="nav-entree nav-pied-lien" title="Réglages" href="#" data-toast="Les réglages ne sont pas détaillés dans la démonstration."><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
+        <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
         <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
         <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="E55.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
       </div>
     </nav>
     <div class="page">
@@ -226,6 +227,7 @@
           <ul class="G-choix-liste" aria-label="Façon de travailler"><li><button class="G-choix" type="button" aria-pressed="true"><span class="G-radio"><svg class="ico" aria-hidden="true"><use href="#lu-check"/></svg></span><span class="G-choix-texte"><span>Je fais tout avec l'assistant</span><span class="G-choix-sous">Il prépare, vous confirmez</span></span></button></li></ul>
           <details class="rv-repli" data-composant="PanneauRepliable"><summary>Autres façons de travailler<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><ul class="G-choix-liste" aria-label="Autres façons de travailler"><li><button class="G-choix" type="button" aria-pressed="false"><span class="G-radio"></span><span class="G-choix-texte"><span>Je tiens mes comptes</span><span class="G-choix-sous">Mon comptable termine l'année</span></span></button></li><li><button class="G-choix" type="button" aria-pressed="false"><span class="G-radio"></span><span class="G-choix-texte"><span>Mon comptable déclare tout</span><span class="G-choix-sous">Il contrôle, vous confirmez</span></span></button></li></ul></div></details>
         </section>
+        <!-- demo-integ --><section class="rv-carte rv-bloc demo-aussi" aria-labelledby="h-demo-aussi"><div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-demo-aussi">Autres façons de démarrer</h2></div><ul class="demo-aussi-liste"><li><a class="demo-aussi-lien" href="E37.html"><span>Créer la fiche de ma société</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E38.html"><span>Ma société est en formation</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E39.html"><span>Faire ma première facture</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E41.html"><span>Reprendre ma comptabilité</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li></ul></section><!-- demo-integ -->
       </main>
     </div>
     <aside class="chat" data-composant="PanneauChat" id="chat" aria-label="Discussion avec l'assistant">

@@ -109,7 +109,7 @@
 .refonte.rv .rv-mini { display: block; width: auto; height: 76px; max-width: 100%; margin-top: var(--rv-pas-1); }
 .refonte.rv .rv-mini .rv-barre { fill: color-mix(in srgb, var(--c-sauge-t) 28%, transparent); }
 .refonte.rv .rv-mini .rv-barre--cour { fill: var(--c-sauge-t); }
-.refonte.rv .rv-mini text { font: 700 13px var(--police-famille-texte); fill: var(--c-sauge-t); }
+.refonte.rv .rv-mini text { font: 600 13px var(--police-famille-texte); fill: var(--c-sauge-t); }
 
 /* ---------- 6. Pastille d'état : fond + icône + mot ---------- */
 .refonte.rv .rv-pastille { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 2px 12px 2px 8px; border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap; border: 1px solid transparent; }
@@ -193,13 +193,13 @@
 .refonte.rv .figee-details > .figee-summary .ico { width: 16px; height: 16px; }
 
 /* ---------- 9. Boutons ---------- */
-.refonte.rv .rv-corps .btn-plein, .refonte.rv .rv-corps .btn-contour, .refonte.rv .rv-corps .btn-neutre { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font: 800 15px/1.2 var(--police-famille-texte); white-space: nowrap; cursor: pointer; transition: transform var(--duree-instant) var(--courbe-standard), box-shadow var(--duree-rapide) var(--courbe-standard); }
+.refonte.rv .rv-corps .btn-plein, .refonte.rv .rv-corps .btn-contour, .refonte.rv .rv-corps .btn-neutre { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font: 600 15px/1.2 var(--police-famille-texte); white-space: nowrap; cursor: pointer; transition: transform var(--duree-instant) var(--courbe-standard), box-shadow var(--duree-rapide) var(--courbe-standard); }
 .refonte.rv .rv-corps .btn-plein { background: var(--c-action); color: var(--couleur-texte-inverse); border: 0; box-shadow: var(--rv-ombre-action); }
 .refonte.rv .rv-corps .btn-plein:hover { transform: translateY(-1px); }
 .refonte.rv .rv-corps .btn-contour { background: var(--c-surface); color: var(--c-texte); border: 1px solid var(--couleur-bordure-champ); }
 .refonte.rv .rv-corps .btn-neutre { background: var(--c-ne-f); color: var(--c-texte-2); border: 1px dashed var(--c-bord-fort); cursor: not-allowed; }
 .refonte.rv .rv-corps .rv-ligne .btn-contour { min-height: 44px; padding: 0 16px; font-size: 14px; }
-.refonte.rv .rv-btn-texte, .refonte.rv .rv-corps .btn-texte { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--c-lien); font: 800 14px/1.2 var(--police-famille-texte); white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.refonte.rv .rv-btn-texte, .refonte.rv .rv-corps .btn-texte { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--c-lien); font: 600 14px/1.2 var(--police-famille-texte); white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .refonte.rv .rv-btn-ia { color: var(--c-ia-t); }
 .refonte.rv .rv-btn-ia .ico { color: var(--c-ia-l); }
 .refonte.rv .rv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rv-pas-2); }
@@ -372,7 +372,7 @@
 .refonte.rv .rv-volet .volet-pied { border-top: 0; padding: var(--rv-pas-3) var(--rv-pas-4) var(--rv-pas-4); }
 .refonte.rv .rv-volet .volet-pied .btn-plein { width: 100%; justify-content: center; }
 .refonte.rv .rv-choix-grille { display: grid; grid-template-columns: 1fr 1fr; gap: var(--rv-pas-2); }
-.refonte.rv .rv-choix { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; border: 1px solid var(--c-bord); border-radius: 14px; background: var(--c-surface); color: var(--c-texte); font: 700 15px/1.25 var(--police-famille-texte); text-align: left; cursor: pointer; }
+.refonte.rv .rv-choix { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; border: 1px solid var(--c-bord); border-radius: 14px; background: var(--c-surface); color: var(--c-texte); font: 600 15px/1.25 var(--police-famille-texte); text-align: left; cursor: pointer; }
 .refonte.rv .rv-choix:hover { background: var(--c-creuse); }
 .refonte.rv .rv-choix--sel { background: var(--c-ia-f); border-color: var(--c-ia-l); color: var(--c-ia-t); }
 .refonte.rv .rv-choix:last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -395,7 +395,7 @@
 .refonte.rv .rv-connexion-centre { display: grid; justify-items: center; gap: var(--rv-pas-3); max-width: 440px; margin: 0 auto; width: 100%; }
 .refonte.rv .rv-connexion-centre--etat { padding: var(--rv-pas-3) 0; }
 .refonte.rv .rv-connexion-carte { width: 100%; display: grid; gap: var(--rv-pas-4); padding: var(--rv-pas-5); background: var(--c-elevee); box-shadow: var(--o-elevee); border-top: 4px solid var(--c-action); border-radius: 24px; }
-.refonte.rv .rv-marque { display: flex; align-items: center; gap: 10px; font: 800 17px/1 var(--police-famille-texte); color: var(--c-texte); }
+.refonte.rv .rv-marque { display: flex; align-items: center; gap: 10px; font: 600 17px/1 var(--police-famille-texte); color: var(--c-texte); }
 .refonte.rv .rv-connexion-tete { display: flex; align-items: center; justify-content: space-between; gap: var(--rv-pas-2); }
 .refonte.rv .rv-connexion-form { display: grid; gap: var(--rv-pas-3); }
 .refonte.rv .rv-connexion-form .btn-plein { width: 100%; justify-content: center; }
@@ -435,7 +435,7 @@
 .refonte.rv .cadre--menu-reduit .nav2 .nav-pied-lien { width: 48px; }
 .refonte.rv .cadre--menu-reduit .nav2 .nav-reduire { display: grid; place-items: center; }
 /* états : titre d'état et fonds de cadre dans le style commun */
-.refonte.rv .autre-etat-libelle { margin: 0 0 var(--rv-pas-3); padding: 6px 14px; width: fit-content; max-width: 100%; border-radius: 999px; background: var(--c-surface); border: 1px solid var(--c-bord); color: var(--c-texte-2); font: 700 14px/1.35 var(--police-famille-texte); }
+.refonte.rv .autre-etat-libelle { margin: 0 0 var(--rv-pas-3); padding: 6px 14px; width: fit-content; max-width: 100%; border-radius: 999px; background: var(--c-surface); border: 1px solid var(--c-bord); color: var(--c-texte-2); font: 600 14px/1.35 var(--police-famille-texte); }
 .refonte.rv .cadre--maquette { border-radius: 24px; box-shadow: var(--o-elevee); border: 1px solid var(--c-bord); overflow: hidden; background: var(--c-fond); }
 .refonte.rv .etats .rv-corps { padding: var(--rv-pas-4); }
 
@@ -444,7 +444,7 @@
 .refonte.rv .etats .titre-bloc, .refonte.rv .etats .mois-titre { font-family: var(--police-famille-titre); font-weight: 600; font-size: 22px; color: var(--c-texte); }
 .refonte.rv .etats .titre-page-v2 { font-family: var(--police-famille-titre); font-style: italic; font-weight: 500; font-size: 30px; line-height: 1.05; color: var(--c-texte); }
 .refonte.rv .etats .phrase-page, .refonte.rv .etats .rubrique-phrase { color: var(--c-texte-2); font-size: 14px; }
-.refonte.rv .etats .pastille-etat { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--c-bord); background: var(--c-ne-f); color: var(--c-ne-t); font: 700 13px/1.2 var(--police-famille-texte); }
+.refonte.rv .etats .pastille-etat { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--c-bord); background: var(--c-ne-f); color: var(--c-ne-t); font: 600 13px/1.2 var(--police-famille-texte); }
 .refonte.rv .etats .pastille-etat--ok { background: var(--c-ok-f); color: var(--c-ok-t); border-color: var(--c-ok-l); }
 .refonte.rv .etats .pastille-etat--ambre, .refonte.rv .etats .pastille-etat--attention { background: var(--c-am-f); color: var(--c-am-t); border-color: var(--c-am-l); }
 .refonte.rv .etats .pastille-etat--rouge, .refonte.rv .etats .pastille-etat--erreur { background: var(--c-ro-f); color: var(--c-ro-t); border-color: var(--c-ro-l); }
@@ -506,11 +506,11 @@
 .refonte.rv .rv-connexion .rv-marque .rv-tuile--ia, .refonte.rv .rv-marque .rv-tuile { background: var(--c-action); color: var(--couleur-texte-inverse); }
 
 /* N08 : palette sobre (groupes en Manrope 13 gras, champ 48 px, lignes compactes, fermer, résultat actif) */
-.refonte.rv .rv-groupe h3 { font: 800 13px/1.3 var(--police-famille-texte); letter-spacing: 0; text-transform: none; color: var(--c-texte-2); }
+.refonte.rv .rv-groupe h3 { font: 600 13px/1.3 var(--police-famille-texte); letter-spacing: 0; text-transform: none; color: var(--c-texte-2); }
 .refonte.rv .rv-palette { display: flex; flex-direction: column; align-content: start; }
 .refonte.rv .rv-palette .palette-champ { min-height: 48px; height: 48px; flex: none; padding: 0 var(--rv-pas-3); }
 .refonte.rv .rv-palette .palette-champ input { min-height: 0; height: 100%; }
-.refonte.rv .rv-fermer { display: none; flex: none; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--c-creuse); color: var(--c-texte); font: 800 14px/1 var(--police-famille-texte); }
+.refonte.rv .rv-fermer { display: none; flex: none; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--c-creuse); color: var(--c-texte); font: 600 14px/1 var(--police-famille-texte); }
 .refonte.rv .rv-res-lien { min-height: 48px; }
 .refonte.rv .rv-res-lien .rv-ligne-montant { margin-left: auto; flex: none; text-align: right; }
 .refonte.rv .rv-res--actif .rv-res-lien { background: var(--c-peche-f); box-shadow: inset 0 0 0 1.5px var(--c-action); }
@@ -534,8 +534,8 @@
 
 /* ===== Retouche 3 : états refaits (étiquette typée, cadre), transparence (faits d'une écriture), héros E19, discussion E25 ===== */
 .refonte.rv .etats .autre-etat { padding: var(--rv-pas-4); border-radius: 28px; background: color-mix(in srgb, var(--c-creuse) 70%, var(--c-fond)); border: 1px dashed var(--c-bord-fort); }
-.refonte.rv .etats .autre-etat-libelle.r3-etiquette { display: flex; align-items: center; gap: var(--rv-pas-2); padding: 6px 16px 6px 6px; min-height: 44px; font: 700 15px/1.3 var(--police-famille-texte); color: var(--c-texte); }
-.refonte.rv .r3-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; font: 800 13px/1 var(--police-famille-texte); background: var(--c-ne-f); color: var(--c-texte-2); }
+.refonte.rv .etats .autre-etat-libelle.r3-etiquette { display: flex; align-items: center; gap: var(--rv-pas-2); padding: 6px 16px 6px 6px; min-height: 44px; font: 600 15px/1.3 var(--police-famille-texte); color: var(--c-texte); }
+.refonte.rv .r3-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; font: 600 13px/1 var(--police-famille-texte); background: var(--c-ne-f); color: var(--c-texte-2); }
 .refonte.rv .r3-badge .ico { width: 16px; height: 16px; }
 .refonte.rv .r3-badge--erreur { background: var(--c-ro-f); color: var(--c-ro-t); }
 .refonte.rv .r3-badge--doute { background: var(--c-ia-f); color: var(--c-ia-t); }
@@ -549,30 +549,30 @@
 .refonte.rv .r3-carte-titre { margin: 0; font: 600 22px/1.2 var(--police-famille-titre); color: var(--c-texte); }
 .refonte.rv .r3-carte-phrase { margin: 0; font: 600 16px/1.4 var(--police-famille-texte); color: var(--c-texte-2); max-width: 52ch; }
 .refonte.rv .r3-reponses { display: flex; flex-wrap: wrap; gap: var(--rv-pas-2); }
-.refonte.rv .r3-assurance { font: 700 13px/1.3 var(--police-famille-texte); color: var(--c-texte-3); }
+.refonte.rv .r3-assurance { font: 600 13px/1.3 var(--police-famille-texte); color: var(--c-texte-3); }
 .refonte.rv .r3-trois { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rv-pas-2); }
-.refonte.rv .r3-trois > span { display: grid; gap: 2px; padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-creuse); font: 800 14px/1.25 var(--police-famille-texte); }
-.refonte.rv .r3-trois small { font: 700 13px/1.2 var(--police-famille-texte); color: var(--c-texte-3); }
+.refonte.rv .r3-trois > span { display: grid; gap: 2px; padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-creuse); font: 600 14px/1.25 var(--police-famille-texte); }
+.refonte.rv .r3-trois small { font: 600 13px/1.2 var(--police-famille-texte); color: var(--c-texte-3); }
 /* Transparence : les faits d'une écriture, en pastilles et non en paragraphe */
 .refonte.rv .r3-faits { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 2px; }
-.refonte.rv .r3-piece { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--c-creuse); border: 1px solid var(--c-bord); font: 700 13px/1 var(--police-famille-texte); color: var(--c-texte); }
+.refonte.rv .r3-piece { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: var(--c-creuse); border: 1px solid var(--c-bord); font: 600 13px/1 var(--police-famille-texte); color: var(--c-texte); }
 .refonte.rv .r3-piece .ico { width: 14px; height: 14px; }
 .refonte.rv .r3-entete-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rv-pas-2); }
-.refonte.rv .r3-mention { display: inline-flex; align-items: center; gap: 6px; font: 800 13px/1.3 var(--police-famille-texte); color: var(--c-ia-t); }
+.refonte.rv .r3-mention { display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1.3 var(--police-famille-texte); color: var(--c-ia-t); }
 .refonte.rv .r3-mention .ico { width: 16px; height: 16px; color: var(--c-ia-l); }
 .refonte.rv .r3-ecriture { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rv-pas-2); margin: 0; }
 .refonte.rv .r3-ecriture > div { display: grid; gap: 2px; padding: var(--rv-pas-2) var(--rv-pas-3); border-radius: var(--rv-rayon-bloc); background: var(--c-creuse); }
-.refonte.rv .r3-ecriture dt { font: 700 13px/1.2 var(--police-famille-texte); color: var(--c-texte-3); }
-.refonte.rv .r3-ecriture dd { margin: 0; font: 700 15px/1.3 var(--police-famille-texte); color: var(--c-texte); }
+.refonte.rv .r3-ecriture dt { font: 600 13px/1.2 var(--police-famille-texte); color: var(--c-texte-3); }
+.refonte.rv .r3-ecriture dd { margin: 0; font: 600 15px/1.3 var(--police-famille-texte); color: var(--c-texte); }
 .refonte.rv .r3-ecriture .r3-large { grid-column: 1 / -1; }
 @container rv-centre (max-width: 560px) { .refonte.rv .r3-ecriture, .refonte.rv .r3-trois { grid-template-columns: 1fr; } }
 /* Étapes de la TVA (E19) : trois pastilles à la place d'un paragraphe */
 .refonte.rv .r3-etapes { display: flex; flex-wrap: wrap; gap: var(--rv-pas-2); margin: 0; padding: 0; list-style: none; }
-.refonte.rv .r3-etapes li { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 999px; font: 800 14px/1 var(--police-famille-texte); background: var(--c-ne-f); color: var(--c-texte-2); }
+.refonte.rv .r3-etapes li { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 999px; font: 600 14px/1 var(--police-famille-texte); background: var(--c-ne-f); color: var(--c-texte-2); }
 .refonte.rv .r3-etapes li .ico { width: 16px; height: 16px; }
 .refonte.rv .r3-etapes .r3-fait { background: var(--c-ok-f); color: var(--c-ok-t); }
 .refonte.rv .r3-etapes .r3-vous { background: var(--c-am-f); color: var(--c-am-t); }
-.refonte.rv .r3-sous-heros { margin: 0; font: 700 18px/1.3 var(--police-famille-texte); color: var(--c-texte-2); }
+.refonte.rv .r3-sous-heros { margin: 0; font: 600 18px/1.3 var(--police-famille-texte); color: var(--c-texte-2); }
 .refonte.rv .r3-heros-tva .rv-heros-titre { max-width: none; }
 .refonte.rv .r3-heros-tva .rv-gros { font-size: 40px; white-space: nowrap; }
 /* E25 : la carte d'action domine, la phrase d'accueil s'efface (sélecteurs renforcés : les écrans portent leur propre feuille) */
@@ -622,7 +622,7 @@
 .refonte.rv .H-page:not(:has(#plus:target)) .r4-bascule a:first-child { display: none; }
 .refonte.rv .H-page:has(#plus:target) .r4-bascule a:last-child { display: none; }
 @media (max-width: 1023px) { .refonte.rv .rf-doc.r4-seul .rf-valeurs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.refonte.rv .r4-ligne-lu { margin: 0; font: 700 17px/1.4 var(--police-famille-texte); color: var(--c-texte); }
+.refonte.rv .r4-ligne-lu { margin: 0; font: 600 17px/1.4 var(--police-famille-texte); color: var(--c-texte); }
 .refonte.rv .cadre .H-barre-ligne { display: contents; font-size: 14px; font-weight: 600; color: var(--c-texte-2); }
 @media (max-width: 430px) { .refonte.rv .cadre .rv-onglet { padding: 0 8px; font-size: 13px; gap: 3px; } .refonte.rv .cadre .rv-onglet-n { min-width: 20px; height: 20px; padding: 0 4px; font-size: 12px; } .refonte.rv .cadre .rv-onglets { padding: 2px; } }
 .refonte.rv .r5-qui { font-weight: 600; color: var(--c-texte); margin-right: var(--rv-pas-3); }

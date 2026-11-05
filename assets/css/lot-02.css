@@ -1,0 +1,47 @@
+/* Lot 02 : Banque et écritures. Compléments de style uniquement (aucun fichier existant modifié). */
+.refonte.rv strong { font-weight: 600; }
+.refonte.rv .lot-fil { margin: 0 0 4px; }
+.refonte.rv .lot-montant { display: inline-flex; align-items: center; gap: 6px; }
+.refonte.rv .lot-mot { font-size: 13px; font-weight: 600; color: var(--c-texte-3, #5f5a53); }
+.refonte.rv .lot-boutons { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.refonte.rv .lot-h2 { margin: 8px 0 0; }
+.refonte.rv .lot-h3 { font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
+.refonte.rv .lot-precision { margin: 0; }
+.refonte.rv .lot-simple { margin: 0; font-size: 14px; color: var(--c-texte-2, #5f5a53); }
+.refonte.rv .lot-table-cadre { overflow-x: auto; }
+.refonte.rv .lot-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.refonte.rv .lot-table th, .refonte.rv .lot-table td { padding: 10px 8px; text-align: left; border-top: 1px solid var(--c-bord, #ece8e1); font-weight: 400; }
+.refonte.rv .lot-table th { font-weight: 600; font-size: 13px; color: var(--c-texte-3, #5f5a53); border-top: 0; }
+.refonte.rv .lot-table .lot-num { text-align: right; white-space: nowrap; }
+.refonte.rv .lot-table tfoot td { font-weight: 600; border-top: 2px solid var(--c-bord, #ece8e1); }
+.refonte.rv .lot-brouillon { border-style: dashed; border-width: 2px; }
+.refonte.rv .lot-champ input, .refonte.rv .lot-etiquette input { min-height: 44px; padding: 0 12px; border: 1px solid var(--c-bord-fort, #d6d0c6); border-radius: 12px; background: var(--c-surface, #fff); font: inherit; font-size: 14px; color: inherit; }
+.refonte.rv .lot-champ input { width: 90px; }
+.refonte.rv .lot-etiquette { display: grid; gap: 4px; font-size: 13px; font-weight: 600; min-width: 0; }
+.refonte.rv .lot-formulaire { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.refonte.rv .lot-lettre { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; border: 1px solid var(--c-bord-fort, #d6d0c6); font-weight: 600; font-size: 13px; background: var(--c-surface, #fff); }
+.refonte.rv .lot-case input { width: 24px; height: 24px; }
+.refonte.rv .lot-pied { grid-template-columns: 1fr auto; align-items: center; position: sticky; bottom: 8px; z-index: 2; }
+.refonte.rv .lot-pied-texte { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.refonte.rv .lot-tuiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.refonte.rv .lot-tuile { width: 100%; min-height: 96px; display: grid; justify-items: center; align-content: center; gap: 4px; padding: 12px; border: 1px solid var(--c-bord, #ece8e1); border-radius: 22px; background: var(--c-surface, #fff); font: inherit; font-size: 14px; color: inherit; cursor: pointer; }
+.refonte.rv .lot-tuile:hover { background: var(--c-creuse, #f3f1ec); }
+.refonte.rv .lot-tuile-titre { font-weight: 600; }
+.refonte.rv .lot-tuile-sous { font-size: 13px; color: var(--c-texte-3, #5f5a53); }
+.refonte.rv .lot-depot { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; border-style: dashed; }
+.refonte.rv .lot-depot-texte p { margin: 0; }
+.refonte.rv .lot-sous-onglets { max-width: 320px; }
+.refonte.rv .lot-nowrap { white-space: nowrap; }
+.refonte.rv .lot-table-cadre :focus-visible, .refonte.rv .lot-tuile:focus-visible, .refonte.rv .lot-case input:focus-visible { outline: 3px solid var(--c-action); outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .refonte.rv .lot-tuiles, .refonte.rv .lot-formulaire { grid-template-columns: 1fr; }
+  .refonte.rv .lot-depot, .refonte.rv .lot-pied { grid-template-columns: 1fr; }
+  .refonte.rv .lot-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .refonte.rv .lot-table, .refonte.rv .lot-table tbody, .refonte.rv .lot-table tfoot, .refonte.rv .lot-table tr, .refonte.rv .lot-table td { display: block; width: 100%; }
+  .refonte.rv .lot-table tr { padding: 8px 0; border-top: 1px solid var(--c-bord, #ece8e1); }
+  .refonte.rv .lot-table td { display: flex; justify-content: space-between; gap: 12px; border: 0; padding: 4px 0; text-align: right; }
+  .refonte.rv .lot-table td::before { content: attr(data-label); font-weight: 600; font-size: 13px; color: var(--c-texte-3, #5f5a53); text-align: left; }
+  .refonte.rv .lot-table td:empty { display: none; }
+  .refonte.rv .lot-champ input { width: 80px; }
+}

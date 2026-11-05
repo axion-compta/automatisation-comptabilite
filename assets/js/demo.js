@@ -230,6 +230,31 @@
       (c.lien ? '<a class="btn-texte rv-btn-texte" href="' + c.lien[1] + '">' + c.lien[0] + '</a>' : '') + '</div>';
   }
 
+  /* ------------------------------------------------------------ menu « Plus » de la barre mobile */
+  function fermerPlus() {
+    var p = $('.demo-plus'); if (!p || p.hidden) return;
+    p.hidden = true; var b = $('[data-plus]'); if (b) b.setAttribute('aria-expanded', 'false');
+  }
+  function menuPlus(btn) {
+    var p = $('.demo-plus');
+    if (p && !p.hidden) { fermerPlus(); return; }
+    if (!p) {
+      var lien = function (a) { return '<li><a href="' + a.getAttribute('href') + '"' + (a.getAttribute('aria-current') ? ' aria-current="page"' : '') + '>' + ($('.nav-libelle', a) || a).textContent.trim() + '</a></li>'; };
+      var dans = $$('.nav-entrees .nav-entree').filter(function (a) { return !document.querySelector('.barre-mobile a.bm-item[href="' + a.getAttribute('href') + '"]'); });
+      var sous = $$('.nav-sous-lien'), ouvert = $('.nav-entrees .nav-entree[aria-current="page"] .nav-libelle');
+      var pied = $$('.nav-pied .nav-entree').filter(function (a) { return /\.html/.test(a.getAttribute('href') || ''); });
+      p = document.createElement('div');
+      p.className = 'demo-plus'; p.id = 'demo-plus'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Plus de rubriques');
+      p.innerHTML = (sous.length ? '<p>Dans ' + (ouvert ? ouvert.textContent.trim() : 'cette rubrique') + '</p><ul>' + sous.map(lien).join('') + '</ul>' : '') +
+        '<p>Rubriques</p><ul>' + dans.map(lien).join('') + '</ul><p>Compte</p><ul>' + pied.map(lien).join('') + '</ul>';
+      document.body.appendChild(p);
+      btn.setAttribute('aria-controls', 'demo-plus');
+    }
+    p.hidden = false; btn.setAttribute('aria-expanded', 'true');
+    var premier = $('a', p); if (premier) premier.focus();
+  }
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') fermerPlus(); });
+
   /* ------------------------------------------------------------ clics (délégation) */
   document.addEventListener('click', function (ev) {
     var t = ev.target;
@@ -265,6 +290,8 @@
     if ((el = t.closest('.chat-agrandir'))) { ev.preventDefault(); basculeChat(el, 'cadre--chat-moitie'); return; }
     if ((el = t.closest('.chat-plein-ecran'))) { ev.preventDefault(); basculeChat(el, 'cadre--chat-plein'); return; }
     if ((el = t.closest('.chat-revenir'))) { ev.preventDefault(); var c2 = el.closest('.cadre'); if (c2) { c2.classList.remove('cadre--chat-plein', 'cadre--chat-moitie', 'cadre--chat-reduit'); } return; }
+    if ((el = t.closest('[data-plus]'))) { ev.preventDefault(); menuPlus(el); return; }
+    if (!t.closest('.demo-plus')) fermerPlus();
     if ((el = t.closest('a[data-simule]'))) { ev.preventDefault(); toast("Cette partie n'est pas détaillée dans la démonstration."); return; }
     if ((el = t.closest('button'))) {
       if (el.closest('.demo-pres, .demo-fin, summary, .composeur, form[aria-label*="Code"]') || el.type === 'submit') return;

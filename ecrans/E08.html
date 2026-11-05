@@ -105,17 +105,18 @@
       </div>
       <button class="bouton-ajouter" type="button" data-composant="BoutonAjouter" title="Ajouter une facture, un relevé, une note de frais…" data-vers="E03.html"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg><span class="nav-libelle">Ajouter</span></button>
       <ul class="nav-entrees">
+        <li><a class="nav-entree" title="Mon activité" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="nav-libelle">Mon activité</span></a></li>
         <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span><span class="nav-compteur" aria-label="5 choses avant de valider octobre" role="img">5</span></a></li>
         <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span><span class="nav-compteur" aria-label="4 à traiter en banque" role="img">4</span></a></li>
-        <li><a class="nav-entree" aria-current="page" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a></li>
+        <li><a class="nav-entree" aria-current="page" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a><ul class="nav-sous" aria-label="Mes factures"><li><a class="nav-sous-lien" href="E18.html">Acompte reçu</a></li><li><a class="nav-sous-lien" href="E17.html">Frais et trajets</a></li><li><a class="nav-sous-lien" href="E22.html">Gros achats durables</a></li></ul></li>
         <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 échéance à moins de 15 jours" role="img">1</span></a></li>
         <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
       </ul>
       <div class="nav-pied">
-        <a class="nav-entree nav-pied-lien" title="Réglages" href="#" data-toast="Les réglages ne sont pas détaillés dans la démonstration."><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
+        <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
         <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
         <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="E55.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
       </div>
     </nav>
     <div class="page">
@@ -129,7 +130,7 @@
         <span class="coin-demo coin-demo--barre">Démo</span>
       </div>
       <main class="page-corps-v2 page-corps-v2--tdb rv-corps" id="contenu" data-zone="contenu" data-composant="Contenu">
-        <header class="rv-entete" data-composant="Contenu"><div class="rv-entete-texte"><h1 class="rv-titre">Facture <span data-fictif="org">Atelier Bertin</span></h1><p class="rv-sous"><span class="nb">1 200 €</span> · reçue le 14/10/2026</p></div><div class="rv-entete-actions"><a class="btn-texte rv-btn-texte" href="#" data-toast="Dans la démonstration, une seule facture est détaillée."><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-left"/></svg>Précédente</a><a class="btn-texte rv-btn-texte" href="#" data-toast="Dans la démonstration, une seule facture est détaillée.">Suivante<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></div></header>
+        <header class="rv-entete" data-composant="Contenu"><div class="rv-entete-texte"><h1 class="rv-titre">Facture <span data-fictif="org">Atelier Bertin</span></h1><p class="rv-sous"><span class="nb">1 200 €</span> · reçue le 14/10/2026</p></div><div class="rv-entete-actions"><a class="btn-texte rv-btn-texte" href="#" data-toast="Dans la démonstration, une seule facture est détaillée."><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-arrow-left"/></svg>Précédente</a><a class="btn-texte rv-btn-texte" href="#" data-toast="Dans la démonstration, une seule facture est détaillée.">Suivante<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></div></header>
         <section class="rv-carte rv-heros" data-composant="CarteAction" aria-labelledby="h-doute">
           <div class="rv-heros-haut">
             <div class="rv-heros-chiffre"><h2 id="h-doute" class="rv-heros-titre">C'est bien <span data-fictif="org">Atelier Bertin</span> ?</h2></div>
@@ -197,7 +198,7 @@
     <li><a class="bm-item" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="bm-lib">Ma banque</span><span class="nav-compteur" role="img" aria-label="4 à traiter en banque">4</span></a></li>
     <li class="bm-plus"><button class="bm-ajouter" type="button" aria-label="Ajouter : prendre une facture en photo, déposer un fichier, saisir" title="Ajouter"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button></li>
     <li><a class="bm-item" aria-current="page" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="bm-lib">Mes factures</span><span class="nav-compteur" role="img" aria-label="1 à suivre dans les factures">1</span></a></li>
-    <li><a class="bm-item" href="#" data-simule="1"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
+    <li><a class="bm-item" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
   </ul></nav>
   <script src="../assets/js/demo.js" defer></script>
 </body>

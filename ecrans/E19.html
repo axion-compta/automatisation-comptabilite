@@ -105,17 +105,18 @@
       </div>
       <button class="bouton-ajouter" type="button" data-composant="BoutonAjouter" title="Ajouter une facture, un relevé, une note de frais…" data-vers="E03.html"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg><span class="nav-libelle">Ajouter</span></button>
       <ul class="nav-entrees">
+        <li><a class="nav-entree" title="Mon activité" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="nav-libelle">Mon activité</span></a></li>
         <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span><span class="nav-compteur" aria-label="5 choses avant de valider octobre" role="img">5</span></a></li>
         <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span><span class="nav-compteur" aria-label="4 à traiter en banque" role="img">4</span></a></li>
         <li><a class="nav-entree" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a></li>
-        <li><a class="nav-entree" aria-current="page" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 échéance à moins de 15 jours" role="img">1</span></a></li>
+        <li><a class="nav-entree" aria-current="page" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 échéance à moins de 15 jours" role="img">1</span></a><ul class="nav-sous" aria-label="Mes déclarations"><li><a class="nav-sous-lien" href="E20.html">Ma TVA d'octobre</a></li><li><a class="nav-sous-lien" href="E21.html">Dates à ne pas manquer</a></li><li><a class="nav-sous-lien" href="E59.html">Bénéfice et impôts</a></li></ul></li>
         <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
       </ul>
       <div class="nav-pied">
-        <a class="nav-entree nav-pied-lien" title="Réglages" href="#" data-toast="Les réglages ne sont pas détaillés dans la démonstration."><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
+        <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
         <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
         <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="E55.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
       </div>
     </nav>
     <div class="page">
@@ -130,7 +131,7 @@
       </div>
       <main class="page-corps-v2 page-corps-v2--tdb rv-corps" id="contenu" data-zone="contenu" data-composant="Contenu">
         <header class="rv-entete" data-composant="Contenu"><div class="rv-entete-texte"><div class="rv-titre-ligne"><h1 class="rv-titre">Mes déclarations</h1><button class="rv-aide" type="button" aria-label="TVA, impôts et dates limites. Dates indicatives, calculées sur votre année comptable du 01/07/2026 au 30/06/2027, à vérifier sur impots.gouv.fr." title="TVA, impôts et dates limites. Dates indicatives, calculées sur votre année comptable du 01/07/2026 au 30/06/2027, à vérifier sur impots.gouv.fr."><span aria-hidden="true">?</span></button></div></div></header>
-        <div class="rv-onglets" role="tablist" data-composant="OngletsPage" aria-label="Sous-parties de la page"><a class="rv-onglet" role="tab" aria-selected="true" href="#" data-simule="1">À faire</a><a class="rv-onglet" role="tab" aria-selected="false" href="#" data-simule="1">Dates</a><a class="rv-onglet" role="tab" aria-selected="false" href="#" data-simule="1">Fin d'année</a></div>
+        <div class="rv-onglets" role="tablist" data-composant="OngletsPage" aria-label="Sous-parties de la page"><a class="rv-onglet" role="tab" aria-selected="true" href="#" data-simule="1">À faire</a><a class="rv-onglet" role="tab" aria-selected="false" href="E21.html">Dates</a><a class="rv-onglet" role="tab" aria-selected="false" href="E59.html">Fin d'année</a></div>
         <section class="rv-carte rv-heros r3-heros-tva" data-composant="CarteAction" aria-labelledby="h-tva">
           <div class="rv-heros-haut">
             <div class="rv-heros-chiffre"><span class="rv-gros" aria-hidden="true">≈ 955 €</span><h2 id="h-tva" class="rv-heros-titre">TVA d'octobre<span class="evitement"> : 955 €, à déclarer avant le 24/11</span></h2></div>
@@ -146,6 +147,7 @@
           <details class="rv-repli" data-composant="PanneauRepliable"><summary>Pourquoi ce montant ?<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><p>Formulaire CA3 : déclaration de TVA mensuelle. Montant estimé avec les documents reçus à ce jour ; le montant final s'affiche ici avant votre dépôt. Source : impots.gouv.fr, règle vérifiée le 12/11/2026.</p><div class="rv-actions"><button class="btn-contour rv-btn" type="button">Voir l'estimation</button><button class="btn-texte rv-btn-texte" type="button">Pourquoi ce montant ?</button></div><p class="rv-note">Prête après « Valider octobre ». Aucune déclaration en retard.</p></div></details>
         </section>
         <section class="rv-carte rv-bloc r4-savoir" data-composant="PanneauRepliable" aria-label="À savoir"><details class="rv-repli" data-composant="PanneauRepliable"><summary>À savoir<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><p>Je vous guide pas à pas sur impots.gouv ; vous déposez vous-même. L'assistant n'envoie rien aux impôts.</p><p><button class="btn-texte rv-btn-texte" type="button">Déjà déposées</button> : les déclarations déposées par vous sont dans Mes documents.</p></div></details></section>
+        <!-- demo-integ --><section class="rv-carte rv-bloc demo-aussi" aria-labelledby="h-demo-aussi"><div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-demo-aussi">Aussi dans Mes déclarations</h2></div><ul class="demo-aussi-liste"><li><a class="demo-aussi-lien" href="E20.html"><span>Ma TVA d'octobre</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E21.html"><span>Dates à ne pas manquer</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li><li><a class="demo-aussi-lien" href="E59.html"><span>Bénéfice et impôts</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-right"/></svg></a></li></ul></section><!-- demo-integ -->
       </main>
     </div>
     <aside class="chat" data-composant="PanneauChat" id="chat" aria-label="Discussion avec l'assistant">
@@ -180,7 +182,7 @@
     <li><a class="bm-item" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="bm-lib">Ma banque</span><span class="nav-compteur" role="img" aria-label="4 à traiter en banque">4</span></a></li>
     <li class="bm-plus"><button class="bm-ajouter" type="button" aria-label="Ajouter : prendre une facture en photo, déposer un fichier, saisir" title="Ajouter"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button></li>
     <li><a class="bm-item" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="bm-lib">Mes factures</span><span class="nav-compteur" role="img" aria-label="1 à suivre dans les factures">1</span></a></li>
-    <li><a class="bm-item" aria-current="page" href="#" data-simule="1"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
+    <li><a class="bm-item" aria-current="page" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
   </ul></nav>
   <script src="../assets/js/demo.js" defer></script>
 </body>
