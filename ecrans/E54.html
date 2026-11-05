@@ -19,7 +19,7 @@
 .refonte.rv .rv-vide { display: grid; justify-items: center; gap: var(--rv-pas-3); padding: var(--rv-pas-5); border: 2px dashed var(--c-bord-fort); border-radius: var(--rv-rayon-carte); background: var(--c-creuse); text-align: center; }
 /* Choix de l'étape (E54) : cartes à cocher, cibles de 44 px au moins */
 .refonte.rv .G-choix-liste { display: grid; gap: var(--rv-pas-2); margin: 0; padding: 0; list-style: none; }
-.refonte.rv .G-choix { display: flex; align-items: center; gap: var(--rv-pas-3); width: 100%; min-height: 64px; padding: var(--rv-pas-2) var(--rv-pas-3); border: 1.5px solid var(--c-bord); border-radius: var(--rv-rayon-bloc); background: var(--c-surface); color: var(--c-texte); font: 800 16px/1.25 var(--police-famille-texte); text-align: left; cursor: pointer; }
+.refonte.rv .G-choix { display: flex; align-items: center; gap: var(--rv-pas-3); width: 100%; min-height: 64px; padding: var(--rv-pas-2) var(--rv-pas-3); border: 1.5px solid var(--c-bord); border-radius: var(--rv-rayon-bloc); background: var(--c-surface); color: var(--c-texte); font: 600 16px/1.25 var(--police-famille-texte); text-align: left; cursor: pointer; }
 .refonte.rv .G-choix:hover { border-color: var(--c-bord-fort); background: var(--c-creuse); }
 .refonte.rv .G-choix[aria-pressed="true"] { border-color: var(--c-ia-l); background: var(--c-ia-f); color: var(--c-ia-t); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-ia-f) 70%, transparent); }
 .refonte.rv .G-radio { flex: none; width: 24px; height: 24px; border-radius: 999px; border: 2px solid var(--c-bord-fort); background: var(--c-surface); display: grid; place-items: center; }
@@ -34,9 +34,9 @@
 .refonte.rv .G-etapes-noms { display: flex; justify-content: space-between; gap: var(--rv-pas-2); font-size: 13px; font-weight: 600; color: var(--c-texte-3); }
 .refonte.rv .rv-heros-fin { flex-direction: row; flex-wrap: wrap; }
 .refonte.rv .chat--discussion .chat-bas { background: transparent; }
-.refonte.rv .chat--discussion .rv-surtitre { font: 800 13px/1.2 var(--police-famille-texte); font-style: normal; color: var(--c-ro-t); }
+.refonte.rv .chat--discussion .rv-surtitre { font: 600 13px/1.2 var(--police-famille-texte); font-style: normal; color: var(--c-ro-t); }
 .refonte.rv .G-suite { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rv-pas-3); }
-.refonte.rv .G-suite .btn-gris-inactif { min-height: 48px; padding: 0 var(--rv-pas-4); border-radius: 999px; border: 0; background: var(--c-ne-f); color: var(--c-texte-3); font: 800 16px/1 var(--police-famille-texte); }
+.refonte.rv .G-suite .btn-gris-inactif { min-height: 48px; padding: 0 var(--rv-pas-4); border-radius: 999px; border: 0; background: var(--c-ne-f); color: var(--c-texte-3); font: 600 16px/1 var(--police-famille-texte); }
 /* Cartes d'entreprise (E55) */
 .refonte.rv .G-ent { display: grid; gap: var(--rv-pas-3); align-content: start; }
 .refonte.rv .G-ent--ouverte { border-top: 4px solid var(--rv-menu); }
@@ -52,12 +52,12 @@
 /* Discussion plein écran (E25) : l'assistant est la pièce maîtresse */
 .refonte.rv .chat--discussion { background: var(--c-fond); }
 .refonte.rv .chat--discussion .chat-tete { display: flex; align-items: center; gap: var(--rv-pas-3); padding: var(--rv-pas-3) var(--rv-pas-4); background: linear-gradient(180deg, var(--c-ia-f), var(--c-surface)); border-bottom: 1px solid var(--c-ia-b); }
-.refonte.rv .chat--discussion .revenir { order: 2; margin-left: auto; min-height: 44px; padding: 0 var(--rv-pas-3); border: 1px solid var(--c-ia-b); border-radius: 999px; background: var(--c-surface); color: var(--c-ia-t); font: 800 14px/1 var(--police-famille-texte); text-decoration: none; }
+.refonte.rv .chat--discussion .revenir { order: 2; margin-left: auto; min-height: 44px; padding: 0 var(--rv-pas-3); border: 1px solid var(--c-ia-b); border-radius: 999px; background: var(--c-surface); color: var(--c-ia-t); font: 600 14px/1 var(--police-famille-texte); text-decoration: none; }
 .refonte.rv .chat--discussion .chat-titre { order: 1; margin: 0; font: italic 500 28px/1.1 var(--police-famille-titre); color: var(--c-ia-t); display: flex; align-items: center; gap: var(--rv-pas-3); }
 .refonte.rv .chat--discussion .pastille-ia { width: 44px; height: 44px; }
 .refonte.rv .chat--discussion .disc-liste { background: var(--c-surface); border-right: 1px solid var(--c-bord); padding: var(--rv-pas-3); }
 .refonte.rv .chat--discussion .disc-liste .btn-contour { width: 100%; min-height: 48px; border-radius: 999px; border-color: var(--c-ia-l); color: var(--c-ia-t); background: var(--c-ia-f); font-weight: 600; }
-.refonte.rv .chat--discussion .disc-liste h3 { font: 800 13px/1 var(--police-famille-texte); color: var(--c-texte-3); }
+.refonte.rv .chat--discussion .disc-liste h3 { font: 600 13px/1 var(--police-famille-texte); color: var(--c-texte-3); }
 .refonte.rv .chat--discussion .disc-liste a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--rv-pas-3); border-radius: var(--rv-rayon-petit); color: var(--c-texte); text-decoration: none; font-weight: 600; }
 .refonte.rv .chat--discussion .disc-liste li.actif a { background: var(--c-ia-f); color: var(--c-ia-t); border: 1px solid var(--c-ia-b); box-shadow: none; }
 .refonte.rv .chat--discussion .chat-contexte { display: none; }
