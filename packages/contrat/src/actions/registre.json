@@ -3,7 +3,7 @@
     { "id": "administrateur" },
     { "id": "utilisateur" },
     { "id": "lecture", "lecture_seule": true },
-    { "id": "comptable" },
+    { "id": "comptable", "lecture_seule": true },
     { "id": "personnel_axion", "lecture_seule": true }
   ],
   "interrupteurs": {
