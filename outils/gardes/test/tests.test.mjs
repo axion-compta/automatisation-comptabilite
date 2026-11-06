@@ -65,3 +65,10 @@ test('le dépôt réel est vert', () => {
 test('chemin inexistant = rouge', () => {
   assert.equal(lancer('outils/absent').status, 1);
 });
+
+test('vert : aide du fichier qui contient l’assertion ; rouge : aide sans assertion', () => {
+  const bon = "const rouge = (x) => assert.ok(x);\nconst deux = (x) => rouge(x);\ntest('a', () => { deux(1); });\n";
+  assert.deepEqual(pb(bon), []);
+  const mauvais = "const noter = (x) => console.log(x);\ntest('a', () => { noter(1); });\n";
+  assert.equal(pb(mauvais).length, 1);
+});

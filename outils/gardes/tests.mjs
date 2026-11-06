@@ -50,12 +50,36 @@ function fermante(m, debut) {
   return m.length;
 }
 
+// Fonctions d'aide du fichier (déclarées en début de ligne) qui contiennent une assertion, directement ou par une autre aide.
+export function aidesAvecAssertion(m) {
+  const morceaux = m.split(/\n(?=(?:async\s+)?(?:const|let|var|function|test|it|describe|import|export)\b)/);
+  const aides = new Map();
+  for (const c of morceaux) {
+    const d = c.match(/^(?:async\s+)?(?:const|let|var|function)\s+(\w+)/);
+    if (d) aides.set(d[1], c.slice(d[0].length));
+  }
+  const bonnes = new Set();
+  for (let change = true; change; ) {
+    change = false;
+    for (const [nom, corps] of aides) {
+      const appelle = [...bonnes].some((b) => new RegExp(`\\b${b}\\s*\\(`).test(corps));
+      if (!bonnes.has(nom) && (ASSERTION.test(corps) || appelle)) {
+        bonnes.add(nom);
+        change = true;
+      }
+    }
+  }
+  return [...bonnes];
+}
+
 // Retourne la liste des problèmes « fichier:ligne message ».
 export function analyserTexte(texte, nom) {
   const m = masquer(texte);
   const lignes = texte.split(/\r?\n/);
   const ligneDe = (pos) => m.slice(0, pos).split('\n').length;
   const pb = [];
+  const aides = aidesAvecAssertion(m);
+  const asserte = (corps) => ASSERTION.test(corps) || aides.some((a) => new RegExp(`\\b${a}\\s*\\(`).test(corps));
   const exigerCarte = (l, quoi) => {
     if (!CARTE.test(lignes[l - 1] ?? '') && !CARTE.test(lignes[l - 2] ?? '')) {
       pb.push(`${nom}:${l} ${quoi} sans carte (écrire LNN-TMM sur la ligne ou la précédente)`);
@@ -78,7 +102,7 @@ export function analyserTexte(texte, nom) {
     const corps = m.slice(ouvrante, fermante(m, ouvrante) + 1);
     if (/\bskip\s*:/.test(corps)) exigerCarte(l, 'option skip');
     if (mod === 'todo' || mod === 'skip') continue;
-    if (!ASSERTION.test(corps)) pb.push(`${nom}:${l} test sans assertion`);
+    if (!asserte(corps)) pb.push(`${nom}:${l} test sans assertion`);
   }
   for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|\b(?:describe|suite)\s*\.\s*skip\s*\(|\bt\s*\.\s*skip\s*\(/g)) {
     exigerCarte(ligneDe(x.index), 'test sauté');
