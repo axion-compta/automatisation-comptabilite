@@ -103,7 +103,7 @@
     --anim-reponse: 100ms;
     --anim-repli: 250ms;
     --anim-fete: 400ms;
-    --couleur-menu-fond: #9a3812;
+    --couleur-menu-fond: #b23f16;
     --couleur-menu-texte: #ffffff;
     --couleur-fond-console: #f3ece2;
     --couleur-fond-portail: #f6efe6;
@@ -143,10 +143,10 @@
     --couleur-graphique-serie-4: var(--couleur-texte-discret);
     --couleur-focus-interieur: var(--couleur-fond-carte);
     --couleur-focus-exterieur: var(--couleur-action-fond);
-    --police-famille-titre: Fraunces, Georgia, serif;
-    --police-famille-texte: Manrope, system-ui, "Segoe UI", sans-serif;
+    --police-famille-titre: Inter, system-ui, "Segoe UI", sans-serif;
+    --police-famille-texte: Inter, system-ui, "Segoe UI", sans-serif;
     --police-famille-code: Inconsolata, ui-monospace, Consolas, monospace;
-    --police-taille-precision: 12px;
+    --police-taille-precision: 13px;
     --police-taille-texte: 14px;
     --police-taille-texte-mobile: 15px;
     --police-taille-titre-carte: 24px;
@@ -188,7 +188,7 @@
     --courbe-standard: cubic-bezier(0.2, 0, 0, 1);
     --courbe-sortie: cubic-bezier(0.4, 0, 1, 1);
     --action: #b23f16;
-    --action-survol: #9a3812;
+    --action-survol: #8a3010;
     --action-doux: #fbeee8;
     --sur-action: #ffffff;
     --ia: #c24a1b;
@@ -206,7 +206,7 @@
     --rv-action: #c24a1b;
     --rv-action-texte: #9e3a12;
     --rv-lien: #a83e15;
-    --rv-menu: #9a3812;
+    --rv-menu: #b23f16;
     --rv-menu-actif-texte: #7a2c0d;
     --rv-ok-fond: #e3efdc;
     --rv-ok-texte: #1a4720;

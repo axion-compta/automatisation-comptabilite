@@ -475,7 +475,7 @@
   .refonte.rv .mobile-discuter .mobile-discuter-rond { width: 52px; height: 52px; min-height: 52px; }
 }
 
-/* T7 : le violet est réservé à l'assistant ; étape en cours, sélection, dépôt : terracotta ; « Ouverte » : vert */
+/* T7 : le violet est réservé à l'assistant ; étape en cours, sélection, dépôt : orange ; « Ouverte » : vert */
 .refonte.rv .rv-choix--sel { background: var(--c-peche-f); border-color: var(--c-action); color: var(--c-peche-t); }
 .refonte.rv .rv-choix--sel .rv-tuile--ia, .refonte.rv .rv-choix--sel .rv-tuile { background: var(--c-action); color: var(--couleur-texte-inverse); }
 .refonte.rv .rf-depot-ic.rv-tuile--ia, .refonte.rv .rv-tuile--ia.rf-depot-ic { background: var(--c-peche-f); color: var(--c-action); }
@@ -505,7 +505,7 @@
   .refonte.rv .rv-res .rv-ligne-sous { white-space: normal; }
 }
 .refonte.rv .rv-seg--miel { background: color-mix(in srgb, var(--c-miel-t) 45%, var(--c-miel-f)); }
-/* T7 (suite) : choix de l'écran « Bien démarrer » et étapes : terracotta, pas violet */
+/* T7 (suite) : choix de l'écran « Bien démarrer » et étapes : orange, pas violet */
 .refonte.rv .G-choix-liste .G-choix[aria-pressed="true"] { border-color: var(--c-action); background: var(--c-peche-f); color: var(--c-peche-t); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-peche-f) 70%, transparent); }
 .refonte.rv .G-choix-liste .G-choix[aria-pressed="true"] .G-radio { border-color: var(--c-action); background: var(--c-action); }
 .refonte.rv .autre-etat .choix--sel { border-color: var(--c-action); background: var(--c-peche-f); color: var(--c-peche-t); }

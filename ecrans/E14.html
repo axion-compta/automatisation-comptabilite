@@ -102,6 +102,7 @@
   <div class="cadre" data-composant="Ossature" data-memorise="menu chat">
     <nav class="nav nav2" data-composant="Menu" aria-label="Navigation principale" tabindex="0">
       <div class="nav-haut"><button class="nav-reduire" type="button" title="Réduire le menu (Ctrl + B)" aria-label="Réduire le menu" aria-keyshortcuts="Control+B"><svg class="ico ico-reduire" aria-hidden="true"><use href="#lu-chevrons-left"/></svg><svg class="ico ico-agrandir" aria-hidden="true"><use href="#lu-chevrons-right"/></svg></button></div>
+      <a class="nav-entree nav-portail" data-composant="RetourPortail" title="Retour au portail Axion (simulé dans la démonstration)" href="../index.html"><svg class="ico" aria-hidden="true"><use href="#lu-arrow-left"/></svg><span class="nav-libelle">Retour au portail</span></a>
       <div class="bloc-ent" data-composant="BlocEntreprise">
         <button class="ent-l1 nav-entreprise" type="button" aria-haspopup="listbox" aria-expanded="false" title="Lemoine Rénovation" aria-label="Lemoine Rénovation" data-composant="SelecteurEntreprise" data-vers="E55.html"><span class="ent-init ent-init--lemoine" aria-hidden="true">LR</span><span class="ent-nom nav-entreprise-nom" data-fictif="org">Lemoine Rénovation</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></button>
         <p class="ent-l2"><span class="ent-l2-texte">SARL · Je fais tout avec l'assistant</span> <a class="ent-lien ent-lien--icone" title="Qui fait quoi ?" aria-label="Qui fait quoi ?" href="E09.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-circle-help"/></svg></a></p>
@@ -113,14 +114,14 @@
         <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span><span class="nav-compteur" aria-label="5 choses avant de valider octobre" role="img">5</span></a></li>
         <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span><span class="nav-compteur" aria-label="4 à traiter en banque" role="img">4</span></a></li>
         <li><a class="nav-entree" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a></li>
-        <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 échéance à moins de 15 jours" role="img">1</span></a></li>
+        <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 alerte urgente : TVA à moins de 15 jours" role="img">!</span></a></li>
         <li><a class="nav-entree" aria-current="page" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a><ul class="nav-sous" aria-label="Mes documents"><li><a class="nav-sous-lien" href="E15.html">Le détail de ma compta</a></li><li><a class="nav-sous-lien" href="E16.html">Mes comptes en détail</a></li><li><a class="nav-sous-lien" href="E14.html" aria-current="page">Lettrage</a></li><li><a class="nav-sous-lien" href="N04.html">Mes comptes comptables</a></li><li><a class="nav-sous-lien" href="E36.html">Exports</a></li></ul></li>
       </ul>
       <div class="nav-pied">
         <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
-        <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
+        <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Parler à l'assistant</span></a>
         <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Mon profil</span></a>
       </div>
     </nav>
     <div class="page">
@@ -130,6 +131,9 @@
         <p class="bande-texte"><span class="bande-ent" data-fictif="org">Lemoine Rénovation</span> <span class="bande-sep">·</span> <span>Octobre 2026</span> <span class="bande-sep">·</span> <span class="bande-nombre" title="Pour valider octobre : 5 choses">5 à faire</span></p>
         <button class="loupe" type="button" data-composant="Recherche" aria-keyshortcuts="Control+K" title="Chercher un document ou une opération (Ctrl + K)" data-vers="N08.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-search"/></svg><span class="loupe-texte">Chercher</span><kbd>Ctrl K</kbd></button>
         <a class="bande-assistant" title="Votre assistant travaille · dernière vérification à 08:42 : voir ce que l'assistant a fait" href="E09.html"><span class="bande-point" aria-hidden="true"></span><span class="bande-ass-texte"><span>Assistant actif</span></span></a>
+        
+        <div class="bascule-mode" data-composant="BasculeMode" role="group" aria-label="Affichage"><button type="button" aria-pressed="true" data-mode="simple" title="Des mots du quotidien">Simple</button><button type="button" aria-pressed="false" data-mode="comptable" title="Affiche aussi le détail de ma compta">Comptable</button></div>
+        <a class="bande-cloche" data-composant="Cloche" title="Alertes : 3 non lues (1 urgente)" aria-label="Alertes : 3 non lues, dont 1 urgente" href="T08.html"><svg class="ico" aria-hidden="true"><use href="#lu-bell"/></svg><span class="bande-cloche-n">3</span></a>
         
         <span class="coin-demo coin-demo--barre">Démo</span>
       </div>
@@ -165,12 +169,13 @@
     
   </div>
   <nav class="barre-mobile" data-composant="BarreMobile" aria-label="Navigation principale"><ul>
+    <li><a class="bm-item" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="bm-lib">Activité</span></a></li>
     <li><a class="bm-item" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="bm-lib">Mon mois</span><span class="nav-compteur" role="img" aria-label="5 choses avant de valider octobre">5</span></a></li>
     <li><a class="bm-item" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="bm-lib">Ma banque</span><span class="nav-compteur" role="img" aria-label="4 à traiter en banque">4</span></a></li>
-    <li class="bm-plus"><button class="bm-ajouter" type="button" aria-label="Ajouter : prendre une facture en photo, déposer un fichier, saisir" title="Ajouter"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button></li>
-    <li><a class="bm-item" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="bm-lib">Mes factures</span><span class="nav-compteur" role="img" aria-label="1 à suivre dans les factures">1</span></a></li>
-    <li><a class="bm-item" aria-current="page" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
+    <li><a class="bm-item" aria-current="page" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="bm-lib">Documents</span></a></li>
+    <li><a class="bm-item" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="2 points à suivre dans Mes factures et Mes déclarations">2</span></a></li>
   </ul></nav>
+  <div class="mobile-discuter" data-composant="BoutonDiscuter"><a class="mobile-discuter-rond" href="E25.html" title="Discuter avec l'assistant" aria-label="Discuter avec l'assistant"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span>Discuter</span></a></div>
   <script src="../assets/js/demo.js" defer></script>
 </body>
 </html>

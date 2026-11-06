@@ -188,3 +188,48 @@ button[disabled], button[aria-disabled="true"], .rv-btn[disabled], .rv-btn[aria-
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* Lot 08 (06/11/2026) : Retour au portail, cloche d'alertes, Discuter, gravité, anneau, Tout valider */
+.refonte .nav-portail { margin: 0 8px 4px; opacity: .92; }
+.refonte .nav-portail .nav-libelle { font-weight: 400; }
+.refonte .bande-cloche { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; color: inherit; text-decoration: none; flex: none; }
+.refonte .bande-cloche:hover, .refonte .bande-cloche:focus-visible { background: var(--c-creuse, #f3f1ec); }
+.refonte .bande-cloche .ico { width: 22px; height: 22px; }
+.refonte .bande-cloche-n { position: absolute; top: 4px; right: 3px; min-width: 18px; height: 18px; padding: 0 4px; display: inline-grid; place-items: center; border-radius: 9px; background: #b23f16; color: #fff; font-size: 13px; font-weight: 600; line-height: 1; }
+.refonte .mobile-discuter-rond span { font-size: 0; }
+@media (max-width: 1023px) { .refonte .mobile-discuter { display: flex; } }
+/* Gravité des alertes : 4 niveaux, jamais la couleur seule (mot + icône + bord) */
+.grav { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 12px; border: 1px solid var(--c-bord-fort, #d6d0c6); background: var(--c-creuse, #f3f1ec); color: var(--c-texte, #1f1d1a); font-size: 14px; font-weight: 600; }
+.grav .ico { width: 16px; height: 16px; }
+.grav--info { border-style: dotted; }
+.grav--afaire { border-style: solid; }
+.grav--urgent { border: 2px solid #b23f16; background: #fbeee8; color: #8a3010; }
+.grav--bloquant { border: 2px solid #8a3010; background: #8a3010; color: #fff; }
+/* Anneau de santé à 3 arcs */
+.sante { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+.sante svg.sante-anneau { width: 120px; height: 120px; }
+.sante .sante-mot { font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+.sante .sante-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.sante .sante-liste li { display: flex; gap: 8px; align-items: center; }
+.sante .sante-trait { display: inline-block; width: 28px; height: 0; border-top: 6px solid #5f5a53; border-radius: 3px; }
+.sante .sante-trait--b { border-top-color: #b23f16; }
+.sante .sante-trait--t { border-top-color: #5f5a53; border-top-style: dashed; }
+/* Tout valider */
+.tv { border: 1px solid var(--c-bord-fort, #d6d0c6); border-radius: 14px; padding: 16px; background: var(--c-fond, #fff); display: grid; gap: 10px; }
+.tv-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.tv-liste li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--c-bord, #ece8e1); }
+.tv-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tv-annuler { display: none; }
+.tv.tv--fait .tv-annuler { display: flex; }
+.tv.tv--fait .tv-liste, .tv.tv--fait .tv-actions .tv-bouton { display: none; }
+.tv-bouton { min-height: 44px; padding: 0 18px; border-radius: 12px; border: 0; background: #b23f16; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.tv-bouton--sec { background: transparent; color: #8a3010; border: 1px solid #b23f16; }
+.alerte-plus { flex-basis: 100%; margin-top: 6px; font-size: 14px; }
+.alerte-plus summary { cursor: pointer; min-height: 36px; display: flex; align-items: center; color: #8a3010; }
+.alerte-plus-corps { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0; }
+.l7-notif { flex-wrap: wrap; }
+.tv[hidden], .tv [hidden] { display: none; }
+.refonte .bascule-mode { display: inline-flex; border: 1px solid var(--c-bord-fort, #d6d0c6); border-radius: 12px; overflow: hidden; flex: none; }
+.refonte .bascule-mode button { min-height: 36px; padding: 0 12px; border: 0; background: transparent; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+.refonte .bascule-mode button[aria-pressed="true"] { background: #fbeee8; color: #8a3010; font-weight: 600; }
+@media (max-width: 1279px) { .refonte .bascule-mode { display: none; } }

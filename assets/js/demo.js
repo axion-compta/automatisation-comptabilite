@@ -246,7 +246,7 @@
       p = document.createElement('div');
       p.className = 'demo-plus'; p.id = 'demo-plus'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Plus de rubriques');
       p.innerHTML = (sous.length ? '<p>Dans ' + (ouvert ? ouvert.textContent.trim() : 'cette rubrique') + '</p><ul>' + sous.map(lien).join('') + '</ul>' : '') +
-        '<p>Rubriques</p><ul>' + dans.map(lien).join('') + '</ul><p>Compte</p><ul>' + pied.map(lien).join('') + '</ul>';
+        '<p>Rubriques</p><ul>' + dans.map(lien).join('') + '<li><a href="E03.html">Ajouter une pièce</a></li></ul><p>Compte</p><ul>' + pied.map(lien).join('') + '<li><a href="' + (($('.nav-portail') || { getAttribute: function () { return '../index.html'; } }).getAttribute('href')) + '">Retour au portail</a></li></ul>';
       document.body.appendChild(p);
       btn.setAttribute('aria-controls', 'demo-plus');
     }
@@ -294,7 +294,7 @@
     if (!t.closest('.demo-plus')) fermerPlus();
     if ((el = t.closest('a[data-simule]'))) { ev.preventDefault(); toast("Cette partie n'est pas détaillée dans la démonstration."); return; }
     if ((el = t.closest('button'))) {
-      if (el.closest('.demo-pres, .demo-fin, summary, .composeur, form[aria-label*="Code"]') || el.type === 'submit') return;
+      if (el.closest('.demo-pres, .demo-fin, summary, .tv, .bascule-mode, .composeur, form[aria-label*="Code"]') || el.type === 'submit') return;
       if (el.classList.contains('outil')) { ev.preventDefault(); toast('Action simulée : ' + (el.getAttribute('aria-label') || 'bouton') + '. Rien n\'est enregistré.'); return; }
       ev.preventDefault();
       var lib = (el.textContent || el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
@@ -436,7 +436,7 @@
     var f = document.createElement('div');
     f.className = 'demo-fin'; f.setAttribute('role', 'dialog'); f.setAttribute('aria-modal', 'true'); f.setAttribute('aria-labelledby', 'demo-fin-t');
     f.innerHTML = '<div><h2 id="demo-fin-t">L\'IA prépare, vous validez.</h2><p>Chaque écriture est expliquée, tracée, et l\'historique s\'exporte pour votre comptable.</p><p class="demo-note" style="font-size:14px">Démonstration : données fictives. Préparé par IA, à valider.</p>' +
-      '<button type="button" class="demo-suivant" data-fin="recommencer">Recommencer la présentation</button><button type="button" class="demo-lien" data-fin="explorer">Explorer librement</button><a class="demo-lien" href="../index.html">Retour à l\'accueil</a></div>';
+      '<button type="button" class="demo-suivant" data-fin="recommencer">Recommencer la présentation</button><button type="button" class="demo-lien" data-fin="explorer">Explorer librement</button><a class="demo-lien" href="#" data-toast="Prendre rendez-vous avec Axion IA : le lien sera mis ici. Dans cette démonstration, aucune donnée n\'est recueillie.">Prendre rendez-vous</a><a class="demo-lien" href="../index.html">Retour à l\'accueil</a></div>';
     document.body.appendChild(f);
     var b = $('[data-fin="recommencer"]', f); if (b) b.focus();
   }
@@ -474,4 +474,37 @@
   }
   window.__demo = { poser: poser, etat: etat, toast: toast, telecharge: telecharge, STEPS: STEPS };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+/* ------------------------------------------------------------ Tout valider (N sûrs) : liste visible, récapitulatif renforcé, annulation 10 s */
+(function () {
+  var minuteur = null;
+  document.addEventListener('click', function (ev) {
+    var t = ev.target; if (!t.closest) return;
+    var tv = t.closest('[data-tv]'); if (!tv) return;
+    var q = function (s) { return tv.querySelector(s); };
+    if (t.closest('[data-tv-demander]')) { ev.preventDefault(); q('[data-tv-recap]').hidden = false; q('[data-tv-recap] button').focus(); return; }
+    if (t.closest('[data-tv-revenir]')) { ev.preventDefault(); q('[data-tv-recap]').hidden = true; return; }
+    if (t.closest('[data-tv-confirmer]')) {
+      ev.preventDefault(); q('[data-tv-recap]').hidden = true; tv.classList.add('tv--fait');
+      var n = 10, sp = q('[data-tv-sec]'); sp.textContent = n;
+      clearInterval(minuteur);
+      minuteur = setInterval(function () { n--; sp.textContent = n; if (n <= 0) { clearInterval(minuteur); var b = q('[data-tv-annuler]'); if (b) b.hidden = true; } }, 1000);
+      return;
+    }
+    if (t.closest('[data-tv-annuler]')) { ev.preventDefault(); clearInterval(minuteur); tv.classList.remove('tv--fait'); }
+  });
+})();
+
+/* Interrupteur Simple / Comptable de l'en-tête : change l'état affiché et le dit (le détail comptable est dans Mes documents). */
+(function () {
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('.bascule-mode button'); if (!b) return;
+    ev.preventDefault();
+    var g = b.parentNode; Array.prototype.forEach.call(g.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    var t = document.querySelector('.demo-toast');
+    if (!t) { t = document.createElement('div'); t.className = 'demo-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = b.getAttribute('data-mode') === 'comptable' ? 'Affichage Comptable : « Le détail de ma compta » et « Mes comptes en détail » sont à votre disposition dans Mes documents. (Simulé.)' : 'Affichage Simple : des mots du quotidien, l\'essentiel d\'abord.';
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 4500);
+  });
 })();

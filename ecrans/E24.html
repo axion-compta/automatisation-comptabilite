@@ -98,6 +98,7 @@
   <div class="cadre" data-composant="Ossature" data-memorise="menu chat">
     <nav class="nav nav2" data-composant="Menu" aria-label="Navigation principale" tabindex="0">
       <div class="nav-haut"><button class="nav-reduire" type="button" title="Réduire le menu (Ctrl + B)" aria-label="Réduire le menu" aria-keyshortcuts="Control+B"><svg class="ico ico-reduire" aria-hidden="true"><use href="#lu-chevrons-left"/></svg><svg class="ico ico-agrandir" aria-hidden="true"><use href="#lu-chevrons-right"/></svg></button></div>
+      <a class="nav-entree nav-portail" data-composant="RetourPortail" title="Retour au portail Axion (simulé dans la démonstration)" href="../index.html"><svg class="ico" aria-hidden="true"><use href="#lu-arrow-left"/></svg><span class="nav-libelle">Retour au portail</span></a>
       <div class="bloc-ent" data-composant="BlocEntreprise">
         <button class="ent-l1 nav-entreprise" type="button" aria-haspopup="listbox" aria-expanded="false" title="Lemoine Rénovation" aria-label="Lemoine Rénovation" data-composant="SelecteurEntreprise" data-vers="E55.html"><span class="ent-init ent-init--lemoine" aria-hidden="true">LR</span><span class="ent-nom nav-entreprise-nom" data-fictif="org">Lemoine Rénovation</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></button>
         <p class="ent-l2"><span class="ent-l2-texte">SARL · Je fais tout avec l'assistant</span> <a class="ent-lien ent-lien--icone" title="Qui fait quoi ?" aria-label="Qui fait quoi ?" href="E09.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-circle-help"/></svg></a></p>
@@ -109,14 +110,14 @@
         <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span><span class="nav-compteur" aria-label="5 choses avant de valider octobre" role="img">5</span></a></li>
         <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span><span class="nav-compteur" aria-label="4 à traiter en banque" role="img">4</span></a></li>
         <li><a class="nav-entree" aria-current="page" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a><ul class="nav-sous" aria-label="Mes factures"><li><a class="nav-sous-lien" href="E18.html">Acompte reçu</a></li><li><a class="nav-sous-lien" href="E17.html">Frais et trajets</a></li><li><a class="nav-sous-lien" href="E22.html">Gros achats durables</a></li></ul></li>
-        <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 échéance à moins de 15 jours" role="img">1</span></a></li>
+        <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 alerte urgente : TVA à moins de 15 jours" role="img">!</span></a></li>
         <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
       </ul>
       <div class="nav-pied">
         <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
-        <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
+        <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Parler à l'assistant</span></a>
         <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
+        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Mon profil</span></a>
       </div>
     </nav>
     <div class="page">
@@ -126,6 +127,9 @@
         <p class="bande-texte"><span class="bande-ent" data-fictif="org">Lemoine Rénovation</span> <span class="bande-sep">·</span> <span>Octobre 2026</span> <span class="bande-sep">·</span> <span class="bande-nombre" title="Pour valider octobre : 5 choses">5 à faire</span></p>
         <button class="loupe" type="button" data-composant="Recherche" aria-keyshortcuts="Control+K" title="Chercher un document ou une opération (Ctrl + K)" data-vers="N08.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-search"/></svg><span class="loupe-texte">Chercher</span><kbd>Ctrl K</kbd></button>
         <a class="bande-assistant" title="Votre assistant travaille · dernière vérification à 08:42 : voir ce que l'assistant a fait" href="E09.html"><span class="bande-point" aria-hidden="true"></span><span class="bande-ass-texte"><span>Assistant actif</span></span></a>
+        
+        <div class="bascule-mode" data-composant="BasculeMode" role="group" aria-label="Affichage"><button type="button" aria-pressed="true" data-mode="simple" title="Des mots du quotidien">Simple</button><button type="button" aria-pressed="false" data-mode="comptable" title="Affiche aussi le détail de ma compta">Comptable</button></div>
+        <a class="bande-cloche" data-composant="Cloche" title="Alertes : 3 non lues (1 urgente)" aria-label="Alertes : 3 non lues, dont 1 urgente" href="T08.html"><svg class="ico" aria-hidden="true"><use href="#lu-bell"/></svg><span class="bande-cloche-n">3</span></a>
         
         <span class="coin-demo coin-demo--barre">Démo</span>
       </div>
@@ -145,6 +149,20 @@
         <section class="rv-carte rv-alerte" data-composant="CarteAction" aria-label="Client en retard">
             <span class="rv-tuile rv-tuile--rouge" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-wallet"/></svg></span><div class="rv-alerte-texte"><p class="rv-alerte-titre"><span data-fictif="org">Boulangerie Rivoire</span> vous doit <span class="nb">1 200 €</span></p><p class="rv-indic-sous">Facture de vente · en retard de 23 jours</p></div><button class="btn-contour rv-btn" type="button" data-vers="E56.html#liste-retard"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-mail"/></svg>Voir la relance</button>
           </section>
+        <section class="tv" data-tv data-composant="ToutValider" aria-labelledby="h-tv">
+  <h2 class="rv-bloc-titre" id="h-tv">Tout valider (36 sûrs)</h2>
+  <p>36 achats sont sûrs : même fournisseur, même montant et même date que sur la banque. Les 2 doutes (Fournisseur d'énergie 219,00 € au montant inhabituel ; Restaurant 64,00 €, repas client ou personnel ?) restent pour vous.</p>
+  <details class="rv-repli" data-composant="PanneauRepliable"><summary>Voir la liste des 36 avant de valider<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><ul class="tv-liste">
+    <li><span>Fournisseur de peintures · 15/10</span><span>128,40 €</span></li>
+    <li><span>Fournisseur de matériaux · 16/10</span><span>98,60 €</span></li>
+    <li><span>Fournisseur de quincaillerie · 22/10</span><span>47,30 €</span></li>
+    <li><span>Assureur · 27/10</span><span>320,00 €</span></li>
+    <li><span>32 autres factures de matériel</span><span>2 622,70 €</span></li>
+    <li><strong>Total des 36 achats</strong><strong>3 217,00 €</strong></li></ul></div></details>
+  <div class="tv-actions"><button class="tv-bouton" type="button" data-tv-demander>Tout valider (36 sûrs)</button><span class="r3-mention" data-composant="Statut"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-sparkles"/></svg>Préparé par IA, à valider</span></div>
+  <div class="tv-recap" data-tv-recap hidden role="alertdialog" aria-label="Récapitulatif avant de valider"><p><strong>Récapitulatif : vous allez confirmer 36 liens pour 3 217,00 €.</strong> Au-delà de 25 objets ou de 1 000 €, je vous demande de relire ce total. Les 2 doutes ne sont pas touchés. Vous pourrez annuler pendant 10 secondes.</p><div class="tv-actions"><button class="tv-bouton" type="button" data-tv-confirmer>Je confirme les 36</button><button class="tv-bouton tv-bouton--sec" type="button" data-tv-revenir>Revenir à la liste</button></div></div>
+  <div class="tv-annuler" data-tv-fait aria-live="polite"><p class="demo-ok"><svg class="ico" aria-hidden="true"><use href="#lu-circle-check"/></svg>36 liens confirmés par vous. Inscrit dans l'historique.</p><button class="tv-bouton tv-bouton--sec" type="button" data-tv-annuler>Annuler (<span data-tv-sec>10</span> s)</button></div>
+</section>
         <section class="rv-carte rv-bloc" data-composant="ListeLignes" aria-labelledby="h-liste-achats">
           <div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-liste-achats">Factures d'achat d'octobre et reçues depuis</h2><span class="rv-compte">48</span></div>
           <details class="rv-repli" data-composant="PanneauRepliable"><summary>Filtrer la liste<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><div class="rv-onglets" role="tablist" data-composant="OngletsPage" aria-label="Filtrer les achats"><a class="rv-onglet" role="tab" aria-selected="true" href="#" data-simule="1">Toutes<span class="rv-onglet-n">48</span></a><a class="rv-onglet" role="tab" aria-selected="false" title="Liens à confirmer" href="#" data-simule="1">À confirmer<span class="rv-onglet-n">38</span></a><a class="rv-onglet" role="tab" aria-selected="false" title="Pas encore liées" href="#" data-simule="1">À vérifier<span class="rv-onglet-n">2</span></a><a class="rv-onglet" role="tab" aria-selected="false" title="Pas encore payées" href="#" data-simule="1">Sans paiement<span class="rv-onglet-n">4</span></a></div></div></details>
@@ -202,12 +220,13 @@
     
   </div>
   <nav class="barre-mobile" data-composant="BarreMobile" aria-label="Navigation principale"><ul>
+    <li><a class="bm-item" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="bm-lib">Activité</span></a></li>
     <li><a class="bm-item" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="bm-lib">Mon mois</span><span class="nav-compteur" role="img" aria-label="5 choses avant de valider octobre">5</span></a></li>
     <li><a class="bm-item" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="bm-lib">Ma banque</span><span class="nav-compteur" role="img" aria-label="4 à traiter en banque">4</span></a></li>
-    <li class="bm-plus"><button class="bm-ajouter" type="button" aria-label="Ajouter : prendre une facture en photo, déposer un fichier, saisir" title="Ajouter"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button></li>
-    <li><a class="bm-item" aria-current="page" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="bm-lib">Mes factures</span><span class="nav-compteur" role="img" aria-label="1 à suivre dans les factures">1</span></a></li>
-    <li><a class="bm-item" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
+    <li><a class="bm-item" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="bm-lib">Documents</span></a></li>
+    <li><a class="bm-item" aria-current="page" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="2 points à suivre dans Mes factures et Mes déclarations">2</span></a></li>
   </ul></nav>
+  <div class="mobile-discuter" data-composant="BoutonDiscuter"><a class="mobile-discuter-rond" href="E25.html" title="Discuter avec l'assistant" aria-label="Discuter avec l'assistant"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span>Discuter</span></a></div>
   <script src="../assets/js/demo.js" defer></script>
 </body>
 </html>
