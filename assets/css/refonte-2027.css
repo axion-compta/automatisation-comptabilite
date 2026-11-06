@@ -5,7 +5,7 @@
    Composants : carte, bloc indicateur, pastille d'état, liste compacte, panneau repliable, bento, bande de l'assistant.
    =================================================================================================== */
 
-/* ---------- 0. Thème : clair par défaut, sombre optionnel ---------- */
+/* ---------- 0. Thème : clair seulement ---------- */
 .refonte.rv {
   --c-fond: var(--rv-fond); --c-surface: var(--rv-surface); --c-creuse: var(--rv-surface-creuse); --c-elevee: var(--rv-surface-elevee);
   --c-bord: var(--rv-bord); --c-bord-fort: var(--rv-bord-fort);
@@ -29,21 +29,7 @@
   --police-inter: var(--police-famille-texte);
   background: var(--c-fond); color: var(--c-texte); font-family: var(--police-famille-texte); font-weight: 500;
 }
-:root[data-theme="sombre"] .refonte.rv {
-  --c-fond: var(--rv-sombre-fond); --c-surface: var(--rv-sombre-surface); --c-creuse: var(--rv-sombre-surface-creuse); --c-elevee: var(--rv-sombre-surface-elevee);
-  --c-bord: var(--rv-sombre-bord); --c-bord-fort: var(--rv-sombre-bord-fort);
-  --c-texte: var(--rv-sombre-texte); --c-texte-2: var(--rv-sombre-texte-2); --c-texte-3: var(--rv-sombre-texte-3);
-  --c-action: var(--rv-sombre-action); --c-action-texte: var(--rv-sombre-action-texte); --c-lien: var(--rv-sombre-lien);
-  --c-ok-f: var(--rv-sombre-ok-fond); --c-ok-t: var(--rv-sombre-ok-texte); --c-ok-l: var(--rv-sombre-ok-trait);
-  --c-am-f: var(--rv-sombre-ambre-fond); --c-am-t: var(--rv-sombre-ambre-texte); --c-am-l: var(--rv-sombre-ambre-trait);
-  --c-ro-f: var(--rv-sombre-rouge-fond); --c-ro-t: var(--rv-sombre-rouge-texte); --c-ro-l: var(--rv-sombre-rouge-trait);
-  --c-ne-f: var(--rv-sombre-neutre-fond); --c-ne-t: var(--rv-sombre-neutre-texte);
-  --c-ia-f: var(--rv-sombre-ia-fond); --c-ia-b: var(--rv-sombre-ia-bord); --c-ia-l: var(--rv-sombre-ia-trait); --c-ia-t: var(--rv-sombre-ia-texte);
-  --c-peche-f: var(--rv-sombre-surface-elevee); --c-peche-t: var(--rv-sombre-action-texte);
-  --c-sauge-f: var(--rv-sombre-ok-fond); --c-sauge-t: var(--rv-sombre-ok-texte);
-  --c-miel-f: var(--rv-sombre-ambre-fond); --c-miel-t: var(--rv-sombre-ambre-texte);
-  --o-carte: 0 1px 2px rgb(0 0 0 / 0.4); --o-elevee: 0 12px 32px rgb(0 0 0 / 0.45);
-}
+
 
 /* ---------- 1. Ossature : menu de la console, fond teinté, centre aéré ---------- */
 .refonte.rv .page { background: var(--c-fond); }
@@ -337,13 +323,6 @@
 .refonte.rv .rv-btn-texte, .refonte.rv .rv-corps .btn-texte { min-width: 44px; justify-content: center; }
 
 /* ---------- 15. Thème sombre (optionnel) : texte foncé sur l'action claire, menu inchangé ---------- */
-:root[data-theme="sombre"] .refonte.rv .rv-corps .btn-plein { color: var(--rv-sombre-fond); }
-:root[data-theme="sombre"] .refonte.rv .rv-corps .btn-contour { background: var(--c-surface); color: var(--c-texte); border-color: var(--c-bord-fort); }
-:root[data-theme="sombre"] .refonte.rv .rv-tuile--ia, :root[data-theme="sombre"] .refonte.rv .chat .pastille-ia, :root[data-theme="sombre"] .refonte.rv .chat .envoyer:not([disabled]) { background: var(--c-ia-l); color: var(--rv-sombre-fond); }
-:root[data-theme="sombre"] .refonte.rv .rv-mois--cours { background: var(--c-am-l); }
-:root[data-theme="sombre"] .refonte.rv .bande-centre, :root[data-theme="sombre"] .refonte.rv .chat, :root[data-theme="sombre"] .refonte.rv .chat .chat-contexte { background: var(--c-surface); color: var(--c-texte); }
-:root[data-theme="sombre"] .refonte.rv .chat .chat-tete { background: linear-gradient(180deg, var(--c-ia-f), var(--c-surface)); }
-:root[data-theme="sombre"] .refonte.rv .chat .msg-ia-corps, :root[data-theme="sombre"] .refonte.rv .chat .sugg, :root[data-theme="sombre"] .refonte.rv .chat .carte-chat { color: var(--c-texte); }
 
 /* ---- Coque allégée (lot E) : menu et bande du haut avec moins de mots ---- */
 .refonte.rv .nav2 .ent-l2 { display: flex; align-items: center; gap: 6px; }

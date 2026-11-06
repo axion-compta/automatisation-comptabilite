@@ -11,8 +11,8 @@
 .refonte .nav2 .ent-l1 { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 4px 8px; border: 0; border-radius: 10px; background: transparent; color: var(--nav-texte); text-align: left; cursor: pointer; font: inherit; }
 .refonte .nav2 .ent-l1:hover { background: color-mix(in srgb, var(--nav-texte) 16%, transparent); }
 .refonte .nav2 .ent-init { flex: none; display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--couleur-ent, #7a3b1e); color: #fff; font-weight: 600; font-size: 15px; box-shadow: 0 0 0 2px #fff; }
-.refonte .ent-init--marceau { --couleur-ent: #2f5d8a; background: #2f5d8a !important; }
-.refonte .cadre:has(.ent-init--marceau) { --couleur-ent: #2f5d8a; }
+.refonte .ent-init--marceau { --couleur-ent: #5c5650; background: #5c5650 !important; }
+.refonte .cadre:has(.ent-init--marceau) { --couleur-ent: #5c5650; }
 .refonte .nav2 .ent-nom { flex: 1; min-width: 0; font-size: 17px; font-weight: 600; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
 .refonte .nav2 .ent-l2 { margin: 0; padding: 0 8px; font-size: 14px; line-height: 1.35; color: var(--nav-texte); }
 .refonte .nav2 .ent-lien { color: var(--nav-texte); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }

@@ -181,3 +181,10 @@ body[data-demo-pres] .demo-toast { bottom: 200px; }
 strong, b, th, h1, h2, h3, h4, h5, h6, button, summary, legend { font-weight: 600; }
 /* Relecture : grand chiffre sans retour à la ligne à 390 px */
 @media (max-width: 480px) { .refonte.rv .rv-heros-chiffre { flex-direction: column; align-items: flex-start; gap: 4px; } .refonte.rv .rv-gros { white-space: nowrap; } }
+
+/* Audit 06/11/2026 : un bouton désactivé doit se voir désactivé, partout (E36, E45, confirmations fortes). */
+button[disabled], button[aria-disabled="true"], .rv-btn[disabled], .rv-btn[aria-disabled="true"] {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: none;
+}

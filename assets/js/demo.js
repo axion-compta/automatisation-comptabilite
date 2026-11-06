@@ -40,9 +40,9 @@
     ['14/10/2026', '11:05', 'Assistant (IA)', 'Écriture préparée', 'Facture AB-1021 du 14/10/2026 (Atelier Bertin)', 'Achat de matériel à Atelier Bertin : 1 000 € hors TVA et 200 € de TVA, soit 1 200 €.', 'Moyenne', 'Pas encore validée par Claire Lemoine'],
     ['14/10/2026', '11:05', 'Assistant (IA)', 'Question posée', 'Facture AB-1021', 'Atelier Bertin est un nouveau fournisseur : le nom est à confirmer.', 'Moyenne', 'En attente'],
     ['07/10/2026', '09:12', 'Assistant (IA)', 'Opération de banque classée', 'Relevé de banque, ligne du 07/10', 'Paiement de 1 000 € : 200 € de moins que la facture, écart signalé.', 'Moyenne', 'En attente'],
-    ['17/10/2026', '08:40', 'Assistant (IA)', 'Lien proposé', 'Ticket Brasserie du Port du 17/10', 'Même montant et même date que l\'opération de 64,00 € du 17/10.', 'Élevée', 'En attente'],
-    ['21/10/2026', '08:41', 'Assistant (IA)', 'Lien proposé', 'Facture Énergies Lumière du 20/10', 'Même fournisseur ; montant inhabituel signalé (219,00 €).', 'Moyenne', 'En attente'],
-    ['03/10/2026', '10:20', 'Claire Lemoine', 'Lien confirmé', 'Point P, 212,40 €', 'Confirmé à la main.', 'Élevée', 'Validé par Claire Lemoine le 05/10/2026']
+    ['17/10/2026', '08:40', 'Assistant (IA)', 'Lien proposé', 'Ticket de restaurant du 17/10', 'Même montant et même date que l\'opération de 64,00 € du 17/10.', 'Élevée', 'En attente'],
+    ['21/10/2026', '08:41', 'Assistant (IA)', 'Lien proposé', 'Facture Fournisseur d\'énergie du 20/10', 'Même fournisseur ; montant inhabituel signalé (219,00 €).', 'Moyenne', 'En attente'],
+    ['12/11/2026', '09:05', 'Claire Lemoine', 'Lien confirmé', 'Fournisseur de matériaux, 212,40 €', 'Confirmé à la main.', 'Élevée', 'Validé par Claire Lemoine le 12/11/2026']
   ];
   function csv(l) { return l.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n'); }
   var FEC = [
@@ -50,8 +50,8 @@
     ['AC', 'Achats', '1', '20261014', '606300', 'Petit outillage et matériel', '', '', 'AB-1021', '20261014', 'DEMO fictif - Atelier Bertin - Préparé par IA, à valider', '1000,00', '0,00', '', '', '', '', ''],
     ['AC', 'Achats', '1', '20261014', '445660', 'TVA déductible', '', '', 'AB-1021', '20261014', 'DEMO fictif - Atelier Bertin - TVA 20 %', '200,00', '0,00', '', '', '', '', ''],
     ['AC', 'Achats', '1', '20261014', '401000', 'Fournisseurs', 'BERT', 'Atelier Bertin', 'AB-1021', '20261014', 'DEMO fictif - Atelier Bertin', '0,00', '1200,00', '', '', '', '', ''],
-    ['VE', 'Ventes', '2', '20260920', '411000', 'Clients', 'DUPO', 'Dupont', 'F-2026-031', '20260920', 'DEMO fictif - Facture client Dupont', '1200,00', '0,00', '', '', '', '', ''],
-    ['VE', 'Ventes', '2', '20260920', '706000', 'Prestations de services', '', '', 'F-2026-031', '20260920', 'DEMO fictif - Facture client Dupont', '0,00', '1000,00', '', '', '', '', ''],
+    ['VE', 'Ventes', '2', '20260920', '411000', 'Clients', 'RIVO', 'Boulangerie Rivoire', 'F-2026-031', '20260920', 'DEMO fictif - Facture client Boulangerie Rivoire', '1200,00', '0,00', '', '', '', '', ''],
+    ['VE', 'Ventes', '2', '20260920', '706000', 'Prestations de services', '', '', 'F-2026-031', '20260920', 'DEMO fictif - Facture client Boulangerie Rivoire', '0,00', '1000,00', '', '', '', '', ''],
     ['VE', 'Ventes', '2', '20260920', '445710', 'TVA collectée', '', '', 'F-2026-031', '20260920', 'DEMO fictif - TVA 20 %', '0,00', '200,00', '', '', '', '', '']
   ];
   function telecharge(quoi) {
@@ -142,11 +142,11 @@
   /* ------------------------------------------------------------ discussion simulée */
   var Q = [
     { cle: 'tva', q: 'Combien je dois de TVA ce mois-ci ?', re: /tva/i,
-      r: "Pour octobre, vous devez environ <strong>955 € de TVA</strong>, à déclarer avant le 24/11/2026. C'est une estimation : j'ai pris vos ventes et vos achats du mois, et je vous montre le calcul si vous le souhaitez.",
-      carte: { surtitre: 'À valider', titre: 'TVA d\'octobre : environ 955 €', note: 'Je prépare la déclaration en brouillon. Je vous guide pas à pas sur impots.gouv ; vous déposez vous-même.', bouton: 'Préparer la déclaration', ok: 'Déclaration préparée en brouillon. Rien n\'est envoyé : vous la déposez vous-même sur impots.gouv, et je vous guide pas à pas.', lien: ['Voir Mes déclarations', 'E19.html'] } },
-    { cle: 'impayes', q: 'Qui me doit de l\'argent ?', re: /doit|impay|retard|dupont|client/i,
-      r: "Un client est en retard : <strong>Dupont, 1 200 €, 23 jours de retard</strong>. J'ai préparé une relance polie, prête mais non envoyée : elle ne part qu'avec votre accord.",
-      carte: { surtitre: 'À valider', titre: 'Relance prête pour Dupont', note: 'Message poli, avec la facture en pièce jointe. Non envoyé tant que vous ne validez pas.', bouton: 'Envoyer la relance', ok: 'Relance enregistrée (simulation : rien n\'a été envoyé).', lien: ['Voir Mes factures', 'E24.html?e=retard'] } },
+      r: "<strong>Préparation impossible : il reste 3 pièces à vérifier.</strong> Tant qu'elles ne sont pas vérifiées, je ne vous donne pas de montant de TVA pour octobre. La déclaration est à déposer avant le 24/11/2026 (date à vérifier).",
+      carte: { surtitre: 'Il manque des vérifications', titre: 'TVA d\'octobre : 3 pièces à vérifier', note: 'Dès que les 3 pièces sont vérifiées, je prépare la déclaration. Vous la déposez vous-même sur impots.gouv.', bouton: 'Voir les 3 pièces', vers: 'E20.html', lien: ['Voir Mes déclarations', 'E19.html'] } },
+    { cle: 'impayes', q: 'Qui me doit de l\'argent ?', re: /doit|impay|retard|rivoire|client/i,
+      r: "Un client est en retard : <strong>Boulangerie Rivoire, 1 200 €, 23 jours de retard</strong>. J'ai préparé une relance polie, prête mais non envoyée : elle ne part qu'avec votre accord.",
+      carte: { surtitre: 'À valider', titre: 'Relance prête pour Boulangerie Rivoire', note: 'Message poli, avec la facture en pièce jointe. Non envoyé tant que vous ne validez pas.', bouton: 'Envoyer la relance', ok: 'Relance enregistrée (simulation : rien n\'a été envoyé).', lien: ['Voir Mes factures', 'E24.html?e=retard'] } },
     { cle: 'manque', q: 'Qu\'est-ce qui manque pour valider octobre ?', re: /manque|valider/i,
       r: "Il reste <strong>5 choses</strong> avant de valider octobre. La première : le relevé de banque d'octobre, que je n'ai pas encore reçu.",
       carte: { surtitre: 'Il manque un relevé', titre: 'Relevé d\'octobre', note: '', bouton: 'Ajouter le relevé', vers: 'E03.html' } },
@@ -155,9 +155,9 @@
       carte: null, lien: ['Voir Ma banque', 'E12.html'] }
   ];
   var AUTRES = [
-    { re: /pourquoi.*ventes|ventes.*mont/i, r: "Vos ventes d'octobre sont à <strong>9 830 € hors TVA</strong>, soit 4 % de plus qu'en octobre 2025. Ce sont trois factures de vente émises ce mois-ci : Dupont, Maison Girard et Atelier Roche." },
+    { re: /pourquoi.*ventes|ventes.*mont/i, r: "Vos ventes d'octobre sont à <strong>9 830 € hors TVA</strong>, soit 4 % de plus qu'en octobre 2025. Ce sont trois factures de vente émises ce mois-ci : Boulangerie Rivoire, Client C et Client B." },
     { re: /explique|écran/i, r: "Cet écran vous montre l'essentiel : ce que j'ai déjà préparé, ce qu'il reste à faire, et un seul bouton pour avancer. Tout ce que je fais est expliqué et daté dans l'historique." },
-    { re: /fait|historique/i, r: "J'ai lu 40 documents (38 classés, 2 à vérifier), proposé 38 liens avec la banque et préparé la TVA d'octobre en brouillon. Tout est dans l'historique, et vous pouvez l'exporter.", lien: ['Voir l\'historique', 'E09.html'] },
+    { re: /fait|historique/i, r: "J'ai lu 40 documents (38 classés, 2 à vérifier), proposé 38 liens avec la banque. La TVA d'octobre attend 3 pièces à vérifier. Tout est dans l'historique, et vous pouvez l'exporter.", lien: ['Voir l\'historique', 'E09.html'] },
     { re: /problème/i, r: "Un souci ? Dites-moi ce qui ne va pas en une phrase, je transmets avec une capture de l'écran.", lien: ['Signaler un problème', 'N01.html'] }
   ];
   var FALLBACK = "Dans cette démonstration, je ne réponds qu'à quelques questions préenregistrées. Essayez l'une de celles ci-dessous.";
@@ -322,7 +322,7 @@
   var G = ['Mon activité', 'Mon mois', 'Dépôt d\'un dossier de factures', 'Un document : pourquoi, qui, quand', 'Ma banque', 'La discussion', 'Mes documents'];
   var STEPS = [
     { g: 0, page: 'E56', texte: "Mon activité : les ventes, l'argent en banque, les clients qui n'ont pas payé et la TVA, d'un seul coup d'œil. Chaque chiffre ouvre sa liste.", act: function () { location.hash = '#liste-retard'; var n = $('.nav'); if (n) n.scrollTop = 0; window.scrollTo(0, 0); } },
-    { g: 0, page: 'E56', texte: "Un clic sur « Clients impayés » ouvre la liste : Dupont, 1 200 €, 23 jours de retard. La relance est déjà prête.", act: function () { } },
+    { g: 0, page: 'E56', texte: "Un clic sur « Clients impayés » ouvre la liste : Boulangerie Rivoire, 1 200 €, 23 jours de retard. La relance est déjà prête.", act: function () { } },
     { g: 1, page: 'E01', texte: "Mon mois : l'assistant dit ce qui est fait et ce qui manque avant de valider octobre. La première chose : le relevé de banque.", act: function (i) { listeFinDeMois(i); } },
     { g: 1, page: 'E01', texte: "Six lignes, un état écrit et un bouton par ligne. Rien de technique : l'assistant prépare, Claire valide.", act: function () { } },
     { g: 2, page: 'E03', texte: "Ajouter : un seul geste. On dépose un dossier, un ZIP (jusqu'à 500 fichiers) ou des photos. L'assistant s'occupe du reste.", act: function (i) { lancerDepot(i); } },

@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="../assets/css/demo.css">
   
 </head>
-<body data-demo-page="N05" class="refonte rv" data-ecran="N05">
+<body data-demo-page="N05" class="refonte rv rv-seul" data-ecran="N05">
 <svg width="0" height="0" aria-hidden="true" focusable="false">
   <symbol id="lu-message-circle" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
   <symbol id="lu-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
@@ -95,81 +95,37 @@
   <symbol id="lu-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
 </svg>
   <a class="evitement" href="#contenu">Aller au contenu</a>
-  <div class="cadre" data-composant="Ossature" data-memorise="menu chat">
-    <nav class="nav nav2" data-composant="Menu" aria-label="Navigation principale" tabindex="0">
-      <div class="nav-haut"><button class="nav-reduire" type="button" title="Réduire le menu (Ctrl + B)" aria-label="Réduire le menu" aria-keyshortcuts="Control+B"><svg class="ico ico-reduire" aria-hidden="true"><use href="#lu-chevrons-left"/></svg><svg class="ico ico-agrandir" aria-hidden="true"><use href="#lu-chevrons-right"/></svg></button></div>
-      <div class="bloc-ent" data-composant="BlocEntreprise">
-        <button class="ent-l1 nav-entreprise" type="button" aria-haspopup="listbox" aria-expanded="false" title="Lemoine Rénovation" aria-label="Lemoine Rénovation" data-composant="SelecteurEntreprise" data-vers="E55.html"><span class="ent-init ent-init--lemoine" aria-hidden="true">LR</span><span class="ent-nom nav-entreprise-nom" data-fictif="org">Lemoine Rénovation</span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></button>
-        <p class="ent-l2"><span class="ent-l2-texte">SARL · Je fais tout avec l'assistant</span> <a class="ent-lien ent-lien--icone" title="Qui fait quoi ?" aria-label="Qui fait quoi ?" href="E09.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-circle-help"/></svg></a></p>
-        <button class="ent-l3 nav-annee" type="button" aria-haspopup="listbox" aria-expanded="false" data-composant="SelecteurAnnee" data-vers="E07.html"><span class="nav-annee-texte"><span class="nav-annee-etiquette" title="Année comptable">Année</span><span class="nav-annee-dates">01/07/2026 → 30/06/2027</span></span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg><span class="ent-aide" role="img" aria-label="Aussi appelée exercice comptable ; elle peut ne pas commencer en janvier ni durer 12 mois." title="Aussi appelée exercice comptable ; elle peut ne pas commencer en janvier ni durer 12 mois.">?</span></button>
-      </div>
-      <button class="bouton-ajouter" type="button" data-composant="BoutonAjouter" title="Ajouter une facture, un relevé, une note de frais…" data-vers="E03.html"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg><span class="nav-libelle">Ajouter</span></button>
-      <ul class="nav-entrees">
-        <li><a class="nav-entree" title="Mon activité" href="E56.html"><svg class="ico" aria-hidden="true"><use href="#lu-chart-column"/></svg><span class="nav-libelle">Mon activité</span></a></li>
-        <li><a class="nav-entree" title="Mon mois" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="nav-libelle">Mon mois</span><span class="nav-compteur" aria-label="5 choses avant de valider octobre" role="img">5</span></a></li>
-        <li><a class="nav-entree" title="Ma banque" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="nav-libelle">Ma banque</span><span class="nav-compteur" aria-label="4 à traiter en banque" role="img">4</span></a></li>
-        <li><a class="nav-entree" title="Mes factures" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="nav-libelle">Mes factures</span><span class="nav-compteur" aria-label="1 à suivre dans les factures" role="img">1</span></a></li>
-        <li><a class="nav-entree" title="Mes déclarations" href="E19.html"><svg class="ico" aria-hidden="true"><use href="#lu-stamp"/></svg><span class="nav-libelle">Mes déclarations</span><span class="nav-compteur" aria-label="1 échéance à moins de 15 jours" role="img">1</span></a></li>
-        <li><a class="nav-entree" title="Mes documents" href="E07.html"><svg class="ico" aria-hidden="true"><use href="#lu-folder"/></svg><span class="nav-libelle">Mes documents</span></a></li>
-      </ul>
-      <div class="nav-pied">
-        <a class="nav-entree nav-pied-lien" title="Réglages" href="E45.html"><svg class="ico" aria-hidden="true"><use href="#lu-settings"/></svg><span class="nav-libelle">Réglages</span></a>
-        <a class="nav-entree nav-pied-lien" title="Parler à l'assistant" href="E25.html"><svg class="ico" aria-hidden="true"><use href="#lu-message-circle"/></svg><span class="nav-libelle">Assistant</span></a>
-        <a class="nav-entree nav-pied-lien lien-probleme" data-composant="SignalerProbleme" title="Signaler un problème" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg><span class="nav-libelle">Signaler un problème</span></a>
-        <a class="nav-entree nav-pied-lien" title="Mon profil" href="N14.html"><svg class="ico" aria-hidden="true"><use href="#lu-user"/></svg><span class="nav-libelle">Profil</span></a>
-      </div>
-    </nav>
-    <div class="page">
-      <div class="entete-mobile bandeau-mobile" data-composant="BandeauMobile"><button class="pastille-ent" type="button" aria-haspopup="listbox" aria-expanded="false" data-composant="SelecteurEntreprise" title="Lemoine Rénovation" data-vers="E55.html"><span class="ent-init ent-init--lemoine" aria-hidden="true">LR</span><span class="pastille-ent-texte"><strong data-fictif="org">Lemoine Rénovation</strong><span class="pastille-ent-annee">Année 01/07/2026 → 30/06/2027</span></span><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></button><span class="bm-pastille" data-composant="Statut">Octobre : 5 avant de valider</span><span class="coin-demo coin-demo--mobile">Démo</span></div>
-      
-      <div class="bande-centre" data-composant="BandeCentre" role="toolbar" aria-label="Outils de la page">
-        <p class="bande-texte"><span class="bande-ent" data-fictif="org">Lemoine Rénovation</span> <span class="bande-sep">·</span> <span>Octobre 2026</span> <span class="bande-sep">·</span> <span class="bande-nombre" title="Pour valider octobre : 5 choses">5 à faire</span></p>
-        <button class="loupe" type="button" data-composant="Recherche" aria-keyshortcuts="Control+K" title="Chercher un document ou une opération (Ctrl + K)" data-vers="N08.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-search"/></svg><span class="loupe-texte">Chercher</span><kbd>Ctrl K</kbd></button>
-        <a class="bande-assistant" title="Votre assistant travaille · dernière vérification à 08:42 : voir ce que l'assistant a fait" href="E09.html"><span class="bande-point" aria-hidden="true"></span><span class="bande-ass-texte"><span>Assistant actif</span></span></a>
-        
-        <span class="coin-demo coin-demo--barre">Démo</span>
-      </div>
-      <main class="page-corps-v2 page-corps-v2--tdb rv-corps" id="contenu" data-zone="contenu" data-composant="Contenu">
-<header class="rv-entete" data-composant="Contenu"><div class="rv-entete-texte"><div class="rv-titre-ligne"><h1 class="rv-titre">Activer mon compte</h1><button class="rv-aide" type="button" aria-label="Trois étapes : votre adresse, votre entreprise, votre accord. Rien n'est créé dans la démonstration." title="Trois étapes : votre adresse, votre entreprise, votre accord. Rien n'est créé dans la démonstration."><span aria-hidden="true">?</span></button></div></div></header>
-<section class="rv-carte rv-heros" data-composant="CarteAction" aria-labelledby="h-n05"><div class="rv-heros-haut"><div class="rv-heros-chiffre"><span class="rv-gros" aria-hidden="true">1/3</span><h2 id="h-n05" class="rv-heros-titre">étape : votre adresse<span class="evitement"> : étape 1 sur 3</span></h2></div><div class="rv-heros-fin"><button class="btn-plein rv-btn" type="button" data-toast="Dans la démonstration, aucun code n&#x27;est envoyé. Code d&#x27;exemple : 482915."><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-mail"/></svg>Recevoir mon code</button><button class="btn-contour rv-btn" type="button" data-vers="E10.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-user"/></svg>J'ai déjà un compte</button></div></div><p class="rv-indic-sous">Vous recevez un code par e-mail : pas de mot de passe à retenir</p><p class="rv-criteres"><span class="r3-mention" data-composant="Statut"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-sparkles"/></svg> Préparé par IA, à valider</span></p></section>
-<section class="rv-carte rv-bloc" data-composant="ListeLignes" aria-labelledby="h-n05-formules"><div class="rv-bloc-tete"><h2 class="rv-bloc-titre" id="h-n05-formules">Ma formule</h2></div><p class="rv-note">Votre formule est celle de votre offre signée. Elle se suit dans votre espace Axion, rubrique « Abonnement et factures ». Rien à choisir ici.</p></section>
-<section class="rv-carte rv-bloc" data-composant="PanneauRepliable" aria-label="À savoir"><details class="rv-repli" data-composant="PanneauRepliable"><summary>À savoir<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><p>Vos données restent dans votre espace. Vous pouvez partir quand vous voulez : je vous remets vos fichiers.</p><p><button class="btn-texte rv-btn-texte" type="button" data-vers="E41.html">Reprendre une comptabilité existante</button></p></div></details></section>
-      </main>
-    </div>
-    <aside class="chat" data-composant="PanneauChat" id="chat" aria-label="Discussion avec l'assistant">
-      <span class="chat-bordure" aria-hidden="true" title="Glisser pour élargir"></span>
-      <div class="chat-tete">
-        <h2 class="chat-titre"><span class="pastille-ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span><span class="chat-titre-texte"><span class="chat-titre-ent" data-fictif="org">Lemoine Rénovation</span> · <span class="nowrap">Octobre 2026</span></span></h2>
-        <div class="chat-outils"><button class="outil chat-probleme" type="button" title="Signaler un problème" aria-label="Signaler un problème" data-vers="N01.html"><svg class="ico" aria-hidden="true"><use href="#lu-life-buoy"/></svg></button><button class="outil chat-reduire" type="button" title="Réduire la discussion" aria-label="Réduire la discussion"><svg class="ico" aria-hidden="true"><use href="#lu-chevrons-right"/></svg></button><button class="outil chat-agrandir" type="button" title="Agrandir la discussion (moitié de l'écran)" aria-label="Agrandir la discussion (moitié de l'écran)"><svg class="ico" aria-hidden="true"><use href="#lu-maximize-2"/></svg></button><button class="outil chat-plein-ecran" type="button" title="Plein écran" aria-label="Plein écran"><svg class="ico" aria-hidden="true"><use href="#lu-maximize-2"/></svg></button><button class="outil chat-revenir" type="button" title="Revenir" aria-label="Revenir"><svg class="ico" aria-hidden="true"><use href="#lu-minimize-2"/></svg></button></div>
-      </div>
-      <div class="chat-barre"><button class="btn-texte petit" type="button" data-vers="E25.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-square-pen"/></svg>Nouvelle discussion</button><button class="btn-texte petit" type="button" data-vers="E25.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-message-circle"/></svg>Mes discussions</button><button class="btn-texte petit" type="button" title="Historique de l'assistant (dans Réglages)" aria-label="Historique de l'assistant" data-vers="E09.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-history"/></svg>Historique de l'assistant</button></div>
-      <p class="chat-contexte"><span class="chat-contexte-texte">Vous regardez : <strong>Créer mon compte</strong></span><button class="btn-texte petit" type="button" data-toast="La discussion suit l&#x27;écran que vous regardez. Non détaillé dans la démonstration.">Changer</button></p>
-      <div class="chat-fil" aria-live="polite" tabindex="0">
-        <div class="msg-ia" data-composant="MessageIA"><span class="pastille-ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span><div class="msg-ia-corps"><p>Je vous guide en 3 étapes.</p><p class="mention">Rien n'est créé sans votre accord.</p></div></div>
-        <ul class="suggestions-chat" data-composant="Suggestions" aria-label="Suggestions"><li><button class="sugg" type="button" data-vers="E41.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-upload"/></svg>Reprendre ma comptabilité</button></li><li><button class="sugg" type="button" data-vers="E10.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-user"/></svg>J'ai déjà un compte</button></li></ul>
-      </div>
-      <div class="chat-bas">
-        <form class="composeur" data-composant="SaisieChat" aria-label="Écrire à l'assistant">
-          <div class="composeur-ligne">
-            <button class="outil" type="button" aria-label="Ajouter un document" title="Ajouter un document, ou glisser, ou coller"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button>
-            <label class="evitement" for="message-1">Votre message</label>
-            <textarea id="message-1" rows="1" placeholder="Écrivez ou déposez un document ici"></textarea>
-            <button class="outil" type="button" aria-label="Parler" title="Parler"><svg class="ico" aria-hidden="true"><use href="#lu-mic"/></svg></button>
-            <button class="envoyer" type="button" aria-label="Envoyer" title="Envoyer" disabled data-toast="L&#x27;envoi d&#x27;une déclaration demande toujours votre accord. Dans la démonstration, rien n&#x27;est envoyé."><svg class="ico" aria-hidden="true"><use href="#lu-send"/></svg></button>
-          </div>
-        </form>
-        <p class="composeur-mention">Rien n'est enregistré sans votre accord.</p>
-      </div>
-    </aside>
-    
+  <div class="cadre cadre--connexion page--connexion rv-connexion" data-composant="Ossature">
+    <span class="coin-demo">Démo</span>
+    <main class="rv-corps rv-connexion-centre" id="contenu" data-zone="contenu" data-composant="Contenu">
+      <div class="rv-carte rv-connexion-carte"><p class="rv-marque"><span class="rv-tuile rv-tuile--ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span>Axion Compta</p>
+          <div class="rv-connexion-tete"><h1 class="rv-titre">Activer mon compte</h1><button class="rv-aide" type="button" aria-label="Vous arrivez par l&#x27;invitation reçue par e-mail. Étape 1 : choisir votre mot de passe. Étape 2 : le code à 6 chiffres. Rien n&#x27;est créé dans la démonstration." title="Vous arrivez par l&#x27;invitation reçue par e-mail. Étape 1 : choisir votre mot de passe. Étape 2 : le code à 6 chiffres. Rien n&#x27;est créé dans la démonstration." data-toast="Vous arrivez par l&#x27;invitation reçue par e-mail. Rien n&#x27;est créé dans la démonstration."><span aria-hidden="true">?</span></button></div>
+          <p class="rv-indic-sous">Vous arrivez ici par l'invitation reçue par e-mail. Étape 1 sur 2 : choisir votre mot de passe.</p>
+          <form class="rv-connexion-form" data-composant="Champ" aria-label="Activation par invitation">
+            <div class="champ-v2" data-composant="Champ"><label for="champ-n05-a">E-mail (venant de l'invitation)</label><input id="champ-n05-a" type="email" value="claire.lemoine@exemple.fr" readonly aria-readonly="true" autocomplete="username"></div>
+            <div class="champ-v2" data-composant="Champ"><label for="champ-n05-b">Choisissez votre mot de passe</label><input id="champ-n05-b" type="password" placeholder="Votre mot de passe" autocomplete="new-password"></div>
+            <div class="champ-v2" data-composant="Champ"><label for="champ-n05-c">Confirmez votre mot de passe</label><input id="champ-n05-c" type="password" placeholder="Le même mot de passe" autocomplete="new-password"></div>
+            <button class="btn-plein rv-btn" type="button" data-code="1">Continuer</button>
+          </form>
+          <p class="rv-note">Votre formule est celle de votre offre signée. Elle se suit dans votre espace Axion, rubrique « Abonnement et factures ». Rien à choisir ici.</p>
+          <p class="rv-note"><span class="r3-mention" data-composant="Statut">Préparé par IA, à valider</span></p></div>
+      <p class="rv-connexion-aide"><a class="lien-probleme rv-btn-texte" data-composant="SignalerProbleme" title="Signaler un problème (Ctrl + Maj + P)" aria-keyshortcuts="Control+Shift+P" href="N01.html"><svg class="ico ico--petite" aria-hidden="true"><use href="#lu-life-buoy"/></svg>Signaler un problème</a></p>
+    </main>
   </div>
-  <nav class="barre-mobile" data-composant="BarreMobile" aria-label="Navigation principale"><ul>
-    <li><a class="bm-item" href="E01.html"><svg class="ico" aria-hidden="true"><use href="#lu-calendar-check"/></svg><span class="bm-lib">Mon mois</span><span class="nav-compteur" role="img" aria-label="5 choses avant de valider octobre">5</span></a></li>
-    <li><a class="bm-item" href="E12.html"><svg class="ico" aria-hidden="true"><use href="#lu-landmark"/></svg><span class="bm-lib">Ma banque</span><span class="nav-compteur" role="img" aria-label="4 à traiter en banque">4</span></a></li>
-    <li class="bm-plus"><button class="bm-ajouter" type="button" aria-label="Ajouter : prendre une facture en photo, déposer un fichier, saisir" title="Ajouter"><svg class="ico" aria-hidden="true"><use href="#lu-plus"/></svg></button></li>
-    <li><a class="bm-item" href="E24.html"><svg class="ico" aria-hidden="true"><use href="#lu-file-text"/></svg><span class="bm-lib">Mes factures</span><span class="nav-compteur" role="img" aria-label="1 à suivre dans les factures">1</span></a></li>
-    <li><a class="bm-item" href="#" data-plus="1" aria-haspopup="true" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#lu-ellipsis"/></svg><span class="bm-lib">Plus</span><span class="nav-compteur" role="img" aria-label="1 échéance à moins de 15 jours">1</span></a></li>
-  </ul></nav>
+  
+<template id="tpl-code"><div class="rv-carte rv-connexion-carte"><p class="rv-marque"><span class="rv-tuile rv-tuile--ia" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#lu-sparkles"/></svg></span>Axion Compta</p>
+          <p class="rv-connexion-rappel">claire.lemoine@exemple.fr (adresse de l'invitation, non modifiable)</p>
+          <h2 class="rv-bloc-titre">Étape 2 sur 2 : entrez le code à 6 chiffres reçu par e-mail</h2>
+          <p class="rv-indic-sous">Code envoyé à <strong>c***@exemple.fr</strong></p>
+          <form class="rv-connexion-form" aria-label="Code reçu par e-mail">
+            <div class="champ-v2" data-composant="Champ"><label for="c2">Code à 6 chiffres</label><input id="c2" class="R-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" value="482913"></div>
+            
+            <label class="case-ligne R-confiance" for="conf-c2"><input id="conf-c2" type="checkbox"> Faire confiance à cet appareil 30 jours</label>
+            <p class="rv-indic-sous">Application d'authentification (option)</p>
+            <button class="btn-plein rv-btn" type="button" data-vers="E56.html">Vérifier le code</button>
+            <button class="btn-texte rv-btn-texte" type="button" disabled aria-disabled="true">Renvoyer le code dans 0:31</button>
+          </form>
+          <details class="rv-repli" data-composant="PanneauRepliable"><summary>Je n'ai pas reçu l'e-mail<svg class="ico ico--petite" aria-hidden="true"><use href="#lu-chevron-down"/></svg></summary><div class="rv-repli-corps"><p>Regardez dans vos courriers indésirables, puis demandez un nouveau code.</p></div></details></div></template>
   <script src="../assets/js/demo.js" defer></script>
 </body>
 </html>

@@ -28,7 +28,7 @@
 .refonte .ligne-fin-titre { font-size: 16px; font-weight: 600; line-height: 1.35; }
 .refonte .etat-ligne { grid-column: 2; display: inline-flex; align-items: center; gap: 6px; width: fit-content; font-size: 15px; font-weight: 600; }
 .refonte .etat-ligne--fait { color: #1b6b3b; }
-.refonte .etat-ligne--afaire { color: #1f4e8c; }
+.refonte .etat-ligne--afaire { color: #4a4540; }
 .refonte .etat-ligne--manque { color: #b3261e; }
 .refonte .ligne-fin-btn { grid-column: 3; grid-row: 1 / span 2; }
 .refonte .ligne-fin-cartes { display: grid; gap: 12px; padding: 0 16px 16px 60px; }
@@ -64,7 +64,7 @@
 .refonte .eq-nom { font-weight: 600; }
 .refonte .eq-role { color: var(--texte-doux); font-size: 15px; }
 .refonte .eq-etat { display: inline-flex; gap: 4px; align-items: center; font-weight: 600; color: #1b6b3b; }
-.refonte .eq-etat--attend { color: #1f4e8c; }
+.refonte .eq-etat--attend { color: #4a4540; }
 .refonte .eq-heure { grid-column: 3; font-size: 14px; color: var(--texte-doux); }
 .refonte .trois-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .refonte .mode-carte { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--bord); border-radius: 12px; background: var(--surface); align-content: start; }
@@ -84,7 +84,7 @@
 .refonte .op-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 12px; }
 .refonte .pastille-etat { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; background: var(--surface-2); color: var(--texte); border: 1px solid var(--bord); }
 .refonte .pastille-etat--ok { color: #1b6b3b; }
-.refonte .pastille-etat--propose { color: #1f4e8c; }
+.refonte .pastille-etat--propose { color: #4a4540; }
 .refonte .pastille-etat--manque { color: #b3261e; }
 .refonte .filtre-etats { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
 .refonte .filtre-etats .puce { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--bord); border-radius: 22px; background: var(--surface); font-size: 15px; color: var(--texte); text-decoration: none; }

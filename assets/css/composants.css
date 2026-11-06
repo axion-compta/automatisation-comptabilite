@@ -432,27 +432,8 @@
    Le sarcelle (--accent) ne sert qu'à 4 choses : bouton plein, bouton d'envoi, entrée active du menu, focus.
    ============================================================================================= */
 
-/* ---- Thème sombre (mode « Automatique » par défaut, forçable par data-theme) ---- */
-@layer composants {
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --fond: var(--theme-sombre-fond); --surface: var(--theme-sombre-surface); --surface-2: var(--theme-sombre-surface-2);
-      --texte: var(--theme-sombre-texte); --texte-doux: var(--theme-sombre-texte-doux); --bord: var(--theme-sombre-bord);
-      --accent: var(--theme-sombre-accent); --accent-survol: var(--theme-sombre-accent-survol); --accent-doux: var(--theme-sombre-accent-doux);
-      --ok: var(--theme-sombre-ok); --ok-fond: var(--theme-sombre-ok-fond); --attention: var(--theme-sombre-attention); --attention-fond: var(--theme-sombre-attention-fond);
-      --manque: var(--theme-sombre-manque); --manque-fond: var(--theme-sombre-manque-fond); --info: var(--theme-sombre-info); --info-fond: var(--theme-sombre-info-fond); --danger: var(--theme-sombre-danger); --sur-accent: var(--theme-sombre-sur-accent);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --fond: var(--theme-sombre-fond); --surface: var(--theme-sombre-surface); --surface-2: var(--theme-sombre-surface-2);
-    --texte: var(--theme-sombre-texte); --texte-doux: var(--theme-sombre-texte-doux); --bord: var(--theme-sombre-bord);
-    --accent: var(--theme-sombre-accent); --accent-survol: var(--theme-sombre-accent-survol); --accent-doux: var(--theme-sombre-accent-doux);
-    --ok: var(--theme-sombre-ok); --ok-fond: var(--theme-sombre-ok-fond); --attention: var(--theme-sombre-attention); --attention-fond: var(--theme-sombre-attention-fond);
-    --manque: var(--theme-sombre-manque); --manque-fond: var(--theme-sombre-manque-fond); --info: var(--theme-sombre-info); --info-fond: var(--theme-sombre-info-fond); --danger: var(--theme-sombre-danger); --sur-accent: var(--theme-sombre-sur-accent);
-    color-scheme: dark;
-  }
-}
+/* ---- Thème clair seulement (le thème sombre est retiré) ---- */
+:root { color-scheme: light; }
 
 @layer composants {
   /* ---- Base : Inter 400/600, 16 px minimum, aucun italique ---- */
