@@ -54,7 +54,11 @@ function dependances(jsonTexte) {
 // diff : { fichiers: [chemin], lignes: nombre }, paquets : [{ chemin, base, branche }] (textes package.json)
 export function analyserPerimetre(fiche, diff, paquets = []) {
   const pb = [];
-  const motifs = fiche.fichiers_autorises ?? [];
+  if (!Array.isArray(fiche.fichiers_autorises)) return ['fiche : fichiers_autorises absent ou n’est pas un tableau'];
+  if (typeof fiche.taille_max_lignes !== 'number' || !Number.isFinite(fiche.taille_max_lignes)) {
+    pb.push('fiche : taille_max_lignes absent ou non numérique');
+  }
+  const motifs = fiche.fichiers_autorises;
   for (const f of diff.fichiers) {
     if (!estAutorise(f, motifs)) pb.push(`fichier hors liste : ${f}`);
   }
@@ -74,37 +78,59 @@ export function analyserPerimetre(fiche, diff, paquets = []) {
   return pb;
 }
 
-function git(args) {
-  const r = spawnSync('git', args, { encoding: 'utf8' });
-  return r.status === 0 ? r.stdout : null;
+export function idDeBranche(branche) {
+  return branche.match(/^lot-(\d\d)\/(L\1-T\d\d)$/)?.[2];
+}
+
+const BASE = 'origin/main';
+const decoupe = (t) => (t ?? '').split('\0').filter(Boolean);
+
+// git : (args) => sortie texte, ou null si échec. env : { GITHUB_HEAD_REF, CORPS_PR }.
+export function collecter(git, env = {}) {
+  const enPR = Boolean(env.GITHUB_HEAD_REF);
+  const branche = env.GITHUB_HEAD_REF || git(['rev-parse', '--abbrev-ref', 'HEAD'])?.trim() || '';
+  const id = idDeBranche(branche) ?? (enPR ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)/)?.[1] : undefined);
+  if (!id) return enPR ? { erreurs: [`aucune fiche pour la branche ${branche}`] } : { ignore: true };
+  const texteFiche = git(['show', `${BASE}:pilotage/fiches/${id}.md`]);
+  const noms = git(['diff', '--name-only', '--no-renames', '-z', `${BASE}...HEAD`]);
+  const stat = git(['diff', '--numstat', '--no-renames', '-z', `${BASE}...HEAD`]);
+  const erreurs = [];
+  if (texteFiche === null) erreurs.push(`fiche ${id} introuvable sur ${BASE}`);
+  if (noms === null || stat === null) erreurs.push(`git diff impossible contre ${BASE}`);
+  const fichiers = decoupe(noms);
+  const lignes = decoupe(stat).reduce((n, l) => {
+    const [a, d] = l.split('\t');
+    return n + (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
+  }, 0);
+  const paquets = fichiers
+    .filter((f) => f.endsWith('package.json'))
+    .map((f) => ({ chemin: f, base: git(['show', `${BASE}:${f}`]), branche: git(['show', `HEAD:${f}`]) }));
+  return { id, texteFiche, noms: fichiers, lignes, paquets, erreurs };
+}
+
+export function evaluer(git, env = {}) {
+  const c = collecter(git, env);
+  if (c.ignore) return { pb: [], msg: 'garde:perimetre vert (pas de branche de fiche)' };
+  const pb = [...c.erreurs];
+  if (typeof c.texteFiche === 'string') {
+    try {
+      pb.push(...analyserPerimetre(lireFiche(c.texteFiche), { fichiers: c.noms, lignes: c.lignes }, c.paquets));
+    } catch (e) {
+      pb.push(`fiche illisible : ${e.message}`);
+    }
+  }
+  return { pb, msg: `garde:perimetre vert (${c.id}, ${c.noms?.length} fichier(s), ${c.lignes} ligne(s))` };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const branche = process.env.GITHUB_HEAD_REF || git(['rev-parse', '--abbrev-ref', 'HEAD'])?.trim() || '';
-  const id = branche.match(/^lot-00\/(L\d\d-T\d\d)$/)?.[1];
-  if (!id) {
-    console.log('garde:perimetre vert (pas de branche de fiche)');
-    process.exit(0);
-  }
-  const base = 'origin/main';
-  const texteFiche = git(['show', `${base}:pilotage/fiches/${id}.md`]);
-  if (texteFiche === null) {
-    console.error(`garde:perimetre ROUGE\n - fiche ${id} introuvable sur ${base}`);
-    process.exit(1);
-  }
-  const noms = (git(['diff', '--name-only', `${base}...HEAD`]) ?? '').split('\n').filter(Boolean);
-  const stat = git(['diff', '--numstat', `${base}...HEAD`]) ?? '';
-  const lignes = stat
-    .split('\n')
-    .filter(Boolean)
-    .reduce((n, l) => n + (parseInt(l.split('\t')[0], 10) || 0) + (parseInt(l.split('\t')[1], 10) || 0), 0);
-  const paquets = noms
-    .filter((f) => f.endsWith('package.json'))
-    .map((f) => ({ chemin: f, base: git(['show', `${base}:${f}`]), branche: git(['show', `HEAD:${f}`]) }));
-  const pb = analyserPerimetre(lireFiche(texteFiche), { fichiers: noms, lignes }, paquets);
+  const git = (args) => {
+    const r = spawnSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
+    return r.status === 0 ? r.stdout : null;
+  };
+  const { pb, msg } = evaluer(git, process.env);
   if (pb.length > 0) {
     console.error('garde:perimetre ROUGE\n' + pb.map((p) => ' - ' + p).join('\n'));
     process.exit(1);
   }
-  console.log(`garde:perimetre vert (${id}, ${noms.length} fichier(s), ${lignes} ligne(s))`);
+  console.log(msg);
 }
