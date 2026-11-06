@@ -35,7 +35,7 @@ export function analyserWorkflow(texte, nom) {
   const global = new Set();
   let dansGlobal = false;
   lignes.forEach((l, i) => {
-    if (/^\S/.test(l) && !l.startsWith('#')) dansGlobal = /^permissions:\s*(#.*)?$/.test(l);
+    if (/^\S/.test(l) && !l.startsWith('#')) dansGlobal = l.startsWith('permissions:');
     else if (dansGlobal && l.trim() !== '') global.add(i);
   });
 
@@ -50,17 +50,34 @@ export function analyserWorkflow(texte, nom) {
         ajoute(i, `action non épinglée par SHA de 40 caractères : ${ref}`);
       }
     }
-    const w = l.match(/^\s*([a-z-]+):\s*write(?:-all)?\s*$/);
+    const w = l.match(/^\s*["']?([a-z-]+)["']?:\s*["']?write(?:-all)?["']?\s*,?\s*\}?\s*$/);
     if (w && !permis.has(w[1])) ajoute(i, `permission en écriture interdite : ${w[1]}`);
     else if (w && global.has(i) && !DEFAUT_ECRITURE.has(w[1])) ajoute(i, `écriture au niveau global interdite : ${w[1]}`);
-    const enLigne = l.match(/^\s*permissions:\s*\{(.*)\}\s*$/);
+    const enLigne = l.match(/^\s*permissions:\s*(?:&\S+\s*)?\{(.*)\}\s*$/);
     if (enLigne) {
-      for (const [, droit] of enLigne[1].matchAll(/([a-z-]+)\s*:\s*write\b/g)) {
+      for (const [, droit] of enLigne[1].matchAll(/["']?([a-z-]+)["']?\s*:\s*["']?write\b/g)) {
         if (!permis.has(droit)) ajoute(i, `permission en écriture interdite : ${droit}`);
         else if (/^permissions:/.test(l) && !DEFAUT_ECRITURE.has(droit)) ajoute(i, `écriture au niveau global interdite : ${droit}`);
       }
     }
-    if (/^\s*permissions:\s*write-all/.test(l)) ajoute(i, 'permissions: write-all interdit');
+    if (/^\s*permissions:\s*["']?write-all/.test(l)) ajoute(i, 'permissions: write-all interdit');
+  });
+
+  // ancres, alias et fusion interdits dans tout bloc permissions
+  lignes.forEach((brut, i) => {
+    const l = sansCommentaire(brut);
+    if (!/^\s*permissions:/.test(l)) return;
+    const base = indent(l);
+    const bloc = [l.replace(/^\s*permissions:/, '')];
+    const idx = [i];
+    for (let k = i + 1; k < lignes.length; k++) {
+      if (lignes[k].trim() !== '' && indent(lignes[k]) <= base) break;
+      bloc.push(sansCommentaire(lignes[k]));
+      idx.push(k);
+    }
+    bloc.forEach((t, n) => {
+      if (/(^|[\s{,])(&|\*)\S|<<:/.test(t)) ajoute(idx[n], 'ancre, alias ou fusion (&, *, <<:) interdits dans permissions');
+    });
   });
 
   // permissions de haut niveau

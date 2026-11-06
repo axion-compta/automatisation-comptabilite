@@ -142,3 +142,49 @@ test('table par workflow : chemins exacts, ni ajout ni élargissement', () => {
   assert.deepEqual([...ecriturePermise('alerte-fusion.yml')], ['issues']);
   assert.deepEqual([...ecriturePermise('zzz.yml')], ['id-token']);
 });
+
+// Formes tordues du bloc permissions.
+const globalPerm = (corps) => vert.replace(/permissions:\n {2}contents: read/, corps);
+const tachePerm = (corps) => vert.replace('  a:\n', `  a:\n${corps}\n`);
+
+test('global-ancre-ouvre-le-bloc-rouge', () => {
+  const t = globalPerm('permissions: &p\n  contents: read\n  issues: write');
+  assert.ok(ecritures(t, `${WF}alerte-fusion.yml`).length > 0);
+  assert.ok(analyserWorkflow(t, `${WF}alerte-fusion.yml`).some((p) => p.includes('ancre')));
+});
+
+test('global-accolade-multiligne-rouge', () => {
+  const t = globalPerm('permissions: {\n  contents: write\n}');
+  assert.ok(ecritures(t, `${WF}portier.yml`).length > 0);
+  assert.ok(ecritures(globalPerm('permissions: &p {\n  issues: write\n}'), `${WF}alerte-fusion.yml`).length > 0);
+});
+
+test('global-ancre-en-ligne-rouge', () => {
+  const t = globalPerm('permissions: &p { contents: write }');
+  assert.ok(ecritures(t, `${WF}portier.yml`).length > 0);
+  assert.ok(analyserWorkflow(t, `${WF}portier.yml`).some((p) => p.includes('ancre')));
+});
+
+test('valeur-entre-guillemets-tache-rouge', () => {
+  assert.ok(ecritures(tachePerm('    permissions:\n      contents: "write"'), `${WF}ci.yml`).length > 0);
+  assert.ok(ecritures(tachePerm("    permissions:\n      contents: 'write'"), `${WF}ci.yml`).length > 0);
+});
+
+test('valeur-entre-guillemets-en-ligne-rouge', () => {
+  assert.ok(ecritures(globalPerm('permissions: { contents: "write" }'), `${WF}portier.yml`).length > 0);
+  assert.ok(ecritures(tachePerm('    permissions: { contents: "write" }'), `${WF}ci.yml`).length > 0);
+});
+
+test('write-all-entre-guillemets-rouge', () => {
+  for (const q of ['"', "'"]) {
+    assert.ok(analyserWorkflow(globalPerm(`permissions: ${q}write-all${q}`), `${WF}portier.yml`).some((p) => p.includes('write-all')));
+    assert.ok(analyserWorkflow(tachePerm(`    permissions: ${q}write-all${q}`), `${WF}portier.yml`).some((p) => p.includes('write-all')));
+  }
+});
+
+test('ancre-alias-fusion-refuses-dans-permissions', () => {
+  for (const corps of ['    permissions: &p\n      contents: read', '    permissions: *p', '    permissions:\n      <<: *p']) {
+    assert.ok(analyserWorkflow(tachePerm(corps), `${WF}ci.yml`).some((p) => p.includes('ancre')), corps);
+  }
+  assert.ok(analyserWorkflow(globalPerm('permissions:\n  <<: *p\n  contents: read'), `${WF}ci.yml`).some((p) => p.includes('ancre')));
+});
