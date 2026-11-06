@@ -30,6 +30,17 @@ export function routesEcritureSansEnTete(): string[] {
     .map((d) => d.operationId);
 }
 
+/** Paramètres de requête (query) tirés du schéma Zod : nom, obligatoire ou non, schéma JSON. */
+export function parametresRequete(schema: Sch | undefined): unknown[] {
+  if (!schema) return [];
+  const objet = (schema instanceof z.ZodOptional ? schema.unwrap() : schema) as unknown as { shape?: Record<string, Sch> };
+  return Object.entries(objet.shape ?? {}).map(([name, champ]) => {
+    const json = z.toJSONSchema(champ) as Record<string, unknown>;
+    delete json['$schema'];
+    return { name, in: 'query', required: !champ.safeParse(undefined).success, schema: json };
+  });
+}
+
 /** Document OpenAPI 3.1 déterministe (clés triées par construction). */
 export function genererOpenapi(): object {
   const paths: Record<string, Record<string, unknown>> = {};
@@ -37,6 +48,9 @@ export function genererOpenapi(): object {
     const s = forme(d.inputSchema).shape;
     const parametres: unknown[] = [];
     if (s['headers']) parametres.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 8, maxLength: 128 } });
+    if (d.method === 'GET') {
+      parametres.push(...parametresRequete(s['query']));
+    }
     if (d.path.includes('{id}')) parametres.push({ name: 'id', in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
     const chemin = d.path;
     const reponses: Record<string, unknown> = { '200': { description: 'OK' } };
