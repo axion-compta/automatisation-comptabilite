@@ -1,19 +1,14 @@
 import { delay, http, HttpResponse, type HttpHandler } from 'msw';
-import {
-  ConflitVersion,
-  creerService,
-  EnTeteEcriture,
-  ModificationEcriture,
-  NouvelleEcriture,
-} from '../../contrat/src/index.js';
+import { EnTeteEcriture, ModificationEcriture, NouvelleEcriture } from '../../contrat/src/schemas.js';
+import { ConflitVersion, creerService } from '../../contrat/src/service.js';
 
-/** Pannes simulables. Le contrat reste la référence : seul le 409 y est déclaré, 423 et 403 sont des pannes de test. */
+/** Pannes simulables. Le contrat reste la référence : seul le 409 y est déclaré (sur modifier) ; 423 et 403 sont des pannes de test. */
 export type Panne = 403 | 409 | 423;
 
 export type OptionsFauxServeur = {
   /** Latence ajoutée à chaque réponse, en millisecondes (0 par défaut). */
   latenceMs?: number;
-  /** Panne appliquée à toutes les routes d'écriture, sauf si l'en-tête x-panne la remplace. */
+  /** Panne appliquée aux routes d'écriture, sauf si l'en-tête x-panne la remplace. */
   panne?: Panne;
   /** Préfixe des routes, vide par défaut. */
   base?: string;
@@ -24,10 +19,11 @@ const MESSAGES: Record<403 | 423, string> = {
   423: 'RESSOURCE_VERROUILLEE',
 };
 
-function panneDemandee(entete: string | null, parDefaut?: Panne): Panne | undefined {
+/** Panne demandée par l'en-tête, sinon par défaut ; limitée aux pannes autorisées pour la route. */
+function panneDemandee(entete: string | null, parDefaut: Panne | undefined, autorisees: Panne[]): Panne | undefined {
   const n = Number(entete);
-  if (n === 403 || n === 409 || n === 423) return n;
-  return parDefaut;
+  const p = autorisees.includes(n as Panne) ? (n as Panne) : parDefaut;
+  return p !== undefined && autorisees.includes(p) ? p : undefined;
 }
 
 /** Fabrique les handlers MSW dérivés du contrat (3 routes), avec un service en mémoire neuf. */
@@ -50,25 +46,17 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
   return [
     http.get(base + '/ecritures', async ({ request }) => {
       await attendre();
-      const url = new URL(request.url);
-      const limiteBrute = url.searchParams.get('limite');
+      const limiteBrute = new URL(request.url).searchParams.get('limite');
       const limite = limiteBrute === null ? undefined : Number(limiteBrute);
       if (limite !== undefined && (!Number.isInteger(limite) || limite < 1 || limite > 100)) return invalide();
-      const decalage = Math.max(0, Number(url.searchParams.get('decalage') ?? 0) || 0);
       const tout = service.lister();
-      const page = tout.slice(decalage, limite === undefined ? undefined : decalage + limite);
-      const suivant = decalage + page.length;
-      return HttpResponse.json(page, {
-        headers: {
-          'x-total': String(tout.length),
-          ...(suivant < tout.length ? { 'x-decalage-suivant': String(suivant) } : {}),
-        },
-      });
+      return HttpResponse.json(limite === undefined ? tout : tout.slice(0, limite));
     }),
 
     http.post(base + '/ecritures', async ({ request }) => {
       await attendre();
-      const panne = panneDemandee(request.headers.get('x-panne'), options.panne);
+      // Le contrat ne déclare 409 que sur modifier : le POST ne l'accepte pas.
+      const panne = panneDemandee(request.headers.get('x-panne'), options.panne, [403, 423]);
       if (panne) return refus(panne);
       const entete = cleDe(request);
       const corps = NouvelleEcriture.safeParse(await request.json().catch(() => undefined));
@@ -78,7 +66,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
 
     http.put(base + '/ecritures/:id', async ({ request, params }) => {
       await attendre();
-      const panne = panneDemandee(request.headers.get('x-panne'), options.panne);
+      const panne = panneDemandee(request.headers.get('x-panne'), options.panne, [403, 409, 423]);
       if (panne) return refus(panne);
       const entete = cleDe(request);
       const corps = ModificationEcriture.safeParse(await request.json().catch(() => undefined));
