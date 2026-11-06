@@ -18,6 +18,10 @@ describe('règle eslint « pas de flottant » (test rouge)', () => {
     ['parseFloat', 'export const a = parseFloat("1");'],
     ['toFixed', 'export const a = (1).toFixed(2);'],
     ['Math.round', 'export const a = Math.round(1);'],
+    ['division', 'export const a = (1 as number) / 2;'],
+    ['division affectée', 'let a = 4; a /= 2; export { a };'],
+    ['division bigint', 'export const a = 4n / 2n;'],
+    ['Number.parseFloat', 'export const a = Number.parseFloat("1");'],
     ['Math.random', 'export const a = Math.random();'],
   ])('refuse : %s', async (_nom, code) => {
     expect((await verifier(code)).length).toBeGreaterThan(0);

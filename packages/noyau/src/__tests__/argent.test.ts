@@ -8,7 +8,7 @@ import {
   pourcentage,
   repartir,
   soustraire,
-} from '../argent.js';
+} from '../argent/index.js';
 
 const c = centimes;
 
@@ -16,6 +16,10 @@ describe('centimes', () => {
   it('accepte les entiers, y compris 0 et négatifs', () => {
     expect(c(0)).toBe(0);
     expect(c(-250)).toBe(-250);
+  });
+  it('normalise -0 en +0', () => {
+    expect(Object.is(c(-0), 0)).toBe(true);
+    expect(Object.is(multiplier(c(-5), 0), 0)).toBe(true);
   });
   it('refuse flottants, NaN, infinis et entiers non sûrs', () => {
     for (const v of [0.1, 1.5, NaN, Infinity, 2 ** 53]) {
@@ -82,6 +86,21 @@ describe('répartition', () => {
     expect(repartir(c(100), [1, 1, 1])).toEqual([34, 33, 33]);
     expect(repartir(c(100), [1, 1, 1]).reduce((s, p) => s + p, 0)).toBe(100);
   });
+  it('donne le reliquat aux plus grands restes, pas aux premiers poids', () => {
+    expect(repartir(c(2), [1, 1, 100])).toEqual([0, 0, 2]);
+    expect(repartir(c(1), [1, 3])).toEqual([0, 1]);
+  });
+  it('à reste égal, l’indice le plus petit passe d’abord', () => {
+    expect(repartir(c(1), [1, 1])).toEqual([1, 0]);
+  });
+  it('un total négatif donne l’opposé du total positif', () => {
+    expect(repartir(c(100), [1, 1, 1])).toEqual([34, 33, 33]);
+    const neg = repartir(c(-100), [1, 1, 1]);
+    expect(neg).toEqual([-34, -33, -33]);
+    expect(neg.reduce((s, q) => s + q, 0)).toBe(-100);
+    expect(repartir(c(-2), [1, 1, 100])).toEqual([0, 0, -2]);
+    expect(Object.is(repartir(c(-1), [0, 1])[0], 0)).toBe(true);
+  });
   it('respecte les poids et saute les poids nuls', () => {
     expect(repartir(c(10), [0, 1, 1])).toEqual([0, 5, 5]);
     expect(repartir(c(1), [0, 1, 1])).toEqual([0, 1, 0]);
@@ -102,5 +121,8 @@ describe('formatage', () => {
     expect(formater(c(0))).toBe('0,00');
     expect(formater(c(-1999))).toBe('-19,99');
     expect(formater(c(100))).toBe('1,00');
+    expect(formater(c(99))).toBe('0,99');
+    expect(formater(c(-5))).toBe('-0,05');
+    expect(formater(c(Number.MAX_SAFE_INTEGER))).toBe('90071992547409,91');
   });
 });

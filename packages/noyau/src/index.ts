@@ -1,2 +1,2 @@
 export const nom = '@axion/noyau';
-export * from './argent.js';
+export * from './argent/index.js';

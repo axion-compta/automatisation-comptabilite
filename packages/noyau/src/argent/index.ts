@@ -4,7 +4,12 @@ declare const marque: unique symbol;
 /** Montant en centimes d'euro : toujours un entier sûr. */
 export type Centimes = number & { readonly [marque]: 'Centimes' };
 
-/** Mode d'arrondi explicite pour toute division. */
+/**
+ * Mode d'arrondi explicite pour toute division.
+ * - `demi-superieur` : demi éloigné de zéro (0,5 donne 1 et -0,5 donne -1) ;
+ * - `demi-pair` : demi vers l'entier pair le plus proche ;
+ * - `inferieur` : vers moins l'infini ; `superieur` : vers plus l'infini.
+ */
 export type Arrondi = 'demi-superieur' | 'demi-pair' | 'inferieur' | 'superieur';
 
 export class ErreurArgent extends Error {
@@ -15,7 +20,8 @@ export function centimes(valeur: number): Centimes {
   if (!Number.isSafeInteger(valeur)) {
     throw new ErreurArgent('Un montant doit être un entier de centimes : ' + String(valeur));
   }
-  return valeur as Centimes;
+  // Normalise -0 en +0.
+  return (valeur === 0 ? 0 : valeur) as Centimes;
 }
 
 function verifier(valeur: number): Centimes {
@@ -39,6 +45,8 @@ export function multiplier(a: Centimes, facteur: number): Centimes {
 
 /** Division entière de deux bigint avec arrondi explicite (dénominateur > 0). */
 function diviser(numerateur: bigint, denominateur: bigint, mode: Arrondi): bigint {
+  // La seule division autorisée du noyau : bigint, arrondi traité juste après.
+  // eslint-disable-next-line no-restricted-syntax
   let q = numerateur / denominateur;
   const reste = numerateur % denominateur;
   if (reste === 0n) return q;
@@ -75,7 +83,11 @@ export function pourcentage(a: Centimes, pointsDeBase: number, mode: Arrondi): C
   return verifier(Number(diviser(brut, 10000n, mode)));
 }
 
-/** Répartit un montant selon des poids entiers positifs ; la somme des parts est exacte. */
+/**
+ * Répartit un montant selon des poids entiers positifs ; la somme des parts est exacte.
+ * Méthode du plus grand reste ; à reste égal, l'indice le plus petit passe d'abord.
+ * Un total négatif donne l'opposé de la répartition du total positif.
+ */
 export function repartir(total: Centimes, poids: readonly number[]): Centimes[] {
   if (poids.length === 0) throw new ErreurArgent('Aucun poids pour la répartition');
   if (poids.some((p) => !Number.isSafeInteger(p) || p < 0)) {
@@ -83,23 +95,32 @@ export function repartir(total: Centimes, poids: readonly number[]): Centimes[] 
   }
   const somme = poids.reduce((s, p) => s + BigInt(p), 0n);
   if (somme === 0n) throw new ErreurArgent('La somme des poids est nulle');
-  const parts = poids.map((p) => diviser(BigInt(total) * BigInt(p), somme, 'inferieur'));
-  let reste = BigInt(total) - parts.reduce((s, p) => s + p, 0n);
-  // Le reliquat (en centimes) est distribué un par un, dans l'ordre, aux poids non nuls.
-  for (let i = 0; reste > 0n; i = (i + 1) % poids.length) {
-    if (poids[i] !== 0) {
-      parts[i] = (parts[i] ?? 0n) + 1n;
-      reste -= 1n;
-    }
+  const negatif = total < 0;
+  const absolu = BigInt(negatif ? -total : total);
+  const produits = poids.map((p) => absolu * BigInt(p));
+  const parts = produits.map((x) => diviser(x, somme, 'inferieur'));
+  const restes = produits.map((x) => x % somme);
+  const distribue = parts.reduce((s, p) => s + p, 0n);
+  const aDistribuer = Number(absolu - distribue);
+  const ordre = poids
+    .map((_p, k) => k)
+    .sort((k, l) => {
+      const rk = restes[k] ?? 0n;
+      const rl = restes[l] ?? 0n;
+      if (rk !== rl) return rk > rl ? -1 : 1;
+      return k - l;
+    });
+  for (const k of ordre.slice(0, aDistribuer)) {
+    parts[k] = (parts[k] ?? 0n) + 1n;
   }
-  return parts.map((p) => verifier(Number(p)));
+  return parts.map((p) => verifier(Number(negatif ? -p : p)));
 }
 
 /** Formate en euros avec virgule, sans passer par un flottant. Ex. : 123456 -> « 1234,56 ». */
 export function formater(a: Centimes): string {
   const negatif = a < 0;
-  const absolu = Math.abs(a);
-  const euros = Math.trunc(absolu / 100);
-  const reste = String(absolu % 100).padStart(2, '0');
+  const absolu = BigInt(Math.abs(a));
+  const euros = diviser(absolu, 100n, 'inferieur');
+  const reste = String(absolu % 100n).padStart(2, '0');
   return (negatif ? '-' : '') + String(euros) + ',' + reste;
 }
