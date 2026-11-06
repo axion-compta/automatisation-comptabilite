@@ -36,7 +36,7 @@
   }
   var HIST = [
     ['Date', 'Heure', 'Qui', 'Action', 'Pièce d\'origine', 'Pourquoi', 'Confiance', 'Validation'],
-    ['DÉMONSTRATION', 'DONNÉES FICTIVES', '', 'Préparé par IA, à valider', '', '', '', ''],
+    ['EXEMPLE · DÉMONSTRATION', 'DONNÉES FICTIVES', '', 'Préparé par IA, à valider', '', '', '', ''],
     ['14/10/2026', '11:05', 'Assistant (IA)', 'Écriture préparée', 'Facture AB-1021 du 14/10/2026 (Atelier Bertin)', 'Achat de matériel à Atelier Bertin : 1 000 € hors TVA et 200 € de TVA, soit 1 200 €.', 'Moyenne', 'Pas encore validée par Claire Lemoine'],
     ['14/10/2026', '11:05', 'Assistant (IA)', 'Question posée', 'Facture AB-1021', 'Atelier Bertin est un nouveau fournisseur : le nom est à confirmer.', 'Moyenne', 'En attente'],
     ['07/10/2026', '09:12', 'Assistant (IA)', 'Opération de banque classée', 'Relevé de banque, ligne du 07/10', 'Paiement de 1 000 € : 200 € de moins que la facture, écart signalé.', 'Moyenne', 'En attente'],
@@ -145,8 +145,8 @@
       r: "<strong>Préparation impossible : il reste 3 pièces à vérifier.</strong> Tant qu'elles ne sont pas vérifiées, je ne vous donne pas de montant de TVA pour octobre. La déclaration est à déposer avant le 24/11/2026 (date à vérifier).",
       carte: { surtitre: 'Il manque des vérifications', titre: 'TVA d\'octobre : 3 pièces à vérifier', note: 'Dès que les 3 pièces sont vérifiées, je prépare la déclaration. Vous la déposez vous-même sur impots.gouv.', bouton: 'Voir les 3 pièces', vers: 'E20.html', lien: ['Voir Mes déclarations', 'E19.html'] } },
     { cle: 'impayes', q: 'Qui me doit de l\'argent ?', re: /doit|impay|retard|rivoire|client/i,
-      r: "Un client est en retard : <strong>Boulangerie Rivoire, 1 200 €, 23 jours de retard</strong>. J'ai préparé une relance polie, prête mais non envoyée : elle ne part qu'avec votre accord.",
-      carte: { surtitre: 'À valider', titre: 'Relance prête pour Boulangerie Rivoire', note: 'Message poli, avec la facture en pièce jointe. Non envoyé tant que vous ne validez pas.', bouton: 'Envoyer la relance', ok: 'Relance enregistrée (simulation : rien n\'a été envoyé).', lien: ['Voir Mes factures', 'E24.html?e=retard'] } },
+      r: "Un client est en retard : <strong>Boulangerie Rivoire, 1 200,00 € en retard de 23 jours</strong>. Le suivi des impayés reste chez vous : le logiciel ne contacte pas vos clients.",
+      carte: null, lien: ['Voir les clients en retard', 'E56.html#liste-retard'] },
     { cle: 'manque', q: 'Qu\'est-ce qui manque pour valider octobre ?', re: /manque|valider/i,
       r: "Il reste <strong>5 choses</strong> avant de valider octobre. La première : le relevé de banque d'octobre, que je n'ai pas encore reçu.",
       carte: { surtitre: 'Il manque un relevé', titre: 'Relevé d\'octobre', note: '', bouton: 'Ajouter le relevé', vers: 'E03.html' } },
@@ -322,7 +322,7 @@
   var G = ['Mon activité', 'Mon mois', 'Dépôt d\'un dossier de factures', 'Un document : pourquoi, qui, quand', 'Ma banque', 'La discussion', 'Mes documents'];
   var STEPS = [
     { g: 0, page: 'E56', texte: "Mon activité : les ventes, l'argent en banque, les clients qui n'ont pas payé et la TVA, d'un seul coup d'œil. Chaque chiffre ouvre sa liste.", act: function () { location.hash = '#liste-retard'; var n = $('.nav'); if (n) n.scrollTop = 0; window.scrollTo(0, 0); } },
-    { g: 0, page: 'E56', texte: "Un clic sur « Clients impayés » ouvre la liste : Boulangerie Rivoire, 1 200 €, 23 jours de retard. La relance est déjà prête.", act: function () { } },
+    { g: 0, page: 'E56', texte: "Un clic sur « Clients impayés » ouvre la liste : Boulangerie Rivoire, 1 200 €, 23 jours de retard. Le suivi reste en lecture seule : le logiciel ne contacte pas vos clients.", act: function () { } },
     { g: 1, page: 'E01', texte: "Mon mois : l'assistant dit ce qui est fait et ce qui manque avant de valider octobre. La première chose : le relevé de banque.", act: function (i) { listeFinDeMois(i); } },
     { g: 1, page: 'E01', texte: "Six lignes, un état écrit et un bouton par ligne. Rien de technique : l'assistant prépare, Claire valide.", act: function () { } },
     { g: 2, page: 'E03', texte: "Ajouter : un seul geste. On dépose un dossier, un ZIP (jusqu'à 500 fichiers) ou des photos. L'assistant s'occupe du reste.", act: function (i) { lancerDepot(i); } },
