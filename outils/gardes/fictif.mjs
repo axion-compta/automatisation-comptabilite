@@ -33,7 +33,7 @@ export function analyserTexte(texte, nom) {
     for (const m of l.matchAll(EMAIL)) {
       if (m[1].toLowerCase() !== 'exemple.fr') pb.push(`${nom}:${i + 1} e-mail hors @exemple.fr : ${m[0]}`);
     }
-    // Ligne d\u00E9cod\u00E9e (%20, %C2%A0 et + = espaces ; %2D, %2F, %2E = - / .). Un candidat rejet\u00E9 ne masque pas la suite : reprise juste apr\u00E8s son premier caract\u00E8re.
+    // Ligne décodée (%20, %C2%A0 et + = espaces ; %2D, %2F, %2E = - / .). Un candidat rejeté ne masque pas la suite : reprise juste après son premier caractère.
     const d = l
       .replace(/%(?:20|C2%A0)/gi, ' ')
       .replace(/\+/g, ' ')
@@ -45,14 +45,16 @@ export function analyserTexte(texte, nom) {
     while ((m = re.exec(d))) {
       const s = m[0].replace(SEPARATEURS, '').toUpperCase();
       const n = LONGUEURS_IBAN[s.slice(0, 2)];
+      // Fin du candidat : indice après le n-ième caractère alphanumérique (la prose qui suit n'en fait pas partie).
+      let fin = 0;
+      if (n) {
+        for (let vus = 0; vus < n; ) if (/[A-Za-z0-9]/.test(m[0][fin++])) vus++;
+      }
       // Prose française : un candidat avec minuscules doit avoir au moins la moitié de chiffres dans le BBAN.
       const bban = s.slice(4, n);
-      const prose = /[a-z]/.test(m[0]) && (bban.match(/\d/g) ?? []).length * 2 < bban.length;
+      const prose = n && /[a-z]/.test(m[0].slice(0, fin)) && (bban.match(/\d/g) ?? []).length * 2 < bban.length;
       if (n && !prose && ibanValide(s.slice(0, n))) {
         pb.push(`${nom}:${i + 1} IBAN au format valide interdit`);
-        let vus = 0;
-        let fin = 0;
-        while (vus < n) if (/[A-Za-z0-9]/.test(m[0][fin++])) vus++;
         re.lastIndex = m.index + fin;
       } else re.lastIndex = m.index + 1;
     }

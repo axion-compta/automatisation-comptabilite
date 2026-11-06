@@ -182,8 +182,8 @@ test('iban-sn-28', () => {
   assert.equal(analyserTexte(`iban ${parGroupes(s, ' ')}`, 't.txt').length, 1);
 });
 
-test('registre-89-pays', () => {
-  // 89 pays avant L00-T31 ; la fiche ajoute 22 longueurs, soit 111 au total (voir journal).
+test('registre-111-pays', () => {
+  // 89 pays avant L00-T31, plus les 22 longueurs ajoutées : 111.
   assert.equal(Object.keys(LONGUEURS_IBAN).length, 89 + AJOUTES.length);
   for (const x of AJOUTES) assert.equal(LONGUEURS_IBAN[x.slice(0, 2)], Number(x.slice(2)), x);
   for (const p of [...DOUZE, ...AJOUTES.map((x) => x.slice(0, 2))]) {
@@ -199,6 +199,27 @@ test('prose-francaise-pas-un-iban', () => {
   assert.equal(analyserTexte(`TEXTE ${prose.toUpperCase()} SUITE`, 't.txt').length, 1);
 });
 
+test('prose-apres-iban-majuscules', () => {
+  // IBAN fictifs construits par code, BBAN riche en lettres, suivis de prose minuscule : toujours détectés.
+  const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let essais = 0;
+  for (const p of ['AD', 'GB', 'ES', 'FR', 'DE', 'IT', 'NL', 'PT', 'BE', 'CH']) {
+    const n = LONGUEURS_IBAN[p];
+    for (let k = 0; k < 400; k++) {
+      let bban = '';
+      for (let i = 0; i < n - 4; i++) bban += alpha[(k * 7 + i * 5 + i * i) % 24];
+      const s = cle(p, bban);
+      for (const suite of ['pour le compte', 'merci']) {
+        assert.equal(analyserTexte(`IBAN : ${parGroupes(s, ' ')} ${suite}`, 't.txt').length, 1, `${s} ${suite}`);
+        essais++;
+      }
+    }
+  }
+  assert.ok(essais > 0);
+  const s = cle('AD', 'Q2MH7W2S50PQVTUQ1C5N');
+  assert.equal(analyserTexte(`IBAN : ${parGroupes(s, ' ')} pour le compte`, 't.txt').length, 1);
+});
+
 test('decodage-pourcent', () => {
   for (const sep of ['%C2%A0', '%c2%a0', '%2D', '%2F', '%2E']) {
     assert.equal(analyserTexte(`?iban=${parGroupes(frValide, sep)}`, 't.txt').length, 1, sep);
@@ -210,5 +231,7 @@ test('email-sans-explosion', () => {
   assert.deepEqual(analyserTexte('a'.repeat(100000), 't.txt'), []);
   assert.ok(Date.now() - t0 < 1000, 'plus d’une seconde');
   // Partie locale très longue : la fin (64 caractères) est encore contrôlée.
-  assert.equal(analyserTexte(`${'a'.repeat(100)}${arobase}${domaineReel}`, 't.txt').length, 1);
+  const pb = analyserTexte(`${'a'.repeat(100)}${arobase}${domaineReel}`, 't.txt');
+  assert.equal(pb.length, 1);
+  assert.ok(pb[0].endsWith(`: ${'a'.repeat(64)}${arobase}${domaineReel}`), pb[0]);
 });
