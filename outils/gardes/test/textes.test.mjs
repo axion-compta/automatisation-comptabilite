@@ -31,6 +31,8 @@ test('vert : commentaires et génériques ne comptent pas', () => {
 
 test('exclusions : écran de test, test, fichier généré', () => {
   assert.ok(estExclu('apps/web/src/Ecran.tsx'));
+  assert.ok(estExclu('apps/web/src/commandes/Palette.tsx'));
+  assert.ok(!estExclu('apps/web/src/commandes/Autre.tsx', '<p>Bonjour</p>'));
   assert.ok(estExclu('apps/web/src/__tests__/a.test.tsx'));
   assert.ok(estExclu('apps/web/src/G.tsx', '// @generated\n'));
   assert.ok(!estExclu('apps/web/src/Autre.tsx', '<p>Bonjour</p>'));

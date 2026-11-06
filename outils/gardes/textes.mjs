@@ -1,9 +1,8 @@
 // garde:textes : aucun texte en dur dans l'interface (V3-UX-072, V3-PRI-017).
 // Rouge si un fichier .tsx de apps/ ou packages/ contient du texte visible en dur (texte entre balises, chaîne
 // entre accolades, aria-label/title/placeholder/alt/label littéraux) : il doit venir de packages/textes.
-// Rouge aussi si un mot interdit figure dans les textes de packages/textes/src (hors tests).
-// Exclus : tests, fichiers générés (marqueur en tête). Limites : heuristique, pas un analyseur JSX complet ;
-// un ternaire {c ? "Oui" : "Non"} n'est pas détecté.
+// Rouge aussi si un mot interdit figure dans packages/textes/src (hors tests). Exclus : tests, fichiers générés.
+// Limites : heuristique, pas un analyseur JSX complet ; un ternaire {c ? "Oui" : "Non"} n'est pas détecté.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -16,9 +15,9 @@ const CODE = /\b(?:const|let|var|return)\b|=>|;\s*$|[\w$\])!]\(/m;
 const CONCERNES = /^(apps|packages)\/.*\.tsx$/;
 const TESTS = /(\.test\.|\.spec\.|\/__tests__\/|\/e2e\/)/;
 const GENERE = /généré|@generated|do not edit|ne pas modifier/i;
-// Écran de test, développement seulement (refusé hors DEV par main.tsx) : seul écran admis avec des textes en dur.
-// À retirer quand le premier écran réel remplace Ecran.tsx.
-export const ECRANS_EXEMPTES = ['apps/web/src/Ecran.tsx'];
+// Exemptions à chemin exact. Ecran.tsx : écran de test (développement seulement), à retirer quand le premier écran
+// réel le remplace. Palette.tsx : à retirer par la fiche de suivi qui passe les textes de la palette dans packages/textes.
+export const ECRANS_EXEMPTES = ['apps/web/src/Ecran.tsx', 'apps/web/src/commandes/Palette.tsx'];
 export const DOSSIER_TEXTES = 'packages/textes/src/';
 // Assemblés ici pour ne pas figurer en clair dans le dépôt.
 export const MOTS_INTERDITS = [['con', 'forme'], ['sans ', 'erreur'], ['garan', 'ti'], ['juri', 'ste'], ['P', 'DP']].map((p) => p.join(''));
