@@ -57,7 +57,18 @@ function dependancesYaml(texte) {
   const out = {};
   let bloc;
   let cle;
-  for (const l of (texte ?? '').split(/\r?\n/)) {
+  const brut = texte ?? '';
+  const refus = (l) => { throw new Error(`pnpm-workspace.yaml : forme yaml non lue (${l.trim() || 'CR seul ou BOM'})`); };
+  if (/\r(?!\n)|\uFEFF/.test(brut)) refus('CR seul ou BOM');
+  let racine = false; // une clé de premier niveau a été vue
+  for (const l of brut.split(/\r?\n/)) {
+    // Liste blanche : colonne 0 = clé simple, commentaire, vide ou marqueur de document ; une ligne indentée suit une clé.
+    if (/^\S/.test(l) && !l.startsWith('#')) {
+      if (/^(?:---|\.\.\.)\s*$/.test(l)) racine = false;
+      else if (/^["']?[\w-]+["']?\s*:/.test(l)) racine = true;
+      else refus(l);
+    } else if (/^\s+\S/.test(l) && !l.trim().startsWith('#') && !racine) refus(l);
+    if (bloc && /^\s+\S/.test(l) && (/<</.test(l) || /(?:^|[:\-,[{]\s*)\*[\w-]/.test(l.trim()))) refus(l); // fusion << ou alias *x
     if (/^["']?(?:overrides|packageExtensions|catalogs?)["']?\s*:\s*[^#\s]/.test(l)) {
       throw new Error(`pnpm-workspace.yaml : forme yaml non lue (${l.trim()})`); // valeur sur la même ligne : non comparable
     }

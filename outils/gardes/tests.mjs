@@ -99,7 +99,7 @@ export function analyserTexte(texte, nom) {
       pb.push(`${nom}:${l} ${quoi} sans carte (écrire LNN-TMM sur la ligne ou la précédente)`);
     }
   };
-  for (const r of m.matchAll(new RegExp(CHAINE + String.raw`\s*([(\x60])`, 'g'))) {
+  for (const r of m.matchAll(new RegExp(CHAINE + String.raw`(?:\s*\?\.)?\s*([(\x60])`, 'g'))) {
     const mods = r[1].match(/\w+/g) ?? [];
     if (mods.some((x) => ['skip', 'todo', 'skipIf', 'runIf'].includes(x))) carte(r.index, 'test sauté ou conditionnel');
     const ordinaire = /^(it|test)\b/.test(r[0].trimStart()) && !mods.some((x) => ['skip', 'todo', 'extend', 'scoped'].includes(x));
@@ -116,7 +116,7 @@ export function analyserTexte(texte, nom) {
     const asserte = ASSERTION.test(corps) || appelle(corps, aides);
     if (ordinaire && !asserte) pb.push(`${nom}:${ligneDe(r.index)} test sans assertion`);
   }
-  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|(?<![\w.$])(?!(?:it|test|describe|suite)\s*\??\.)[\w$]+\s*\??\.\s*(?:skip|todo)\s*\(|(?<![\w.$])(?:skip|todo)\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
+  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|(?<![\w.$])(?!(?:it|test|describe|suite)\s*\??\.)[\w$]+\s*\??\.\s*(?:skip|todo)\s*(?:\?\.)?\s*\(|(?<![\w.$])(?:skip|todo)\s*(?:\?\.)?\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
     carte(x.index, 'test sauté ou à faire');
   }
   for (const x of m.matchAll(/(?<![\w.$])only\s*\(/g)) pb.push(`${nom}:${ligneDe(x.index)} .only interdit`);

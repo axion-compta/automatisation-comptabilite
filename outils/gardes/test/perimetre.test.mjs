@@ -322,10 +322,22 @@ test('T32-4b pnpm-workspace.yaml : forme sur une ligne = rouge « forme yaml non
     'catalog: {lib: 3.0.0}',
     'catalogs: {x: {lib: 3.0.0}}',
     'overrides: &o\n  lib: 2.0.0',
+    'overrides:\r  lib: 2.0.0',
+    '\uFEFFoverrides:\n  lib: 2.0.0',
+    '{packages: [a], overrides: {foo: 1.0.0}}',
+    '--- {packages: [a], overrides: {foo: 1.0.0}}',
+    '? overrides\n: {foo: 1.0.0}',
+    'overrides:\n  base: &b 1.0.0\n  lib: *b',
+    'overrides:\n  <<: *autres',
   ]) {
     const paquets = [{ chemin: 'pnpm-workspace.yaml', base, branche: base + ligne + '\n' }];
     assert.throws(() => analyserPerimetre(fiche, diff, paquets), /forme yaml non lue/, ligne);
   }
+});
+
+test('T32-4d pnpm-workspace.yaml : racine entièrement indentée = forme yaml non lue', () => {
+  const paquets = [{ chemin: 'pnpm-workspace.yaml', base: '', branche: '  overrides:\n    lib: 2.0.0\n' }];
+  assert.throws(() => analyserPerimetre(fiche, { fichiers: [], lignes: 1 }, paquets), /forme yaml non lue/);
 });
 
 test('T32-4c pnpm-workspace.yaml : clé entre guillemets et catalogs lues', () => {

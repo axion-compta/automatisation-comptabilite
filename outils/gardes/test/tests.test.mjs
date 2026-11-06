@@ -51,6 +51,7 @@ const ROUGES = [
     `const { skip } = test;`,
     'const {\n  todo\n} = it;',
     `test?.skip('a', () => { ${OK} });`,
+    `test.skip?.('a', () => { ${OK} });`,
     `describe?.skipIf(c)('a', () => {});`,
     `import * as t from 'node:test';\nt.test.skip('a', () => { ${OK} });`,
     `import * as $t from 'node:test';\n$t.skip('a', () => { ${OK} });`,
