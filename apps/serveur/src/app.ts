@@ -11,9 +11,7 @@ export function creerRouteur(service: Service = creerService()) {
   return os.router({
     ecritures: {
       lister: os.ecritures.lister.handler(({ input }) => {
-        const tout = service.lister();
-        const limite = input.query?.limite;
-        return { body: limite === undefined ? tout : tout.slice(0, limite) };
+        return service.page({ limite: input.query?.limite, decalage: input.query?.decalage });
       }),
       creer: os.ecritures.creer.handler(({ input }) => ({
         body: service.creer(input.headers['idempotency-key'], input.body),

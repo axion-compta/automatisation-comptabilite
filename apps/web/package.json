@@ -6,6 +6,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
+    "@axion/faux-serveur": "workspace:*",
     "@orpc/client": "1.16.1",
     "@tanstack/react-query": "5.105.0",
     "@tanstack/react-router": "1.170.46",

@@ -47,11 +47,13 @@ export function lireFiche(texte) {
 
 // Texte d'un commentaire sans ses blocs de code (``` ou ~~~ ; un bloc non fermé court jusqu'à la fin).
 const horsCode = (corps) => String(corps ?? '').replace(/(```|~~~)[\s\S]*?(\1|$)/g, '');
+// Idem sans les commentaires HTML <!-- ... --> (invisibles à la lecture ; un commentaire non fermé court jusqu'à la fin).
+const visible = (corps) => horsCode(corps).replace(/<!--[\s\S]*?(-->|$)/g, '');
 // Verdict d'un commentaire : ligne exacte « VERDICT: OK » ; toute autre ligne contenant « verdict » vaut refus.
 function verdict(corps) {
   const lignes = horsCode(corps).split(/\r?\n/);
   if (lignes.some((l) => /verdict/i.test(l) && l !== 'VERDICT: OK')) return 'KO';
-  return lignes.includes('VERDICT: OK') ? 'OK' : null;
+  return visible(corps).split(/\r?\n/).includes('VERDICT: OK') ? 'OK' : null; // une ligne cachée ne compte pas
 }
 
 // Seule différence admise sur la fiche de la PR : la ligne « statut: a_faire » devient « statut: fait ».
@@ -100,13 +102,14 @@ export function decider(pr, options = {}) {
 
   const fiche = p.fiche && typeof p.fiche === 'object' ? p.fiche : {};
   if (!id || fiche.id !== id) refus('fiche lue sur origin/main absente ou différente de la branche');
+  if (fiche.statut !== 'a_faire') refus('fiche sur main : statut différent de a_faire (ou absent)');
   if (fiche.sensible !== 'non') refus('fiche sensible (ou champ sensible absent)');
   if (fiche.tests_requis !== 'oui' && fiche.tests_requis !== 'non') refus('tests_requis absent ou différent de oui/non');
   if (fiche.tests_requis === 'oui' &&!f.some((x) => FORME_TEST.test(norm(x?.chemin)) && x?.etat !== 'removed' && x?.additions > 0)) refus('tests requis absents du diff');
   if (f.some((x) => norm(x?.chemin) === fichePr) && !statutSeulChange(p.ficheBase, p.ficheTete)) refus('fiche modifiée autrement que par statut: a_faire vers fait');
 
   const etiquettes = Array.isArray(p.etiquettes) ? p.etiquettes : null;
-  if (!etiquettes) refus('étiquettes inconnues');
+  if (!etiquettes || etiquettes.some((e) => typeof e !== 'string')) refus('étiquettes inconnues');
   for (const e of etiquettes ?? []) if (ETIQUETTES_INTERDITES.includes(e) || /^echec-/.test(e)) refus(`étiquette interdite : ${e}`);
 
   const auteur = ident(p.auteur);
@@ -120,8 +123,11 @@ export function decider(pr, options = {}) {
   if (!dernier) refus('aucun verdict du relecteur');
   else if (verdict(dernier.corps) !== 'OK') refus('le dernier verdict du relecteur n\'est pas OK');
   else if (dernier.edite !== false) refus('le dernier verdict du relecteur a été édité (ou état d\'édition inconnu)');
-  else if (!FORME_SHA.test(sha) || !horsCode(dernier.corps).includes(sha)) refus('le dernier verdict ne cite pas le headRefOid actuel');
+  else if (!FORME_SHA.test(sha) || !visible(dernier.corps).includes(sha)) refus('le dernier verdict ne cite pas le headRefOid actuel');
   if (dernier) {
+    const retrait = (Array.isArray(p.evenements) ? p.evenements : []).some((e) => e?.evenement === 'unlabeled' && /^(a-corriger|bloque|echec-.*)$/.test(String(e?.etiquette))
+      && !(String(e?.date) < String(dernier.date))); // même seconde ou date illisible = refus
+    if (retrait) refus('étiquette a-corriger, bloque ou echec-* retirée depuis le dernier verdict');
     const evts = (Array.isArray(p.evenements) ? p.evenements : []).filter((e) => e?.etiquette === 'relu')
       .sort((x, y) => String(x.date).localeCompare(String(y.date)));
     const last = evts[evts.length - 1];
@@ -158,7 +164,7 @@ export function lirePr(numero) {
   const verifs = (j.statusCheckRollup ?? []).filter((c) => c.name === 'verifier');
   const pr = {
     arret, etat: j.state, brouillon: j.isDraft, base: j.baseRefName, fork: j.isCrossRepository, branche: j.headRefName,
-    headRefOid: j.headRefOid, auteur: j.author?.login, etiquettes: j.labels.map((l) => l.name),
+    headRefOid: j.headRefOid, auteur: j.author?.login, etiquettes: Array.isArray(j.labels) ? j.labels.map((l) => l?.name) : null,
     verifier: verifs.length > 0 && verifs.every((c) => c.conclusion === 'SUCCESS') ? 'SUCCESS' : 'AUTRE',
     aJour: estAJour(gh(['api', `repos/${depot}/compare/main...${j.headRefOid}`, '--jq', '.behind_by'])),
     fichiers, diffDependances: fichiers.some((x) => /(^|\/)(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml)$/.test(x.chemin)),
@@ -180,6 +186,12 @@ export function ligneCalibrage({ date, pr, fiche, fusionner, raisons, minutes })
   return [date, pr, fiche ?? '', fusionner ? 'fusion' : 'refus', raisons.map(nettoie).join(' | '), minutes ?? ''].join(';');
 }
 
+// Fusionne d'abord, écrit le calibrage ensuite : si la fusion échoue (exception), rien n'est écrit.
+export function conclure(d, { fusion, ecrire }) {
+  if (d.fusionner) fusion();
+  ecrire();
+}
+
 function principal(argv) {
   const aBlanc = argv.includes('--a-blanc');
   const iCsv = argv.indexOf('--csv');
@@ -199,14 +211,15 @@ function principal(argv) {
   const dernier = (pr.commentaires ?? []).filter((c) => verdict(c.corps) !== null).map((c) => c.date).sort().pop();
   const minutes = dernier ? Math.max(0, Math.round((maintenant - new Date(dernier)) / 60000)) : '';
   const ligne = ligneCalibrage({ date: maintenant.toISOString(), pr: numero, fiche: id, fusionner: d.fusionner, raisons: d.raisons, minutes });
-  console.log(ligne);
-  if (!aBlanc) {
-    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, ligne + '\n');
-    if (csv) appendFileSync(csv, ligne + '\n');
-    if (d.fusionner) {
-      gh(['pr', 'merge', numero, '--squash', '--delete-branch', '--match-head-commit', pr.headRefOid, '--repo', depot]);
-    }
-  }
+  conclure(aBlanc ? { fusionner: false } : d, {
+    fusion: () => gh(['pr', 'merge', numero, '--squash', '--delete-branch', '--match-head-commit', pr.headRefOid, '--repo', depot]),
+    ecrire: () => {
+      console.log(ligne);
+      if (aBlanc) return;
+      if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, ligne + '\n');
+      if (csv) appendFileSync(csv, ligne + '\n');
+    },
+  });
   return 0;
 }
 

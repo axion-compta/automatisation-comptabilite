@@ -11,8 +11,17 @@ import {
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
   .route({ method: 'GET', path: '/ecritures', inputStructure: 'detailed', operationId: 'listerEcritures' })
-  .input(z.object({ query: z.object({ limite: z.coerce.number().int().min(1).max(100).optional() }).optional() }))
-  .output(z.object({ body: z.array(Ecriture) }));
+  .input(
+    z.object({
+      query: z
+        .object({
+          limite: z.coerce.number().int().min(1).max(100).optional(),
+          decalage: z.coerce.number().int().min(0).optional(),
+        })
+        .optional(),
+    }),
+  )
+  .output(z.object({ body: z.array(Ecriture), decalage: z.number().int().min(0), total: z.number().int().min(0) }));
 
 export const creer = oc
   .route({ method: 'POST', path: '/ecritures', inputStructure: 'detailed', operationId: 'creerEcriture' })
