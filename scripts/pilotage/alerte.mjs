@@ -2,7 +2,7 @@
 import { fileURLToPath } from 'node:url';
 
 export const PROPRIETAIRE = 'will383842';
-const SENSIBLES = [
+export const SENSIBLES = [
   /^\.github\//,
   /^LICENSE$/,
   /^scripts\/verifier\.mjs$/,
@@ -16,6 +16,9 @@ const SENSIBLES = [
   /^outils\/gardes\//,
   /^scripts\/pilotage\//,
   /^pilotage\//,
+  /^\.claude\//,
+  /^CLAUDE\.md$/,
+  /(^|\/)package\.json$/,
 ];
 
 export const estSensible = (chemin) => SENSIBLES.some((r) => r.test(chemin));
@@ -23,15 +26,19 @@ export const estSensible = (chemin) => SENSIBLES.some((r) => r.test(chemin));
 // prs : [{ numero, labels: [nom] }] ; renvoie un message par PR au 3e échec ou bloquée.
 export function alertesEchecs(prs) {
   return prs
-    .filter((p) => p.labels.includes('echec-3') || p.labels.includes('bloque'))
+    .filter((p) => (p.labels ?? []).some((l) => l === 'echec-3' || l === 'bloque'))
     .map((p) => `PR #${p.numero} : 3e échec ou bloquée, reprise par ${PROPRIETAIRE} seul`);
 }
 
 // pr : { numero, fusionnee, fusionnePar, fichiers: [chemin], labels: [nom] }
+// Liste des fichiers absente : la PR est considérée sensible.
 export function alerteFusion(pr) {
-  if (!pr.fusionnee) return [];
-  const sensible = pr.labels.includes('sensible-a-fusionner') || pr.fichiers.some(estSensible);
-  if (!sensible || pr.fusionnePar === PROPRIETAIRE) return [];
+  if (!pr.fusionnee || pr.fusionnePar === PROPRIETAIRE) return [];
+  if (!Array.isArray(pr.fichiers)) {
+    return [`PR #${pr.numero} : liste des fichiers absente, PR considérée sensible, fusionnée par ${pr.fusionnePar}`];
+  }
+  const sensible = (pr.labels ?? []).includes('sensible-a-fusionner') || pr.fichiers.some(estSensible);
+  if (!sensible) return [];
   return [`PR #${pr.numero} : PR sensible fusionnée par ${pr.fusionnePar}, seul ${PROPRIETAIRE} le peut`];
 }
 

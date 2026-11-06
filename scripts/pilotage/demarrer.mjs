@@ -7,6 +7,7 @@ export const CODE_ARRET = 3;
 // git : (args) => { status } ; renvoie le code de sortie de la routine.
 export function demarrer(git) {
   if (git(['fetch', 'origin']).status !== 0) return 1;
+  if (git(['rev-parse', '--verify', '--quiet', 'origin/main^{commit}']).status !== 0) return 1;
   return git(['cat-file', '-e', 'origin/main:pilotage/ARRET']).status === 0 ? CODE_ARRET : 0;
 }
 

@@ -18,23 +18,26 @@ export function avancement(fiches) {
   return { total: fiches.length, fait, lots };
 }
 
-export function lireStatut(texte) {
-  const id = texte.match(/^id:\s*(L\d{2}-T\d{2})\s*$/m)?.[1];
-  const statut = texte.match(/^statut:\s*(\w+)\s*$/m)?.[1];
-  return id && statut ? { id, statut } : null;
+// Lit le statut dans l'en-tête --- seulement. L'id vient du nom du fichier (ex. L00-T09.md).
+export function lireStatut(texte, nomFichier) {
+  const id = nomFichier.match(/^(L\d{2}-T\d{2})\.md$/)?.[1];
+  const entete = texte.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1];
+  const statut = entete?.match(/^statut:[ \t]*["']?(\w+)["']?[ \t]*(?:#[^\r\n]*)?\r?$/m)?.[1];
+  return id && statut ? { id, statut: statut.toLowerCase() } : null;
 }
 
-export function resume(a) {
+export function resume(a, illisibles = 0) {
   const lignes = [`Avancement : ${a.fait}/${a.total} fiches faites`];
   for (const [lot, v] of Object.entries(a.lots).sort()) lignes.push(`Lot ${lot} : ${v.fait}/${v.total}`);
+  if (illisibles > 0) lignes.push(`${illisibles} fiche(s) illisible(s)`);
   return lignes.join('\n');
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const dossier = 'pilotage/fiches';
-  const fiches = readdirSync(dossier)
-    .filter((n) => /^L\d{2}-T\d{2}\.md$/.test(n))
-    .map((n) => lireStatut(readFileSync(`${dossier}/${n}`, 'utf8')))
-    .filter(Boolean);
-  console.log(resume(avancement(fiches)));
+  const dossier = fileURLToPath(new URL('../../pilotage/fiches/', import.meta.url));
+  const noms = readdirSync(dossier).filter((n) => /^L\d{2}-T\d{2}\.md$/.test(n));
+  const lues = noms.map((n) => lireStatut(readFileSync(dossier + n, 'utf8'), n));
+  const illisibles = lues.filter((x) => !x).length;
+  console.log(resume(avancement(lues.filter(Boolean)), illisibles));
+  process.exit(illisibles > 0 ? 1 : 0);
 }
