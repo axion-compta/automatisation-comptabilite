@@ -7,6 +7,12 @@ export const fr = {
     generique: "Une erreur s'est produite. Réessayez dans un instant.",
     reseau: 'Connexion impossible. Vérifiez votre réseau.',
   },
+  palette: {
+    titre: 'Palette de commandes',
+    champ: 'Commande',
+    exemple: '/aller une page',
+    aucune: 'Aucune page ne correspond.',
+  },
 } as const;
 
 export type Textes = typeof fr;
