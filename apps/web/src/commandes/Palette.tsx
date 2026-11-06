@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fr } from '../../../../packages/textes/src/fr.js';
 import { executerCommande } from './aller.js';
 import { installerRaccourci, proposer } from './raccourci.js';
 
@@ -21,12 +22,12 @@ export function Palette({ onAller }: { onAller: (chemin: string) => void }) {
   const candidates = proposer(requete);
 
   return (
-    <div role="dialog" aria-label="Palette de commandes">
+    <div role="dialog" aria-label={fr.palette.titre}>
       <input
-        aria-label="Commande"
+        aria-label={fr.palette.champ}
         autoFocus
         value={requete}
-        placeholder="/aller une page"
+        placeholder={fr.palette.exemple}
         onChange={(e) => setRequete(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') fermer();
@@ -46,7 +47,7 @@ export function Palette({ onAller }: { onAller: (chemin: string) => void }) {
           </li>
         ))}
       </ul>
-      {candidates.length === 0 && <p>Aucune page ne correspond.</p>}
+      {candidates.length === 0 && <p>{fr.palette.aucune}</p>}
     </div>
   );
 }
