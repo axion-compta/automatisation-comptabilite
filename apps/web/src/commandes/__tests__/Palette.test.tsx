@@ -62,4 +62,14 @@ describe('Palette', () => {
     act(() => (document.querySelectorAll('li button')[5] as HTMLButtonElement).click());
     expect(onAller).toHaveBeenCalledWith('/tva');
   });
+  it('textes affichés identiques aux originaux (venus de packages/textes)', () => {
+    monter(vi.fn());
+    touche(document, { key: 'k', ctrlKey: true });
+    expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Palette de commandes');
+    const champ = document.querySelector('input') as HTMLInputElement;
+    expect(champ.getAttribute('aria-label')).toBe('Commande');
+    expect(champ.placeholder).toBe('/aller une page');
+    saisir(champ, 'zzzzqqqq');
+    expect(document.querySelector('p')?.textContent).toBe('Aucune page ne correspond.');
+  });
 });

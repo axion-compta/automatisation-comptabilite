@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserDepot, analyserMotsInterdits, analyserTexte, estExclu, MOTS_INTERDITS } from '../textes.mjs';
+import { analyserDepot, analyserMotsInterdits, analyserTexte, ECRANS_EXEMPTES, estExclu, MOTS_INTERDITS } from '../textes.mjs';
 
 test('vert : textes venus de packages/textes et dépôt réel', () => {
   assert.deepEqual(analyserTexte('<button>{fr.actions.valider}</button>', 'a.tsx'), []);
@@ -31,7 +31,6 @@ test('vert : commentaires et génériques ne comptent pas', () => {
 
 test('exclusions : écran de test, test, fichier généré', () => {
   assert.ok(estExclu('apps/web/src/Ecran.tsx'));
-  assert.ok(estExclu('apps/web/src/commandes/Palette.tsx'));
   assert.ok(!estExclu('apps/web/src/commandes/Autre.tsx', '<p>Bonjour</p>'));
   assert.ok(estExclu('apps/web/src/__tests__/a.test.tsx'));
   assert.ok(estExclu('apps/web/src/G.tsx', '// @generated\n'));
@@ -63,4 +62,11 @@ test('rouge : texte avec parenthèses, point-virgule ou égal ; fragment ; attri
 test('dépôt simulé : un fr.test.ts avec mot interdit reste vert', () => {
   const git = (args) => (args[0] === 'rev-parse' ? '/r\n' : 'packages/textes/src/fr.test.ts\0');
   assert.deepEqual(analyserDepot(git, () => MOTS_INTERDITS[0]), []);
+});
+
+test('palette-plus-exemptee : la palette est analysée et le dépôt reste vert', () => {
+  assert.ok(!ECRANS_EXEMPTES.includes('apps/web/src/commandes/Palette.tsx'));
+  assert.ok(!estExclu('apps/web/src/commandes/Palette.tsx'));
+  assert.equal(analyserTexte('<div aria-label="Palette de commandes" />', 'apps/web/src/commandes/Palette.tsx').length, 1);
+  assert.deepEqual(analyserDepot(), []);
 });
