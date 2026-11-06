@@ -58,6 +58,14 @@ export function analyserActions(r) {
       if (niveaux.get(o) === 'E') pb.push(`rôle en lecture seule avec un outil d'écriture : ${x.id} / ${o}`);
     }
   }
+  // DEMANDE 5 non acceptée : le comptable reste en lecture seule, sans outil d'écriture (ROL-002).
+  const comptable = (r.roles ?? []).find((x) => x?.id === 'comptable');
+  if (comptable && comptable.lecture_seule !== true) pb.push('rôle comptable sans lecture_seule (DEMANDE 5 non acceptée)');
+  if (Array.isArray(matrice.comptable)) {
+    for (const o of matrice.comptable) {
+      if (niveaux.get(o) === 'E') pb.push(`comptable avec un outil d'écriture (DEMANDE 5 non acceptée) : ${o}`);
+    }
+  }
   return pb;
 }
 
@@ -67,5 +75,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     for (const p of pb) console.error('garde:actions ' + p);
     process.exit(1);
   }
-  console.log('garde:actions : registre conforme');
+  console.log('garde:actions vert');
 }
