@@ -10,24 +10,28 @@ export const MARQUEUR_RELECTEUR = 'A_RENSEIGNER_PAR_WILL';
 export const IDENTIFIANTS_RELECTEUR = [MARQUEUR_RELECTEUR];
 // Copie EN DUR de pilotage/LISEZMOI.md §Fusion (le test chemins-sensibles-egaux-a-lisezmoi les compare). « / » final = dossier.
 export const CHEMINS_SENSIBLES = [
-  '.github/', 'LICENSE', 'scripts/verifier.mjs', '.gitleaks.toml', 'eslint.config.js', 'tsconfig.base.json',
+  '.github/', '.claude/', 'CLAUDE.md', 'LICENSE', 'scripts/verifier.mjs', '.gitleaks.toml', 'eslint.config.js', 'tsconfig.base.json',
   'CODEOWNERS', '.npmrc', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', 'outils/gardes/', 'scripts/pilotage/', 'pilotage/',
 ];
+// Ajouts demandés à la relecture de la PR n°21 (la liste du LISEZMOI reste comparée par test) : secrets, attributs, config de tests.
+export const CHEMINS_SENSIBLES_EN_PLUS = ['.gitleaksignore', '.gitattributes'];
 export const ETIQUETTES_INTERDITES = ['bloque', 'a-corriger', 'sensible-a-fusionner'];
 const FORME_BRANCHE = /^lot-(\d{2})\/L(\d{2})-T(\d{2})$/;
 const FORME_IDENTITE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$/;
 const FORME_SHA = /^[0-9a-f]{40}$/;
-const FORME_TEST = /(^|\/)(test|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/;
+const FORME_TEST = /\.(test|spec)\.[cm]?[jt]sx?$/;
 
 const bas = (x) => String(x ?? '').toLowerCase();
+const ident = (x) => bas(x).replace(/\[bot\]$/, ''); // un compte App s'écrit « nom » ou « nom[bot] » selon l'API
 const norm = (chemin) => String(chemin ?? '').replace(/\\/g, '/');
 
 export function estSensible(chemin) {
   const c = bas(norm(chemin));
   if (c === '' || c.startsWith('/') || c.split('/').includes('..')) return true;
-  return CHEMINS_SENSIBLES.some((s) => {
+  if (/^(vitest\.config|stryker)(\.|$)/.test(c.split('/').pop())) return true;
+  return [...CHEMINS_SENSIBLES, ...CHEMINS_SENSIBLES_EN_PLUS].some((s) => {
     const m = bas(s);
-    return m.endsWith('/') ? c.startsWith(m) : c === m || c.endsWith('/' + m);
+    return m.endsWith('/') ? c.startsWith(m) || c.includes('/' + m) : c === m || c.endsWith('/' + m);
   });
 }
 
@@ -42,10 +46,12 @@ export function lireFiche(texte) {
   return fiche;
 }
 
-// Verdict d'un commentaire : ligne exacte « VERDICT: OK » ; toute autre ligne « VERDICT: ... » vaut refus.
+// Texte d'un commentaire sans ses blocs de code (``` ou ~~~ ; un bloc non fermé court jusqu'à la fin).
+const horsCode = (corps) => String(corps ?? '').replace(/(```|~~~)[\s\S]*?(\1|$)/g, '');
+// Verdict d'un commentaire : ligne exacte « VERDICT: OK » ; toute autre ligne contenant « verdict » vaut refus.
 function verdict(corps) {
-  const lignes = String(corps ?? '').split(/\r?\n/);
-  if (lignes.some((l) => l.startsWith('VERDICT:') && l !== 'VERDICT: OK')) return 'KO';
+  const lignes = horsCode(corps).split(/\r?\n/);
+  if (lignes.some((l) => /verdict/i.test(l) && l !== 'VERDICT: OK')) return 'KO';
   return lignes.includes('VERDICT: OK') ? 'OK' : null;
 }
 
@@ -69,7 +75,7 @@ export function decider(pr, options = {}) {
   const refus = (r) => raisons.push(r);
   const p = pr && typeof pr === 'object' ? pr : {};
   const relecteurs = (options.relecteurs ?? IDENTIFIANTS_RELECTEUR)
-    .filter((x) => typeof x === 'string' && x !== MARQUEUR_RELECTEUR && FORME_IDENTITE.test(x)).map(bas);
+    .filter((x) => typeof x === 'string' && x !== MARQUEUR_RELECTEUR && FORME_IDENTITE.test(x)).map(ident);
   if (relecteurs.length === 0) refus('identité du relecteur non renseignée');
   if (p.arret !== false) refus('ARRET présent ou état inconnu');
   if (p.etat !== 'OPEN' || p.brouillon !== false || p.base !== 'main') refus('PR non ouverte, brouillon ou hors main');
@@ -96,29 +102,31 @@ export function decider(pr, options = {}) {
   const fiche = p.fiche && typeof p.fiche === 'object' ? p.fiche : {};
   if (!id || fiche.id !== id) refus('fiche lue sur origin/main absente ou différente de la branche');
   if (fiche.sensible !== 'non') refus('fiche sensible (ou champ sensible absent)');
-  if (fiche.tests_requis === 'oui' && !f.some((x) => FORME_TEST.test(norm(x?.chemin)) && x?.etat !== 'removed' && x?.additions > 0)) refus('tests requis absents du diff');
+  if (fiche.tests_requis !== 'oui' && fiche.tests_requis !== 'non') refus('tests_requis absent ou différent de oui/non');
+  if (fiche.tests_requis === 'oui' &&!f.some((x) => FORME_TEST.test(norm(x?.chemin)) && x?.etat !== 'removed' && x?.additions > 0)) refus('tests requis absents du diff');
   if (f.some((x) => norm(x?.chemin) === fichePr) && !statutSeulChange(p.ficheBase, p.ficheTete)) refus('fiche modifiée autrement que par statut: a_faire vers fait');
 
   const etiquettes = Array.isArray(p.etiquettes) ? p.etiquettes : null;
   if (!etiquettes) refus('étiquettes inconnues');
-  for (const e of ETIQUETTES_INTERDITES) if ((etiquettes ?? []).includes(e)) refus(`étiquette interdite : ${e}`);
+  for (const e of etiquettes ?? []) if (ETIQUETTES_INTERDITES.includes(e) || /^echec-/.test(e)) refus(`étiquette interdite : ${e}`);
 
-  const auteur = bas(p.auteur);
+  const auteur = ident(p.auteur);
   if (auteur === '') refus('auteur inconnu');
   const sha = String(p.headRefOid ?? '');
   if (!FORME_SHA.test(sha)) refus('headRefOid invalide');
   const verdicts = (Array.isArray(p.commentaires) ? p.commentaires : [])
-    .filter((c) => relecteurs.includes(bas(c?.auteur)) && bas(c?.auteur) !== auteur && verdict(c?.corps) !== null)
+    .filter((c) => relecteurs.includes(ident(c?.auteur)) && ident(c?.auteur) !== auteur && verdict(c?.corps) !== null)
     .sort((x, y) => String(x.date).localeCompare(String(y.date)));
   const dernier = verdicts[verdicts.length - 1];
   if (!dernier) refus('aucun verdict du relecteur');
   else if (verdict(dernier.corps) !== 'OK') refus('le dernier verdict du relecteur n\'est pas OK');
-  else if (!FORME_SHA.test(sha) || !dernier.corps.includes(sha)) refus('le dernier verdict ne cite pas le headRefOid actuel');
+  else if (dernier.edite !== false) refus('le dernier verdict du relecteur a été édité (ou état d\'édition inconnu)');
+  else if (!FORME_SHA.test(sha) || !horsCode(dernier.corps).includes(sha)) refus('le dernier verdict ne cite pas le headRefOid actuel');
   if (dernier) {
     const evts = (Array.isArray(p.evenements) ? p.evenements : []).filter((e) => e?.etiquette === 'relu')
       .sort((x, y) => String(x.date).localeCompare(String(y.date)));
     const last = evts[evts.length - 1];
-    if (!etiquettes?.includes('relu') || !last || last.evenement !== 'labeled' || bas(last.acteur) !== bas(dernier.auteur) || bas(last.acteur) === auteur) {
+    if (!etiquettes?.includes('relu') || !last || last.evenement !== 'labeled' || ident(last.acteur) !== ident(dernier.auteur) || ident(last.acteur) === auteur) {
       refus('étiquette relu absente ou pas posée par le relecteur');
     }
   }
@@ -132,16 +140,20 @@ function gh(args) {
   return r.stdout;
 }
 const ndjson = (s) => s.split('\n').filter(Boolean).map((l) => JSON.parse(l));
-const arretPresent = () => {
-  spawnSync('git', ['fetch', '-q', 'origin'], { stdio: 'ignore' });
-  return spawnSync('git', ['cat-file', '-e', 'origin/main:pilotage/ARRET'], { stdio: 'ignore' }).status === 0;
+// ARRET présent = true. Tout doute (fetch en échec, origin/main absent, cat-file autre que 0 ou 128) vaut true : refus.
+const git = (...a) => spawnSync('git', a, { stdio: 'ignore' }).status;
+export const arretPresent = (exec = git) => {
+  if (exec('fetch', '-q', 'origin') !== 0 || exec('rev-parse', '--verify', '-q', 'origin/main') !== 0) return true;
+  return exec('cat-file', '-e', 'origin/main:pilotage/ARRET') !== 128;
 };
+// À jour = la sortie est exactement un entier valant 0 (vide, « null » ou texte = pas à jour).
+export const estAJour = (sortie) => /^\d+$/.test(String(sortie ?? '').trim()) && parseInt(String(sortie).trim(), 10) === 0;
 const brut = (depot, chemin, ref) => gh(['api', '-H', 'Accept: application/vnd.github.raw', `repos/${depot}/contents/${chemin}?ref=${ref}`]);
 
 export function lirePr(numero) {
   const depot = process.env.GITHUB_REPOSITORY || gh(['repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner']).trim();
   if (!/^[\w.-]+\/[\w.-]+$/.test(depot)) throw new Error('dépôt invalide');
-  const j = JSON.parse(gh(['pr', 'view', String(numero), '--json', 'author,headRefOid,headRefName,baseRefName,isCrossRepository,isDraft,state,labels,comments,statusCheckRollup']));
+  const j = JSON.parse(gh(['pr', 'view', String(numero), '--repo', depot, '--json', 'author,headRefOid,headRefName,baseRefName,isCrossRepository,isDraft,state,labels,statusCheckRollup']));
   const arret = arretPresent();
   const id = FORME_BRANCHE.exec(j.headRefName) ? j.headRefName.split('/')[1] : null;
   const fichiers = ndjson(gh(['api', '--paginate', `repos/${depot}/pulls/${numero}/files`, '--jq', '.[] | {chemin: .filename, ancien: .previous_filename, etat: .status, additions, suppressions: .deletions}']));
@@ -150,9 +162,9 @@ export function lirePr(numero) {
     arret, etat: j.state, brouillon: j.isDraft, base: j.baseRefName, fork: j.isCrossRepository, branche: j.headRefName,
     headRefOid: j.headRefOid, auteur: j.author?.login, etiquettes: j.labels.map((l) => l.name),
     verifier: verifs.length > 0 && verifs.every((c) => c.conclusion === 'SUCCESS') ? 'SUCCESS' : 'AUTRE',
-    aJour: Number(gh(['api', `repos/${depot}/compare/main...${j.headRefOid}`, '--jq', '.behind_by']).trim()) === 0,
+    aJour: estAJour(gh(['api', `repos/${depot}/compare/main...${j.headRefOid}`, '--jq', '.behind_by'])),
     fichiers, diffDependances: fichiers.some((x) => /(^|\/)(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml)$/.test(x.chemin)),
-    commentaires: j.comments.map((c) => ({ auteur: c.author?.login, corps: c.body, date: c.createdAt })),
+    commentaires: ndjson(gh(['api', '--paginate', `repos/${depot}/issues/${numero}/comments`, '--jq', '.[] | {auteur: .user.login, corps: .body, date: .created_at, edite: (.updated_at != .created_at)}'])),
     evenements: ndjson(gh(['api', '--paginate', `repos/${depot}/issues/${numero}/events`, '--jq', '.[] | select(.event=="labeled" or .event=="unlabeled") | {evenement: .event, etiquette: .label.name, acteur: .actor.login, date: .created_at}'])),
   };
   if (id) {
@@ -180,7 +192,11 @@ function principal(argv) {
     return 2;
   }
   const { pr, depot, id } = lirePr(numero);
-  const d = decider(pr);
+  let d = decider(pr);
+  if (d.fusionner && !aBlanc) { // relecture complète (commentaires, étiquettes, ARRET) juste avant la fusion
+    const r2 = lirePr(numero);
+    d = r2.pr.headRefOid === pr.headRefOid ? decider(r2.pr) : { fusionner: false, raisons: ['tête de la PR changée pendant la lecture'] };
+  }
   const maintenant = new Date();
   const dernier = (pr.commentaires ?? []).filter((c) => verdict(c.corps) !== null).map((c) => c.date).sort().pop();
   const minutes = dernier ? Math.max(0, Math.round((maintenant - new Date(dernier)) / 60000)) : '';
@@ -190,7 +206,6 @@ function principal(argv) {
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, ligne + '\n');
     if (csv) appendFileSync(csv, ligne + '\n');
     if (d.fusionner) {
-      if (arretPresent()) return 0; // ARRET apparu entre la lecture et la fusion
       gh(['pr', 'merge', numero, '--squash', '--delete-branch', '--match-head-commit', pr.headRefOid, '--repo', depot]);
     }
   }
