@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { analyserWorkflow, analyserCodeowners } from '../ci.mjs';
+import { analyserWorkflow, analyserCodeowners, ECRITURE_PAR_WORKFLOW, ecriturePermise } from '../ci.mjs';
 
 const SHA = '3d3c42e5aac5ba805825da76410c181273ba90b1';
 const vert = `name: Essai
@@ -75,4 +75,70 @@ test('CODEOWNERS : complet vert, incomplet rouge', () => {
   const texte = readFileSync(new URL('../../../.github/CODEOWNERS', import.meta.url), 'utf8');
   assert.deepEqual(analyserCodeowners(texte), []);
   assert.ok(analyserCodeowners(texte.replace('/.npmrc @will383842', '')).length > 0);
+});
+
+// Écriture au niveau d'une tâche (hors niveau global).
+const WF = '.github/workflows/';
+const avecTache = (...droits) => vert.replace('  a:\n', `  a:\n    permissions:\n${droits.map((d) => `      ${d}: write\n`).join('')}`);
+const ecritures = (texte, nom) => analyserWorkflow(texte, nom).filter((p) => p.includes('écriture'));
+
+test('portier-contents-write-vert', () => {
+  assert.deepEqual(analyserWorkflow(avecTache('contents', 'pull-requests'), `${WF}portier.yml`), []);
+  assert.deepEqual(analyserWorkflow(avecTache('contents'), 'portier.yml'), []);
+});
+
+test('contents-write-dans-ci-rouge', () => {
+  assert.ok(ecritures(avecTache('contents'), `${WF}ci.yml`).length > 0);
+  assert.ok(ecritures(avecTache('contents'), 'ci.yml').length > 0);
+});
+
+test('contents-write-dans-version-rouge', () => {
+  assert.ok(ecritures(avecTache('contents'), `${WF}version.yml`).length > 0);
+  assert.deepEqual(analyserWorkflow(avecTache('id-token'), `${WF}version.yml`), []);
+});
+
+test('portier-packages-write-rouge', () => {
+  assert.ok(ecritures(avecTache('packages'), `${WF}portier.yml`).length > 0);
+  assert.ok(ecritures(avecTache('contents', 'issues'), `${WF}portier.yml`).length > 0);
+});
+
+test('ecriture-globale-rouge-partout', () => {
+  for (const nom of ['portier.yml', 'alerte-fusion.yml', 'version.yml', 'ci.yml', 'autre.yml']) {
+    for (const droit of ['contents', 'pull-requests', 'issues']) {
+      const global = vert.replace('contents: read', `contents: read\n  ${droit}: write`);
+      assert.ok(analyserWorkflow(global, `${WF}${nom}`).some((p) => p.includes('écriture')), `${nom} ${droit}`);
+    }
+  }
+  const enLigne = vert.replace(/permissions:\n {2}contents: read/, 'permissions: { contents: write }');
+  assert.ok(ecritures(enLigne, `${WF}portier.yml`).length > 0);
+});
+
+test('alerte-fusion-issues-seulement', () => {
+  assert.deepEqual(analyserWorkflow(avecTache('issues'), `${WF}alerte-fusion.yml`), []);
+  assert.ok(ecritures(avecTache('contents'), `${WF}alerte-fusion.yml`).length > 0);
+  assert.ok(ecritures(avecTache('pull-requests'), `${WF}alerte-fusion.yml`).length > 0);
+  assert.ok(ecritures(avecTache('issues'), `${WF}portier.yml`).length > 0);
+});
+
+test('workflow-inconnu-id-token-seulement', () => {
+  for (const nom of [`${WF}inconnu.yml`, `${WF}Portier.yml`, `${WF}sous/portier.yml`, 'portier.yml.bak']) {
+    assert.ok(ecritures(avecTache('contents'), nom).length > 0, nom);
+  }
+  assert.deepEqual(analyserWorkflow(avecTache('id-token'), `${WF}inconnu.yml`), []);
+});
+
+test('write-all-refuse', () => {
+  for (const nom of ['portier.yml', 'alerte-fusion.yml', 'version.yml', 'ci.yml']) {
+    const global = vert.replace(/permissions:\n {2}contents: read/, 'permissions: write-all');
+    assert.ok(analyserWorkflow(global, `${WF}${nom}`).some((p) => p.includes('write-all')), nom);
+    const tache = vert.replace('  a:\n', '  a:\n    permissions: write-all\n');
+    assert.ok(analyserWorkflow(tache, `${WF}${nom}`).some((p) => p.includes('write-all')), nom);
+  }
+});
+
+test('table par workflow : chemins exacts, ni ajout ni élargissement', () => {
+  assert.deepEqual([...ECRITURE_PAR_WORKFLOW.keys()].sort(), [`${WF}alerte-fusion.yml`, `${WF}portier.yml`, `${WF}version.yml`]);
+  assert.deepEqual([...ecriturePermise('portier.yml')].sort(), ['contents', 'pull-requests']);
+  assert.deepEqual([...ecriturePermise('alerte-fusion.yml')], ['issues']);
+  assert.deepEqual([...ecriturePermise('zzz.yml')], ['id-token']);
 });

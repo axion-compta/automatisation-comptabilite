@@ -7,7 +7,20 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const TIMEOUT_MAX = 10;
-const ECRITURE_PERMISE = new Set(['id-token']);
+const DEFAUT_ECRITURE = new Set(['id-token']);
+// Droits d'écriture permis, par chemin exact de workflow (aucun motif). Hors table : id-token seul.
+export const ECRITURE_PAR_WORKFLOW = new Map([
+  ['.github/workflows/version.yml', new Set(['id-token'])],
+  ['.github/workflows/portier.yml', new Set(['contents', 'pull-requests'])],
+  ['.github/workflows/alerte-fusion.yml', new Set(['issues'])],
+]);
+const DOSSIER_WORKFLOWS = '.github/workflows/';
+
+export function ecriturePermise(nom) {
+  let chemin = String(nom).replace(/\\/g, '/');
+  if (!chemin.includes('/')) chemin = DOSSIER_WORKFLOWS + chemin;
+  return ECRITURE_PAR_WORKFLOW.get(chemin) ?? DEFAUT_ECRITURE;
+}
 
 const indent = (l) => l.length - l.trimStart().length;
 const sansCommentaire = (l) => l.replace(/\s+#.*$/, '');
@@ -16,6 +29,15 @@ export function analyserWorkflow(texte, nom) {
   const pb = [];
   const lignes = texte.split(/\r?\n/);
   const ajoute = (n, msg) => pb.push(`${nom}:${n + 1} ${msg}`);
+  const permis = ecriturePermise(nom);
+
+  // lignes du bloc `permissions:` de haut niveau (hors job)
+  const global = new Set();
+  let dansGlobal = false;
+  lignes.forEach((l, i) => {
+    if (/^\S/.test(l) && !l.startsWith('#')) dansGlobal = /^permissions:\s*(#.*)?$/.test(l);
+    else if (dansGlobal && l.trim() !== '') global.add(i);
+  });
 
   lignes.forEach((brut, i) => {
     const l = sansCommentaire(brut);
@@ -29,7 +51,15 @@ export function analyserWorkflow(texte, nom) {
       }
     }
     const w = l.match(/^\s*([a-z-]+):\s*write(?:-all)?\s*$/);
-    if (w && !ECRITURE_PERMISE.has(w[1])) ajoute(i, `permission en écriture interdite : ${w[1]}`);
+    if (w && !permis.has(w[1])) ajoute(i, `permission en écriture interdite : ${w[1]}`);
+    else if (w && global.has(i) && !DEFAUT_ECRITURE.has(w[1])) ajoute(i, `écriture au niveau global interdite : ${w[1]}`);
+    const enLigne = l.match(/^\s*permissions:\s*\{(.*)\}\s*$/);
+    if (enLigne) {
+      for (const [, droit] of enLigne[1].matchAll(/([a-z-]+)\s*:\s*write\b/g)) {
+        if (!permis.has(droit)) ajoute(i, `permission en écriture interdite : ${droit}`);
+        else if (/^permissions:/.test(l) && !DEFAUT_ECRITURE.has(droit)) ajoute(i, `écriture au niveau global interdite : ${droit}`);
+      }
+    }
     if (/^\s*permissions:\s*write-all/.test(l)) ajoute(i, 'permissions: write-all interdit');
   });
 
