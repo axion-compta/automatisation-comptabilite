@@ -49,7 +49,7 @@ describe('faux hote C4', () => {
   });
 
   it('migrer-refuse-casse-mixte', () => {
-    for (const ins of ['Security Definer', 'GRANT ALL', 'sEcUrItY dEfInEr', 'Execute x', 'grant select']) {
+    for (const ins of ['Security Definer', 'GRANT ALL', 'sEcUrItY dEfInEr', 'SECURITY\nDEFINER', 'security\t definer', 'security/**/definer', 'security -- x\n definer','Execute x', 'grant select']) {
       const m = manifeste({ migrer: () => ['SELECT 1', ins] });
       const base = creerBase();
       expect(() => migrer(m, base)).toThrow(/refusee/);
@@ -69,6 +69,25 @@ describe('faux hote C4', () => {
 
   it('manifeste-interrupteur-ouvert-refuse', () => {
     expect(() => defineAutomation(manifeste({ actif: true }))).toThrow(/interrupteur/);
+  });
+
+  it('manifeste-50-permissions-accepte', () => {
+    const perms = Array.from({ length: 50 }, (_, i) => 'p' + i);
+    expect(() => defineAutomation(manifeste({ permissions: perms }))).not.toThrow();
+  });
+
+  it('jeu-id-en-double-refuse-par-verifierJeu', () => {
+    const jeu = module_.jeuEssai.map((c, i) => (i === 1 ? { ...c, id: module_.jeuEssai[0].id } : c));
+    expect(verifierJeu({ jeuEssai: jeu })).toBe(false);
+  });
+
+  it('manifeste-gele-en-profondeur', () => {
+    const m = defineAutomation(manifeste());
+    expect(() => m.permissions.push('x')).toThrow();
+    expect(() => m.jeuEssai.push({ id: 'z', type: 'normal' })).toThrow();
+    expect(() => {
+      m.jeuEssai[0].type = 'autre';
+    }).toThrow();
   });
 
   it('manifeste-51-permissions-refuse', () => {

@@ -6,7 +6,11 @@ export function creerBase() {
 }
 
 export function instructionRefusee(instruction) {
-  const bas = String(instruction).toLowerCase();
+  const bas = String(instruction)
+    .toLowerCase()
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/--[^\n]*/g, ' ')
+    .replace(/\s+/g, ' ');
   return INTERDITS.find((mot) => bas.includes(mot)) ?? null;
 }
 
@@ -35,5 +39,9 @@ export function rejouer(module, executer = () => 'ok') {
 
 // Verifie que chaque cas du jeu est bien forme, sans agir (interrupteur ferme).
 export function verifierJeu(module) {
-  return module.jeuEssai.every((c) => typeof c.id === 'string' && typeof c.type === 'string');
+  const ids = module.jeuEssai.map((c) => c.id);
+  return (
+    module.jeuEssai.every((c) => typeof c.id === 'string' && typeof c.type === 'string') &&
+    new Set(ids).size === ids.length
+  );
 }

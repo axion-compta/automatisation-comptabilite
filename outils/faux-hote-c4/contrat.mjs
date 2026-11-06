@@ -31,5 +31,9 @@ export function validerManifeste(m) {
 export function defineAutomation(manifeste) {
   const erreurs = validerManifeste(manifeste);
   if (erreurs.length > 0) throw new Error(`Manifeste refuse : ${erreurs.join(' ; ')}`);
-  return Object.freeze({ ...manifeste });
+  return Object.freeze({
+    ...manifeste,
+    permissions: Object.freeze([...manifeste.permissions]),
+    jeuEssai: Object.freeze(manifeste.jeuEssai.map((c) => Object.freeze({ ...c }))),
+  });
 }
