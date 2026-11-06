@@ -42,3 +42,12 @@ test('le dépôt réel est vert', () => {
   const r = spawnSync(process.execPath, ['outils/gardes/termine.mjs'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
 });
+
+test('rouge : tests_requis oui sans fichier de test dans fichiers_autorises ni au journal', () => {
+  const f = { 'L00-T01': { fiche: { ...fiche('L00-T01', 'fait').fiche, tests_requis: 'oui', fichiers_autorises: ['outils/x/**'] }, fichier: 'L00-T01.md' } };
+  const j = { 'L00-T01': journal('L00-T01') };
+  assert.match(analyserTermine(f, j, ['outils/y/a.test.mjs'])[0], /tests_requis oui/);
+  assert.deepEqual(analyserTermine(f, j, ['outils/x/a.test.mjs']), []);
+  assert.deepEqual(analyserTermine(f, { 'L00-T01': journal('L00-T01') + '\n- a.test.mjs' }, []), []);
+  assert.deepEqual(analyserTermine(f, j), []);
+});

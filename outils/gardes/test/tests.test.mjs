@@ -55,6 +55,8 @@ test('le canari est déclaré rouge par la garde (la garde n’est pas aveugle)'
   assert.equal(r.status, 1);
   assert.match(r.stderr, /sans-assertion\.canari\.mjs:\d+ test sans assertion/);
   assert.match(r.stderr, /skip-sans-carte\.canari\.mjs:\d+ test sauté sans carte/);
+  assert.match(r.stderr, /only\.canari\.mjs:\d+ \.only interdit/);
+  assert.match(r.stderr, /vide\.canari\.mjs:\d+ test sans assertion/);
 });
 
 test('le dépôt réel est vert', () => {
@@ -71,4 +73,46 @@ test('vert : aide du fichier qui contient l’assertion ; rouge : aide sans asse
   assert.deepEqual(pb(bon), []);
   const mauvais = "const noter = (x) => console.log(x);\ntest('a', () => { noter(1); });\n";
   assert.equal(pb(mauvais).length, 1);
+});
+
+test('rouge : .only sous toutes ses formes', () => {
+  for (const t of ["describe.only('a', () => {});", "suite.only('a', () => {});", "test('a', { only: true }, () => { assert.ok(1); });"]) {
+    assert.match(pb(t)[0], /\.only interdit/, t);
+  }
+});
+
+test('rouge : faux amis de l’assertion', () => {
+  for (const c of ['const expected = 1; expected.toString();', 'failures.push(1);', 'assertionsLog();', 'verifierRien();']) {
+    assert.match(pb(`test('a', () => { ${c} });`)[0], /sans assertion/, c);
+  }
+});
+
+test('rouge : aide contournée (beforeEach, aide sans assertion, deux déclarations) ; vert : aide en retrait', () => {
+  const hook = "const aide = () => 0;\nbeforeEach(() => { assert.ok(1); });\ntest('a', () => { aide(); });";
+  const deux = "const bon = () => assert.ok(1); const aide = () => 0;\ntest('a', () => { aide(); });";
+  assert.equal(pb(hook).length, 1);
+  assert.equal(pb(deux).length, 1);
+  const retrait = "describe('g', () => {\n  const verif = (x) => {\n    assert.ok(x);\n  };\n  test('a', () => { verif(1); });\n});";
+  assert.deepEqual(pb(retrait), []);
+});
+
+test('rouge : skipIf, runIf, todo, t.todo, each à gabarit, chaîne de modificateurs', () => {
+  const ok = 'expect(1).toBe(1);';
+  for (const t of [
+    `test.skipIf(c)('a', () => { ${ok} });`,
+    `it.runIf(c)('a', () => { ${ok} });`,
+    `test('a', { todo: true }, () => { ${ok} });`,
+    `test('a', (t) => { t.todo(); ${ok} });`,
+    `it.skip.each([1])('a', () => { ${ok} });`,
+  ]) {
+    assert.match(pb(t)[0], /sans carte/, t);
+  }
+  assert.equal(pb('it.each`a|b`(\'x\', () => { void 1; });').length, 1);
+  assert.equal(pb("test.concurrent.each([1])('a', () => { void 1; });").length, 1);
+  assert.deepEqual(pb("test.concurrent.each([1])('a', () => { expect(1).toBe(1); });"), []);
+});
+
+test('regex : un littéral contenant une apostrophe ne fausse pas le masquage ; son contenu ne compte pas', () => {
+  assert.deepEqual(pb("const r = /'/;\ntest('a', () => { assert.ok(r.test('x')); });"), []);
+  assert.equal(pb("test('a', () => { /assert.ok(/.test('x'); });").length, 1);
 });
