@@ -42,3 +42,13 @@ describe("registre d'actions", () => {
     for (const a of registre.actions) expect(Boolean(a.outil) !== Boolean(a.exclusion)).toBe(true);
   });
 });
+
+describe('défauts L00-T26', () => {
+  it('le comptable est en lecture seule', () => {
+    expect(registre.roles.find((x) => x.id === 'comptable')?.lecture_seule).toBe(true);
+  });
+  it('interrupteur non déclaré dans le registre : refus même si actif', () => {
+    const r = { ...registre, actions: [{ id: 'x', interrupteur: 'fantome', outil: 'outil_lire' }] };
+    expect(peutAgir(r, 'administrateur', 'x', new Set(['fantome']))).toBe(false);
+  });
+});

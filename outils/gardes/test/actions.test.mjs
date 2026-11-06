@@ -6,7 +6,7 @@ import { analyserActions, CHEMIN_REGISTRE } from '../actions.mjs';
 const reel = () => JSON.parse(readFileSync(CHEMIN_REGISTRE, 'utf8'));
 const rouge = (r, texte) => assert.ok(analyserActions(r).some((p) => p.includes(texte)), texte);
 
-test('vert : le registre réel est conforme', () => {
+test('vert : le registre réel est vert', () => {
   assert.deepEqual(analyserActions(reel()), []);
 });
 
@@ -90,4 +90,16 @@ test('clés héritées : rôle « constructor » sans ligne, sans exception', ()
   const r = reel();
   r.roles.push({ id: 'constructor', lecture_seule: true });
   rouge(r, 'rôle sans ligne : constructor');
+});
+
+test('rouge : comptable sans lecture_seule', () => {
+  const r = reel();
+  delete r.roles.find((x) => x.id === 'comptable').lecture_seule;
+  rouge(r, 'comptable sans lecture_seule');
+});
+
+test("rouge : comptable avec un outil d'écriture", () => {
+  const r = reel();
+  r.matrice.comptable.push('outil_proposer');
+  rouge(r, "comptable avec un outil d'écriture");
 });
