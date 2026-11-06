@@ -13,8 +13,7 @@ export const CHEMINS_SENSIBLES = [
   '.github/', '.claude/', 'CLAUDE.md', 'LICENSE', 'scripts/verifier.mjs', '.gitleaks.toml', 'eslint.config.js', 'tsconfig.base.json',
   'CODEOWNERS', '.npmrc', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', 'outils/gardes/', 'scripts/pilotage/', 'pilotage/',
 ];
-// Ajouts demandés à la relecture de la PR n°21 (la liste du LISEZMOI reste comparée par test) : secrets, attributs, config de tests.
-export const CHEMINS_SENSIBLES_EN_PLUS = ['.gitleaksignore', '.gitattributes'];
+export const CHEMINS_SENSIBLES_EN_PLUS = ['.gitleaksignore', '.gitattributes']; // en plus de la liste du LISEZMOI (comparée par test)
 export const ETIQUETTES_INTERDITES = ['bloque', 'a-corriger', 'sensible-a-fusionner'];
 const FORME_BRANCHE = /^lot-(\d{2})\/L(\d{2})-T(\d{2})$/;
 const FORME_IDENTITE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$/;
@@ -146,7 +145,6 @@ export const arretPresent = (exec = git) => {
   if (exec('fetch', '-q', 'origin') !== 0 || exec('rev-parse', '--verify', '-q', 'origin/main') !== 0) return true;
   return exec('cat-file', '-e', 'origin/main:pilotage/ARRET') !== 128;
 };
-// À jour = la sortie est exactement un entier valant 0 (vide, « null » ou texte = pas à jour).
 export const estAJour = (sortie) => /^\d+$/.test(String(sortie ?? '').trim()) && parseInt(String(sortie).trim(), 10) === 0;
 const brut = (depot, chemin, ref) => gh(['api', '-H', 'Accept: application/vnd.github.raw', `repos/${depot}/contents/${chemin}?ref=${ref}`]);
 
