@@ -25,10 +25,7 @@ export function analyserTexte(texte, nom) {
   const pb = [];
   texte.split(/\r?\n/).forEach((l, i) => {
     for (const m of l.matchAll(HEX)) pb.push(`${nom}:${i + 1} couleur en dur ${m[0]} : utiliser un jeton`);
-    for (const m of l.matchAll(PROPRIETE)) {
-      const nom_ = m[1].match(NOMS);
-      if (nom_) pb.push(`${nom}:${i + 1} couleur en dur ${nom_[0]} : utiliser un jeton`);
-    }
+    for (const m of l.matchAll(PROPRIETE)) if (NOMS.test(m[1])) pb.push(`${nom}:${i + 1} couleur en dur ${m[1].match(NOMS)[0]} : jeton requis`);
     for (const m of l.matchAll(FONCTION)) pb.push(`${nom}:${i + 1} couleur en dur ${m[0]}...) : utiliser un jeton`);
   });
   return pb;

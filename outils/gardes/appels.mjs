@@ -5,8 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-// Formes vues : fetch nu (appel, ?.(), alias), window.fetch, "fetch" entre guillemets (window["fetch"]),
-// XMLHttpRequest/WebSocket/EventSource/sendBeacon sous toute forme, modules réseau, import() d'une URL http(s).
+// Formes vues : fetch nu ou aliasé, window["fetch"], XHR/WebSocket/EventSource/sendBeacon, modules réseau, import http(s).
 const APPEL = new RegExp(
   [
     String.raw`(?<![\w.$])fetch\b(?!\s*:)`,

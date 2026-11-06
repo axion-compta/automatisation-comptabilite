@@ -12,7 +12,6 @@ const LETTRES = /[A-Za-zÀ-ÿ]{2,}/;
 const NOEUD = /<(?:[A-Za-z][^<>]*)?>([^<>{}]+)(?=[<{])|\}([^<>{}]+)(?=<)/g;
 const CHAINE = /\{\s*(['"`])((?:(?!\1)[^\\\n])*)\1\s*\}/g;
 const ATTRIBUT = /\b(?:aria-label|title|placeholder|alt|label)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
-// Code TypeScript pris à tort pour du texte (génériques : useState<A>(x); const b = c<D>).
 const CODE = /\b(?:const|let|var|return)\b|=>|;\s*$|[\w$\])!]\(/m;
 const CONCERNES = /^(apps|packages)\/.*\.tsx$/;
 const TESTS = /(\.test\.|\.spec\.|\/__tests__\/|\/e2e\/)/;

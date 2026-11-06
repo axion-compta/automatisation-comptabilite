@@ -21,6 +21,7 @@ test('vert : méthode nommée fetch, commentaires', () => {
 
 test('exclusions : couche api, tests, hors apps/web/src', () => {
   assert.ok(estExclu(COUCHE_APPELS));
+  assert.ok(estExclu('apps/web/src/G.ts', '// @generated\nfetch(u)'));
   assert.ok(estExclu('apps/web/src/__tests__/api.test.ts'));
   assert.ok(estExclu('packages/faux-serveur/src/a.ts'));
   assert.ok(!estExclu('apps/web/src/Ecran.tsx', 'x'));
@@ -39,8 +40,4 @@ test('rouge : une forme par ligne (alias, optionnel, crochets, espaces, modules,
     "import ky from 'ky'", 'new EventSource(u)', 'navigator.sendBeacon(u)', "await import('https://x.org/m.js')"];
   for (const f of formes) assert.ok(analyserTexte(f, 'E.tsx').length >= 1, f);
   assert.deepEqual(analyserTexte("const m = await import('./faux.js'); const o = { fetch: 1 };", 'E.tsx'), []);
-});
-
-test('exclusion : fichier généré', () => {
-  assert.ok(estExclu('apps/web/src/G.ts', '// @generated\nfetch(u)'));
 });
