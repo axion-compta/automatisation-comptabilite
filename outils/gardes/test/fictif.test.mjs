@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS, ibanValide } from '../fictif.mjs';
+import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS, ibanValide, LONGUEURS_IBAN } from '../fictif.mjs';
 
 // Les valeurs sont assemblées ici pour ne pas figurer en clair dans le dépôt.
 const domaineReel = ['exemple', 'com'].join('.');
@@ -163,4 +163,52 @@ test('rouge : lecture contenant un octet NUL = binaire non reconnu', () => {
 test('rouge : extensions binaires ajoutées', () => {
   const noms = ['a.avif', 'b.heic', 'c.mp4', 'd.mp3', 'e.xz', 'f.bz2', 'g.sqlite', 'h.wasm'];
   assert.equal(analyserDepot(fauxGit(noms.map((n) => `z/${n}`).join('\0') + '\0'), () => '').length, noms.length);
+});
+
+// L00-T31 : suivi de garde:fictif.
+const fictif = (pays, n) => cle(pays, '5'.repeat(n - 4));
+const AJOUTES = 'AO25 BF28 BJ28 CF27 CG27 CI28 CM27 CV25 DZ26 GA27 GQ27 GW25 IR26 KM27 MA28 MG27 ML28 MZ25 NE28 SN28 TD27 TG28'.split(' ');
+const DOUZE = ['BI', 'DJ', 'FK', 'HN', 'LY', 'MN', 'NI', 'OM', 'RU', 'SD', 'SO', 'YE'];
+
+test('iban-dz-26', () => {
+  const s = fictif('DZ', 26);
+  assert.equal(s.length, 26);
+  assert.equal(analyserTexte(`iban ${s}`, 't.txt').length, 1);
+});
+
+test('iban-sn-28', () => {
+  const s = fictif('SN', 28);
+  assert.equal(s.length, 28);
+  assert.equal(analyserTexte(`iban ${parGroupes(s, ' ')}`, 't.txt').length, 1);
+});
+
+test('registre-89-pays', () => {
+  // 89 pays avant L00-T31 ; la fiche ajoute 22 longueurs, soit 111 au total (voir journal).
+  assert.equal(Object.keys(LONGUEURS_IBAN).length, 89 + AJOUTES.length);
+  for (const x of AJOUTES) assert.equal(LONGUEURS_IBAN[x.slice(0, 2)], Number(x.slice(2)), x);
+  for (const p of [...DOUZE, ...AJOUTES.map((x) => x.slice(0, 2))]) {
+    const s = fictif(p, LONGUEURS_IBAN[p]);
+    assert.equal(analyserTexte(`iban ${s}`, 't.txt').length, 1, p);
+  }
+});
+
+test('prose-francaise-pas-un-iban', () => {
+  const prose = cle('FI', 'ABCDEFGHIJKLMN').toLowerCase();
+  assert.deepEqual(analyserTexte(`texte ${prose} suite`, 't.txt'), []);
+  // Témoin : la même chaîne en majuscules reste détectée.
+  assert.equal(analyserTexte(`TEXTE ${prose.toUpperCase()} SUITE`, 't.txt').length, 1);
+});
+
+test('decodage-pourcent', () => {
+  for (const sep of ['%C2%A0', '%c2%a0', '%2D', '%2F', '%2E']) {
+    assert.equal(analyserTexte(`?iban=${parGroupes(frValide, sep)}`, 't.txt').length, 1, sep);
+  }
+});
+
+test('email-sans-explosion', () => {
+  const t0 = Date.now();
+  assert.deepEqual(analyserTexte('a'.repeat(100000), 't.txt'), []);
+  assert.ok(Date.now() - t0 < 1000, 'plus d’une seconde');
+  // Partie locale très longue : la fin (64 caractères) est encore contrôlée.
+  assert.equal(analyserTexte(`${'a'.repeat(100)}${arobase}${domaineReel}`, 't.txt').length, 1);
 });
