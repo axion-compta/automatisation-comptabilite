@@ -47,10 +47,41 @@ export function estAutorise(fichier, motifs) {
 }
 
 // Champs comparés à main comme des dépendances (valeurs comparées par leur JSON : un override peut être imbriqué).
-const CHAMPS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'overrides', 'pnpm.overrides', 'resolutions'];
+const CHAMPS = [
+  'dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'overrides', 'pnpm.overrides', 'resolutions',
+  'pnpm.packageExtensions', 'pnpm.patchedDependencies', 'bundleDependencies', 'bundledDependencies',
+];
+
+// pnpm-workspace.yaml : entrées des blocs de premier niveau overrides, packageExtensions et catalog, comparées par leur texte.
+function dependancesYaml(texte) {
+  const out = {};
+  let bloc;
+  let cle;
+  for (const l of (texte ?? '').split(/\r?\n/)) {
+    const haut = l.match(/^(\w+):\s*(?:#.*)?$/);
+    if (haut || /^\S/.test(l)) {
+      bloc = haut && ['overrides', 'packageExtensions', 'catalog'].includes(haut[1]) ? haut[1] : undefined;
+      cle = undefined;
+    } else if (bloc && l.trim() !== '' && !l.trim().startsWith('#')) {
+      const indent = l.length - l.trimStart().length;
+      out.__indent ??= {};
+      if (out.__indent[bloc] === undefined) out.__indent[bloc] = indent;
+      if (indent === out.__indent[bloc]) {
+        const nom = l.trim().match(/^(?:"([^"]+)"|'([^']+)'|([^:]+?))\s*:/);
+        cle = `pnpm-workspace.${bloc}:${nom ? (nom[1] ?? nom[2] ?? nom[3]) : l.trim()}`;
+        out[cle] = '';
+      }
+      if (cle) out[cle] += l.trim() + '\n';
+    }
+  }
+  delete out.__indent;
+  return out;
+}
+
 function dependances(jsonTexte, chemin) {
   const out = {};
   if (!jsonTexte) return out;
+  if (chemin.endsWith('.yaml')) return dependancesYaml(jsonTexte);
   let j;
   try {
     j = JSON.parse(jsonTexte);
@@ -58,7 +89,9 @@ function dependances(jsonTexte, chemin) {
     throw new Error(`package.json invalide : ${chemin} (${e.message})`);
   }
   for (const champ of CHAMPS) {
-    const objet = champ === 'pnpm.overrides' ? j?.pnpm?.overrides : j?.[champ];
+    let objet = champ.startsWith('pnpm.') ? j?.pnpm?.[champ.slice(5)] : j?.[champ];
+    if (Array.isArray(objet)) objet = Object.fromEntries(objet.map((n) => [n, true])); // bundleDependencies : liste de noms
+    else if (typeof objet === 'boolean') objet = { '(tout)': objet };
     for (const [nom, v] of Object.entries(objet ?? {})) out[`${champ}:${nom}`] = JSON.stringify(v);
   }
   return out;
@@ -72,6 +105,11 @@ export function analyserPerimetre(fiche, diff, paquets = []) {
     pb.push('fiche : taille_max_lignes absent ou non numérique');
   }
   const motifs = fiche.fichiers_autorises;
+  for (const m of motifs) {
+    let prof = 0;
+    for (const c of String(m)) if (c === '{') prof++; else if (c === '}' && prof > 0) prof--;
+    if (prof > 0) pb.push(`motif invalide : accolade ouvrante jamais fermée dans ${m}`);
+  }
   for (const f of diff.fichiers) {
     if (!estAutorise(f, motifs)) pb.push(`fichier hors liste : ${f}`);
   }
@@ -134,7 +172,7 @@ export function collecter(git, env = {}) {
     if (raw !== null && estPRPilotage(branche, e)) return { pilotage: true, noms: e.map((x) => x.chemin), erreurs: [] };
   }
   const idBranche = idDeBranche(branche);
-  const idCorps = enPR && !idBranche ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)/)?.[1] : undefined;
+  const idCorps = enPR && !idBranche ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)\b/)?.[1] : undefined;
   const id = idBranche ?? idCorps;
   if (!id) return enPR ? { erreurs: [`aucune fiche pour la branche ${branche}`] } : { ignore: true };
   const texteFiche = git(['show', `${BASE}:pilotage/fiches/${id}.md`]);
@@ -172,7 +210,7 @@ export function collecter(git, env = {}) {
     return n + (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
   }, 0);
   const paquets = fichiers
-    .filter((f) => f.endsWith('package.json'))
+    .filter((f) => f.endsWith('package.json') || f.endsWith('pnpm-workspace.yaml'))
     .map((f) => ({ chemin: f, base: git(['show', `${BASE}:${f}`]), branche: git(['show', `HEAD:${f}`]) }));
   return { id, texteFiche, noms: fichiers, lignes, paquets, erreurs };
 }

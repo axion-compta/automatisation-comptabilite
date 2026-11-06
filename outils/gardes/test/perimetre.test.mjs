@@ -266,3 +266,48 @@ test('T23-5 TITRE_PR : l’id du titre doit être celui de la branche (ou du cor
   assert.deepEqual(evaluer(gitRepli(), { ...eRepli, TITRE_PR: 'L00-T03 titre' }).pb, []);
   assert.match(evaluer(gitRepli(), { ...eRepli, TITRE_PR: 'L00-T09 titre' }).pb[0], /titre de PR/);
 });
+
+test('T32-1 accolade ouvrante jamais fermée = motif invalide', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  const pb = analyserPerimetre({ ...fiche, fichiers_autorises: ['x/{a,b.js'] }, diff);
+  assert.match(pb[0], /motif invalide/);
+  assert.deepEqual(analyserPerimetre({ ...fiche, fichiers_autorises: ['x/{a,b}.js'] }, diff), []);
+});
+
+test('T32-2 l’id de la fiche dans le corps s’arrête à une frontière de mot', () => {
+  const g = gitRepli(ficheSens, '');
+  const e = { GITHUB_HEAD_REF: 'divers/x', CORPS_PR: 'Fiche: L00-T033\n' };
+  assert.equal(collecter(g, e).id, undefined);
+});
+
+test('T32-3 champs pnpm et lots embarqués comparés à main', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  const base = '{"name":"x"}';
+  for (const [t, motif, nom] of [
+    ['{"pnpm":{"packageExtensions":{"lib":{"dependencies":{"y":"1"}}}}}', /pnpm\.packageExtensions:lib/, 'lib'],
+    ['{"pnpm":{"patchedDependencies":{"lib@1.0.0":"patches/lib.patch"}}}', /pnpm\.patchedDependencies:lib@1\.0\.0/, 'lib@1.0.0'],
+    ['{"bundleDependencies":["lib"]}', /bundleDependencies:lib/, 'lib'],
+    ['{"bundledDependencies":["lib"]}', /bundledDependencies:lib/, 'lib'],
+  ]) {
+    const paquets = [{ chemin: 'package.json', base, branche: t }];
+    assert.match(analyserPerimetre(fiche, diff, paquets)[0], motif);
+    assert.deepEqual(analyserPerimetre({ ...fiche, nouvelles_dependances: [nom] }, diff, paquets), []);
+  }
+});
+
+test('T32-4 pnpm-workspace.yaml : overrides, packageExtensions et catalog comparés à main', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  const base = 'packages:\n  - "a/*"\noverrides:\n  vieux: 1.0.0\n';
+  for (const [t, motif] of [
+    [base + '  lib: 2.0.0\n', /pnpm-workspace\.overrides:lib/],
+    [base + 'packageExtensions:\n  lib:\n    dependencies:\n      y: "1"\n', /pnpm-workspace\.packageExtensions:lib/],
+    [base + 'catalog:\n  "@s/lib": 3.0.0\n', /pnpm-workspace\.catalog:@s\/lib/],
+  ]) {
+    const paquets = [{ chemin: 'pnpm-workspace.yaml', base, branche: t }];
+    assert.match(analyserPerimetre(fiche, diff, paquets)[0], motif);
+  }
+  const identique = [{ chemin: 'pnpm-workspace.yaml', base, branche: base + 'packages2:\n  - x\n' }];
+  assert.deepEqual(analyserPerimetre(fiche, diff, identique), []);
+  const permis = [{ chemin: 'pnpm-workspace.yaml', base, branche: base + '  lib: 2.0.0\n' }];
+  assert.deepEqual(analyserPerimetre({ ...fiche, nouvelles_dependances: ['lib'] }, diff, permis), []);
+});

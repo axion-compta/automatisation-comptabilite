@@ -46,6 +46,21 @@ const ROUGES = [
     `it.concurrent.only('a', () => { ${OK} });`,
     "describe.skip.only('a', () => {});",
   ].map((t) => [/\.only interdit/, t]),
+  ...[
+    `test['skip']('a', () => { ${OK} });`,
+    `const { skip } = test;`,
+    `const { todo: reporter } = it;`,
+    `test?.skip('a', () => { ${OK} });`,
+    `describe?.skipIf(c)('a', () => {});`,
+    `import * as t from 'node:test';\nt.test.skip('a', () => { ${OK} });`,
+    `import * as t from 'vitest';\nt.skip('a', () => { ${OK} });`,
+  ].map((t) => [/sans carte/, t]),
+  ...[
+    `test['only']('a', () => { ${OK} });`,
+    `const { only } = test;`,
+    `test?.only('a', () => { ${OK} });`,
+    `import * as t from 'node:test';\nt.it.only('a', () => { ${OK} });`,
+  ].map((t) => [/\.only interdit/, t]),
   [/alias de test interdit/, "import { it as cas } from 'vitest';\ncas('a', () => {});"],
   [/alias de test interdit/, "import { describe, test as cas } from 'node:test';"],
 ];
@@ -72,6 +87,7 @@ test('vert : assertions reconnues, cartes, aides, regex, chaînes', () => {
     "const rouge = (x) => assert.ok(x);\nconst deux = (x) => rouge(x);\ntest('a', () => { deux(1); });",
     "describe('g', () => {\n  const verif = (x) => {\n    assert.ok(x);\n  };\n  test('a', () => { verif(1); });\n});",
     "const r = /'/;\ntest('a', () => { assert.ok(r.test('x')); });",
+    "const s = \"test['skip']\"; // test['only'] en commentaire\nconst { a, b } = test;",
     "const s = `it.skip('a', () => {})`;\nconst u = \"xit(\", v = { skip: false };",
   ];
   for (const t of VERTS) assert.deepEqual(pb(t), [], t);

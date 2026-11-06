@@ -8,10 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 export const EST_TEST = /\.(test|spec)\.[cm]?[jt]sx?$/;
 const CARTE = /\bL\d{2}-T\d{2}\b/;
-const CHAINE = String.raw`(?<![\w.$])(?:describe|suite|it|test)((?:\s*\.\s*\w+)*)`;
+const CHAINE = String.raw`(?<![\w.$])(?:describe|suite|it|test)((?:\s*\??\.\s*\w+)*)`;
 const ASSERTION = /\bexpect(?:\.soft)?\s*\(|\bexpectTypeOf\s*\(|\bassert(?:\.\w+)?\s*\(|\bt\.assert\.\w+\s*\(/;
 const appelle = (corps, noms) => noms.some((b) => new RegExp(`\\b${b}\\s*\\(`).test(corps));
-const ONLY = String.raw`(?<![\w.$])(?:describe|suite|it|test)(?:\s*\.\s*\w+)*\s*\.\s*only\b|\bonly\s*:(?!\s*false\b)`;
+const ONLY = String.raw`(?<![\w.$])(?:describe|suite|it|test)(?:\s*\??\.\s*\w+)*\s*\??\.\s*only\b|\bonly\s*:(?!\s*false\b)`;
 const ENCHAINES = ['each', 'skipIf', 'runIf']; // modificateurs qui renvoient une fonction à rappeler
 
 // Remplace par des espaces le contenu des commentaires, chaînes, gabarits et littéraux regex (retours à la ligne conservés).
@@ -116,16 +116,28 @@ export function analyserTexte(texte, nom) {
     const asserte = ASSERTION.test(corps) || appelle(corps, aides);
     if (ordinaire && !asserte) pb.push(`${nom}:${ligneDe(r.index)} test sans assertion`);
   }
-  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|(?<![\w.$])(?!(?:it|test|describe|suite)\s*\.)\w+\s*\.\s*(?:skip|todo)\s*\(|(?<![\w.$])skip\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
+  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|(?<![\w.$])(?!(?:it|test|describe|suite)\s*\??\.)\w+\s*\??\.\s*(?:skip|todo)\s*\(|(?<![\w.$])skip\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
     carte(x.index, 'test sauté ou à faire');
   }
   for (const x of m.matchAll(/import\s*\{[^}]*\b(?:it|test|describe|suite)\s+as\s+\w+[^}]*\}\s*from\s*['"]/g)) {
     if (/^(?:vitest|node:test)['"]/.test(texte.slice(x.index + x[0].length))) pb.push(`${nom}:${ligneDe(x.index)} alias de test interdit : la garde ne le suit pas`);
   }
+  // Formes exotiques : crochets test['skip'], destructuration { skip } = test, espace de noms import * as t.
+  const vif = (x) => m[x.index] === texte[x.index]; // le début de la forme est du code, pas une chaîne ni un commentaire
+  const exo = (x, mot) => (/^(?:skip|todo|skipIf|runIf)$/.test(mot) ? carte(x.index, 'test sauté ou à faire') : pb.push(`${nom}:${ligneDe(x.index)} .only interdit`));
+  const MOD = 'skip|todo|only|skipIf|runIf';
+  for (const x of texte.matchAll(new RegExp(String.raw`(?<![\w.$])(?:describe|suite|it|test)(?:\s*\??\.\s*\w+)*\s*(?:\?\.)?\s*\[\s*['"\x60](${MOD})['"\x60]\s*\]`, 'g'))) {
+    if (vif(x)) exo(x, x[1]);
+  }
+  for (const x of m.matchAll(new RegExp(String.raw`\{[^{}]*?\b(${MOD})\b[^{}]*\}\s*=\s*(?:describe|suite|it|test)\b(?!\s*\()`, 'g'))) exo(x, x[1]);
+  for (const n of texte.matchAll(/import\s*\*\s*as\s+(\w+)\s+from\s*['"](?:vitest|node:test)['"]/g)) {
+    if (!vif(n)) continue;
+    for (const x of m.matchAll(new RegExp(String.raw`(?<![\w.$])${n[1]}\s*\??\.\s*(?:(?:describe|suite|it|test)\s*\??\.\s*)?(${MOD})\b`, 'g'))) exo(x, x[1]);
+  }
   for (const x of m.matchAll(new RegExp(ONLY, 'g'))) {
     pb.push(`${nom}:${ligneDe(x.index)} .only interdit`);
   }
-  return pb;
+  return [...new Set(pb)];
 }
 
 function parcourir(chemin, out) {
