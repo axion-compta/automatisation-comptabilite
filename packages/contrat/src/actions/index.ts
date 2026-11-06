@@ -34,6 +34,7 @@ export function peutAgir(
 ): boolean {
   const action = r.actions.find((a) => a.id === actionId);
   if (!action?.outil) return false;
+  if (!Object.hasOwn(r.interrupteurs, action.interrupteur)) return false;
   if (!actifs.has(action.interrupteur)) return false;
   return roleAutorise(r, role, action.outil);
 }
