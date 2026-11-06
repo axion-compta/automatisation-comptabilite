@@ -106,9 +106,17 @@ test('collecte : fiche introuvable, branche sans fiche en PR = rouge ; hors PR =
   assert.deepEqual(evaluer(fauxGit({ 'rev-parse --abbrev-ref HEAD': 'main\n' })).pb, []);
 });
 
-test('collecte : id lu dans CORPS_PR, git diff en échec = rouge', () => {
-  const e = { GITHUB_HEAD_REF: 'divers/x', CORPS_PR: 'Fiche: L00-T03\n' };
-  assert.deepEqual(evaluer(fauxGit(), e).pb, []);
+const ficheSens = '---\nid: L00-T03\nsensible: oui\nstatut: a_faire\nfichiers_autorises: ["pilotage/fiches/*"]\ntaille_max_lignes: 50\n---\n';
+const gitRepli = (fiche = ficheSens, noms = 'pilotage/fiches/L00-T03.md\0') =>
+  fauxGit({
+    'show origin/main:pilotage/fiches/L00-T03.md': fiche,
+    'diff --name-only --no-renames -z origin/main...HEAD': noms,
+    'diff --numstat --text --no-renames -z origin/main...HEAD': '1\t1\tpilotage/fiches/L00-T03.md\0',
+  });
+const eRepli = { GITHUB_HEAD_REF: 'divers/x', CORPS_PR: 'Fiche: L00-T03\n' };
+
+test('collecte : id lu dans CORPS_PR (PR fiches seules, fiche sensible), git diff en échec = rouge', () => {
+  assert.deepEqual(evaluer(gitRepli(), eRepli).pb, []);
   const g = fauxGit({ 'diff --numstat --text --no-renames -z origin/main...HEAD': null });
   assert.match(evaluer(g, env).pb[0], /git diff impossible/);
 });
@@ -182,4 +190,79 @@ test('rouge-fichier-binaire-octet-nul', () => {
 test('estPRPilotage-et-lireRaw-cas-limites', () => {
   assert.equal(estPRPilotage('pilotage/x', []), false);
   assert.deepEqual(lireRaw(entree('M', 'a b/é.md')), [{ statut: 'M', mode: '100644', chemin: 'a b/é.md' }]);
+});
+
+test('T23-1 virgule hors accolades : littérale, pas une alternative', () => {
+  assert.equal(estAutorise('n/importe/quoi.b', ['a,b']), false);
+  assert.equal(estAutorise('a', ['a,b']), false);
+  assert.equal(estAutorise('a,b', ['a,b']), true);
+  assert.equal(estAutorise('x/b.js', ['x/{a,b}.js']), true);
+  assert.equal(estAutorise('x/c.js', ['x/{a,b}.js']), false);
+  assert.equal(estAutorise('c.txt', ['{a,b}.txt|c.txt']), false);
+});
+
+test('T23-2 nouvelles_dependances en chaîne = rouge', () => {
+  const pb = analyserPerimetre({ ...fiche, nouvelles_dependances: 'x-lib' }, { fichiers: [], lignes: 1 });
+  assert.match(pb[0], /nouvelles_dependances n’est pas un tableau/);
+  assert.deepEqual(analyserPerimetre({ ...fiche, nouvelles_dependances: [] }, { fichiers: [], lignes: 1 }), []);
+});
+
+test('T23-3 overrides, pnpm.overrides et resolutions comparés à main', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  const base = '{"name":"x"}';
+  for (const [t, motif] of [
+    ['{"overrides":{"lib":"2.0.0"}}', /overrides:lib/],
+    ['{"pnpm":{"overrides":{"lib":"2.0.0"}}}', /pnpm\.overrides:lib/],
+    ['{"resolutions":{"lib":"2.0.0"}}', /resolutions:lib/],
+  ]) {
+    const paquets = [{ chemin: 'package.json', base, branche: t }];
+    assert.match(analyserPerimetre(fiche, diff, paquets)[0], motif);
+    assert.deepEqual(analyserPerimetre({ ...fiche, nouvelles_dependances: ['lib'] }, diff, paquets), []);
+  }
+});
+
+const ficheP = '---\nid: L00-T03\nfichiers_autorises: ["package.json"]\ntaille_max_lignes: 50\n---\n';
+const gitP = (branche) =>
+  fauxGit({
+    'show origin/main:pilotage/fiches/L00-T03.md': ficheP,
+    'diff --name-only --no-renames -z origin/main...HEAD': 'package.json\0',
+    'diff --numstat --text --no-renames -z origin/main...HEAD': '1\t1\tpackage.json\0',
+    'show origin/main:package.json': '{}',
+    'show HEAD:package.json': branche,
+  });
+
+test('T23-4 package.json invalide : message distinct de « fiche illisible »', () => {
+  const pb = evaluer(gitP('{ pas du json'), env).pb;
+  assert.equal(pb.length, 1);
+  assert.match(pb[0], /package\.json invalide : package\.json/);
+  assert.doesNotMatch(pb[0], /fiche illisible/);
+  assert.deepEqual(evaluer(gitP('{}'), env).pb, []);
+  assert.match(evaluer(fauxGit({ 'show origin/main:pilotage/fiches/L00-T03.md': 'sans en-tête' }), env).pb[0], /fiche illisible/);
+});
+
+test('T23-4 fichier binaire (numstat « - - ») compté comme rouge explicite, pas 0 ligne', () => {
+  const g = fauxGit({ 'diff --numstat --text --no-renames -z origin/main...HEAD': '-\t-\ta.txt\0' });
+  assert.match(evaluer(g, env).pb[0], /fichier binaire non comptable : a\.txt/);
+});
+
+test('T23-5 repli CORPS_PR refusé dès qu’un autre fichier est touché', () => {
+  const g = gitRepli(ficheSens.replace('["pilotage/fiches/*"]', '["**"]'), 'pilotage/fiches/L00-T03.md\0outils/x.mjs\0');
+  assert.match(evaluer(g, eRepli).pb[0], /repli CORPS_PR refusé.*outils\/x\.mjs/);
+  assert.match(evaluer(gitRepli(ficheSens, ''), eRepli).pb[0], /repli CORPS_PR refusé/);
+});
+
+test('T23-5 repli CORPS_PR refusé si la fiche est déjà fait sur main ou non sensible', () => {
+  const fait = ficheSens.replace('a_faire', 'fait');
+  assert.match(evaluer(gitRepli(fait), eRepli).pb.join(), /déjà statut: fait/);
+  const ns = ficheSens.replace('sensible: oui', 'sensible: non');
+  assert.match(evaluer(gitRepli(ns), eRepli).pb.join(), /n’est pas sensible/);
+});
+
+test('T23-5 TITRE_PR : l’id du titre doit être celui de la branche (ou du corps)', () => {
+  assert.deepEqual(evaluer(fauxGit(), { ...env, TITRE_PR: 'L00-T03 un titre' }).pb, []);
+  assert.match(evaluer(fauxGit(), { ...env, TITRE_PR: 'L00-T04 un titre' }).pb[0], /titre de PR/);
+  assert.match(evaluer(fauxGit(), { ...env, TITRE_PR: 'un titre' }).pb[0], /titre de PR/);
+  assert.match(evaluer(fauxGit(), { ...env, TITRE_PR: 'L00-T03' }).pb[0], /titre de PR/);
+  assert.deepEqual(evaluer(gitRepli(), { ...eRepli, TITRE_PR: 'L00-T03 titre' }).pb, []);
+  assert.match(evaluer(gitRepli(), { ...eRepli, TITRE_PR: 'L00-T09 titre' }).pb[0], /titre de PR/);
 });
