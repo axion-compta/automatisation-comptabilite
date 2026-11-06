@@ -70,31 +70,36 @@ const CLIENTS = ['Atelier Bertin', 'Garage Fontaine', 'Boulangerie Rivoire', 'Im
 const PLANS: Plan[] = [
   { profil: 'pleine', nom: 'Lemoine Rénovation', siren: '123456782', devise: 'XXA', courriel: 'contact@exemple.fr', regime: 'reel_normal', nbFactures: 12, tauxTva: 20 },
   { profil: 'vide', nom: 'Immobilière Marceau', siren: '987654324', devise: 'XXB', courriel: 'accueil@exemple.fr', regime: 'reel_normal', nbFactures: 0, tauxTva: 20 },
-  { profil: 'en_formation', nom: 'Atelier Bertin Création', siren: null, devise: 'XXA', courriel: 'creation@exemple.fr', regime: 'aucun', nbFactures: 0, tauxTva: 0 },
-  { profil: 'franchise', nom: 'Garage Fontaine Services', siren: '123456782', devise: 'XXC', courriel: 'services@exemple.fr', regime: 'franchise_en_base', nbFactures: 8, tauxTva: 0 },
-  { profil: 'micro', nom: 'Boulangerie Rivoire Micro', siren: '987654324', devise: 'XXD', courriel: 'micro@exemple.fr', regime: 'franchise_en_base', nbFactures: 6, tauxTva: 0 },
-  { profil: 'tva_encaissements', nom: 'Lemoine Rénovation Sud', siren: '123456782', devise: 'XXB', courriel: 'sud@exemple.fr', regime: 'encaissements', nbFactures: 10, tauxTva: 10 },
-  { profil: 'charge', nom: 'Garage Fontaine Charge', siren: '987654324', devise: 'XXA', courriel: 'charge@exemple.fr', regime: 'reel_normal', nbFactures: 60, tauxTva: 20 },
+  { profil: 'en_formation', nom: 'Atelier Bertin', siren: null, devise: 'XXA', courriel: 'creation@exemple.fr', regime: 'aucun', nbFactures: 0, tauxTva: 0 },
+  { profil: 'franchise', nom: 'Garage Fontaine', siren: '123456782', devise: 'XXC', courriel: 'services@exemple.fr', regime: 'franchise_en_base', nbFactures: 8, tauxTva: 0 },
+  { profil: 'micro', nom: 'Boulangerie Rivoire', siren: '987654324', devise: 'XXD', courriel: 'micro@exemple.fr', regime: 'franchise_en_base', nbFactures: 6, tauxTva: 0 },
+  { profil: 'tva_encaissements', nom: 'Lemoine Rénovation', siren: '987654324', devise: 'XXB', courriel: 'sud@exemple.fr', regime: 'encaissements', nbFactures: 10, tauxTva: 10 },
+  { profil: 'charge', nom: 'Garage Fontaine', siren: '987654324', devise: 'XXA', courriel: 'charge@exemple.fr', regime: 'reel_normal', nbFactures: 60, tauxTva: 20 },
 ];
 
 export function genererDonnees(graine: number = GRAINE): JeuDonnees {
   const alea = creerAlea(graine);
   const entier = (min: number, max: number) => min + Math.floor(alea() * (max - min + 1));
   const societes = PLANS.map((p): SocieteFictive => {
-    const factures: FactureFictive[] = [];
-    for (let i = 1; i <= p.nbFactures; i++) {
+    const clients = CLIENTS.filter((c) => c !== p.nom);
+    const tirees: Omit<FactureFictive, 'numero'>[] = [];
+    for (let i = 0; i < p.nbFactures; i++) {
       const ht = entier(50, 5000) * 100 + entier(0, 99);
       const jour = String(entier(1, 28)).padStart(2, '0');
       const mois = String(entier(1, 12)).padStart(2, '0');
-      factures.push({
-        numero: `${p.profil.slice(0, 3).toUpperCase()}-${String(i).padStart(4, '0')}`,
+      tirees.push({
         date: `2025-${mois}-${jour}`,
-        client: CLIENTS[entier(0, CLIENTS.length - 1)] as string,
+        client: clients[entier(0, clients.length - 1)] as string,
         ht_centimes: ht,
         tva_centimes: Math.round((ht * p.tauxTva) / 100),
       });
     }
-    factures.sort((a, b) => a.date.localeCompare(b.date) || a.numero.localeCompare(b.numero));
+    // Tri stable par date (égalité : ordre de tirage), puis numérotation continue.
+    tirees.sort((x, y) => x.date.localeCompare(y.date));
+    const factures: FactureFictive[] = tirees.map((t, i) => ({
+      numero: `${p.profil.slice(0, 3).toUpperCase()}-${String(i + 1).padStart(4, '0')}`,
+      ...t,
+    }));
     return { profil: p.profil, nom: p.nom, siren: p.siren, devise: p.devise, email: p.courriel, regime_tva: p.regime, factures };
   });
   return { version: 1, graine, societes };

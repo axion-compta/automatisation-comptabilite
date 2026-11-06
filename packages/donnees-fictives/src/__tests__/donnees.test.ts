@@ -35,7 +35,7 @@ describe('données fictives v1', () => {
     for (const s of jeu.societes) {
       expect(s.devise).toMatch(/^XX[A-D]$/);
       expect(s.email).toMatch(/^[a-z]+@exemple\.fr$/);
-      expect(NOMS_PERMIS.some((n) => s.nom.startsWith(n))).toBe(true);
+      expect(NOMS_PERMIS).toContain(s.nom);
     }
   });
 
@@ -45,6 +45,19 @@ describe('données fictives v1', () => {
     expect(nb('en_formation')).toBe(0);
     expect(nb('charge')).toBe(60);
     expect(nb('pleine')).toBeGreaterThan(0);
+  });
+
+  it('numérote les factures par date croissante, de façon continue', () => {
+    for (const s of jeu.societes) {
+      s.factures.forEach((f, i) => {
+        expect(Number(f.numero.slice(-4))).toBe(i + 1);
+        if (i > 0) expect(f.date >= s.factures[i - 1]!.date).toBe(true);
+      });
+    }
+  });
+
+  it('ne facture jamais la société à elle-même', () => {
+    for (const s of jeu.societes) for (const f of s.factures) expect(f.client).not.toBe(s.nom);
   });
 
   it('applique la TVA selon le régime et ne contient aucun IBAN', () => {
