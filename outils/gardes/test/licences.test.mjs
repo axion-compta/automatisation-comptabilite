@@ -93,3 +93,20 @@ test('executer : rouge sans node_modules/.pnpm, vert et rouge sinon', () => {
     rmSync(r, { recursive: true, force: true });
   }
 });
+
+test('licence-mit-or-incomplet : « MIT OR » sans second terme = rouge', () => {
+  assert.equal(licencePermise('MIT OR'), false);
+  assert.equal(licencePermise('MIT OR ISC'), true);
+});
+
+test('licence-minuscules : la casse compte', () => {
+  assert.equal(licencePermise('mit'), false);
+  assert.equal(licencePermise('mit OR isc'), false);
+  assert.equal(licencePermise('MIT or ISC'), false);
+});
+
+test('licence-espaces-multiples : espaces et tabulations tolérés entre les jetons', () => {
+  assert.equal(licencePermise('  MIT   OR   GPL-3.0-only  '), true);
+  assert.equal(licencePermise('MIT \t AND   GPL-3.0-only'), false);
+  assert.equal(licencePermise('Apache-2.0  WITH   LLVM-exception'), true);
+});
