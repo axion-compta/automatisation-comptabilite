@@ -1,7 +1,6 @@
 export type Panne = '' | '403' | '409' | '423';
 /** statut 0 = le serveur n'a pas répondu (réseau). */
 export type Reponse = { statut: number; corps: unknown };
-
 async function appeler(url: string, methode: string, cle: string, corps: unknown, panne: Panne): Promise<Reponse> {
   const entetes: Record<string, string> = { 'content-type': 'application/json', 'idempotency-key': cle };
   if (panne) entetes['x-panne'] = panne;
@@ -12,17 +11,14 @@ async function appeler(url: string, methode: string, cle: string, corps: unknown
     return { statut: 0, corps: null };
   }
 }
-
 /** Envoie une écriture (le corps est celui du contrat) ; la clé d'idempotence est fournie par l'appelant. */
 export function envoyerEcriture(cle: string, libelle: string, montantCentimes: number, panne: Panne): Promise<Reponse> {
   return appeler('/ecritures', 'POST', cle, { libelle, montantCentimes }, panne);
 }
-
 /** Modifie une écriture existante ; 409 si la version est périmée. */
 export function modifierEcriture(cle: string, id: string, version: number, panne: Panne): Promise<Reponse> {
   return appeler('/ecritures/' + encodeURIComponent(id), 'PUT', cle, { libelle: 'Achat fictif modifié', montantCentimes: 1300, version }, panne);
 }
-
 /** Nombre d'écritures, ou null si le serveur ne répond pas. */
 export async function compterEcritures(): Promise<number | null> {
   try {
@@ -35,7 +31,6 @@ export async function compterEcritures(): Promise<number | null> {
     return null;
   }
 }
-
 const MESSAGES: Record<number, string> = {
   200: 'Écriture enregistrée.',
   400: 'Requête invalide.',
