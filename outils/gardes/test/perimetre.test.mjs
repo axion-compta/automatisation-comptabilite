@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserPerimetre, estAutorise, evaluer, idDeBranche, lireFiche } from '../perimetre.mjs';
+import { analyserPerimetre, collecter, estAutorise, estPRPilotage, lireRaw, evaluer, idDeBranche, lireFiche } from '../perimetre.mjs';
 
 const fiche = {
   fichiers_autorises: ['outils/gardes/perimetre*', 'outils/gardes/test/{perimetre,fictif}*', 'pilotage/journal/L00-T03.md'],
@@ -60,7 +60,7 @@ const fauxGit = (extra = {}) => {
   const t = {
     'show origin/main:pilotage/fiches/L00-T03.md': ficheMain,
     'diff --name-only --no-renames -z origin/main...HEAD': 'a.txt\0',
-    'diff --numstat --no-renames -z origin/main...HEAD': '3\t1\ta.txt\0',
+    'diff --numstat --text --no-renames -z origin/main...HEAD': '3\t1\ta.txt\0',
     ...extra,
   };
   return (args) => t[args.join(' ')] ?? null;
@@ -109,6 +109,77 @@ test('collecte : fiche introuvable, branche sans fiche en PR = rouge ; hors PR =
 test('collecte : id lu dans CORPS_PR, git diff en échec = rouge', () => {
   const e = { GITHUB_HEAD_REF: 'divers/x', CORPS_PR: 'Fiche: L00-T03\n' };
   assert.deepEqual(evaluer(fauxGit(), e).pb, []);
-  const g = fauxGit({ 'diff --numstat --no-renames -z origin/main...HEAD': null });
+  const g = fauxGit({ 'diff --numstat --text --no-renames -z origin/main...HEAD': null });
   assert.match(evaluer(g, env).pb[0], /git diff impossible/);
+});
+
+const RAW = 'diff --raw --no-renames -z origin/main...HEAD';
+const entree = (statut, chemin, mode = '100644') => `:000000 ${mode} 0000000 abcdef0 ${statut}\0${chemin}\0`;
+const pil = (entrees, branche = 'lot-00/fiches-T19-T23', extra = {}) =>
+  evaluer(fauxGit({ [RAW]: entrees.join(''), ...extra }), { GITHUB_HEAD_REF: branche });
+
+test('vert-pr-de-pilotage-fiches-seules', () => {
+  const r = pil([entree('A', 'pilotage/fiches/L00-T19.md'), entree('A', 'pilotage/journal/L00-T19.md')]);
+  assert.deepEqual(r.pb, []);
+  assert.match(r.msg, /PR de pilotage, 2 fichier/);
+  assert.deepEqual(pil([entree('A', 'pilotage/fiches/L00-T19.md')], 'pilotage/x').pb, []);
+});
+
+test('rouge-pr-pilotage-modification-suppression-arret-consignes', () => {
+  for (const [st, f] of [
+    ['M', 'pilotage/fiches/L00-T03.md'],
+    ['D', 'pilotage/fiches/L00-T03.md'],
+    ['A', 'pilotage/ARRET'],
+    ['A', 'pilotage/consignes/x.md'],
+    ['M', 'pilotage/LISEZMOI.md'],
+  ]) {
+    assert.match(pil([entree('A', 'pilotage/fiches/L00-T19.md'), entree(st, f)]).pb[0], /aucune fiche/, st + f);
+  }
+});
+
+test('rouge-pr-pilotage-nom-hors-motif-ou-accentue', () => {
+  assert.ok(pil([entree('A', 'pilotage/fiches/é.md')]).pb.length > 0);
+  assert.ok(pil([entree('A', 'pilotage/fiches/L00-T19.md.txt')]).pb.length > 0);
+});
+
+test('rouge-pr-pilotage-lien-symbolique-ou-sous-module', () => {
+  assert.ok(pil([entree('A', 'pilotage/fiches/L00-T19.md', '120000')]).pb.length > 0);
+  assert.ok(pil([entree('A', 'pilotage/fiches/L00-T20.md', '160000')]).pb.length > 0);
+});
+
+test('rouge-pr-pilotage-avec-fichier-outils', () => {
+  for (const d of ['outils/gardes/x.mjs', 'packages/a/b.ts', 'scripts/v.mjs', 'CLAUDE.md', '.github/workflows/ci.yml']) {
+    assert.ok(pil([entree('A', 'pilotage/fiches/L00-T19.md'), entree('A', d)]).pb.length > 0, d);
+  }
+});
+
+test('rouge-pr-pilotage-avec-github', () => {
+  assert.ok(pil([entree('A', 'pilotage/fiches/L00-T19.md'), entree('A', '.github/workflows/ci.yml')]).pb.length > 0);
+});
+
+test('rouge-branche-ordinaire-sans-fiche', () => {
+  const e = [entree('A', 'pilotage/fiches/L00-T19.md')];
+  assert.match(pil(e, 'divers/x').pb[0], /aucune fiche/);
+  assert.match(pil(e, 'lot-00/autre-chose').pb[0], /aucune fiche/);
+});
+
+test('hors-pr-le-mode-pilotage-ne-s-applique-pas', () => {
+  const g = fauxGit({ [RAW]: entree('A', 'pilotage/fiches/L00-T19.md'), 'rev-parse --abbrev-ref HEAD': 'pilotage/x\n' });
+  assert.match(evaluer(g).msg, /pas de branche de fiche/);
+  assert.equal(collecter(g).pilotage, undefined);
+});
+
+test('rouge-pilotage-git-en-echec', () => {
+  const g = fauxGit({ [RAW]: null });
+  assert.match(evaluer(g, { GITHUB_HEAD_REF: 'pilotage/x' }).pb[0], /aucune fiche/);
+});
+
+test('rouge-fichier-binaire-octet-nul', () => {
+  const g = fauxGit({ 'show HEAD:a.txt': ['x', 'y'].join('\0') });
+  assert.match(evaluer(g, env).pb[0], /fichier binaire : a\.txt/);
+});
+
+test('estPRPilotage-et-lireRaw-cas-limites', () => {
+  assert.equal(estPRPilotage('pilotage/x', []), false);
+  assert.deepEqual(lireRaw(entree('M', 'a b/é.md')), [{ statut: 'M', mode: '100644', chemin: 'a b/é.md' }]);
 });

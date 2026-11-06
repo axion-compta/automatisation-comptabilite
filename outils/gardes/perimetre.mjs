@@ -83,21 +83,51 @@ export function idDeBranche(branche) {
 }
 
 const BASE = 'origin/main';
+
+// Mode « PR de pilotage » : branche lot-NN/fiches-* ou pilotage/*, qui AJOUTE (statut A) uniquement des
+// fiches ou journaux pilotage/(fiches|journal)/LNN-TMM.md, hors lien symbolique (120000) et sous-module (160000).
+// Toute modification, suppression, ARRET, consignes/, LISEZMOI.md repasse par le chemin normal.
+// Limite : l'étiquette sensible-a-fusionner n'est pas fournie à la garde par ci.yml, elle n'est pas exigée ici.
+const FICHIER_PILOTAGE = /^pilotage\/(?:fiches|journal)\/L\d\d-T\d\d\.md$/;
+// entrees : [{ statut, mode, chemin }], lues par git diff --raw -z --no-renames
+export function estPRPilotage(branche, entrees) {
+  if (!/^(?:lot-\d\d\/fiches-.+|pilotage\/.+)$/.test(branche)) return false;
+  if (entrees.length === 0) return false;
+  return entrees.every(
+    (e) => e.statut === 'A' && e.mode !== '120000' && e.mode !== '160000' && FICHIER_PILOTAGE.test(e.chemin),
+  );
+}
+export function lireRaw(texte) {
+  const t = (texte ?? '').split('\0');
+  const out = [];
+  for (let i = 0; i < t.length; i++) {
+    const m = t[i].match(/^:(\d+) (\d+) \w+ \w+ ([A-Z])\d*$/);
+    if (m && t[i + 1] !== undefined) out.push({ statut: m[3], mode: m[2], chemin: t[++i] });
+  }
+  return out;
+}
 const decoupe = (t) => (t ?? '').split('\0').filter(Boolean);
 
 // git : (args) => sortie texte, ou null si échec. env : { GITHUB_HEAD_REF, CORPS_PR }.
 export function collecter(git, env = {}) {
   const enPR = Boolean(env.GITHUB_HEAD_REF);
   const branche = env.GITHUB_HEAD_REF || git(['rev-parse', '--abbrev-ref', 'HEAD'])?.trim() || '';
+  if (enPR) {
+    const raw = git(['diff', '--raw', '--no-renames', '-z', `${BASE}...HEAD`]);
+    const e = lireRaw(raw);
+    if (raw !== null && estPRPilotage(branche, e)) return { pilotage: true, noms: e.map((x) => x.chemin), erreurs: [] };
+  }
   const id = idDeBranche(branche) ?? (enPR ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)/)?.[1] : undefined);
   if (!id) return enPR ? { erreurs: [`aucune fiche pour la branche ${branche}`] } : { ignore: true };
   const texteFiche = git(['show', `${BASE}:pilotage/fiches/${id}.md`]);
   const noms = git(['diff', '--name-only', '--no-renames', '-z', `${BASE}...HEAD`]);
-  const stat = git(['diff', '--numstat', '--no-renames', '-z', `${BASE}...HEAD`]);
+  const stat = git(['diff', '--numstat', '--text', '--no-renames', '-z', `${BASE}...HEAD`]);
   const erreurs = [];
   if (texteFiche === null) erreurs.push(`fiche ${id} introuvable sur ${BASE}`);
   if (noms === null || stat === null) erreurs.push(`git diff impossible contre ${BASE}`);
   const fichiers = decoupe(noms);
+  // binaire côté branche (un octet NUL) = rouge ; --text compte quand même les lignes si seul l'ancien état était binaire
+  for (const f of fichiers) if (git(['show', `HEAD:${f}`])?.includes('\0')) erreurs.push(`fichier binaire : ${f}`);
   const lignes = decoupe(stat).reduce((n, l) => {
     const [a, d] = l.split('\t');
     return n + (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
@@ -110,6 +140,7 @@ export function collecter(git, env = {}) {
 
 export function evaluer(git, env = {}) {
   const c = collecter(git, env);
+  if (c.pilotage) return { pb: [], msg: `garde:perimetre vert (PR de pilotage, ${c.noms.length} fichier(s))` };
   if (c.ignore) return { pb: [], msg: 'garde:perimetre vert (pas de branche de fiche)' };
   const pb = [...c.erreurs];
   if (typeof c.texteFiche === 'string') {
