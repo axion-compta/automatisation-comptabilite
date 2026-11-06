@@ -1,16 +1,17 @@
 // Palette de commandes Ctrl+K (ou Cmd+K), sans modèle : filtrage local des destinations.
-import { classer, destinations, type Destination } from './aller.js';
+import { classer, COMMANDE, destinations, type Destination } from './aller.js';
 
-type Touche = { key: string; ctrlKey: boolean; metaKey: boolean; altKey?: boolean; shiftKey?: boolean };
+type Touche = { key?: string; ctrlKey: boolean; metaKey: boolean; altKey?: boolean; shiftKey?: boolean };
 
-/** Vrai pour Ctrl+K ou Cmd+K seuls (Alt et Maj exclus). */
+/** Vrai pour Ctrl+K ou Cmd+K seuls (Alt et Maj exclus). Une touche sans `key` ne déclenche rien. */
 export function estRaccourciPalette(e: Touche): boolean {
-  return e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey;
+  return (e.key ?? '').toLowerCase() === 'k' && (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey;
 }
 
-/** Entrées proposées : toutes les destinations si la requête est vide, sinon celles qui correspondent (au plus `max`). */
-export function proposer(requete: string, max = 8): Destination[] {
-  const texte = requete.trim().replace(/^\/aller\s*/i, '');
+/** Entrées proposées : les 10 destinations si la requête est vide, sinon les candidates (en cas d'égalité, toutes). */
+export function proposer(requete: string, max = destinations.length): Destination[] {
+  const m = COMMANDE.exec(requete);
+  const texte = (m ? (m[1] ?? '') : requete).trim();
   if (texte === '') return destinations.slice(0, max);
   return classer(texte).slice(0, max);
 }
