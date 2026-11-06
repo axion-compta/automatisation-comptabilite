@@ -1,0 +1,37 @@
+{
+  "roles": [
+    { "id": "administrateur" },
+    { "id": "utilisateur" },
+    { "id": "lecture", "lecture_seule": true },
+    { "id": "comptable" },
+    { "id": "personnel_axion", "lecture_seule": true }
+  ],
+  "interrupteurs": {
+    "lecture": { "actif_par_defaut": false },
+    "ecriture": { "actif_par_defaut": false },
+    "validation": { "actif_par_defaut": false },
+    "export": { "actif_par_defaut": false }
+  },
+  "outils": [
+    { "id": "outil_lire", "niveau": "L" },
+    { "id": "outil_lister", "niveau": "L" },
+    { "id": "outil_proposer", "niveau": "E" },
+    { "id": "outil_valider", "niveau": "E" },
+    { "id": "outil_annuler", "niveau": "E" }
+  ],
+  "actions": [
+    { "id": "lire", "interrupteur": "lecture", "outil": "outil_lire" },
+    { "id": "lister", "interrupteur": "lecture", "outil": "outil_lister" },
+    { "id": "proposer", "interrupteur": "ecriture", "outil": "outil_proposer" },
+    { "id": "valider", "interrupteur": "validation", "outil": "outil_valider" },
+    { "id": "annuler", "interrupteur": "ecriture", "outil": "outil_annuler" },
+    { "id": "exporter", "interrupteur": "export", "exclusion": "Pas d'outil à ce stade : export réservé à une fiche ultérieure." }
+  ],
+  "matrice": {
+    "administrateur": ["outil_lire", "outil_lister", "outil_proposer", "outil_valider", "outil_annuler"],
+    "utilisateur": ["outil_lire", "outil_lister", "outil_proposer", "outil_valider", "outil_annuler"],
+    "lecture": ["outil_lire", "outil_lister"],
+    "comptable": ["outil_lire", "outil_lister"],
+    "personnel_axion": ["outil_lire", "outil_lister"]
+  }
+}
