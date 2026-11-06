@@ -1,6 +1,6 @@
 // garde:termine : « fait » se contrôle par machine (V3-QUA-020). Une fiche à statut: fait exige : journal titré
 // « # Journal LNN-TMM » de 10 lignes au plus ; dépendances à statut: fait ; si tests_requis: oui, un fichier de test suivi
-// par git dans fichiers_autorises (ou cité au journal par son chemin).
+// par git dans fichiers_autorises (dont le chemin figure dans fichiers_autorises).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -26,10 +26,8 @@ export function analyserTermine(fiches, journaux, fichiersTest = null) {
     }
     if (fiche.tests_requis === 'oui' && fichiersTest) {
       const motifs = Array.isArray(fiche.fichiers_autorises) ? fiche.fichiers_autorises : [];
-      const cites = (journal ?? '').match(/[\w/-]+\.(?:test|spec)\.[cm]?[jt]sx?\b/g) ?? [];
-      const citeReel = cites.some((c) => fichiersTest.some((f) => f === c || f.endsWith('/' + c)));
-      if (!citeReel && !fichiersTest.some((f) => estAutorise(f, motifs))) {
-        pb.push(`${id} : tests_requis oui mais aucun fichier de test dans fichiers_autorises (ni cité au journal)`);
+      if (!fichiersTest.some((f) => estAutorise(f, motifs))) {
+        pb.push(`${id} : tests_requis oui mais aucun fichier de test suivi dans fichiers_autorises`);
       }
     }
     for (const d of Array.isArray(fiche.depend_de) ? fiche.depend_de : []) {

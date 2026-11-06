@@ -102,7 +102,7 @@ export function analyserTexte(texte, nom) {
   for (const r of m.matchAll(new RegExp(CHAINE + String.raw`\s*([(\x60])`, 'g'))) {
     const mods = r[1].match(/\w+/g) ?? [];
     if (mods.some((x) => ['skip', 'todo', 'skipIf', 'runIf'].includes(x))) carte(r.index, 'test sauté ou conditionnel');
-    const ordinaire = /^(it|test)\b/.test(r[0].trimStart()) && !mods.some((x) => x === 'skip' || x === 'todo');
+    const ordinaire = /^(it|test)\b/.test(r[0].trimStart()) && !mods.some((x) => ['skip', 'todo', 'extend', 'scoped'].includes(x));
     let o = r.index + r[0].length - 1;
     if (r[2] === '`') o = m.indexOf('`', o + 1);
     else if (mods.some((x) => ENCHAINES.includes(x))) o = fermante(m, o);
@@ -116,8 +116,11 @@ export function analyserTexte(texte, nom) {
     const asserte = ASSERTION.test(corps) || appelle(corps, aides);
     if (ordinaire && !asserte) pb.push(`${nom}:${ligneDe(r.index)} test sans assertion`);
   }
-  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|\bt\s*\.\s*(?:skip|todo)\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
+  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|(?<![\w.$])(?!(?:it|test|describe|suite)\s*\.)\w+\s*\.\s*(?:skip|todo)\s*\(|(?<![\w.$])skip\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
     carte(x.index, 'test sauté ou à faire');
+  }
+  for (const x of m.matchAll(/import\s*\{[^}]*\b(?:it|test|describe|suite)\s+as\s+\w+[^}]*\}\s*from\s*['"]/g)) {
+    if (/^(?:vitest|node:test)['"]/.test(texte.slice(x.index + x[0].length))) pb.push(`${nom}:${ligneDe(x.index)} alias de test interdit : la garde ne le suit pas`);
   }
   for (const x of m.matchAll(new RegExp(ONLY, 'g'))) {
     pb.push(`${nom}:${ligneDe(x.index)} .only interdit`);

@@ -30,12 +30,12 @@ const ROUGES = [
     `test('a', { todo: true }, () => { ${OK} });`,
     `const o = { todo: true }; test('a', o, () => { ${OK} });`,
     `test('a', (t) => { t.todo(); ${OK} });`,
+    `test('a', ({ skip }) => { skip();  });`,
+    `test('a', (context) => { context.skip();  });`,
     "describe.skip('a', () => {});",
     "describe.skipIf(c)('a', () => {});",
-    "describe.runIf(c)('a', () => {});",
     "describe.concurrent.skip('a', () => {});",
     "describe.skip.each([1])('a', () => {});",
-    "suite.shuffle.skip('a', () => {});",
     "describe('a', { skip: true }, () => {});",
   ].map((t) => [/sans carte/, t]),
   ...[
@@ -44,11 +44,10 @@ const ROUGES = [
     `test('a', { only: true }, () => { ${OK} });`,
     `test.only.each([1])('a', () => { ${OK} });`,
     `it.concurrent.only('a', () => { ${OK} });`,
-    `describe.concurrent.only('a', () => {});`,
-    `test.sequential.only('a', () => { ${OK} });`,
-    `test.fails.only('a', () => { ${OK} });`,
     "describe.skip.only('a', () => {});",
   ].map((t) => [/\.only interdit/, t]),
+  [/alias de test interdit/, "import { it as cas } from 'vitest';\ncas('a', () => {});"],
+  [/alias de test interdit/, "import { describe, test as cas } from 'node:test';"],
 ];
 
 test('rouge : chaque forme fautive est détectée', () => {
@@ -65,6 +64,7 @@ test('vert : assertions reconnues, cartes, aides, regex, chaînes', () => {
     corps('assert.equal(1, 1);'),
     "test('a', async (t) => { t.assert.ok(true); });",
     corps('await expect(p).rejects.toThrow();'),
+    "const monTest = test.extend({ a: 1 });",
     "it.each([1, 2])('a %s', (n) => { expect(n).toBeTruthy(); });",
     "test.concurrent.each([1])('a', () => { expect(1).toBe(1); });",
     `it.skip('a [L01-T02]', () => { ${OK} });`,

@@ -29,14 +29,13 @@ test('rouge : dépendance non faite ou introuvable, statut inconnu, id différen
   assert.match(analyserTermine({ 'L00-T01': fiche('L00-T02', 'a_faire') }, {})[0], /différent du nom/);
 });
 
-test('tests_requis oui : fichier de test autorisé, ou chemin réellement cité au journal', () => {
+test("tests_requis oui : un fichier de test suivi doit être dans fichiers_autorises (une citation au journal ne suffit pas)", () => {
   const f = un('fait', { tests_requis: 'oui', fichiers_autorises: ['outils/x/**'] });
   const j = (fin) => ({ 'L00-T01': journal('L00-T01', 3, fin) });
   assert.match(analyserTermine(f, j(), ['outils/y/a.test.mjs'])[0], /tests_requis oui/);
   assert.deepEqual(analyserTermine(f, j(), ['outils/x/a.test.mjs']), []);
-  assert.deepEqual(analyserTermine(f, j('- outils/y/a.test.mjs'), ['outils/y/a.test.mjs']), []);
-  for (const fin of ['- garde:tests vert', '- les attestations ok', '- outils/y/absent.test.mjs']) {
-    assert.equal(analyserTermine(f, j(fin), ['outils/y/a.test.mjs']).length, 1, fin);
+  for (const fin of ["- garde:tests vert", "- outils/y/a.test.mjs", "- a.test.mjs", "- outils/x/b.test.mjs (autre tâche)"]) {
+    assert.equal(analyserTermine(f, j(fin), ["outils/y/a.test.mjs"]).length, 1, fin);
   }
   assert.deepEqual(analyserTermine(f, j()), []);
 });
