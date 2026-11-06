@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS } from '../fictif.mjs';
+import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS, ibanValide } from '../fictif.mjs';
 
 // Les valeurs sont assemblées ici pour ne pas figurer en clair dans le dépôt.
 const domaineReel = ['exemple', 'com'].join('.');
@@ -117,4 +117,50 @@ test('rouge : binaires et bureautique hors dossier fictif ; vert dans packages/d
   assert.match(pb[0], /app\/a\.xlsx binaire suivi/);
   const dedans = noms.map((n) => `${DOSSIERS_PDF_FICTIFS[0]}${n}`).join('\0') + '\0';
   assert.deepEqual(analyserDepot(fauxGit(dedans), () => ''), []);
+});
+
+const ruValide = cle('RU', '4'.repeat(29));
+
+test('rouge : pays du registre ajoutés (RU, longueur 33)', () => {
+  assert.equal(ruValide.length, 33);
+  assert.equal(analyserTexte(`iban ${ruValide}`, 't.txt').length, 1);
+});
+
+test('rouge : préfixe parasite avant l’IBAN, plusieurs IBAN sur une ligne', () => {
+  assert.equal(analyserTexte(`id x1 de12 ${frValide}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`ref AB12 ${parGroupes(frValide, ' ')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`${frValide} puis ${ruValide}`, 't.txt').length, 2);
+  assert.equal(analyserTexte(`iban_${frValide}`, 't.txt').length, 1);
+});
+
+test('rouge : séparateurs multiples, point, barre, espace après le pays, %20 et +', () => {
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '  ')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '.')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '/')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${frValide.slice(0, 2)} ${frValide.slice(2)}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`?iban=${parGroupes(frValide, '%20')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`?iban=${parGroupes(frValide, '+')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, ' ')}`, 't.txt').length, 1);
+});
+
+test('vert : 20 jetons DE + 2 chiffres + 18 caractères base32 à clé invalide', () => {
+  let graine = 777;
+  const alea = () => (graine = (graine * 1103515245 + 12345) % 2147483648);
+  for (let k = 0; k < 20; k++) {
+    let t = 'DE' + String(10 + (alea() % 90));
+    for (let i = 0; i < 18; i++) t += base32[(alea() >> 8) % 32];
+    if (ibanValide(t)) t = t.slice(0, 2) + '00' + t.slice(4);
+    assert.deepEqual(analyserTexte(`secret ${t}`, 't.txt'), [], t);
+  }
+});
+
+test('rouge : lecture contenant un octet NUL = binaire non reconnu', () => {
+  const pb = analyserDepot(fauxGit('app/x.dat\0ok.txt\0'), (f) => (f.endsWith('x.dat') ? 'a\0b' : 'ok'));
+  assert.equal(pb.length, 1);
+  assert.match(pb[0], /app\/x\.dat binaire non reconnu/);
+});
+
+test('rouge : extensions binaires ajoutées', () => {
+  const noms = ['a.avif', 'b.heic', 'c.mp4', 'd.mp3', 'e.xz', 'f.bz2', 'g.sqlite', 'h.wasm'];
+  assert.equal(analyserDepot(fauxGit(noms.map((n) => `z/${n}`).join('\0') + '\0'), () => '').length, noms.length);
 });
