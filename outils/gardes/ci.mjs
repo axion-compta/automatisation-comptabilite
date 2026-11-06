@@ -7,15 +7,68 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const TIMEOUT_MAX = 10;
-const ECRITURE_PERMISE = new Set(['id-token']);
+const DEFAUT_ECRITURE = new Set(['id-token']);
+// Droits d'écriture permis, par chemin exact de workflow (aucun motif). Hors table : id-token seul.
+export const ECRITURE_PAR_WORKFLOW = new Map([
+  ['.github/workflows/version.yml', new Set(['id-token'])],
+  ['.github/workflows/portier.yml', new Set(['contents', 'pull-requests'])],
+  ['.github/workflows/alerte-fusion.yml', new Set(['issues'])],
+]);
+const DOSSIER_WORKFLOWS = '.github/workflows/';
+
+export function ecriturePermise(nom) {
+  let chemin = String(nom).replace(/\\/g, '/');
+  if (!chemin.includes('/')) chemin = DOSSIER_WORKFLOWS + chemin;
+  return ECRITURE_PAR_WORKFLOW.get(chemin) ?? DEFAUT_ECRITURE;
+}
 
 const indent = (l) => l.length - l.trimStart().length;
 const sansCommentaire = (l) => l.replace(/\s+#.*$/, '');
+
+// Liste blanche : toute ligne qui cite « permissions » doit avoir une forme lue, sinon rouge.
+const FORME_PERMISSIONS = /^\s*permissions:\s*(\{\s*\}|read-all|\{[^\n]*\}\s*(#.*)?|(#.*)?)$/;
+const LIGNE_DROIT = /^\s+[a-z-]+:\s+(read|write|none)\s*(#.*)?$/i;
+const ENTREE_DROIT = /^[a-z-]+\s*:\s*(read|write|none)$/i;
+
+function controlerPermissions(lignes, ajoute) {
+  const non = (i, plus = '') => ajoute(i, 'forme permissions non lue' + plus);
+  for (let i = 0; i < lignes.length; i++) {
+    const brut = lignes[i].trimEnd();
+    if (/^\s*#/.test(brut)) continue;
+    if (/^\s*(?:-\s+)?(?:\?(?:\s|$)|\*|"[^"]*\\)/.test(brut)) ajoute(i, 'clé YAML non lue (échappement, ? ou alias)');
+    if (!/permissions/i.test(brut)) continue;
+    if (!FORME_PERMISSIONS.test(brut)) {
+      non(i, /write/i.test(brut) ? ' (écriture possible)' : '');
+      continue;
+    }
+    const enLigne = brut.match(/^\s*permissions:\s*\{(.*)\}\s*(#.*)?$/);
+    if (enLigne && enLigne[1].split(',').some((e) => e.trim() !== '' && !ENTREE_DROIT.test(e.trim()))) non(i);
+    if (/^\s*permissions:\s*(#.*)?$/.test(brut)) {
+      const base = indent(brut);
+      for (let k = i + 1; k < lignes.length; k++) {
+        const t = lignes[k].trimEnd();
+        if (t.trim() === '' || /^\s*#/.test(t)) continue;
+        if (indent(t) <= base) break;
+        if (!LIGNE_DROIT.test(t) && t.trim() !== '{}') non(k, ' dans un bloc');
+      }
+    }
+  }
+}
 
 export function analyserWorkflow(texte, nom) {
   const pb = [];
   const lignes = texte.split(/\r?\n/);
   const ajoute = (n, msg) => pb.push(`${nom}:${n + 1} ${msg}`);
+  const permis = ecriturePermise(nom);
+  controlerPermissions(lignes, ajoute);
+
+  // lignes du bloc `permissions:` de haut niveau (hors job)
+  const global = new Set();
+  let dansGlobal = false;
+  lignes.forEach((l, i) => {
+    if (/^\S/.test(l) && !l.startsWith('#')) dansGlobal = l.startsWith('permissions:');
+    else if (dansGlobal && l.trim() !== '') global.add(i);
+  });
 
   lignes.forEach((brut, i) => {
     const l = sansCommentaire(brut);
@@ -28,9 +81,34 @@ export function analyserWorkflow(texte, nom) {
         ajoute(i, `action non épinglée par SHA de 40 caractères : ${ref}`);
       }
     }
-    const w = l.match(/^\s*([a-z-]+):\s*write(?:-all)?\s*$/);
-    if (w && !ECRITURE_PERMISE.has(w[1])) ajoute(i, `permission en écriture interdite : ${w[1]}`);
-    if (/^\s*permissions:\s*write-all/.test(l)) ajoute(i, 'permissions: write-all interdit');
+    const w = l.match(/^\s*["']?([a-z-]+)["']?:\s*["']?write(?:-all)?["']?\s*,?\s*\}?\s*$/i);
+    if (w && !permis.has(w[1])) ajoute(i, `permission en écriture interdite : ${w[1]}`);
+    else if (w && global.has(i) && !DEFAUT_ECRITURE.has(w[1])) ajoute(i, `écriture au niveau global interdite : ${w[1]}`);
+    const enLigne = l.match(/^\s*permissions:\s*(?:&\S+\s*)?\{(.*)\}\s*$/);
+    if (enLigne) {
+      for (const [, droit] of enLigne[1].matchAll(/["']?([a-z-]+)["']?\s*:\s*["']?write\b/gi)) {
+        if (!permis.has(droit)) ajoute(i, `permission en écriture interdite : ${droit}`);
+        else if (/^permissions:/.test(l) && !DEFAUT_ECRITURE.has(droit)) ajoute(i, `écriture au niveau global interdite : ${droit}`);
+      }
+    }
+    if (/^\s*permissions:\s*["']?write-all/.test(l)) ajoute(i, 'permissions: write-all interdit');
+  });
+
+  // ancres, alias et fusion interdits dans tout bloc permissions
+  lignes.forEach((brut, i) => {
+    const l = sansCommentaire(brut);
+    if (!/^\s*permissions:/.test(l)) return;
+    const base = indent(l);
+    const bloc = [l.replace(/^\s*permissions:/, '')];
+    const idx = [i];
+    for (let k = i + 1; k < lignes.length; k++) {
+      if (lignes[k].trim() !== '' && indent(lignes[k]) <= base) break;
+      bloc.push(sansCommentaire(lignes[k]));
+      idx.push(k);
+    }
+    bloc.forEach((t, n) => {
+      if (/(^|[\s{,])(&|\*)\S|<<:/.test(t)) ajoute(idx[n], 'ancre, alias ou fusion (&, *, <<:) interdits dans permissions');
+    });
   });
 
   // permissions de haut niveau

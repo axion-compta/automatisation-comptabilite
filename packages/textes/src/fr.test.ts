@@ -15,4 +15,10 @@ describe('textes fr', () => {
   it('contient les actions de base', () => {
     expect(fr.actions.enregistrer).toBe('Enregistrer');
   });
+  it('contient les 4 textes de la palette, identiques aux originaux', () => {
+    expect(fr.palette.titre).toBe('Palette de commandes');
+    expect(fr.palette.champ).toBe('Commande');
+    expect(fr.palette.exemple).toBe('/aller une page');
+    expect(fr.palette.aucune).toBe('Aucune page ne correspond.');
+  });
 });

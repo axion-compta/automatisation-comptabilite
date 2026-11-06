@@ -2,6 +2,10 @@ import { delay, http, HttpResponse, type HttpHandler } from 'msw';
 import { EnTeteEcriture, ModificationEcriture, NouvelleEcriture } from '../../contrat/src/schemas.js';
 import { ConflitVersion, creerService } from '../../contrat/src/service.js';
 
+/** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
+const erreur = (code: string, status: number, data?: unknown) =>
+  HttpResponse.json({ defined: data !== undefined, code, status, message: code, ...(data === undefined ? {} : { data }) }, { status });
+
 /** Pannes simulables. Le contrat reste la référence : seul le 409 y est déclaré (sur modifier) ; 423 et 403 sont des pannes de test. */
 export type Panne = 403 | 409 | 423;
 
@@ -15,7 +19,7 @@ export type OptionsFauxServeur = {
 };
 
 const MESSAGES: Record<403 | 423, string> = {
-  403: 'ACCES_REFUSE',
+  403: 'FORBIDDEN',
   423: 'RESSOURCE_VERROUILLEE',
 };
 
@@ -35,22 +39,22 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
   };
 
   const refus = (panne: Panne, versionActuelle = 1) =>
-    panne === 409
-      ? HttpResponse.json({ code: 'CONFLIT_VERSION', status: 409, data: { versionActuelle } }, { status: 409 })
-      : HttpResponse.json({ code: MESSAGES[panne], status: panne }, { status: panne });
+    panne === 409 ? erreur('CONFLIT_VERSION', 409, { versionActuelle }) : erreur(MESSAGES[panne], panne);
 
-  const invalide = () => HttpResponse.json({ code: 'REQUETE_INVALIDE', status: 400 }, { status: 400 });
+  const invalide = () => erreur('BAD_REQUEST', 400);
   const cleDe = (request: Request) =>
     EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined });
 
   return [
     http.get(base + '/ecritures', async ({ request }) => {
       await attendre();
-      const limiteBrute = new URL(request.url).searchParams.get('limite');
-      const limite = limiteBrute === null ? undefined : Number(limiteBrute);
+      const q = new URL(request.url).searchParams;
+      const nombre = (nom: string) => (q.get(nom) === null ? undefined : Number(q.get(nom)));
+      const limite = nombre('limite');
+      const decalage = nombre('decalage');
       if (limite !== undefined && (!Number.isInteger(limite) || limite < 1 || limite > 100)) return invalide();
-      const tout = service.lister();
-      return HttpResponse.json(limite === undefined ? tout : tout.slice(0, limite));
+      if (decalage !== undefined && (!Number.isInteger(decalage) || decalage < 0)) return invalide();
+      return HttpResponse.json(service.page({ limite, decalage }));
     }),
 
     http.post(base + '/ecritures', async ({ request }) => {
@@ -61,7 +65,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
       const entete = cleDe(request);
       const corps = NouvelleEcriture.safeParse(await request.json().catch(() => undefined));
       if (!entete.success || !corps.success) return invalide();
-      return HttpResponse.json(service.creer(entete.data['idempotency-key'], corps.data));
+      return HttpResponse.json({ body: service.creer(entete.data['idempotency-key'], corps.data) });
     }),
 
     http.put(base + '/ecritures/:id', async ({ request, params }) => {
@@ -72,10 +76,10 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
       const corps = ModificationEcriture.safeParse(await request.json().catch(() => undefined));
       if (!entete.success || !corps.success) return invalide();
       try {
-        return HttpResponse.json(service.modifier(entete.data['idempotency-key'], String(params['id']), corps.data));
+        return HttpResponse.json({ body: service.modifier(entete.data['idempotency-key'], String(params['id']), corps.data) });
       } catch (e) {
         if (e instanceof ConflitVersion) return refus(409, e.versionActuelle);
-        return HttpResponse.json({ code: 'INTROUVABLE', status: 404 }, { status: 404 });
+        return erreur('NOT_FOUND', 404);
       }
     }),
   ];

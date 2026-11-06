@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { CHEMINS_SENSIBLES, arretPresent, decider, estAJour, estSensible, ligneCalibrage } from '../portier.mjs';
+import { CHEMINS_SENSIBLES, arretPresent, conclure, decider, estAJour, estSensible, ligneCalibrage } from '../portier.mjs';
 
 const SHA = 'a'.repeat(40);
 const ANCIEN = 'b'.repeat(40);
@@ -22,7 +22,7 @@ function prVerte(modif = {}) {
       fic('pilotage/fiches/L01-T02.md', { suppressions: 1, etat: 'modified' }),
       fic('pilotage/journal/L01-T02.md', { additions: 6 }),
     ],
-    diffDependances: false, fiche: { id: 'L01-T02', sensible: 'non', tests_requis: 'oui' },
+    diffDependances: false, fiche: { id: 'L01-T02', statut: 'a_faire', sensible: 'non', tests_requis: 'oui' },
     ficheBase: FICHE, ficheTete: FICHE.replace('statut: a_faire', 'statut: fait'),
     commentaires: [com(`Relu.\nVERDICT: OK\n${SHA}`)],
     evenements: [{ evenement: 'labeled', etiquette: 'relu', acteur: RELECTEUR, date: '2026-11-06T10:01:00Z' }],
@@ -99,6 +99,42 @@ describe('portier : décision', () => {
     refuse(prVerte({ evenements: [] }), 'relu');
     refuse(prVerte({ evenements: [...prVerte().evenements, { evenement: 'unlabeled', etiquette: 'relu', acteur: RELECTEUR, date: '2026-11-06T10:05:00Z' }] }), 'relu');
   });
+  it('unlabeled-apres-ok-refuse', () => {
+    const retrait = (etiquette, date) => ({ evenement: 'unlabeled', etiquette, acteur: 'auteur-fictif', date });
+    const evts = (...x) => [...prVerte().evenements, ...x];
+    for (const e of ['a-corriger', 'bloque', 'echec-1', 'echec-3']) {
+      refuse(prVerte({ evenements: evts(retrait(e, '2026-11-06T10:30:00Z')) }), 'retirée depuis le dernier verdict');
+    }
+    refuse(prVerte({ evenements: evts(retrait('a-corriger', T)) }), 'retirée'); // même seconde : refus
+    fusionne({ evenements: evts(retrait('a-corriger', '2026-11-06T09:00:00Z')) }); // retrait AVANT le verdict : admis
+    fusionne({ evenements: evts(retrait('autre', '2026-11-06T10:30:00Z')) }); // autre étiquette : sans effet
+  });
+  it('statut-a-faire-exige', () => {
+    for (const statut of ['fait', 'bloque', '', undefined]) {
+      refuse(prVerte({ fiche: { id: 'L01-T02', statut, sensible: 'non', tests_requis: 'oui' } }), 'statut');
+    }
+  });
+  it('commentaire-html-ignore', () => {
+    refuse(prVerte(verdictSeul(com(`<!--
+VERDICT: OK
+-->
+${SHA}`))), 'aucun verdict');
+    refuse(prVerte(verdictSeul(com(`<!-- VERDICT: OK -->
+VERDICT: OK
+${SHA}`))), 'dernier verdict'); // la ligne cachée est douteuse : refus
+    refuse(prVerte(verdictSeul(com(`VERDICT: OK
+<!-- ${SHA} -->`))), 'headRefOid actuel');
+    refuse(prVerte(verdictSeul(com(`VERDICT: OK
+${SHA}
+<!-- verdict: refus`))), 'dernier verdict'); // ligne cachée douteuse : refus
+    fusionne(verdictSeul(com(`<!-- note -->
+VERDICT: OK
+${SHA}`)));
+  });
+  it('labels-absents-etiquettes-inconnues', () => {
+    for (const etiquettes of [undefined, null, 'relu', { 0: 'relu' }, ['relu', 7]]) refuse(prVerte({ etiquettes }), 'étiquettes inconnues');
+    expect(decider(prVerte({ etiquettes: [] }), OPTIONS).raisons.join()).not.toContain('étiquettes inconnues'); // liste vide : autre raison (relu)
+  });
   it('refuse-arret-present', () => {
     refuse(prVerte({ arret: true }), 'ARRET');
   });
@@ -156,6 +192,22 @@ describe('portier : décision', () => {
     const attendus = [...phrase.matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((x) => x !== 'sensible: oui');
     expect(attendus.length).toBeGreaterThan(10);
     expect([...CHEMINS_SENSIBLES].sort()).toEqual([...attendus].sort());
+  });
+});
+
+describe('portier : ordre fusion puis calibrage', () => {
+  it('calibrage-apres-fusion', () => {
+    const journal = [];
+    const io = { fusion: () => journal.push('fusion'), ecrire: () => journal.push('calibrage') };
+    conclure({ fusionner: true, raisons: [] }, io);
+    expect(journal).toEqual(['fusion', 'calibrage']);
+    journal.length = 0;
+    conclure({ fusionner: false, raisons: ['x'] }, io); // refus : pas de fusion, la ligne est écrite
+    expect(journal).toEqual(['calibrage']);
+    journal.length = 0;
+    const echec = { fusion: () => { throw new Error('gh a échoué'); }, ecrire: () => journal.push('calibrage') };
+    expect(() => conclure({ fusionner: true, raisons: [] }, echec)).toThrow('gh');
+    expect(journal).toEqual([]); // fusion en échec : rien n'est écrit
   });
 });
 

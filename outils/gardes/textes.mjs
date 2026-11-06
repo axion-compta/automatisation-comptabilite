@@ -16,8 +16,8 @@ const CONCERNES = /^(apps|packages)\/.*\.tsx$/;
 const TESTS = /(\.test\.|\.spec\.|\/__tests__\/|\/e2e\/)/;
 const GENERE = /généré|@generated|do not edit|ne pas modifier/i;
 // Exemptions à chemin exact. Ecran.tsx : écran de test (développement seulement), à retirer quand le premier écran
-// réel le remplace. Palette.tsx : à retirer par la fiche de suivi qui passe les textes de la palette dans packages/textes.
-export const ECRANS_EXEMPTES = ['apps/web/src/Ecran.tsx', 'apps/web/src/commandes/Palette.tsx'];
+// réel le remplace. Palette.tsx n'est plus exemptée (L00-T29) : ses textes viennent de packages/textes.
+export const ECRANS_EXEMPTES = ['apps/web/src/Ecran.tsx'];
 export const DOSSIER_TEXTES = 'packages/textes/src/';
 // Assemblés ici pour ne pas figurer en clair dans le dépôt.
 export const MOTS_INTERDITS = [['con', 'forme'], ['sans ', 'erreur'], ['garan', 'ti'], ['juri', 'ste'], ['P', 'DP']].map((p) => p.join(''));
