@@ -174,8 +174,8 @@ test('rouge-pilotage-git-en-echec', () => {
   assert.match(evaluer(g, { GITHUB_HEAD_REF: 'pilotage/x' }).pb[0], /aucune fiche/);
 });
 
-test('rouge-fichier-binaire-binaire-octet-nul', () => {
-  const g = fauxGit({ 'show HEAD:a.txt': 'x  const g = fauxGit({ 'diff --numstat --text --no-renames -z origin/main...HEAD': '-\t-\ta.txt\0' });y' });
+test('rouge-fichier-binaire-octet-nul', () => {
+  const g = fauxGit({ 'show HEAD:a.txt': ['x', 'y'].join('\0') });
   assert.match(evaluer(g, env).pb[0], /fichier binaire : a\.txt/);
 });
 
