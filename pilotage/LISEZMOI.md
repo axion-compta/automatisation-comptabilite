@@ -29,6 +29,6 @@ Au début de chaque exécution : `git fetch origin`, puis si `git cat-file -e or
 CI rouge après 2 corrections : label `echec-N` suivant et commentaire factuel, puis arrêt. Au 3e échec : label `bloque` et issue assignée à `will383842`. Une fiche bloquée n'est reprise que par Will.
 
 ## Fusion
-Les PR sensibles (`sensible: oui`, ou diff touchant `.github/`, `LICENSE`, `scripts/verifier.mjs`, `.gitleaks.toml`, `.claude/`, `CLAUDE.md`, `eslint.config.js`, `tsconfig.base.json`, `CODEOWNERS`, `.npmrc`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, une dépendance, `outils/gardes/`, `scripts/pilotage/`, `pilotage/`) sont fusionnées par Will seul. Les autres le sont par le relecteur, en squash. Le seul contrôle obligatoire est la tâche CI `verifier`.
+Les PR sensibles (`sensible: oui`, ou diff touchant `.github/`, `LICENSE`, `scripts/verifier.mjs`, `.gitleaks.toml`, `.claude/`, `CLAUDE.md`, `eslint.config.js`, `tsconfig.base.json`, `CODEOWNERS`, `.npmrc`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, une dépendance, `outils/gardes/`, `scripts/pilotage/`, `pilotage/`) sont fusionnées par Will seul. Les autres le sont par le portier (L00-T21), en squash. Le seul contrôle obligatoire est la tâche CI `verifier`.
 
 Limite connue : CODEOWNERS reste décoratif tant que `require_code_owner_reviews` n'est pas actif ; la parade est le workflow `alerte-fusion.yml` (L00-T09).
