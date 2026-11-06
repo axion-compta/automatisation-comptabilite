@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS } from '../fictif.mjs';
+import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS, ibanValide } from '../fictif.mjs';
 
 // Les valeurs sont assemblées ici pour ne pas figurer en clair dans le dépôt.
 const domaineReel = ['exemple', 'com'].join('.');
@@ -62,4 +62,105 @@ test('rouge : PDF hors dossier fictif ; vert dans le dossier prévu', () => {
   const pb = analyserDepot(fauxGit(`doc/a.pdf\0${DOSSIERS_PDF_FICTIFS[0]}b.pdf\0`), () => '');
   assert.equal(pb.length, 1);
   assert.match(pb[0], /doc\/a\.pdf PDF suivi/);
+});
+
+// IBAN fictifs construits par code (clé de contrôle calculée), jamais écrits en clair.
+const cle = (pays, bban) => {
+  const r = (bban + pays).replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55)) + '00';
+  let reste = 0;
+  for (const ch of r) reste = (reste * 10 + Number(ch)) % 97;
+  return pays + String(98 - reste).padStart(2, '0') + bban;
+};
+const frValide = cle('FR', '3'.repeat(23));
+const parGroupes = (s, sep) => s.match(/.{1,4}/g).join(sep);
+
+test('rouge : IBAN en minuscules, espaces insécables, tirets', () => {
+  assert.equal(analyserTexte(`iban ${frValide.toLowerCase()}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, ' ')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '-')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide.toLowerCase(), '\u202f')}`, 't.txt').length, 1);
+});
+
+// Ancien contrôle : pays quelconque, préfixe de 15 à 34 caractères, modulo 97 seul.
+const ancienOk = (s) => {
+  for (let n = 15; n <= 34; n++) {
+    const p = s.slice(0, n);
+    if (p.length < n) break;
+    const r = (p.slice(4) + p.slice(0, 4)).replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55));
+    let reste = 0;
+    for (const ch of r) reste = (reste * 10 + Number(ch)) % 97;
+    if (reste === 1) return true;
+  }
+  return false;
+};
+const base32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+test('vert : jetons base32 de 34 caractères (pays inconnu ou longueur inexacte)', () => {
+  let graine = 12345;
+  const alea = () => (graine = (graine * 1103515245 + 12345) % 2147483648);
+  const jetons = [];
+  while (jetons.length < 20) {
+    // Deux lettres de pays inconnu (Q?), deux chiffres base32 (2 à 7), puis 30 caractères base32.
+    let t = 'Q' + base32[alea() % 26] + String(2 + (alea() % 6)) + String(2 + (alea() % 6));
+    for (let i = 0; i < 30; i++) t += base32[(alea() >> 8) % 32];
+    if (ancienOk(t)) jetons.push(t);
+  }
+  for (const t of jetons) assert.deepEqual(analyserTexte(`secret ${t}`, 't.txt'), [], t);
+  // Pays connu mais longueur inexacte (25 au lieu de 27) : clé valide, pas un IBAN.
+  assert.deepEqual(analyserTexte(`x ${cle('FR', '3'.repeat(21))}`, 't.txt'), []);
+});
+
+test('rouge : binaires et bureautique hors dossier fictif ; vert dans packages/donnees-fictives', () => {
+  const noms = ['a.xlsx', 'b.docx', 'c.zip', 'd.png', 'e.JPG', 'f.woff2', 'g.ttf', 'h.gif', 'i.ico'];
+  const pb = analyserDepot(fauxGit(noms.map((n) => `app/${n}`).join('\0') + '\0'), () => '');
+  assert.equal(pb.length, noms.length);
+  assert.match(pb[0], /app\/a\.xlsx binaire suivi/);
+  const dedans = noms.map((n) => `${DOSSIERS_PDF_FICTIFS[0]}${n}`).join('\0') + '\0';
+  assert.deepEqual(analyserDepot(fauxGit(dedans), () => ''), []);
+});
+
+const ruValide = cle('RU', '4'.repeat(29));
+
+test('rouge : pays du registre ajoutés (RU, longueur 33)', () => {
+  assert.equal(ruValide.length, 33);
+  assert.equal(analyserTexte(`iban ${ruValide}`, 't.txt').length, 1);
+});
+
+test('rouge : préfixe parasite avant l’IBAN, plusieurs IBAN sur une ligne', () => {
+  assert.equal(analyserTexte(`id x1 de12 ${frValide}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`ref AB12 ${parGroupes(frValide, ' ')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`${frValide} puis ${ruValide}`, 't.txt').length, 2);
+  assert.equal(analyserTexte(`iban_${frValide}`, 't.txt').length, 1);
+});
+
+test('rouge : séparateurs multiples, point, barre, espace après le pays, %20 et +', () => {
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '  ')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '.')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, '/')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${frValide.slice(0, 2)} ${frValide.slice(2)}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`?iban=${parGroupes(frValide, '%20')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`?iban=${parGroupes(frValide, '+')}`, 't.txt').length, 1);
+  assert.equal(analyserTexte(`iban ${parGroupes(frValide, ' ')}`, 't.txt').length, 1);
+});
+
+test('vert : 20 jetons DE + 2 chiffres + 18 caractères base32 à clé invalide', () => {
+  let graine = 777;
+  const alea = () => (graine = (graine * 1103515245 + 12345) % 2147483648);
+  for (let k = 0; k < 20; k++) {
+    let t = 'DE' + String(10 + (alea() % 90));
+    for (let i = 0; i < 18; i++) t += base32[(alea() >> 8) % 32];
+    if (ibanValide(t)) t = t.slice(0, 2) + '00' + t.slice(4);
+    assert.deepEqual(analyserTexte(`secret ${t}`, 't.txt'), [], t);
+  }
+});
+
+test('rouge : lecture contenant un octet NUL = binaire non reconnu', () => {
+  const pb = analyserDepot(fauxGit('app/x.dat\0ok.txt\0'), (f) => (f.endsWith('x.dat') ? 'a\0b' : 'ok'));
+  assert.equal(pb.length, 1);
+  assert.match(pb[0], /app\/x\.dat binaire non reconnu/);
+});
+
+test('rouge : extensions binaires ajoutées', () => {
+  const noms = ['a.avif', 'b.heic', 'c.mp4', 'd.mp3', 'e.xz', 'f.bz2', 'g.sqlite', 'h.wasm'];
+  assert.equal(analyserDepot(fauxGit(noms.map((n) => `z/${n}`).join('\0') + '\0'), () => '').length, noms.length);
 });
