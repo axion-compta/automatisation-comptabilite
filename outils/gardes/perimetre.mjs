@@ -23,30 +23,43 @@ export function lireFiche(texte) {
 
 function enRegex(motif) {
   let s = '';
+  let prof = 0; // profondeur d’accolades : la virgule ne sépare des variantes qu’à l’intérieur
   for (let i = 0; i < motif.length; i++) {
     const c = motif[i];
     if (c === '*' && motif[i + 1] === '*') {
       s += '.*';
       i++;
     } else if (c === '*') s += '[^/]*';
-    else if (c === '{') s += '(?:';
-    else if (c === '}') s += ')';
-    else if (c === ',') s += '|';
-    else s += c.replace(/[.+?^$()|[\]\\]/g, '\\$&');
+    else if (c === '{') {
+      prof++;
+      s += '(?:';
+    } else if (c === '}' && prof > 0) {
+      prof--;
+      s += ')';
+    } else if (c === ',' && prof > 0) s += '|';
+    else s += c.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
   }
-  return new RegExp('^' + s + '$');
+  return new RegExp('^(?:' + s + (prof > 0 ? ')'.repeat(prof) : '') + ')$');
 }
 
 export function estAutorise(fichier, motifs) {
   return motifs.some((m) => enRegex(m).test(fichier));
 }
 
-function dependances(jsonTexte) {
+// Champs comparés à main comme des dépendances (valeurs comparées par leur JSON : un override peut être imbriqué).
+const CHAMPS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'overrides', 'pnpm.overrides', 'resolutions'];
+function dependances(jsonTexte, chemin) {
   const out = {};
   if (!jsonTexte) return out;
-  const j = JSON.parse(jsonTexte);
-  for (const champ of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
-    for (const [nom, v] of Object.entries(j[champ] ?? {})) out[`${champ}:${nom}`] = v;
+  let j;
+  try {
+    j = JSON.parse(jsonTexte);
+  } catch (e) {
+    throw new Error(`package.json invalide : ${chemin} (${e.message})`);
+  }
+  for (const champ of CHAMPS) {
+    const objet = champ === 'pnpm.overrides' ? j?.pnpm?.overrides : j?.[champ];
+    for (const [nom, v] of Object.entries(objet ?? {})) out[`${champ}:${nom}`] = JSON.stringify(v);
   }
   return out;
 }
@@ -65,12 +78,15 @@ export function analyserPerimetre(fiche, diff, paquets = []) {
   if (typeof fiche.taille_max_lignes === 'number' && diff.lignes > fiche.taille_max_lignes) {
     pb.push(`taille ${diff.lignes} lignes > ${fiche.taille_max_lignes}`);
   }
+  if (fiche.nouvelles_dependances !== undefined && !Array.isArray(fiche.nouvelles_dependances)) {
+    return [...pb, 'fiche : nouvelles_dependances n’est pas un tableau'];
+  }
   const permises = new Set(fiche.nouvelles_dependances ?? []);
   for (const p of paquets) {
-    const avant = dependances(p.base);
-    const apres = dependances(p.branche);
+    const avant = dependances(p.base, p.chemin);
+    const apres = dependances(p.branche, p.chemin);
     for (const k of new Set([...Object.keys(avant), ...Object.keys(apres)])) {
-      if (avant[k] !== apres[k] && !permises.has(k.split(':')[1])) {
+      if (avant[k] !== apres[k] && !permises.has(k.slice(k.indexOf(':') + 1))) {
         pb.push(`dépendance modifiée sans autorisation : ${k} (${p.chemin})`);
       }
     }
@@ -117,7 +133,9 @@ export function collecter(git, env = {}) {
     const e = lireRaw(raw);
     if (raw !== null && estPRPilotage(branche, e)) return { pilotage: true, noms: e.map((x) => x.chemin), erreurs: [] };
   }
-  const id = idDeBranche(branche) ?? (enPR ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)/)?.[1] : undefined);
+  const idBranche = idDeBranche(branche);
+  const idCorps = enPR && !idBranche ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)/)?.[1] : undefined;
+  const id = idBranche ?? idCorps;
   if (!id) return enPR ? { erreurs: [`aucune fiche pour la branche ${branche}`] } : { ignore: true };
   const texteFiche = git(['show', `${BASE}:pilotage/fiches/${id}.md`]);
   const noms = git(['diff', '--name-only', '--no-renames', '-z', `${BASE}...HEAD`]);
@@ -126,10 +144,31 @@ export function collecter(git, env = {}) {
   if (texteFiche === null) erreurs.push(`fiche ${id} introuvable sur ${BASE}`);
   if (noms === null || stat === null) erreurs.push(`git diff impossible contre ${BASE}`);
   const fichiers = decoupe(noms);
+  // TITRE_PR (forme « LNN-TMM titre », fourni par ci.yml) : son id doit être celui de la branche (ou du corps).
+  if (enPR && env.TITRE_PR !== undefined && env.TITRE_PR.match(/^(L\d\d-T\d\d) \S/)?.[1] !== id) {
+    erreurs.push(`titre de PR : « LNN-TMM titre » attendu avec l’id ${id}`);
+  }
+  // Repli sur CORPS_PR : seulement pour une PR qui ne touche que pilotage/fiches/, sur une fiche sensible non terminée.
+  if (idCorps) {
+    const horsFiches = fichiers.filter((f) => !f.startsWith('pilotage/fiches/'));
+    if (fichiers.length === 0 || horsFiches.length > 0) {
+      erreurs.push(`repli CORPS_PR refusé : la PR touche autre chose que pilotage/fiches/ (${horsFiches[0] ?? 'aucun fichier'})`);
+    }
+    let f;
+    try {
+      f = typeof texteFiche === 'string' ? lireFiche(texteFiche) : undefined;
+    } catch {
+      f = undefined; // l’illisibilité est signalée par evaluer
+    }
+    if (f?.statut === 'fait') erreurs.push(`repli CORPS_PR refusé : la fiche ${id} a déjà statut: fait sur ${BASE}`);
+    if (f && f.sensible !== 'oui') erreurs.push(`repli CORPS_PR refusé : la fiche ${id} n’est pas sensible`);
+  }
   // binaire côté branche (un octet NUL) = rouge ; --text compte quand même les lignes si seul l'ancien état était binaire
   for (const f of fichiers) if (git(['show', `HEAD:${f}`])?.includes('\0')) erreurs.push(`fichier binaire : ${f}`);
   const lignes = decoupe(stat).reduce((n, l) => {
-    const [a, d] = l.split('\t');
+    const [a, d, ...reste] = l.split('\t');
+    // « - - » : git ne sait pas compter (binaire) ; plutôt que 0 ligne, rouge explicite.
+    if (a === '-' || d === '-') erreurs.push(`fichier binaire non comptable : ${reste.join('\t')}`);
     return n + (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
   }, 0);
   const paquets = fichiers
@@ -144,10 +183,18 @@ export function evaluer(git, env = {}) {
   if (c.ignore) return { pb: [], msg: 'garde:perimetre vert (pas de branche de fiche)' };
   const pb = [...c.erreurs];
   if (typeof c.texteFiche === 'string') {
+    let fiche;
     try {
-      pb.push(...analyserPerimetre(lireFiche(c.texteFiche), { fichiers: c.noms, lignes: c.lignes }, c.paquets));
+      fiche = lireFiche(c.texteFiche);
     } catch (e) {
       pb.push(`fiche illisible : ${e.message}`);
+    }
+    if (fiche) {
+      try {
+        pb.push(...analyserPerimetre(fiche, { fichiers: c.noms, lignes: c.lignes }, c.paquets));
+      } catch (e) {
+        pb.push(e.message); // ex. « package.json invalide : … »
+      }
     }
   }
   return { pb, msg: `garde:perimetre vert (${c.id}, ${c.noms?.length} fichier(s), ${c.lignes} ligne(s))` };
