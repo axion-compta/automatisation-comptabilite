@@ -22,7 +22,7 @@ describe('handlers du contrat', () => {
     const a = await (await fetch(H + '/ecritures', nouvelle('cle-fictive-1'))).json();
     const b = await (await fetch(H + '/ecritures', nouvelle('cle-fictive-1'))).json();
     expect(b).toEqual(a);
-    const liste = (await (await fetch(H + "/ecritures")).json()) as Array<Record<string, unknown>>;
+    const liste = ((await (await fetch(H + "/ecritures")).json()) as { body: Array<Record<string, unknown>> }).body;
     expect(liste).toHaveLength(1);
     expect(liste[0]).toMatchObject({ libelle: 'Achat fictif', montantCentimes: 1250, version: 1 });
   });
@@ -37,7 +37,7 @@ describe('handlers du contrat', () => {
 describe('pannes 409/423/403', () => {
   it('409 : version périmée, avec la version actuelle', async () => {
     serveur.use(...creerHandlers({ base: H }));
-    const e = (await (await fetch(H + "/ecritures", nouvelle("cle-fictive-1"))).json()) as { id: string };
+    const e = ((await (await fetch(H + "/ecritures", nouvelle("cle-fictive-1"))).json()) as { body: { id: string } }).body;
     const put = (cle: string, version: number) =>
       fetch(H + '/ecritures/' + e.id, {
         method: 'PUT',
@@ -84,8 +84,9 @@ describe('latence et pagination', () => {
     serveur.use(...creerHandlers({ base: H }));
     for (let i = 1; i <= 5; i++) await fetch(H + '/ecritures', nouvelle('cle-fictive-' + i, 'Achat ' + i));
     const p1 = await fetch(H + '/ecritures?limite=2');
-    expect(((await p1.json()) as Array<{ libelle: string }>).map((e) => e.libelle)).toEqual(['Achat 1', 'Achat 2']);
-    expect(p1.headers.get('x-total')).toBeNull();
+    const page = (await p1.json()) as { body: Array<{ libelle: string }>; decalage: number; total: number };
+    expect(page.body.map((e) => e.libelle)).toEqual(['Achat 1', 'Achat 2']);
+    expect(page).toMatchObject({ decalage: 0, total: 5 });
     expect((await fetch(H + '/ecritures?limite=0')).status).toBe(400);
   });
 });
@@ -102,11 +103,11 @@ describe('PUT et pannes, cas limites', () => {
   it('PUT rejoué avec la même clé : même réponse, version augmentée une seule fois', async () => {
     serveur.use(...creerHandlers({ base: H }));
     await fetch(H + '/ecritures', nouvelle('cle-fictive-1'));
-    const a = (await (await put('E1', 'cle-fictive-2', modif)).json()) as { version: number };
-    const b = (await (await put('E1', 'cle-fictive-2', modif)).json()) as { version: number };
-    expect(a.version).toBe(2);
+    const a = (await (await put('E1', 'cle-fictive-2', modif)).json()) as { body: { version: number } };
+    const b = (await (await put('E1', 'cle-fictive-2', modif)).json()) as { body: { version: number } };
+    expect(a.body.version).toBe(2);
     expect(b).toEqual(a);
-    const liste = (await (await fetch(H + '/ecritures')).json()) as Array<{ version: number }>;
+    const liste = ((await (await fetch(H + '/ecritures')).json()) as { body: Array<{ version: number }> }).body;
     expect(liste[0]?.version).toBe(2);
   });
 
