@@ -37,6 +37,10 @@ export function genererOpenapi(): object {
     const s = forme(d.inputSchema).shape;
     const parametres: unknown[] = [];
     if (s['headers']) parametres.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 8, maxLength: 128 } });
+    if (d.method === 'GET') {
+      parametres.push({ name: 'limite', in: 'query', required: false, schema: { type: 'integer', minimum: 1, maximum: 100 } });
+      parametres.push({ name: 'decalage', in: 'query', required: false, schema: { type: 'integer', minimum: 0 } });
+    }
     if (d.path.includes('{id}')) parametres.push({ name: 'id', in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
     const chemin = d.path;
     const reponses: Record<string, unknown> = { '200': { description: 'OK' } };

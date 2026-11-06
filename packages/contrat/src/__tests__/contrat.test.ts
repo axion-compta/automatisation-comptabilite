@@ -19,6 +19,7 @@ describe('contrat', () => {
     const doc = JSON.stringify(genererOpenapi());
     expect(doc).toContain('"409"');
     expect(doc).toContain('Idempotency-Key');
+    expect(doc).toContain('"decalage"');
   });
 });
 
@@ -53,6 +54,23 @@ describe('service', () => {
     expect(erreur).toBeInstanceOf(ConflitVersion);
     expect((erreur as ConflitVersion).status).toBe(409);
     expect((erreur as ConflitVersion).versionActuelle).toBe(2);
+  });
+
+  it('idempotence-par-route : la même clé sur creer et modifier = deux effets distincts', () => {
+    const s = creerService();
+    const e = s.creer('cle-fictive-1', entree);
+    const m = s.modifier('cle-fictive-1', e.id, { ...entree, montantCentimes: 1300, version: 1 });
+    expect(m.version).toBe(2);
+    expect(s.lister()[0]?.montantCentimes).toBe(1300);
+  });
+
+  it('page : décalage et total', () => {
+    const s = creerService();
+    for (let i = 1; i <= 4; i++) s.creer('cle-fictive-' + i, { ...entree, libelle: 'Achat ' + i });
+    const p = s.page({ limite: 2, decalage: 1 });
+    expect(p.body.map((e) => e.libelle)).toEqual(['Achat 2', 'Achat 3']);
+    expect([p.decalage, p.total]).toEqual([1, 4]);
+    expect(s.page()).toMatchObject({ decalage: 0, total: 4 });
   });
 
   it('rejouer une modification ne l\'applique qu\'une fois', () => {
