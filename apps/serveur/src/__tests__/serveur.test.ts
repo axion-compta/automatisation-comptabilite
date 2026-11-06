@@ -1,5 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { creerApp } from '../app.js';
+import { creerService } from '../../../../packages/contrat/src/service.js';
+import { demarrer } from '../index.js';
 
 const json = { 'content-type': 'application/json' };
 const apps: Array<ReturnType<typeof creerApp>> = [];
@@ -63,5 +65,21 @@ describe('serveur Fastify + oRPC en mémoire', () => {
   it('chaque serveur a son propre état', async () => {
     await creer(neuf(), 'cle-fictive-8');
     expect((await neuf().inject({ method: 'GET', url: '/ecritures' })).json().body).toEqual([]);
+  });
+
+  it('une erreur inattendue du service reste une erreur 500, pas un 404', async () => {
+    const service = { ...creerService(), modifier: () => { throw new Error('panne interne'); } };
+    const a = creerApp(service);
+    apps.push(a);
+    const r = await a.inject({ method: 'PUT', url: '/ecritures/E1', headers: { ...json, 'idempotency-key': 'cle-fictive-9' }, payload: { libelle: 'x', montantCentimes: 1, version: 1 } });
+    expect(r.statusCode).toBe(500);
+  });
+});
+
+describe('garde production', () => {
+  it('refuse de démarrer quand NODE_ENV vaut production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    await expect(demarrer(0)).rejects.toThrow('serveur en mémoire interdit en production');
+    vi.unstubAllEnvs();
   });
 });

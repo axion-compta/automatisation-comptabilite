@@ -9,7 +9,7 @@ function scriptMsw(): Plugin {
     name: 'script-msw',
     configureServer(serveur) {
       serveur.middlewares.use('/mockServiceWorker.js', (_req, res) => {
-        const chemin = createRequire(import.meta.url).resolve('msw/mockServiceWorker.js');
+        const chemin = createRequire(new URL('../../packages/faux-serveur/package.json', import.meta.url)).resolve('msw/mockServiceWorker.js');
         res.setHeader('content-type', 'text/javascript');
         res.end(readFileSync(chemin));
       });

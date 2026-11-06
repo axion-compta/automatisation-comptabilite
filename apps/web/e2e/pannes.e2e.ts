@@ -37,3 +37,20 @@ test('panne 409 : la création ne la déclare pas, elle est ignorée', async ({ 
   await page.getByRole('button', { name: 'Envoyer' }).click();
   await expect(page.getByTestId('resultat')).toHaveText('200 Écriture enregistrée.');
 });
+
+test('panne 409 sur la modification : conflit de version affiché', async ({ page }) => {
+  await page.getByRole('button', { name: 'Envoyer' }).click();
+  await expect(page.getByTestId('resultat')).toHaveText('200 Écriture enregistrée.');
+  await page.getByLabel('Panne').selectOption('409');
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await expect(page.getByTestId('resultat')).toHaveText('409 Conflit de version.');
+});
+
+test('vrai conflit sans panne : deux modifications avec la même version', async ({ page }) => {
+  await page.getByRole('button', { name: 'Envoyer' }).click();
+  await expect(page.getByTestId('total')).toHaveText('1 écriture(s)');
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await expect(page.getByTestId('resultat')).toHaveText('200 Écriture enregistrée.');
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await expect(page.getByTestId('resultat')).toHaveText('409 Conflit de version.');
+});
