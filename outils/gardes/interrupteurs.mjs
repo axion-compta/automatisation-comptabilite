@@ -14,8 +14,8 @@ export function analyserInterrupteurs(r) {
   }
   const utilises = new Set();
   for (const a of r.actions ?? []) {
-    if (!a.interrupteur) {
-      pb.push(`action sans interrupteur : ${a.id}`);
+    if (!a?.interrupteur) {
+      pb.push(`action sans interrupteur : ${a?.id ?? 'entrée invalide'}`);
       continue;
     }
     utilises.add(a.interrupteur);
@@ -31,5 +31,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     for (const p of pb) console.error('garde:interrupteurs ' + p);
     process.exit(1);
   }
-  console.log('garde:interrupteurs : registre conforme');
+  console.log('garde:interrupteurs vert');
 }
