@@ -70,6 +70,7 @@ const env = { GITHUB_HEAD_REF: 'lot-00/L00-T03' };
 test('collecte : vert, lignes comptées', () => {
   const r = evaluer(fauxGit(), env);
   assert.deepEqual(r.pb, []);
+  assert.equal(idDeBranche('lot-00/L01-T02'), undefined);
   assert.match(r.msg, /L00-T03, 1 fichier\(s\), 4 ligne/);
 });
 
