@@ -34,7 +34,9 @@ function controlerPermissions(lignes, ajoute) {
   const non = (i, plus = '') => ajoute(i, 'forme permissions non lue' + plus);
   for (let i = 0; i < lignes.length; i++) {
     const brut = lignes[i].trimEnd();
-    if (/^\s*#/.test(brut) || !/permissions/i.test(brut)) continue;
+    if (/^\s*#/.test(brut)) continue;
+    if (/^\s*(?:-\s+)?(?:\?(?:\s|$)|\*|"[^"]*\\)/.test(brut)) ajoute(i, 'clé YAML non lue (échappement, ? ou alias)');
+    if (!/permissions/i.test(brut)) continue;
     if (!FORME_PERMISSIONS.test(brut)) {
       non(i, /write/i.test(brut) ? ' (écriture possible)' : '');
       continue;

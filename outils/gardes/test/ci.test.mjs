@@ -221,3 +221,17 @@ test('ancre-alias-fusion-refuses-dans-permissions', () => {
   }
   assert.ok(analyserWorkflow(globalPerm('permissions:\n  <<: *p\n  contents: read'), `${WF}ci.yml`).some((p) => p.includes('ancre')));
 });
+
+// Troisième relecture : clé YAML écrite pour ne pas contenir « permissions » en clair.
+const yamlNonLu = (texte, nom = `${WF}portier.yml`) => analyserWorkflow(texte, nom).some((p) => p.includes('clé YAML non lue'));
+const clesCachees = {
+  'échappement \\x70': () => tachePerm('    "\\x70ermissions": write-all'),
+  'échappement \\u0073 puis bloc': () => tachePerm('    "permission\\u0073":\n      contents: write'),
+  'clé explicite coupée sur deux lignes': () => tachePerm('    ? "permis\\\n      sions"\n    : write-all'),
+  'alias sur clé échappée réutilisée': () => vert.replace('  a:\n', '  a:\n    env: {A: &k "\\x70ermissions"}\n    *k : write-all\n'),
+};
+for (const [forme, fabrique] of Object.entries(clesCachees)) {
+  test(`cle-cachee : ${forme} est rouge`, () => {
+    assert.ok(yamlNonLu(fabrique()));
+  });
+}
