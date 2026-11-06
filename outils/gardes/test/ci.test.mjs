@@ -182,6 +182,39 @@ test('write-all-entre-guillemets-rouge', () => {
   }
 });
 
+// Liste blanche : toute forme de permissions non lue est rouge, même sur un workflow à écriture permise.
+const nonLue = (texte, nom = `${WF}portier.yml`) => analyserWorkflow(texte, nom).some((p) => p.includes('forme permissions non lue'));
+const formes = {
+  'accolade ouverte sur plusieurs lignes': (c) => tachePerm(`    permissions: { contents: ${c},\n      actions: read }`),
+  'accolade sur la ligne suivante': (c) => tachePerm(`    permissions:\n      {contents: ${c}}`),
+  'clé permissions entre guillemets': (c) => tachePerm(`    "permissions": { contents: ${c} }`),
+  'clé complexe ?': (c) => tachePerm(`    ? permissions\n    : contents: ${c}`),
+  'tâche entière en accolades': (c) => vert.replace(/ {2}a:\n[\s\S]*$/, `  a: { runs-on: ubuntu-latest, timeout-minutes: 10, permissions: { contents: ${c} } }\n`),
+  'valeur sur la ligne suivante': (c) => tachePerm(`    permissions:\n      contents:\n        ${c}`),
+  'valeur en >-': (c) => tachePerm(`    permissions:\n      contents: >-\n        ${c}`),
+  'valeur en |': (c) => tachePerm(`    permissions:\n      contents: |\n        ${c}`),
+  'étiquette !!str': (c) => tachePerm(`    permissions:\n      contents: !!str ${c}`),
+  'clé entre guillemets dans le bloc': (c) => tachePerm(`    permissions:\n      "contents": ${c}`),
+  'point d\u2019interrogation dans le bloc': (c) => tachePerm(`    permissions:\n      ? contents\n      : ${c}`),
+  'ancre dans le bloc': (c) => tachePerm(`    permissions:\n      contents: &d ${c}`),
+};
+for (const [forme, fabrique] of Object.entries(formes)) {
+  test(`liste-blanche : ${forme} est rouge`, () => {
+    assert.ok(nonLue(fabrique('write')), 'write');
+    assert.ok(nonLue(fabrique('read')), 'read');
+  });
+}
+
+test('liste-blanche : write/Write/WRITE refusés hors table, formes lues acceptées', () => {
+  for (const v of ['write', 'Write', 'WRITE']) {
+    assert.ok(ecritures(tachePerm(`    permissions:\n      contents: ${v}`), `${WF}ci.yml`).length > 0, v);
+    assert.ok(ecritures(tachePerm(`    permissions: { contents: ${v} }`), `${WF}ci.yml`).length > 0, v);
+  }
+  for (const ok of ['    permissions: {}', '    permissions: read-all', '    permissions: { contents: read, issues: none } # note', '    permissions: # note\n      contents: read # lecture\n\n      # rien\n      issues: none']) {
+    assert.deepEqual(analyserWorkflow(tachePerm(ok), `${WF}essai.yml`), [], ok);
+  }
+});
+
 test('ancre-alias-fusion-refuses-dans-permissions', () => {
   for (const corps of ['    permissions: &p\n      contents: read', '    permissions: *p', '    permissions:\n      <<: *p']) {
     assert.ok(analyserWorkflow(tachePerm(corps), `${WF}ci.yml`).some((p) => p.includes('ancre')), corps);

@@ -25,11 +25,40 @@ export function ecriturePermise(nom) {
 const indent = (l) => l.length - l.trimStart().length;
 const sansCommentaire = (l) => l.replace(/\s+#.*$/, '');
 
+// Liste blanche : toute ligne qui cite « permissions » doit avoir une forme lue, sinon rouge.
+const FORME_PERMISSIONS = /^\s*permissions:\s*(\{\s*\}|read-all|\{[^\n]*\}\s*(#.*)?|(#.*)?)$/;
+const LIGNE_DROIT = /^\s+[a-z-]+:\s+(read|write|none)\s*(#.*)?$/i;
+const ENTREE_DROIT = /^[a-z-]+\s*:\s*(read|write|none)$/i;
+
+function controlerPermissions(lignes, ajoute) {
+  const non = (i, plus = '') => ajoute(i, 'forme permissions non lue' + plus);
+  for (let i = 0; i < lignes.length; i++) {
+    const brut = lignes[i].trimEnd();
+    if (/^\s*#/.test(brut) || !/permissions/i.test(brut)) continue;
+    if (!FORME_PERMISSIONS.test(brut)) {
+      non(i, /write/i.test(brut) ? ' (écriture possible)' : '');
+      continue;
+    }
+    const enLigne = brut.match(/^\s*permissions:\s*\{(.*)\}\s*(#.*)?$/);
+    if (enLigne && enLigne[1].split(',').some((e) => e.trim() !== '' && !ENTREE_DROIT.test(e.trim()))) non(i);
+    if (/^\s*permissions:\s*(#.*)?$/.test(brut)) {
+      const base = indent(brut);
+      for (let k = i + 1; k < lignes.length; k++) {
+        const t = lignes[k].trimEnd();
+        if (t.trim() === '' || /^\s*#/.test(t)) continue;
+        if (indent(t) <= base) break;
+        if (!LIGNE_DROIT.test(t) && t.trim() !== '{}') non(k, ' dans un bloc');
+      }
+    }
+  }
+}
+
 export function analyserWorkflow(texte, nom) {
   const pb = [];
   const lignes = texte.split(/\r?\n/);
   const ajoute = (n, msg) => pb.push(`${nom}:${n + 1} ${msg}`);
   const permis = ecriturePermise(nom);
+  controlerPermissions(lignes, ajoute);
 
   // lignes du bloc `permissions:` de haut niveau (hors job)
   const global = new Set();
@@ -50,12 +79,12 @@ export function analyserWorkflow(texte, nom) {
         ajoute(i, `action non épinglée par SHA de 40 caractères : ${ref}`);
       }
     }
-    const w = l.match(/^\s*["']?([a-z-]+)["']?:\s*["']?write(?:-all)?["']?\s*,?\s*\}?\s*$/);
+    const w = l.match(/^\s*["']?([a-z-]+)["']?:\s*["']?write(?:-all)?["']?\s*,?\s*\}?\s*$/i);
     if (w && !permis.has(w[1])) ajoute(i, `permission en écriture interdite : ${w[1]}`);
     else if (w && global.has(i) && !DEFAUT_ECRITURE.has(w[1])) ajoute(i, `écriture au niveau global interdite : ${w[1]}`);
     const enLigne = l.match(/^\s*permissions:\s*(?:&\S+\s*)?\{(.*)\}\s*$/);
     if (enLigne) {
-      for (const [, droit] of enLigne[1].matchAll(/["']?([a-z-]+)["']?\s*:\s*["']?write\b/g)) {
+      for (const [, droit] of enLigne[1].matchAll(/["']?([a-z-]+)["']?\s*:\s*["']?write\b/gi)) {
         if (!permis.has(droit)) ajoute(i, `permission en écriture interdite : ${droit}`);
         else if (/^permissions:/.test(l) && !DEFAUT_ECRITURE.has(droit)) ajoute(i, `écriture au niveau global interdite : ${droit}`);
       }
