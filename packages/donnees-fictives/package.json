@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "generer": "node scripts/generer.mjs"
+  },
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
