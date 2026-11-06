@@ -2,19 +2,23 @@
 // Rouge si un fichier .tsx de apps/ ou packages/ contient du texte visible en dur (texte entre balises, chaîne
 // entre accolades, aria-label/title/placeholder/alt/label littéraux) : il doit venir de packages/textes.
 // Rouge aussi si un mot interdit figure dans les textes de packages/textes/src (hors tests).
-// Exclus : tests, fichiers générés (marqueur en tête). Limite : heuristique, pas un analyseur JSX complet.
+// Exclus : tests, fichiers générés (marqueur en tête). Limites : heuristique, pas un analyseur JSX complet ;
+// un ternaire {c ? "Oui" : "Non"} n'est pas détecté.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const LETTRES = /[A-Za-zÀ-ÿ]{2,}/;
-const NOEUD = /<[A-Za-z][^<>]*>([^<>{}]+)(?=[<{])|\}([^<>{}]+)(?=<)/g;
+const NOEUD = /<(?:[A-Za-z][^<>]*)?>([^<>{}]+)(?=[<{])|\}([^<>{}]+)(?=<)/g;
 const CHAINE = /\{\s*(['"`])((?:(?!\1)[^\\\n])*)\1\s*\}/g;
-const ATTRIBUT = /\b(?:aria-label|title|placeholder|alt|label)\s*=\s*"([^"]*)"/g;
+const ATTRIBUT = /\b(?:aria-label|title|placeholder|alt|label)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+// Code TypeScript pris à tort pour du texte (génériques : useState<A>(x); const b = c<D>).
+const CODE = /\b(?:const|let|var|return)\b|=>|;\s*$|[\w$\])!]\(/m;
 const CONCERNES = /^(apps|packages)\/.*\.tsx$/;
 const TESTS = /(\.test\.|\.spec\.|\/__tests__\/|\/e2e\/)/;
 const GENERE = /généré|@generated|do not edit|ne pas modifier/i;
 // Écran de test, développement seulement (refusé hors DEV par main.tsx) : seul écran admis avec des textes en dur.
+// À retirer quand le premier écran réel remplace Ecran.tsx.
 export const ECRANS_EXEMPTES = ['apps/web/src/Ecran.tsx'];
 export const DOSSIER_TEXTES = 'packages/textes/src/';
 // Assemblés ici pour ne pas figurer en clair dans le dépôt.
@@ -35,13 +39,14 @@ export function analyserTexte(texte, nom) {
   const ligne = (index) => code.slice(0, index).split('\n').length;
   for (const m of code.matchAll(NOEUD)) {
     const t = (m[1] ?? m[2]).trim();
-    if (LETTRES.test(t) && !/[;=()]/.test(t)) pb.push(`${nom}:${ligne(m.index)} texte en dur « ${t} » : utiliser packages/textes`);
+    if (LETTRES.test(t) && !CODE.test(t)) pb.push(`${nom}:${ligne(m.index)} texte en dur « ${t} » : utiliser packages/textes`);
   }
   for (const m of code.matchAll(CHAINE)) {
     if (LETTRES.test(m[2])) pb.push(`${nom}:${ligne(m.index)} texte en dur « ${m[2]} » : utiliser packages/textes`);
   }
   for (const m of code.matchAll(ATTRIBUT)) {
-    if (LETTRES.test(m[1])) pb.push(`${nom}:${ligne(m.index)} attribut en dur « ${m[1]} » : utiliser packages/textes`);
+    const v = m[1] ?? m[2];
+    if (LETTRES.test(v)) pb.push(`${nom}:${ligne(m.index)} attribut en dur « ${v} » : utiliser packages/textes`);
   }
   return pb;
 }

@@ -38,3 +38,12 @@ test('dépôt simulé : rouge sur un fichier suivi, vert une fois exclu', () => 
   assert.equal(pb.length, 1);
   assert.match(pb[0], /apps\/web\/src\/a\.css:1/);
 });
+
+test('rouge : noms CSS sur propriété de couleur, majuscules ; vert : jeton, transparent, #add-bouton', () => {
+  for (const l of ['a { color: red; }', 'style={{color:"white"}}', 'x { background: 1px solid Black }', 'color: RGB(1,2,3)', 'fill: Hsl(0 0% 0%)']) {
+    assert.equal(analyserTexte(l, 'a.css').length, 1, l);
+  }
+  for (const l of ['a { color: transparent; border-color: currentColor; background: var(--couleur-fond) }', 'a[href="#add-bouton"] {}']) {
+    assert.deepEqual(analyserTexte(l, 'a.css'), [], l);
+  }
+});

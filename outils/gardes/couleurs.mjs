@@ -6,7 +6,10 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const HEX = /(?<![\w&#])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])/g;
-const FONCTION = /\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/g;
+const FONCTION = /\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/gi;
+// Noms de couleurs CSS sur une propriété de couleur (transparent, currentColor, inherit restent permis).
+const PROPRIETE = /(?<![\w-])(?:color|background(?:-color)?|fill|stroke|border(?:-(?:top|right|bottom|left))?-color|outline-color|box-shadow|backgroundColor|borderColor|outlineColor|boxShadow)["']?\s*:\s*([^;}\n]*)/gi;
+const NOMS = /\b(?:red|white|black|blue|green|yellow|orange|purple|pink|brown|gr[ae]y|silver|gold|navy|teal|cyan|magenta|lime|maroon|olive|aqua|fuchsia|indigo|violet|crimson|salmon|coral|beige|ivory|khaki|tan|turquoise|lavender)\b/i;
 const CONCERNES = /^(apps|packages)\/.*\.(tsx?|css|html)$/;
 const TESTS = /(\.test\.|\.spec\.|\/__tests__\/|\/e2e\/)/;
 // Seule source admise des couleurs (et sa copie générée).
@@ -22,6 +25,10 @@ export function analyserTexte(texte, nom) {
   const pb = [];
   texte.split(/\r?\n/).forEach((l, i) => {
     for (const m of l.matchAll(HEX)) pb.push(`${nom}:${i + 1} couleur en dur ${m[0]} : utiliser un jeton`);
+    for (const m of l.matchAll(PROPRIETE)) {
+      const nom_ = m[1].match(NOMS);
+      if (nom_) pb.push(`${nom}:${i + 1} couleur en dur ${nom_[0]} : utiliser un jeton`);
+    }
     for (const m of l.matchAll(FONCTION)) pb.push(`${nom}:${i + 1} couleur en dur ${m[0]}...) : utiliser un jeton`);
   });
   return pb;

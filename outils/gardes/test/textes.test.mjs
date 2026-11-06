@@ -49,3 +49,16 @@ test('dépôt simulé : texte en dur et mot interdit signalés', () => {
   const contenu = { '/r/apps/web/src/B.tsx': '<p>Bonjour</p>', '/r/packages/textes/src/fr.ts': `x: '${MOTS_INTERDITS[0]}'` };
   assert.equal(analyserDepot(git, (f) => contenu[f]).length, 2);
 });
+
+test('rouge : texte avec parenthèses, point-virgule ou égal ; fragment ; attributs ; majuscules', () => {
+  for (const l of ['<p>Supprimer (définitif)</p>', '<p>Bonjour; au revoir</p>', '<p>Total : 3 = 1+2</p>', '<>Bonjour</>', "<input placeholder='Rechercher' />", '<p title="Aide">{x}</p>']) {
+    assert.equal(analyserTexte(l, 'a.tsx').length, 1, l);
+  }
+  assert.deepEqual(analyserTexte("const a = useState<Panne>(''); return <p>{fr.a}</p>;", 'a.tsx'), []);
+  assert.equal(analyserMotsInterdits(`UN TEXTE ${MOTS_INTERDITS[0].toUpperCase()}`, 'fr.ts').length, 1);
+});
+
+test('dépôt simulé : un fr.test.ts avec mot interdit reste vert', () => {
+  const git = (args) => (args[0] === 'rev-parse' ? '/r\n' : 'packages/textes/src/fr.test.ts\0');
+  assert.deepEqual(analyserDepot(git, () => MOTS_INTERDITS[0]), []);
+});

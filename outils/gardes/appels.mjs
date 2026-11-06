@@ -5,7 +5,20 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const APPEL = /(?<![\w.$])(?:fetch\s*\(|new\s+(?:XMLHttpRequest|WebSocket|EventSource)\b|axios\b)|\bnavigator\.sendBeacon\s*\(|\b(?:window|globalThis|self)\.fetch\s*\(/g;
+// Formes vues : fetch nu (appel, ?.(), alias), window.fetch, "fetch" entre guillemets (window["fetch"]),
+// XMLHttpRequest/WebSocket/EventSource/sendBeacon sous toute forme, modules réseau, import() d'une URL http(s).
+const APPEL = new RegExp(
+  [
+    String.raw`(?<![\w.$])fetch\b(?!\s*:)`,
+    String.raw`\b(?:window|globalThis|self)\s*\.\s*fetch\b`,
+    String.raw`['"\x60]fetch['"\x60]`,
+    String.raw`\b(?:XMLHttpRequest|WebSocket|EventSource|sendBeacon)\b`,
+    String.raw`['"\x60](?:axios|ky|undici|ofetch|socket\.io-client)['"\x60]`,
+    String.raw`\baxios\b`,
+    String.raw`\bimport\s*\(\s*['"\x60]https?:`,
+  ].join('|'),
+  'g',
+);
 const CONCERNES = /^apps\/web\/src\/.*\.(tsx?|jsx?)$/;
 const TESTS = /(\.test\.|\.spec\.|\/__tests__\/)/;
 // Seule couche autorisée à parler au réseau.

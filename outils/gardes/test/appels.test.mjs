@@ -33,3 +33,14 @@ test('dépôt simulé : fetch hors api.ts rouge, dans api.ts vert', () => {
   assert.equal(pb.length, 1);
   assert.match(pb[0], /Ecran\.tsx:1/);
 });
+
+test('rouge : une forme par ligne (alias, optionnel, crochets, espaces, modules, import http)', () => {
+  const formes = ['fetch?.(u)', 'window["fetch"](u)', 'const f = fetch;', 'new window.XMLHttpRequest()', 'navigator . sendBeacon(u)',
+    "import ky from 'ky'", 'new EventSource(u)', 'navigator.sendBeacon(u)', "await import('https://x.org/m.js')"];
+  for (const f of formes) assert.ok(analyserTexte(f, 'E.tsx').length >= 1, f);
+  assert.deepEqual(analyserTexte("const m = await import('./faux.js'); const o = { fetch: 1 };", 'E.tsx'), []);
+});
+
+test('exclusion : fichier généré', () => {
+  assert.ok(estExclu('apps/web/src/G.ts', '// @generated\nfetch(u)'));
+});
