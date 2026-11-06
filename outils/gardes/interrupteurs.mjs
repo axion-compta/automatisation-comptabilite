@@ -1,11 +1,17 @@
-// garde:interrupteurs : chaque action dépend d'un interrupteur déclaré (V3-PRI-013).
-// Rouge si : action sans interrupteur, interrupteur non déclaré, interrupteur déclaré sans action.
+// garde:interrupteurs : chaque action dépend d'un interrupteur déclaré, fermé par défaut (V3-PRI-013).
+// Rouge si : action sans interrupteur, interrupteur non déclaré, interrupteur sans action,
+// interrupteur actif par défaut (ou sans état actif_par_defaut: false).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { CHEMIN_REGISTRE } from './actions.mjs';
 
 export function analyserInterrupteurs(r) {
   const pb = [];
-  const declares = new Set(r.interrupteurs ?? []);
+  const decl = r.interrupteurs ?? {};
+  const declares = new Set(Object.keys(decl));
+  for (const [nom, etat] of Object.entries(decl)) {
+    if (etat?.actif_par_defaut !== false) pb.push(`interrupteur actif par défaut ou sans état : ${nom}`);
+  }
   const utilises = new Set();
   for (const a of r.actions ?? []) {
     if (!a.interrupteur) {
@@ -20,7 +26,7 @@ export function analyserInterrupteurs(r) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const pb = analyserInterrupteurs(JSON.parse(readFileSync('packages/contrat/src/actions/registre.json', 'utf8')));
+  const pb = analyserInterrupteurs(JSON.parse(readFileSync(CHEMIN_REGISTRE, 'utf8')));
   if (pb.length > 0) {
     for (const p of pb) console.error('garde:interrupteurs ' + p);
     process.exit(1);
