@@ -23,6 +23,16 @@ function taches() {
   return res;
 }
 
+// Lignes (triées) du bloc « permissions: » d'une tâche, indentées de 6 espaces.
+function permissionsDe(bloc) {
+  const l = bloc.split(/\r?\n/);
+  const d = l.findIndex((x) => /^ {4}permissions:\s*$/.test(x));
+  assert.ok(d >= 0, 'bloc permissions absent');
+  const res = [];
+  for (let i = d + 1; i < l.length && /^ {6}\S/.test(l[i]); i++) res.push(l[i].trim());
+  return res.sort();
+}
+
 test('pas-de-pull-request-target', () => {
   assert.ok(!/pull_request_target/.test(utiles.join('\n')));
   assert.ok(!/^\s*pull_request:/m.test(utiles.join('\n')));
@@ -31,7 +41,12 @@ test('pas-de-pull-request-target', () => {
 test('permissions-vides-globales', () => {
   assert.ok(utiles.some((l) => /^permissions:\s*\{\}\s*$/.test(l)));
   const t = taches();
-  assert.match(t.sbom, /permissions:\n {6}contents: read\n/);
+  assert.deepEqual(permissionsDe(t.sbom), ['contents: read']);
+  assert.deepEqual(permissionsDe(t.signer), ['contents: read', 'id-token: write']);
+  assert.ok(!/write-all|read-all/.test(texte));
+  for (const bloc of Object.values(t)) {
+    for (const p of permissionsDe(bloc)) assert.ok(!/: write/.test(p) || p === 'id-token: write', p);
+  }
 });
 
 test('id-token-sur-un-seul-job', () => {
@@ -61,6 +76,7 @@ test('sbom-genere-apres-installation-figee', () => {
   const s = taches().sbom;
   assert.match(s, /pnpm install --frozen-lockfile/);
   assert.match(s, /cyclonedx-npm@\d+\.\d+\.\d+ /);
+  assert.match(s, /--ignore-npm-errors/);
   assert.match(s, /upload-artifact/);
 });
 
