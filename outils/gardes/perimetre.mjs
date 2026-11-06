@@ -83,12 +83,24 @@ export function idDeBranche(branche) {
 }
 
 const BASE = 'origin/main';
+
+// Mode « PR de pilotage » : branche lot-NN/fiches-* ou pilotage/*, tous les fichiers sous pilotage/.
+// Limite : l'étiquette sensible-a-fusionner n'est pas fournie à la garde par ci.yml, elle n'est pas exigée ici.
+export function estPRPilotage(branche, fichiers) {
+  if (!/^(?:lot-\d\d\/fiches-.+|pilotage\/.+)$/.test(branche)) return false;
+  if (fichiers.length === 0) return false;
+  return fichiers.every((f) => f.startsWith('pilotage/') && !f.split('/').includes('..'));
+}
 const decoupe = (t) => (t ?? '').split('\0').filter(Boolean);
 
 // git : (args) => sortie texte, ou null si échec. env : { GITHUB_HEAD_REF, CORPS_PR }.
 export function collecter(git, env = {}) {
   const enPR = Boolean(env.GITHUB_HEAD_REF);
   const branche = env.GITHUB_HEAD_REF || git(['rev-parse', '--abbrev-ref', 'HEAD'])?.trim() || '';
+  if (enPR) {
+    const n = git(['diff', '--name-only', '--no-renames', '-z', `${BASE}...HEAD`]);
+    if (n !== null && estPRPilotage(branche, decoupe(n))) return { pilotage: true, noms: decoupe(n), erreurs: [] };
+  }
   const id = idDeBranche(branche) ?? (enPR ? env.CORPS_PR?.match(/Fiche:\s*(L\d\d-T\d\d)/)?.[1] : undefined);
   if (!id) return enPR ? { erreurs: [`aucune fiche pour la branche ${branche}`] } : { ignore: true };
   const texteFiche = git(['show', `${BASE}:pilotage/fiches/${id}.md`]);
@@ -110,6 +122,7 @@ export function collecter(git, env = {}) {
 
 export function evaluer(git, env = {}) {
   const c = collecter(git, env);
+  if (c.pilotage) return { pb: [], msg: `garde:perimetre vert (PR de pilotage, ${c.noms.length} fichier(s))` };
   if (c.ignore) return { pb: [], msg: 'garde:perimetre vert (pas de branche de fiche)' };
   const pb = [...c.erreurs];
   if (typeof c.texteFiche === 'string') {
