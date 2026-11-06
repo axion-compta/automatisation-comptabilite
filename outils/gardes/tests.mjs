@@ -1,8 +1,6 @@
-// garde:tests : un test sans assertion est rouge ; un test sauté sans carte (fiche LNN-TMM) est rouge (V3-QUA-019).
-// Sans argument : analyse les fichiers de test suivis par git (hors outils/canari/).
-// Avec des chemins (fichiers ou dossiers) : analyse ces chemins sur le disque (utilisé pour le canari).
-// Limites (analyse statique simple) : assertion factice (expect(true).toBe(true)), assertion dans du code mort,
-// expect.assertions(0) ne sont pas détectées.
+// garde:tests (V3-QUA-019) : rouge si un test n'a pas d'assertion, si un skip/todo/skipIf/runIf n'a pas de carte LNN-TMM, ou .only.
+// Sans argument : tests suivis par git (hors outils/canari/) ; avec chemins : ces chemins (canari). Limites : assertion factice,
+// code mort, expect.assertions(0), aide importée d'un autre fichier.
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,10 +8,11 @@ import { fileURLToPath } from 'node:url';
 
 export const EST_TEST = /\.(test|spec)\.[cm]?[jt]sx?$/;
 const CARTE = /\bL\d{2}-T\d{2}\b/;
-const APPEL = /(?<![\w.$])(it|test)((?:\s*\.\s*\w+)*)\s*([(`])/g;
+const CHAINE = String.raw`(?<![\w.$])(?:describe|suite|it|test)((?:\s*\.\s*\w+)*)`;
 const ASSERTION = /\bexpect(?:\.soft)?\s*\(|\bexpectTypeOf\s*\(|\bassert(?:\.\w+)?\s*\(|\bt\.assert\.\w+\s*\(/;
-const APPELE_PUIS_APPEL = ['each', 'skipIf', 'runIf'];
-const AVEC_CARTE = ['skip', 'todo', 'skipIf', 'runIf'];
+const appelle = (corps, noms) => noms.some((b) => new RegExp(`\\b${b}\\s*\\(`).test(corps));
+const ONLY = String.raw`(?<![\w.$])(?:describe|suite|it|test)(?:\s*\.\s*\w+)*\s*\.\s*only\b|\bonly\s*:(?!\s*false\b)`;
+const ENCHAINES = ['each', 'skipIf', 'runIf']; // modificateurs qui renvoient une fonction à rappeler
 
 // Remplace par des espaces le contenu des commentaires, chaînes, gabarits et littéraux regex (retours à la ligne conservés).
 export function masquer(t) {
@@ -22,36 +21,28 @@ export function masquer(t) {
   const blanc = (c) => (c === '\n' ? '\n' : ' ');
   while (i < t.length) {
     const c = t[i];
-    const d = t[i + 1];
     const avant = s.trimEnd().slice(-1);
-    if (c === '/' && d === '/') {
+    if (c === '/' && t[i + 1] === '/') {
       while (i < t.length && t[i] !== '\n') s += blanc(t[i++]);
-    } else if (c === '/' && d === '*') {
+    } else if (c === '/' && t[i + 1] === '*') {
       const fin = t.indexOf('*/', i + 2);
-      const j = fin < 0 ? t.length : fin + 2;
-      while (i < j) s += blanc(t[i++]);
+      for (const j = fin < 0 ? t.length : fin + 2; i < j; ) s += blanc(t[i++]);
     } else if (c === '/' && (avant === '' || '(,=:[!&|?{;}'.includes(avant))) {
-      s += c;
-      i++;
+      s += t[i++];
       for (let classe = false; i < t.length && t[i] !== '\n' && (classe || t[i] !== '/'); ) {
         if (t[i] === '\\') s += blanc(t[i++]);
-        else if (t[i] === '[') classe = true;
-        else if (t[i] === ']') classe = false;
+        else if (t[i] === '[' || t[i] === ']') classe = t[i] === '[';
         if (i < t.length) s += blanc(t[i++]);
       }
-      if (i < t.length && t[i] === '/') s += t[i++];
+      if (t[i] === '/') s += t[i++];
     } else if (c === '"' || c === "'" || c === '`') {
-      s += c;
-      i++;
+      s += t[i++];
       while (i < t.length && t[i] !== c && (c === '`' || t[i] !== '\n')) {
         if (t[i] === '\\') s += blanc(t[i++]);
         if (i < t.length) s += blanc(t[i++]);
       }
       if (i < t.length) s += t[i++];
-    } else {
-      s += c;
-      i++;
-    }
+    } else s += t[i++];
   }
   return s;
 }
@@ -67,11 +58,10 @@ function fermante(m, debut, o = '(', f = ')') {
 
 // Fin de l'expression qui commence en i : premier « ; » ou retour à la ligne hors parenthèses.
 function finExpression(m, i) {
-  let n = 0;
-  for (; i < m.length; i++) {
+  for (let n = 0; i < m.length; i++) {
     if ('([{'.includes(m[i])) n++;
     else if (')]}'.includes(m[i])) n--;
-    else if (n <= 0 && (m[i] === ';' || m[i] === '\n') && m.slice(0, i).trim() !== '') return i;
+    else if (n <= 0 && (m[i] === ';' || m[i] === '\n')) return i;
   }
   return m.length;
 }
@@ -84,17 +74,13 @@ export function aidesAvecAssertion(m) {
   for (const r of m.matchAll(decl)) {
     let p = r.index + r[0].length;
     while (/\s/.test(m[p] ?? '')) p++;
-    const fin = m[p] === '{' ? fermante(m, p, '{', '}') : finExpression(m, p);
-    aides.set(r[1] ?? r[2], m.slice(p, fin + 1));
+    aides.set(r[1] ?? r[2], m.slice(p, (m[p] === '{' ? fermante(m, p, '{', '}') : finExpression(m, p)) + 1));
   }
   const bonnes = [];
   for (let change = true; change; ) {
     change = false;
     for (const [nom, corps] of aides) {
-      if (!bonnes.includes(nom) && (ASSERTION.test(corps) || bonnes.some((b) => new RegExp(`\\b${b}\\s*\\(`).test(corps)))) {
-        bonnes.push(nom);
-        change = true;
-      }
+      if (!bonnes.includes(nom) && (ASSERTION.test(corps) || appelle(corps, bonnes))) change = !!bonnes.push(nom);
     }
   }
   return bonnes;
@@ -107,35 +93,33 @@ export function analyserTexte(texte, nom) {
   const ligneDe = (pos) => m.slice(0, pos).split('\n').length;
   const pb = [];
   const aides = aidesAvecAssertion(m);
-  const asserte = (corps) => ASSERTION.test(corps) || aides.some((a) => new RegExp(`\\b${a}\\s*\\(`).test(corps));
-  const exigerCarte = (l, quoi) => {
+  const carte = (pos, quoi) => {
+    const l = ligneDe(pos);
     if (!CARTE.test(lignes[l - 1] ?? '') && !CARTE.test(lignes[l - 2] ?? '')) {
       pb.push(`${nom}:${l} ${quoi} sans carte (écrire LNN-TMM sur la ligne ou la précédente)`);
     }
   };
-  for (const r of m.matchAll(APPEL)) {
-    const l = ligneDe(r.index);
-    const mods = r[2].match(/\w+/g) ?? [];
-    let ouvrante = r.index + r[0].length - 1;
-    if (r[3] === '`') ouvrante = m.indexOf('`', ouvrante + 1);
-    else if (mods.some((x) => APPELE_PUIS_APPEL.includes(x))) ouvrante = fermante(m, ouvrante);
-    else ouvrante = -1;
-    if (ouvrante >= 0 || r[3] === '`') {
-      const suite = m.slice(ouvrante + 1).match(/^\s*\(/);
+  for (const r of m.matchAll(new RegExp(CHAINE + String.raw`\s*([(\x60])`, 'g'))) {
+    const mods = r[1].match(/\w+/g) ?? [];
+    if (mods.some((x) => ['skip', 'todo', 'skipIf', 'runIf'].includes(x))) carte(r.index, 'test sauté ou conditionnel');
+    const ordinaire = /^(it|test)\b/.test(r[0].trimStart()) && !mods.some((x) => x === 'skip' || x === 'todo');
+    let o = r.index + r[0].length - 1;
+    if (r[2] === '`') o = m.indexOf('`', o + 1);
+    else if (mods.some((x) => ENCHAINES.includes(x))) o = fermante(m, o);
+    else o = -1;
+    if (o >= 0) {
+      const suite = m.slice(o + 1).match(/^\s*\(/);
       if (!suite) continue;
-      ouvrante += suite[0].length;
-    } else ouvrante = r.index + r[0].length - 1;
-    const motif = mods.find((x) => AVEC_CARTE.includes(x));
-    if (motif) exigerCarte(l, motif === 'skip' || motif === 'skipIf' ? 'test sauté' : motif === 'todo' ? 'test à faire' : 'test conditionnel');
-    const corps = m.slice(ouvrante, fermante(m, ouvrante) + 1);
-    if (/\b(?:skip|todo)\s*:/.test(corps)) exigerCarte(l, 'option skip ou todo');
-    if (mods.includes('todo') || mods.includes('skip')) continue;
-    if (!asserte(corps)) pb.push(`${nom}:${l} test sans assertion`);
+      o += suite[0].length;
+    } else o = r.index + r[0].length - 1;
+    const corps = m.slice(o, fermante(m, o) + 1);
+    const asserte = ASSERTION.test(corps) || appelle(corps, aides);
+    if (ordinaire && !asserte) pb.push(`${nom}:${ligneDe(r.index)} test sans assertion`);
   }
-  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|\b(?:describe|suite)\s*\.\s*(?:skip|todo)\s*\(|\bt\s*\.\s*(?:skip|todo)\s*\(/g)) {
-    exigerCarte(ligneDe(x.index), 'test sauté');
+  for (const x of m.matchAll(/(?<![\w.])(?:xit|xtest|xdescribe)\s*\(|\bt\s*\.\s*(?:skip|todo)\s*\(|\b(?:skip|todo)\s*:(?!\s*false\b)/g)) {
+    carte(x.index, 'test sauté ou à faire');
   }
-  for (const x of m.matchAll(/\b(?:describe|suite|it|test)\s*\.\s*only\s*\(|\bonly\s*:\s*true/g)) {
+  for (const x of m.matchAll(new RegExp(ONLY, 'g'))) {
     pb.push(`${nom}:${ligneDe(x.index)} .only interdit`);
   }
   return pb;
@@ -147,26 +131,18 @@ function parcourir(chemin, out) {
   } else out.push(chemin);
 }
 
-export function analyserFichiers(fichiers, lire = (f) => readFileSync(f, 'utf8')) {
-  return fichiers.flatMap((f) => analyserTexte(lire(f), f));
-}
-
-function fichiersSuivis() {
-  const r = spawnSync('git', ['ls-files', '-z'], { encoding: 'utf8', maxBuffer: 1 << 28 });
-  if (r.status !== 0) throw new Error('git ls-files impossible');
-  return r.stdout.split('\0').filter((f) => EST_TEST.test(f) && !f.startsWith('outils/canari/'));
-}
-
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  let fichiers;
   try {
-    const args = process.argv.slice(2);
-    if (args.length > 0) {
-      fichiers = [];
-      for (const a of args) parcourir(a, fichiers);
+    let fichiers = [];
+    if (process.argv.length > 2) {
+      for (const a of process.argv.slice(2)) parcourir(a, fichiers);
       fichiers = fichiers.filter((f) => /\.[cm]?[jt]sx?$/.test(f));
-    } else fichiers = fichiersSuivis();
-    const pb = analyserFichiers(fichiers);
+    } else {
+      const r = spawnSync('git', ['ls-files', '-z'], { encoding: 'utf8', maxBuffer: 1 << 28 });
+      if (r.status !== 0) throw new Error('git ls-files impossible');
+      fichiers = r.stdout.split('\0').filter((f) => EST_TEST.test(f) && !f.startsWith('outils/canari/'));
+    }
+    const pb = fichiers.flatMap((f) => analyserTexte(readFileSync(f, 'utf8'), f));
     if (pb.length > 0) {
       console.error('garde:tests ROUGE\n' + pb.map((p) => ' - ' + p.replace(/\\/g, '/')).join('\n'));
       process.exit(1);

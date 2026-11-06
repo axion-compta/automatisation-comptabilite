@@ -1,4 +1,3 @@
-// Canari de garde:tests : test vide, FAUTIF À DESSEIN (voir sans-assertion.canari.mjs).
+// Canari : test vide, fautif à dessein.
 import { test } from 'node:test';
-
 test('canari : test vide', () => {});

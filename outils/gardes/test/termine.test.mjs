@@ -3,51 +3,45 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { analyserTermine } from '../termine.mjs';
 
-const fiche = (id, statut, depend_de = []) => ({ fiche: { id, statut, depend_de }, fichier: `${id}.md` });
-const journal = (id, n = 3) => [`# Journal ${id}`, ...Array(n - 1).fill('- ligne')].join('\n');
+const fiche = (id, statut, plus = {}) => ({ fiche: { id, statut, depend_de: [], ...plus }, fichier: `${id}.md` });
+const journal = (id, n = 3, fin = '') => [`# Journal ${id}`, ...Array(n - 1).fill('- ligne'), fin].filter(Boolean).join('\n');
+const un = (statut, plus) => ({ 'L00-T01': fiche('L00-T01', statut, plus) });
 
-test('vert : fait avec journal et dépendance faite', () => {
-  const f = { 'L00-T01': fiche('L00-T01', 'fait'), 'L00-T02': fiche('L00-T02', 'fait', ['L00-T01']) };
-  const j = { 'L00-T01': journal('L00-T01'), 'L00-T02': journal('L00-T02', 10) };
-  assert.deepEqual(analyserTermine(f, j), []);
+test('vert : fait avec journal et dépendance faite ; a_faire sans journal', () => {
+  const f = { ...un('fait'), 'L00-T02': fiche('L00-T02', 'fait', { depend_de: ['L00-T01'] }) };
+  assert.deepEqual(analyserTermine(f, { 'L00-T01': journal('L00-T01'), 'L00-T02': journal('L00-T02', 10) }), []);
+  assert.deepEqual(analyserTermine(un('a_faire'), {}), []);
 });
 
-test('rouge : fait sans journal, journal vide', () => {
-  const f = { 'L00-T01': fiche('L00-T01', 'fait') };
-  assert.match(analyserTermine(f, {})[0], /fait sans journal/);
-  assert.equal(analyserTermine(f, { 'L00-T01': '  \n' }).length, 1);
+test('rouge : journal absent, vide, trop long, mal titré', () => {
+  assert.match(analyserTermine(un('fait'), {})[0], /fait sans journal/);
+  assert.equal(analyserTermine(un('fait'), { 'L00-T01': '  \n' }).length, 1);
+  assert.match(analyserTermine(un('fait'), { 'L00-T01': journal('L00-T01', 11) })[0], /11 lignes > 10/);
+  assert.match(analyserTermine(un('fait'), { 'L00-T01': '# Autre\n- x' })[0], /doit commencer par/);
 });
 
-test('rouge : journal de 11 lignes ou mal titré', () => {
-  const f = { 'L00-T01': fiche('L00-T01', 'fait') };
-  assert.match(analyserTermine(f, { 'L00-T01': journal('L00-T01', 11) })[0], /11 lignes > 10/);
-  assert.match(analyserTermine(f, { 'L00-T01': '# Autre\n- x' })[0], /doit commencer par/);
-});
-
-test('rouge : fait alors qu’une dépendance ne l’est pas, ou est introuvable', () => {
-  const f = { 'L00-T01': fiche('L00-T01', 'a_faire'), 'L00-T02': fiche('L00-T02', 'fait', ['L00-T01', 'L00-T99']) };
+test('rouge : dépendance non faite ou introuvable, statut inconnu, id différent du fichier', () => {
+  const f = { 'L00-T01': fiche('L00-T01', 'a_faire'), 'L00-T02': fiche('L00-T02', 'fait', { depend_de: ['L00-T01', 'L00-T99'] }) };
   const pb = analyserTermine(f, { 'L00-T02': journal('L00-T02') });
-  assert.equal(pb.length, 2);
   assert.match(pb[0], /ne l’est pas/);
   assert.match(pb[1], /L00-T99 introuvable/);
+  assert.match(analyserTermine(un('termine'), {})[0], /statut « termine » inconnu/);
+  assert.match(analyserTermine({ 'L00-T01': fiche('L00-T02', 'a_faire') }, {})[0], /différent du nom/);
 });
 
-test('vert : a_faire sans journal ; rouge : statut inconnu ou id différent du fichier', () => {
-  assert.deepEqual(analyserTermine({ 'L00-T01': fiche('L00-T01', 'a_faire') }, {}), []);
-  assert.match(analyserTermine({ 'L00-T01': fiche('L00-T01', 'termine') }, {})[0], /statut « termine » inconnu/);
-  assert.match(analyserTermine({ 'L00-T01': fiche('L00-T02', 'a_faire') }, {})[0], /différent du nom/);
+test('tests_requis oui : fichier de test autorisé, ou chemin réellement cité au journal', () => {
+  const f = un('fait', { tests_requis: 'oui', fichiers_autorises: ['outils/x/**'] });
+  const j = (fin) => ({ 'L00-T01': journal('L00-T01', 3, fin) });
+  assert.match(analyserTermine(f, j(), ['outils/y/a.test.mjs'])[0], /tests_requis oui/);
+  assert.deepEqual(analyserTermine(f, j(), ['outils/x/a.test.mjs']), []);
+  assert.deepEqual(analyserTermine(f, j('- outils/y/a.test.mjs'), ['outils/y/a.test.mjs']), []);
+  for (const fin of ['- garde:tests vert', '- les attestations ok', '- outils/y/absent.test.mjs']) {
+    assert.equal(analyserTermine(f, j(fin), ['outils/y/a.test.mjs']).length, 1, fin);
+  }
+  assert.deepEqual(analyserTermine(f, j()), []);
 });
 
 test('le dépôt réel est vert', () => {
   const r = spawnSync(process.execPath, ['outils/gardes/termine.mjs'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
-});
-
-test('rouge : tests_requis oui sans fichier de test dans fichiers_autorises ni au journal', () => {
-  const f = { 'L00-T01': { fiche: { ...fiche('L00-T01', 'fait').fiche, tests_requis: 'oui', fichiers_autorises: ['outils/x/**'] }, fichier: 'L00-T01.md' } };
-  const j = { 'L00-T01': journal('L00-T01') };
-  assert.match(analyserTermine(f, j, ['outils/y/a.test.mjs'])[0], /tests_requis oui/);
-  assert.deepEqual(analyserTermine(f, j, ['outils/x/a.test.mjs']), []);
-  assert.deepEqual(analyserTermine(f, { 'L00-T01': journal('L00-T01') + '\n- a.test.mjs' }, []), []);
-  assert.deepEqual(analyserTermine(f, j), []);
 });
