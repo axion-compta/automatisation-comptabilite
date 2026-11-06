@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { contrat, ConflitVersion, creerService, genererOpenapi, routesEcritureSansEnTete, EnTeteEcriture } from '../index.js';
+import { z } from 'zod';
+import { parametresRequete, contrat, ConflitVersion, creerService, genererOpenapi, routesEcritureSansEnTete, EnTeteEcriture } from '../index.js';
+
+describe('parametresRequete', () => {
+  it('tire noms, obligation et bornes du schéma Zod', () => {
+    const schema = z.object({ taille: z.coerce.number().int().min(5), page: z.coerce.number().int().min(0).optional() }).optional();
+    expect(parametresRequete(schema)).toEqual([
+      { name: 'taille', in: 'query', required: true, schema: { type: 'integer', minimum: 5, maximum: 9007199254740991 } },
+      { name: 'page', in: 'query', required: false, schema: { type: 'integer', minimum: 0, maximum: 9007199254740991 } },
+    ]);
+    expect(parametresRequete(undefined)).toEqual([]);
+  });
+});
 
 describe('contrat', () => {
   it('expose exactement 3 routes', () => {
