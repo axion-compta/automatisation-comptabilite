@@ -13,11 +13,18 @@ Une routine auteur choisit sa fiche ainsi :
 1. Les fiches sont lues sur `origin/main`, jamais sur une branche.
 2. Couloir de la routine, `statut: a_faire`, dépendances toutes à `statut: fait`.
 3. Tri par `ordre` croissant.
-4. La branche `lot-00/<id>` décide de la suite :
+4. La branche `lot-NN/<id>` (NN est le champ `lot` de la fiche, ex. `lot-01/L01-T05`) décide de la suite :
    - absente : réserver (`git switch -c`, commit vide, `git push -u`) ; push refusé = fiche suivante ;
    - présente avec une PR étiquetée `a-corriger` sans `bloque` : reprendre ;
    - présente sans PR et dernier commit de plus de 3 h : reprendre ;
    - sinon : sauter.
+5. Rôle des couloirs :
+   - A : pilotage, gardes, CI et dépendances ;
+   - B : écritures, plan, exercices ;
+   - C : contrat, serveurs en mémoire, faux serveur, données fictives ;
+   - D : écrans et socle de l'application web ;
+   - E : déclarations (TVA, FEC), paramètres, contrôles ;
+   - F : composants, jetons, textes.
 
 ## Labels
 `sensible-a-fusionner`, `fusion-will`, `relu`, `a-corriger`, `echec-1`, `echec-2`, `echec-3`, `bloque`.
