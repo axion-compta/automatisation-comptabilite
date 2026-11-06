@@ -23,7 +23,7 @@ describe('centimes', () => {
   });
   it('refuse flottants, NaN, infinis et entiers non sûrs', () => {
     for (const v of [0.1, 1.5, NaN, Infinity, 2 ** 53]) {
-      expect(() => c(v)).toThrow(ErreurArgent);
+      expect(() => c(v)).toThrow(/entier/);
     }
   });
 });
@@ -73,6 +73,10 @@ describe('pourcentage et arrondis', () => {
     expect(pourcentage(c(100), 5000, 'superieur')).toBe(50);
     expect(pourcentage(c(-100), 5000, 'inferieur')).toBe(-50);
   });
+  it('demi-pair arrondit au-dessus de la moitié', () => {
+    expect(pourcentage(c(7), 1000, 'demi-pair')).toBe(1);
+    expect(pourcentage(c(-7), 1000, 'demi-pair')).toBe(-1);
+  });
   it('refuse un taux non entier', () => {
     expect(() => pourcentage(c(100), 12.5, 'inferieur')).toThrow(ErreurArgent);
   });
@@ -89,9 +93,13 @@ describe('répartition', () => {
   it('donne le reliquat aux plus grands restes, pas aux premiers poids', () => {
     expect(repartir(c(2), [1, 1, 100])).toEqual([0, 0, 2]);
     expect(repartir(c(1), [1, 3])).toEqual([0, 1]);
+    expect(repartir(c(3), [2, 5])).toEqual([1, 2]);
   });
   it('à reste égal, l’indice le plus petit passe d’abord', () => {
     expect(repartir(c(1), [1, 1])).toEqual([1, 0]);
+    expect(repartir(c(2), [1, 1, 1])).toEqual([1, 1, 0]);
+    expect(repartir(c(1), [1, 1, 1, 1, 1])).toEqual([1, 0, 0, 0, 0]);
+    expect(repartir(c(4), [1, 2, 4])).toEqual([1, 1, 2]);
   });
   it('un total négatif donne l’opposé du total positif', () => {
     expect(repartir(c(100), [1, 1, 1])).toEqual([34, 33, 33]);
@@ -101,6 +109,13 @@ describe('répartition', () => {
     expect(repartir(c(-2), [1, 1, 100])).toEqual([0, 0, -2]);
     expect(Object.is(repartir(c(-1), [0, 1])[0], 0)).toBe(true);
   });
+  it('tient sur de très grands montants', () => {
+    const max = Number.MAX_SAFE_INTEGER;
+    const parts = repartir(c(max), [max, 1]);
+    expect(parts.reduce((t, q) => t + q, 0)).toBe(max);
+    expect(parts).toEqual([max - 1, 1]);
+    expect(repartir(c(-max), [1, 1])).toEqual([-4503599627370496, -4503599627370495]);
+  });
   it('respecte les poids et saute les poids nuls', () => {
     expect(repartir(c(10), [0, 1, 1])).toEqual([0, 5, 5]);
     expect(repartir(c(1), [0, 1, 1])).toEqual([0, 1, 0]);
@@ -109,7 +124,7 @@ describe('répartition', () => {
   it('refuse les entrées invalides', () => {
     expect(() => repartir(c(10), [])).toThrow(ErreurArgent);
     expect(() => repartir(c(10), [0, 0])).toThrow(ErreurArgent);
-    expect(() => repartir(c(10), [1, -1])).toThrow(ErreurArgent);
+    expect(() => repartir(c(10), [2, -1])).toThrow(ErreurArgent);
     expect(() => repartir(c(10), [1, 0.5])).toThrow(ErreurArgent);
   });
 });

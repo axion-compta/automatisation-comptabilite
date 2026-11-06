@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
@@ -33,5 +34,30 @@ describe('règle eslint « pas de flottant » (test rouge)', () => {
 
   it('ne s’applique pas hors du noyau', async () => {
     expect(await verifier('export const a = 0.1;', 'packages/ui/src/exemple.ts')).toEqual([]);
+  });
+});
+
+describe('exception de division verrouillée', () => {
+  function sources(dossier: string): string[] {
+    return readdirSync(dossier, { withFileTypes: true }).flatMap((e) => {
+      const chemin = dossier + '/' + e.name;
+      if (e.isDirectory()) return e.name === '__tests__' ? [] : sources(chemin);
+      return e.name.endsWith('.ts') ? [chemin] : [];
+    });
+  }
+
+  it('un seul eslint-disable dans le noyau, juste avant la division de diviser', () => {
+    const trouves: { fichier: string; suivante: string }[] = [];
+    for (const fichier of sources(racine + 'packages/noyau/src')) {
+      const lignes = readFileSync(fichier, 'utf8').split(/\r?\n/);
+      lignes.forEach((l, i) => {
+        if (l.includes('eslint-disable')) {
+          trouves.push({ fichier: fichier.replace(racine, ''), suivante: (lignes[i + 1] ?? '').trim() });
+        }
+      });
+    }
+    expect(trouves).toEqual([
+      { fichier: 'packages/noyau/src/argent/index.ts', suivante: 'let q = numerateur / denominateur;' },
+    ]);
   });
 });
