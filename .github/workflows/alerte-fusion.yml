@@ -1,0 +1,61 @@
+name: Alerte fusion
+
+# Après chaque CI terminée sur main, cherche la PR fusionnée et ouvre une issue assignée au propriétaire
+# si la PR est sensible et fusionnée par un autre que lui (scripts/pilotage/alerte.mjs, lu depuis main).
+# Jamais pull_request_target : aucune donnée de PR n'est lue dans un run:, tout passe par env:.
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      numero:
+        description: 'Numéro de la PR à contrôler'
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: alerte-fusion-${{ github.event.workflow_run.head_sha || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  alerte:
+    name: alerte
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Contrôler la PR fusionnée
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPOT: ${{ github.repository }}
+          PROPRIETAIRE: ${{ github.repository_owner }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          NUMERO: ${{ inputs.numero }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NUMERO:-}" ]; then
+            NUMERO=$(gh api "repos/$DEPOT/commits/$SHA/pulls" --jq '.[0].number // empty')
+          fi
+          if [ -z "${NUMERO:-}" ]; then echo "Aucune PR liée à ce commit."; exit 0; fi
+          case "$NUMERO" in *[!0-9]*) echo "Numéro de PR invalide."; exit 1 ;; esac
+          gh api "repos/$DEPOT/pulls/$NUMERO" --jq '{numero: .number, fusionnee: .merged, fusionnePar: .merged_by.login, labels: [.labels[].name]}' > pr.json
+          gh api --paginate "repos/$DEPOT/pulls/$NUMERO/files" --jq '.[].filename' | jq -R . | jq -s . > fichiers.json
+          jq -n --slurpfile p pr.json --slurpfile f fichiers.json '{prs: [$p[0] + {fichiers: $f[0]}]}' > entree.json
+          code=0
+          node scripts/pilotage/alerte.mjs < entree.json > alerte.txt || code=$?
+          if [ "$code" -eq 0 ]; then echo "Aucune alerte."; exit 0; fi
+          if [ "$code" -ne 1 ] || [ ! -s alerte.txt ]; then echo "Échec du script d'alerte."; exit 1; fi
+          gh issue create --repo "$DEPOT" --assignee "$PROPRIETAIRE" --title "Alerte fusion : PR #$NUMERO" --body-file alerte.txt
