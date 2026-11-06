@@ -335,6 +335,17 @@ test('T32-4b pnpm-workspace.yaml : forme sur une ligne = rouge « forme yaml non
   }
 });
 
+test('T32-4e pnpm-workspace.yaml : commentaire en colonne 0 dans un bloc, entrées suivantes lues', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  for (const [bloc, motif] of [['overrides', /pnpm-workspace\.overrides:lodash/], ['catalog', /pnpm-workspace\.catalog:lodash/]]) {
+    const base = `${bloc}:\n  vieux: 1.0.0\n# note\n  lodash: 1.0.0\n`;
+    const ajout = [{ chemin: 'pnpm-workspace.yaml', base: `${bloc}:\n  vieux: 1.0.0\n`, branche: `${bloc}:\n  vieux: 1.0.0\n# x\n  lodash: 6.6.6\n` }];
+    assert.match(analyserPerimetre(fiche, diff, ajout)[0], motif);
+    const modif = [{ chemin: 'pnpm-workspace.yaml', base, branche: base.replace('lodash: 1.0.0', 'lodash: 6.6.6') }];
+    assert.match(analyserPerimetre(fiche, diff, modif)[0], motif);
+  }
+});
+
 test('T32-4d pnpm-workspace.yaml : racine entièrement indentée = forme yaml non lue', () => {
   const paquets = [{ chemin: 'pnpm-workspace.yaml', base: '', branche: '  overrides:\n    lib: 2.0.0\n' }];
   assert.throws(() => analyserPerimetre(fiche, { fichiers: [], lignes: 1 }, paquets), /forme yaml non lue/);

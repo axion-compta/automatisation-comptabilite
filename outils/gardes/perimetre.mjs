@@ -73,7 +73,7 @@ function dependancesYaml(texte) {
       throw new Error(`pnpm-workspace.yaml : forme yaml non lue (${l.trim()})`); // valeur sur la même ligne : non comparable
     }
     const haut = l.match(/^["']?(\w+)["']?\s*:\s*(?:#.*)?$/);
-    if (haut || /^\S/.test(l)) {
+    if (haut || (/^\S/.test(l) && !l.startsWith('#'))) {
       bloc = haut && ['overrides', 'packageExtensions', 'catalog', 'catalogs'].includes(haut[1]) ? haut[1] : undefined;
       cle = undefined;
     } else if (bloc && l.trim() !== '' && !l.trim().startsWith('#')) {
