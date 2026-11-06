@@ -58,9 +58,12 @@ function dependancesYaml(texte) {
   let bloc;
   let cle;
   for (const l of (texte ?? '').split(/\r?\n/)) {
-    const haut = l.match(/^(\w+):\s*(?:#.*)?$/);
+    if (/^["']?(?:overrides|packageExtensions|catalogs?)["']?\s*:\s*[^#\s]/.test(l)) {
+      throw new Error(`pnpm-workspace.yaml : forme yaml non lue (${l.trim()})`); // valeur sur la même ligne : non comparable
+    }
+    const haut = l.match(/^["']?(\w+)["']?\s*:\s*(?:#.*)?$/);
     if (haut || /^\S/.test(l)) {
-      bloc = haut && ['overrides', 'packageExtensions', 'catalog'].includes(haut[1]) ? haut[1] : undefined;
+      bloc = haut && ['overrides', 'packageExtensions', 'catalog', 'catalogs'].includes(haut[1]) ? haut[1] : undefined;
       cle = undefined;
     } else if (bloc && l.trim() !== '' && !l.trim().startsWith('#')) {
       const indent = l.length - l.trimStart().length;
@@ -106,6 +109,7 @@ export function analyserPerimetre(fiche, diff, paquets = []) {
   }
   const motifs = fiche.fichiers_autorises;
   for (const m of motifs) {
+    // Note : le contrôle ne connaît pas l’échappement ; `a/\{b` est donc classé « motif invalide » (choix assumé, plus strict).
     let prof = 0;
     for (const c of String(m)) if (c === '{') prof++; else if (c === '}' && prof > 0) prof--;
     if (prof > 0) pb.push(`motif invalide : accolade ouvrante jamais fermée dans ${m}`);

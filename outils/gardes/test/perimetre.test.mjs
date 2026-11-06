@@ -311,3 +311,37 @@ test('T32-4 pnpm-workspace.yaml : overrides, packageExtensions et catalog compar
   const permis = [{ chemin: 'pnpm-workspace.yaml', base, branche: base + '  lib: 2.0.0\n' }];
   assert.deepEqual(analyserPerimetre({ ...fiche, nouvelles_dependances: ['lib'] }, diff, permis), []);
 });
+
+test('T32-4b pnpm-workspace.yaml : forme sur une ligne = rouge « forme yaml non lue »', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  const base = 'packages:\n  - "a/*"\n';
+  for (const ligne of [
+    'overrides: {lib: 2.0.0}',
+    '"overrides": {lib: 2.0.0}',
+    "'packageExtensions': {lib: {}}",
+    'catalog: {lib: 3.0.0}',
+    'catalogs: {x: {lib: 3.0.0}}',
+    'overrides: &o\n  lib: 2.0.0',
+  ]) {
+    const paquets = [{ chemin: 'pnpm-workspace.yaml', base, branche: base + ligne + '\n' }];
+    assert.throws(() => analyserPerimetre(fiche, diff, paquets), /forme yaml non lue/, ligne);
+  }
+});
+
+test('T32-4c pnpm-workspace.yaml : clé entre guillemets et catalogs lues', () => {
+  const diff = { fichiers: [], lignes: 1 };
+  const base = 'packages:\n  - "a/*"\n';
+  for (const [t, motif] of [
+    [base + '"overrides":\n  lib: 2.0.0\n', /pnpm-workspace\.overrides:lib/],
+    [base + "'packageExtensions':\n  lib:\n    dependencies:\n      y: \"1\"\n", /pnpm-workspace\.packageExtensions:lib/],
+    [base + 'catalogs:\n  groupe:\n    lib: 3.0.0\n', /pnpm-workspace\.catalogs:groupe/],
+  ]) {
+    const paquets = [{ chemin: 'pnpm-workspace.yaml', base, branche: t }];
+    assert.match(analyserPerimetre(fiche, diff, paquets)[0], motif);
+  }
+});
+
+test('T32-1b accolade échappée : classée « motif invalide »', () => {
+  const pb = analyserPerimetre({ ...fiche, fichiers_autorises: [String.raw`a/\{b`] }, { fichiers: [], lignes: 1 });
+  assert.match(pb[0], /motif invalide/);
+});
