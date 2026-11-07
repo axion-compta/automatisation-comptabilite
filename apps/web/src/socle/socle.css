@@ -88,7 +88,8 @@
 }
 /* Cibles tactiles : minimum --cible-min (WCAG 2.2). Les liens en ligne dans une phrase sont exemptés. */
 .menu-bureau a, .barre-mobile nav a, .barre-mobile nav button, .barre-discuter, .barre-plus a,
-.coque-principal li > a, .coque-principal td a, .coque-principal button, .coque-principal select, .coque-principal input {
+.coque-principal li > a, .coque-principal td a, .coque-principal button, .coque-principal select, .coque-principal input,
+[role="dialog"] input, [role="dialog"] li > button {
   box-sizing: border-box; min-width: var(--cible-min); min-height: var(--cible-min);
 }
 .coque-principal li > a, .coque-principal td a { display: inline-flex; align-items: center; }

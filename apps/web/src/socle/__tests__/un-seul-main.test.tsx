@@ -46,6 +46,11 @@ describe('un seul main', () => {
     expect(hote.querySelectorAll('main').length).toBe(1);
     expect(hote.querySelector('main h1')).not.toBeNull();
   });
+  it('route /essai : exactement un main avec un h1', async () => {
+    const hote = await afficher('/essai');
+    expect(hote.querySelectorAll('main').length).toBe(1);
+    expect(hote.querySelector('main h1')).not.toBeNull();
+  });
   it.each(ecransDecouverts().map((e) => [e.id, e.chemin] as const))('écran %s : exactement un main', async (_id, chemin) => {
     const hote = await afficher(chemin);
     expect(hote.querySelectorAll('main').length).toBe(1);
