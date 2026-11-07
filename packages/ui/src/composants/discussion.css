@@ -1,0 +1,8 @@
+/* Discussion : étapes du tour et textes sourcés ; variables de jetons.css seulement. */
+.axion-etapes { font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-etapes [data-etat="echec"] { color: var(--couleur-erreur); }
+.axion-etapes [data-etat="faite"] { color: var(--couleur-succes); }
+.axion-etapes__etat { color: var(--couleur-texte-discret); }
+.axion-texte-sources { font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-texte-sources__valeur { min-height: var(--cible-min); background: transparent; color: var(--couleur-accent); border: 0; border-bottom: 1px solid var(--couleur-accent); font: inherit; cursor: pointer; }
+.axion-texte-sources__valeur:focus-visible { outline: 2px solid var(--couleur-accent); outline-offset: 2px; }

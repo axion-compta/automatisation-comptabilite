@@ -1,0 +1,7 @@
+ref,role,traitement_dans_ue,societe_mere_ue,conservation_chez_fournisseur,contrat_archive_le,annonce_le,active_le,actif
+HEB-1,hébergeur principal,oui,non,non,,,,non
+HEB-2,second hébergeur,oui,non,non,,,,non
+IA-1,fournisseur d'intelligence artificielle,oui,non,non,,,,non
+IA-2,fournisseur d'intelligence artificielle,oui,non,non,,,,non
+MEL-1,envoi de courriels,oui,non,non,,,,non
+FEL-1,plateforme de facture électronique,oui,non,non,,,,non

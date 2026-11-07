@@ -1,0 +1,8 @@
+parcours,etape,max_clics,max_saisies,source
+P1,premier lancement,5,0,spec-14-04-B a confirmer
+P2,reprendre une comptabilité,4,0,spec-14-04-B a confirmer
+P3,ajouter une pièce et la valider,3,0,spec-14-04-B a confirmer
+P4,voir,1,0,spec-14-04-B a confirmer
+P4,déclarer,3,0,spec-14-04-B a confirmer
+P5,lancer la fin d'année,2,0,spec-14-04-B a confirmer
+P6,signaler,2,0,spec-14-04-B a confirmer
