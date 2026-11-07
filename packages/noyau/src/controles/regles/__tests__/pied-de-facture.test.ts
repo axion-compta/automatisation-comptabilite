@@ -31,9 +31,26 @@ const k6 = (p: PieceControlee, q: Qualification[] = []) => regleCCK06.evaluer({ 
 const OK = { resultat: 'OK' };
 const alerte5 = (ecart: number, valeur: string) => ({ resultat: 'ALERTE', ecartCentimes: ecart, valeur });
 const arith = (ecart: number) => ({ resultat: 'ALERTE', ecartCentimes: ecart, valeur: 'ARITH' });
+const codeDe = (f: () => unknown): unknown => {
+  try {
+    f();
+  } catch (e) {
+    return (e as { code?: unknown }).code;
+  }
+  return undefined;
+};
+const META = { version: 1, gravite: 'M', bloque: [], actif: true };
+const DECL = ['arrivee', 'continu', 'nocturne', 'a_la_demande'];
 const ttc1200 = piece([ligne(1000, 200, 1200)], [1000, 200, 1200], 800);
 
 describe('CC-K05 et CC-K06', () => {
+  it('metadonnees', () => {
+    expect(regleCCK05).toMatchObject({ id: 'CC-K05', ...META });
+    expect(regleCCK06).toMatchObject({ id: 'CC-K06', ...META });
+    expect(regleCCK05.declencheurs).toEqual(DECL);
+    expect(regleCCK06.declencheurs).toEqual(DECL);
+  });
+
   it('CT-06', () => {
     expect(k5(piece([ligne(9800, 1960, 11760)], [10000, 1960, 11760]))).toEqual(alerte5(200, 'ht'));
   });
@@ -60,6 +77,8 @@ describe('CC-K05 et CC-K06', () => {
     expect(k5(piece(l, [1000, 200, 1195]))).toEqual(alerte5(5, 'ttc'));
     expect(k5(piece(l, [1000, 203, 1204]))).toEqual(alerte5(4, 'tva'));
     expect(k5(piece(l, [1000, 200, 1200]), 0)).toEqual(OK);
+    expect(codeDe(() => regleCCK05.evaluer({ piece: piece(l, [1000, 200, 1200]) }))).toBe('parametre_absent');
+    expect(codeDe(() => k5(piece(l, [1000, 200, 1200]), -1))).toBe('parametre_invalide');
     for (const t of [undefined, -1]) {
       const traces = executerControles([regleCCK05], [{ type: 'piece', id: 'p1', donnee: { piece: piece(l, [1000, 200, 1200]), ...(t === undefined ? {} : { tolerance: c(t) }) } }], 'arrivee', 'T');
       expect(traces.map((x) => x.resultat)).toEqual(['IMPOSSIBLE']);
@@ -74,6 +93,8 @@ describe('CC-K05 et CC-K06', () => {
 
   it('qualification-partielle-alerte', () => {
     expect(k6(ttc1200, [qual(300)])).toEqual(arith(100));
+    expect(k6(ttc1200, [qual(400), qual(0)])).toEqual(OK);
+    expect(k6(ttc1200, [qual(300, 'remise'), qual(100, 'avoir')])).toEqual(OK);
     expect(k6(ttc1200, [qual(401)])).toEqual(arith(1));
     expect(k6(ttc1200, [qual(399)])).toEqual(arith(1));
     expect(k6(ttc1200, [qual(500)])).toEqual(arith(100));
@@ -93,13 +114,13 @@ describe('CC-K05 et CC-K06', () => {
   it('montants-invalides', () => {
     for (const v of [NaN, Infinity, 1.5]) {
       const faux = v as Centimes;
-      expect(() => k5({ ...piece([ligne(1, 1, 1)], [1, 1, 1]), totaux: { ht: faux, tva: c(1), ttc: c(1) } })).toThrow();
-      expect(() => k5(piece([{ ...ligne(1, 1, 1), tva: faux }], [1, 1, 1]))).toThrow();
-      expect(() => regleCCK05.evaluer({ piece: piece([], [0, 0, 0]), tolerance: faux })).toThrow();
-      expect(() => k6({ ...ttc1200, montantDu: faux })).toThrow();
-      expect(() => k6({ ...ttc1200, totaux: { ...ttc1200.totaux, ttc: faux } })).toThrow();
-      expect(() => k6(ttc1200, [{ motif: 'avoir', montant: faux }])).toThrow();
+      expect(codeDe(() => k5({ ...piece([ligne(1, 1, 1)], [1, 1, 1]), totaux: { ht: faux, tva: c(1), ttc: c(1) } }))).toBe('entree_invalide');
+      expect(codeDe(() => k5(piece([{ ...ligne(1, 1, 1), tva: faux }], [1, 1, 1])))).toBe('entree_invalide');
+      expect(codeDe(() => regleCCK05.evaluer({ piece: piece([], [0, 0, 0]), tolerance: faux }))).toBe('entree_invalide');
+      expect(codeDe(() => k6({ ...ttc1200, montantDu: faux }))).toBe('entree_invalide');
+      expect(codeDe(() => k6({ ...ttc1200, totaux: { ...ttc1200.totaux, ttc: faux } }))).toBe('entree_invalide');
+      expect(codeDe(() => k6(ttc1200, [{ motif: 'avoir', montant: faux }]))).toBe('entree_invalide');
     }
-    expect(() => k6(ttc1200, [qual(-1)])).toThrow();
+    expect(codeDe(() => k6(ttc1200, [qual(-1)]))).toBe('entree_invalide');
   });
 });
