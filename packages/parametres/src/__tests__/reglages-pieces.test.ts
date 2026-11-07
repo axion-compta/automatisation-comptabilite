@@ -2,30 +2,32 @@ import { describe, expect, it } from 'vitest';
 import { ErreurParametre, ParametreLegal, parametreAuJour } from '../au-jour.js';
 import { REGLAGES_PIECES, reglagesPiecesAuJour } from '../reglages-pieces.js';
 
-const CLES = [
-  'pieces.taille_max_octets',
-  'pieces.pages_max_file_normale',
-  'pieces.pages_max_modele',
-  'pieces.image_cote_max',
-  'pieces.image_pixels_max',
-  'pieces.archive_ratio_max',
-  'pieces.archive_total_max_octets',
-  'pieces.archive_nombre_max',
-  'pieces.confiance_seuil_sur',
-  'pieces.confiance_seuil_douteux',
-  'pieces.bareme_xml',
-  'pieces.bareme_accord_texte_pdf',
-  'pieces.bareme_accord_ocr',
-  'pieces.bareme_a_seul',
-  'pieces.bareme_vision_seule',
-  'pieces.bareme_echec',
-  'pieces.tolerance_par_taux',
-  'pieces.tolerance_piece_max',
-  'pieces.tolerance_par_ligne',
-  'pieces.tolerance_lignes_max',
-  'pieces.nom_longueur_max',
-  'pieces.image_distance_max',
+// Valeurs écrites en clair d'après la fiche L04-T54 (jamais recalculées avec les formules du code).
+const ATTENDU: [string, string, number][] = [
+  ['pieces.taille_max_octets', 'tailleMaxOctets', 26214400],
+  ['pieces.pages_max_file_normale', 'pagesMaxFileNormale', 50],
+  ['pieces.pages_max_modele', 'pagesMaxModele', 10],
+  ['pieces.image_cote_max', 'imageCoteMax', 30000],
+  ['pieces.image_pixels_max', 'imagePixelsMax', 100000000],
+  ['pieces.archive_ratio_max', 'archiveRatioMax', 100],
+  ['pieces.archive_total_max_octets', 'archiveTotalMaxOctets', 1073741824],
+  ['pieces.archive_nombre_max', 'archiveNombreMax', 500],
+  ['pieces.confiance_seuil_sur', 'confianceSeuilSur', 85],
+  ['pieces.confiance_seuil_douteux', 'confianceSeuilDouteux', 50],
+  ['pieces.bareme_xml', 'baremeXml', 99],
+  ['pieces.bareme_accord_texte_pdf', 'baremeAccordTextePdf', 95],
+  ['pieces.bareme_accord_ocr', 'baremeAccordOcr', 90],
+  ['pieces.bareme_a_seul', 'baremeASeul', 80],
+  ['pieces.bareme_vision_seule', 'baremeVisionSeule', 70],
+  ['pieces.bareme_echec', 'baremeEchec', 40],
+  ['pieces.tolerance_par_taux', 'toleranceParTaux', 1],
+  ['pieces.tolerance_piece_max', 'tolerancePieceMax', 5],
+  ['pieces.tolerance_par_ligne', 'toleranceParLigne', 1],
+  ['pieces.tolerance_lignes_max', 'toleranceLignesMax', 5],
+  ['pieces.nom_longueur_max', 'nomLongueurMax', 180],
+  ['pieces.image_distance_max', 'imageDistanceMax', 6],
 ];
+const CLES = ATTENDU.map(([cle]) => cle);
 const JOUR = '2026-11-05';
 
 function codeErreur(f: () => unknown): string | undefined {
@@ -44,14 +46,11 @@ function avecValeur(cle: string, valeur: string): ParametreLegal[] {
 describe('réglages des pièces', () => {
   it('toutes-les-cles-presentes', () => {
     expect(REGLAGES_PIECES.map((p) => p.cle).sort()).toEqual([...CLES].sort());
-    for (const cle of CLES) expect(parametreAuJour(REGLAGES_PIECES, cle, 'FR', JOUR).cle).toBe(cle);
+    for (const [cle, , v] of ATTENDU) expect(parametreAuJour(REGLAGES_PIECES, cle, 'FR', JOUR).valeur, cle).toBe(String(v));
     for (const p of REGLAGES_PIECES) expect(ParametreLegal.safeParse(p).success).toBe(true);
-    const r = reglagesPiecesAuJour(JOUR);
-    expect(Object.keys(r)).toHaveLength(CLES.length);
-    expect(r.tailleMaxOctets).toBe(25 * 1024 * 1024);
-    expect(r.confianceSeuilSur).toBe(85);
-    expect(r.baremeEchec).toBe(40);
-    expect(r.imageDistanceMax).toBe(6);
+    const r: Record<string, number> = { ...reglagesPiecesAuJour(JOUR) };
+    expect(Object.keys(r)).toHaveLength(ATTENDU.length);
+    for (const [, champ, v] of ATTENDU) expect(r[champ], champ).toBe(v);
   });
 
   it('valeurs-entieres', () => {
