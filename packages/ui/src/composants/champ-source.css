@@ -1,0 +1,6 @@
+/* Champ avec source : uniquement des variables de jetons.css. */
+.axion-champ-source { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-s); padding: var(--espace-xs) var(--espace-s); font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-champ-source--a_confirmer { background: var(--couleur-surface); border: 1px solid var(--couleur-alerte); border-left-width: var(--espace-xs); border-radius: var(--rayon-m); }
+.axion-champ-source__intitule { font-weight: var(--graisse-forte); color: var(--couleur-texte-discret); }
+.axion-champ-source__valeur { font-weight: var(--graisse-normale); }
+.axion-champ-source__lien { color: var(--couleur-texte); text-decoration: underline; }

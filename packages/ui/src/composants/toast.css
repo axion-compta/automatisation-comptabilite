@@ -1,0 +1,5 @@
+/* Toast d'annulation : variables de jetons.css seulement. */
+.axion-toast { display: flex; align-items: center; gap: var(--espace-m); padding: var(--espace-s) var(--espace-m); border-radius: var(--rayon-m); border: 1px solid var(--couleur-accent); background: var(--couleur-fond); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-toast__annonce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.axion-toast__annuler { min-width: var(--cible-min); min-height: var(--cible-min); background: transparent; color: var(--couleur-accent); border: 1px solid var(--couleur-accent); border-radius: var(--rayon-m); cursor: pointer; }
+.axion-toast__annuler:focus-visible { outline: 2px solid var(--couleur-accent); outline-offset: 2px; }
