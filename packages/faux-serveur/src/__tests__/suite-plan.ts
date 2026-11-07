@@ -76,5 +76,13 @@ export function suitePlan(nom: string, cible: Cible): void {
         }
         expect((await a('GET', '/exercices/EX2026/plan?classe=7&limite=100&q=' + 'x'.repeat(50))).status).toBe(200);
       }));
+
+    it('clé inconnue (avec ou sans crochets) : ignorée, 200', () =>
+      avec(async (a) => {
+        for (const q of ['foo[x]=1&autre=1', 'foo=1', 'classeur[x]=1']) {
+          const r = await a('GET', '/exercices/EX2026/plan?' + q);
+          expect([q, r.status]).toEqual([q, 200]);
+        }
+      }));
   });
 }
