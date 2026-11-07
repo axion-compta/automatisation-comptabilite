@@ -26,7 +26,8 @@ export const QueryPlan = z.object({
   decalage: z.coerce.number().int().min(0).optional(),
 });
 
-const enveloppe = <T extends z.ZodType>(corps: T) =>
+/** Enveloppe de liste paginée, partagée par les schémas de réponse. */
+export const enveloppe = <T extends z.ZodType>(corps: T) =>
   z.object({ body: z.array(corps), decalage: z.number().int().min(0), total: z.number().int().min(0) });
 
 export const ReponseExercices = enveloppe(Exercice);

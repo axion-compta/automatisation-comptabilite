@@ -1,5 +1,6 @@
 import { oc } from '@orpc/contract';
 import { z } from 'zod';
+import { enveloppe } from './plan.js';
 
 export const Tiers = z.object({
   code: z.string(),
@@ -8,9 +9,6 @@ export const Tiers = z.object({
   email: z.string(),
 });
 export type Tiers = z.infer<typeof Tiers>;
-
-const enveloppe = <T extends z.ZodType>(corps: T) =>
-  z.object({ body: z.array(corps), decalage: z.number().int().min(0), total: z.number().int().min(0) });
 
 export const ReponseTiers = enveloppe(Tiers);
 
