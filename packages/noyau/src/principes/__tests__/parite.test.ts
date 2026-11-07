@@ -11,7 +11,6 @@ function codeErreur(f: () => unknown): string | undefined {
   }
   return undefined;
 }
-
 function historique(canal: string): unknown {
   return {
     id: 'h1',
@@ -33,7 +32,6 @@ describe('parite entre deux etats hors canal', () => {
     expect(differences(a, b)).toEqual([]);
     expect(etatCanonique(a)).toBe(etatCanonique(b));
     expect(etatCanonique(a)).not.toContain('canal');
-    // sans l'ignorer, le canal fait la différence
     expect(differences(a, b, [])).toEqual(['canal']);
     expect(etatCanonique({ canal: 'x', a: 1 }, [])).toBe('{"a":1,"canal":"x"}');
   });
@@ -76,7 +74,6 @@ describe('parite entre deux etats hors canal', () => {
     expect(etatCanonique(a)).toBe('{"lignes":[{"compte":"1"},{"compte":"2","detail":{"v":1}}]}');
     expect(etatCanonique(a, ['detail', 'canal'])).toBe('{"lignes":[{"compte":"1"},{"compte":"2"}]}');
     expect(differences({ l: [{ canal: 1 }] }, { l: [{ canal: 2 }] })).toEqual([]);
-    // une clé ignorée n'est pas contrôlée
     expect(etatCanonique({ canal: undefined, a: 1 })).toBe('{"a":1}');
     expect(memeEtatHorsCanal({ canal: 1, a: 1 }, { a: 1 })).toBe(true);
   });
@@ -116,7 +113,6 @@ describe('parite entre deux etats hors canal', () => {
       expect(codeErreur(() => differences(1, v))).toBe('valeur_non_serialisable');
       expect(codeErreur(() => memeEtatHorsCanal(v, v))).toBe('valeur_non_serialisable');
     }
-    // une même sous-structure partagée sans cycle reste acceptée
     const partage = { v: 1 };
     expect(etatCanonique({ a: partage, b: partage })).toBe('{"a":{"v":1},"b":{"v":1}}');
     expect(etatCanonique(Object.create(null) as object)).toBe('{}');

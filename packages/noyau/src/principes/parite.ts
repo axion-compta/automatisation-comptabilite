@@ -4,29 +4,16 @@ import { createHash } from 'node:crypto';
 export class ErreurParite extends Error {
   override name = 'ErreurParite';
   readonly code = 'valeur_non_serialisable';
-  constructor(message: string) {
-    super(message);
-  }
 }
-
 const IGNORER_PAR_DEFAUT: readonly string[] = ['canal'];
-
-function tableau(v: unknown): v is readonly unknown[] {
-  return Array.isArray(v);
-}
-
+const tableau = (v: unknown): v is readonly unknown[] => Array.isArray(v);
 function objetSimple(v: unknown): v is Record<string, unknown> {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
   const proto: unknown = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
 }
-
-function cles(o: Record<string, unknown>, ignorer: readonly string[]): string[] {
-  return Object.keys(o)
-    .filter((k) => !ignorer.includes(k))
-    .sort();
-}
-
+const cles = (o: Record<string, unknown>, ignorer: readonly string[]): string[] =>
+  Object.keys(o).filter((k) => !ignorer.includes(k)).sort();
 function canonique(v: unknown, ignorer: readonly string[], pile: readonly unknown[]): string {
   if (v === null) return 'null';
   if (typeof v === 'string' || typeof v === 'boolean') return JSON.stringify(v);
@@ -42,11 +29,8 @@ function canonique(v: unknown, ignorer: readonly string[], pile: readonly unknow
   const morceaux = cles(v, ignorer).map((k) => `${JSON.stringify(k)}:${canonique(v[k], ignorer, suite)}`);
   return `{${morceaux.join(',')}}`;
 }
-
-export function etatCanonique(valeur: unknown, ignorer: readonly string[] = IGNORER_PAR_DEFAUT): string {
-  return canonique(valeur, ignorer, []);
-}
-
+export const etatCanonique = (valeur: unknown, ignorer: readonly string[] = IGNORER_PAR_DEFAUT): string =>
+  canonique(valeur, ignorer, []);
 function comparer(a: unknown, b: unknown, ignorer: readonly string[], chemin: string, sortie: string[]): void {
   if (tableau(a) && tableau(b)) {
     const n = Math.max(a.length, b.length);
@@ -68,7 +52,6 @@ function comparer(a: unknown, b: unknown, ignorer: readonly string[], chemin: st
   }
   if (canonique(a, ignorer, []) !== canonique(b, ignorer, [])) sortie.push(chemin === '' ? '(racine)' : chemin);
 }
-
 export function differences(a: unknown, b: unknown, ignorer: readonly string[] = IGNORER_PAR_DEFAUT): string[] {
   etatCanonique(a, ignorer);
   etatCanonique(b, ignorer);
@@ -76,11 +59,6 @@ export function differences(a: unknown, b: unknown, ignorer: readonly string[] =
   comparer(a, b, ignorer, '', sortie);
   return sortie.sort();
 }
-
-export function memeEtatHorsCanal(a: unknown, b: unknown): boolean {
-  return etatCanonique(a) === etatCanonique(b);
-}
-
-export function empreinteEtat(valeur: unknown): string {
-  return createHash('sha256').update(etatCanonique(valeur), 'utf8').digest('hex');
-}
+export const memeEtatHorsCanal = (a: unknown, b: unknown): boolean => etatCanonique(a) === etatCanonique(b);
+export const empreinteEtat = (valeur: unknown): string =>
+  createHash('sha256').update(etatCanonique(valeur), 'utf8').digest('hex');
