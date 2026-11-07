@@ -13,7 +13,7 @@ export type ResultatIs = {
 };
 
 const PDB_PLEIN = 10000;
-const DUREE_REFERENCE_MOIS = 12;
+const ANNEE_MOIS = 12;
 const ELIGIBILITES: readonly string[] = ['eligible', 'non_eligible', 'a_confirmer'];
 const ZERO = centimes(0);
 
@@ -31,8 +31,8 @@ export function calculerIs(e: Readonly<EntreeIs>, p: Readonly<ParametresIs>): Re
   if (!tauxValide(p.tauxReduitPdb) || !tauxValide(p.tauxNormalPdb)) invalide();
   if (!entier(p.plafondCentimes) || p.plafondCentimes < 0) invalide();
 
-  if (e.dureeMois !== DUREE_REFERENCE_MOIS) {
-    const motif = e.dureeMois > DUREE_REFERENCE_MOIS ? 'exercice_long_a_verifier' : 'exercice_court_a_verifier';
+  if (e.dureeMois !== ANNEE_MOIS) {
+    const motif = e.dureeMois > ANNEE_MOIS ? 'exercice_long_a_verifier' : 'exercice_court_a_verifier';
     return { statut: 'a_verifier', impotCentimes: null, partReduite: ZERO, partNormale: ZERO, motif };
   }
   if (e.beneficeCentimes <= 0) {
