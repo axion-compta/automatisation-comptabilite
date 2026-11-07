@@ -474,6 +474,138 @@
           }
         }
       }
+    },
+    "/chat/messages": {
+      "post": {
+        "operationId": "posterMessageChat",
+        "tags": [
+          "flux:evenements"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "message_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "conversation_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "texte": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "puces": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "ecran",
+                            "selection",
+                            "piece"
+                          ]
+                        },
+                        "ref": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "ref"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "canal": {
+                    "type": "string",
+                    "enum": [
+                      "clavier",
+                      "voix"
+                    ]
+                  }
+                },
+                "required": [
+                  "message_id",
+                  "conversation_id",
+                  "texte",
+                  "puces",
+                  "canal"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Flux d'événements",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/tours/{id}/arreter": {
+      "post": {
+        "operationId": "arreterTour",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
     }
   }
 }
