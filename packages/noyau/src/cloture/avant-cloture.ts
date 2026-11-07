@@ -84,10 +84,6 @@ export function controlesAvantCloture(entree: EntreeControles): ControleCloture[
     { id: 'CLO-02', ok: ecartAttente === 0, valeur: formater(ecartAttente), ecartCentimes: ecartAttente },
     { id: 'CLO-03', ok: ecartBanque === 0, valeur: formater(ecartBanque), ecartCentimes: ecartBanque },
     { id: 'CLO-04', ok: ecartBalance === 0, valeur: formater(ecartBalance), ecartCentimes: ecartBalance },
-    {
-      id: 'CLO-05',
-      ok: entree.immobilisationsRevues,
-      valeur: entree.immobilisationsRevues ? 'oui' : 'non',
-    },
+    { id: 'CLO-05', ok: entree.immobilisationsRevues, valeur: entree.immobilisationsRevues ? 'oui' : 'non' },
   ];
 }

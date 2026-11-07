@@ -10,90 +10,43 @@ import {
 
 // Sujets, préfixes et comptes fictifs, passés en argument.
 const CONFIG = { sujetsAttendus: ['sujet-a', 'sujet-b'], sujetsCouverts: ['sujet-a'] };
+const q = (sujet: string, reponse: 'oui' | 'non' | 'neant', nomRepondant?: string) => ({ sujet, reponse, nomRepondant });
+const bloc = (sujet: string, code: 'sujet_non_couvert' | 'neant_sans_nom' | 'sans_reponse') => ({ sujet, code });
 
 describe('questionnaire avant clôture', () => {
   it('oui-sur-sujet-non-couvert-bloque', () => {
-    const r = evaluerQuestionnaire(
-      [
-        { sujet: 'sujet-a', reponse: 'non' },
-        { sujet: 'sujet-b', reponse: 'oui' },
-      ],
-      CONFIG,
-    );
-    expect(r).toEqual({ ok: false, bloquants: [{ sujet: 'sujet-b', code: 'sujet_non_couvert' }] });
+    const r = evaluerQuestionnaire([q('sujet-a', 'non'), q('sujet-b', 'oui')], CONFIG);
+    expect(r).toEqual({ ok: false, bloquants: [bloc('sujet-b', 'sujet_non_couvert')] });
   });
-
   it('neant-sans-nom-bloque', () => {
-    for (const nomRepondant of [undefined, '', '   ', '\t ']) {
-      const r = evaluerQuestionnaire(
-        [
-          { sujet: 'sujet-a', reponse: 'non' },
-          { sujet: 'sujet-b', reponse: 'neant', nomRepondant },
-        ],
-        CONFIG,
-      );
-      expect(r.bloquants).toEqual([{ sujet: 'sujet-b', code: 'neant_sans_nom' }]);
+    for (const nom of [undefined, '', '   ', '\t ']) {
+      const r = evaluerQuestionnaire([q('sujet-a', 'non'), q('sujet-b', 'neant', nom)], CONFIG);
+      expect(r.bloquants).toEqual([bloc('sujet-b', 'neant_sans_nom')]);
       expect(r.ok).toBe(false);
     }
   });
-
   it('sujet-sans-reponse-bloque', () => {
-    const r = evaluerQuestionnaire([{ sujet: 'sujet-a', reponse: 'non' }], CONFIG);
-    expect(r).toEqual({ ok: false, bloquants: [{ sujet: 'sujet-b', code: 'sans_reponse' }] });
+    const r = evaluerQuestionnaire([q('sujet-a', 'non')], CONFIG);
+    expect(r).toEqual({ ok: false, bloquants: [bloc('sujet-b', 'sans_reponse')] });
   });
-
   it('questionnaire-complet-ok', () => {
     const r = evaluerQuestionnaire(
-      [
-        { sujet: 'sujet-a', reponse: 'oui', nomRepondant: 'Alice Exemple', date: '2026-12-01' },
-        { sujet: 'sujet-b', reponse: 'neant', nomRepondant: 'Alice Exemple' },
-      ],
+      [{ ...q('sujet-a', 'oui', 'Alice Exemple'), date: '2026-12-01' }, q('sujet-b', 'neant', 'Alice Exemple')],
       CONFIG,
     );
     expect(r).toEqual({ ok: true, bloquants: [] });
   });
-
   it('derniere-reponse-compte', () => {
-    const premier = evaluerQuestionnaire(
-      [
-        { sujet: 'sujet-b', reponse: 'oui' },
-        { sujet: 'sujet-b', reponse: 'non' },
-        { sujet: 'sujet-a', reponse: 'non' },
-      ],
-      CONFIG,
-    );
-    expect(premier.ok).toBe(true);
-    const inverse = evaluerQuestionnaire(
-      [
-        { sujet: 'sujet-b', reponse: 'non' },
-        { sujet: 'sujet-b', reponse: 'oui' },
-        { sujet: 'sujet-a', reponse: 'non' },
-      ],
-      CONFIG,
-    );
-    expect(inverse.bloquants).toEqual([{ sujet: 'sujet-b', code: 'sujet_non_couvert' }]);
+    const a = q('sujet-a', 'non');
+    expect(evaluerQuestionnaire([q('sujet-b', 'oui'), q('sujet-b', 'non'), a], CONFIG).ok).toBe(true);
+    const inverse = evaluerQuestionnaire([q('sujet-b', 'non'), q('sujet-b', 'oui'), a], CONFIG);
+    expect(inverse.bloquants).toEqual([bloc('sujet-b', 'sujet_non_couvert')]);
   });
-
   it('oui-sur-sujet-couvert-ou-inattendu', () => {
-    const couvert = evaluerQuestionnaire(
-      [
-        { sujet: 'sujet-a', reponse: 'oui' },
-        { sujet: 'sujet-b', reponse: 'non' },
-      ],
-      CONFIG,
-    );
-    expect(couvert.ok).toBe(true);
-    const inattendu = evaluerQuestionnaire(
-      [
-        { sujet: 'sujet-a', reponse: 'non' },
-        { sujet: 'sujet-b', reponse: 'non' },
-        { sujet: 'sujet-z', reponse: 'oui' },
-      ],
-      CONFIG,
-    );
-    expect(inattendu.bloquants).toEqual([{ sujet: 'sujet-z', code: 'sujet_non_couvert' }]);
+    expect(evaluerQuestionnaire([q('sujet-a', 'oui'), q('sujet-b', 'non')], CONFIG).ok).toBe(true);
+    const inattendu = evaluerQuestionnaire([q('sujet-a', 'non'), q('sujet-b', 'non'), q('sujet-z', 'oui')], CONFIG);
+    expect(inattendu.bloquants).toEqual([bloc('sujet-z', 'sujet_non_couvert')]);
   });
-
   it('questionnaire-vide-tout-sans-reponse', () => {
     const r = evaluerQuestionnaire([], CONFIG);
     expect(r.bloquants.map((b) => b.sujet)).toEqual(['sujet-a', 'sujet-b']);
@@ -131,7 +84,6 @@ describe('contrôles avant clôture', () => {
       valeur: '0',
     });
   });
-
   it('attente-non-soldee-clo-02', () => {
     const e = ecr('e1', 'valide', [ligne('ATT1', 1234, 0), ligne('ATT2', 0, 34), ligne('B200', 0, 1200)]);
     const c = parId(controlesAvantCloture(entree([e])), 'CLO-02');
@@ -139,7 +91,6 @@ describe('contrôles avant clôture', () => {
     const solde = ecr('e2', 'valide', [ligne('ATT1', 500, 0), ligne('ATT1', 0, 500)]);
     expect(parId(controlesAvantCloture(entree([solde])), 'CLO-02')).toMatchObject({ ok: true, valeur: '0,00' });
   });
-
   it('banque-differente-du-releve-clo-03', () => {
     const e = ecr('e1', 'valide', [ligne('BQ1', 10000, 0), ligne('B200', 0, 10000)]);
     const bon = parId(controlesAvantCloture(entree([e], { soldeReleve: centimes(10000) })), 'CLO-03');
@@ -149,29 +100,24 @@ describe('contrôles avant clôture', () => {
     const inverse = parId(controlesAvantCloture(entree([e], { soldeReleve: centimes(10100) })), 'CLO-03');
     expect(inverse).toMatchObject({ ok: false, valeur: '-1,00', ecartCentimes: -100 });
   });
-
   it('tout-vert-valeurs-chiffrees', () => {
     const c = controlesAvantCloture(entree([ecr('e1', 'valide', EQ)]));
     expect(c.map((x) => x.id)).toEqual(['CLO-01', 'CLO-02', 'CLO-03', 'CLO-04', 'CLO-05']);
     expect(c.every((x) => x.ok)).toBe(true);
     expect(c.map((x) => x.valeur)).toEqual(['0', '0,00', '0,00', '0,00', 'oui']);
   });
-
   it('balance-desequilibree-clo-04', () => {
     const c = controlesAvantCloture(entree([ecr('e1', 'valide', [ligne('A100', 700, 0), ligne('B200', 0, 500)])]));
     expect(parId(c, 'CLO-04')).toMatchObject({ ok: false, valeur: '2,00', ecartCentimes: 200 });
   });
-
   it('immobilisations-non-revues-clo-05', () => {
     const c = controlesAvantCloture(entree([], { immobilisationsRevues: false }));
     expect(parId(c, 'CLO-05')).toMatchObject({ ok: false, valeur: 'non' });
   });
-
   it('aucune-ecriture-ok-sauf-clo-05', () => {
     const c = controlesAvantCloture(entree([], { immobilisationsRevues: false }));
     expect(c.filter((x) => !x.ok).map((x) => x.id)).toEqual(['CLO-05']);
   });
-
   it('prefixe-vide-ou-releve-invalide-refuse', () => {
     for (const p of ['', '  ']) {
       expect(() => controlesAvantCloture(entree([], { prefixeAttente: p }))).toThrow(ErreurCloture);
@@ -181,7 +127,6 @@ describe('contrôles avant clôture', () => {
       expect(() => controlesAvantCloture(entree([], { soldeReleve: mauvais as never }))).toThrow(ErreurCloture);
     }
   });
-
   it('seules-les-ecritures-validees-comptent-dans-les-soldes', () => {
     const e = ecr('e1', 'propose', [ligne('ATT1', 900, 0), ligne('B200', 0, 900)]);
     const c = controlesAvantCloture(entree([e]));
