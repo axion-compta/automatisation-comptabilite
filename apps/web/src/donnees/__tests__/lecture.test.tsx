@@ -22,8 +22,11 @@ function Sonde({ sortie }: { sortie: EtatLecture<Env>[] }) {
   sortie.push(useLecture<Env>('/ecritures', schema));
   return null;
 }
-async function monter(corps: Env): Promise<EtatLecture<Env>[]> {
-  vi.stubGlobal('fetch', () => Promise.resolve(Response.json(corps)));
+async function monter(corps: Env, statut = 200, attente = 20, appels: string[] = []): Promise<EtatLecture<Env>[]> {
+  vi.stubGlobal('fetch', (url: string) => {
+    appels.push(url);
+    return Promise.resolve(Response.json(corps, { status: statut }));
+  });
   const sortie: EtatLecture<Env>[] = [];
   const hote = document.createElement('div');
   document.body.append(hote);
@@ -36,7 +39,7 @@ async function monter(corps: Env): Promise<EtatLecture<Env>[]> {
     );
   });
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, attente));
   });
   return sortie;
 }
@@ -52,5 +55,21 @@ describe('useLecture', () => {
   it('use-lecture-vide', async () => {
     const sortie = await monter({ total: 0, elements: [] });
     expect(sortie[sortie.length - 1]?.etat).toBe('vide');
+  });
+  it('use-lecture-erreur-4xx-sans-nouvelle-tentative', async () => {
+    const appels: string[] = [];
+    const sortie = await monter({ total: 0, elements: [] }, 403, 450, appels);
+    const dernier = sortie[sortie.length - 1];
+    expect(dernier?.etat).toBe('erreur');
+    expect(dernier?.erreur?.code).toBe('acces_refuse');
+    expect(appels).toHaveLength(1);
+  });
+  it('use-lecture-erreur-5xx-une-nouvelle-tentative', async () => {
+    const appels: string[] = [];
+    const sortie = await monter({ total: 0, elements: [] }, 503, 450, appels);
+    const dernier = sortie[sortie.length - 1];
+    expect(dernier?.etat).toBe('erreur');
+    expect(dernier?.erreur?.code).toBe('serveur');
+    expect(appels).toHaveLength(2);
   });
 });

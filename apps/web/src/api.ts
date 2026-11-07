@@ -43,7 +43,7 @@ export const message = (statut: number): string =>
   statut === 0 || statut >= 500 ? 'Erreur réseau.' : (MESSAGES[statut] ?? 'Erreur ' + statut + '.');
 
 export type CodeLecture = 'acces_refuse' | 'introuvable' | 'conflit' | 'verrouille' | 'serveur' | 'reseau' | 'reponse_invalide';
-/** Erreur d'une lecture ; statut 0 = pas de réponse ou réponse invalide sans statut d'erreur. */
+/** Erreur d'une lecture ; statut 0 = pas de réponse (réseau) ; réponse invalide : statut HTTP reçu. */
 export class ErreurLecture extends Error {
   constructor(
     readonly statut: number,
@@ -54,8 +54,11 @@ export class ErreurLecture extends Error {
   }
 }
 const CODES: Record<number, CodeLecture> = { 403: 'acces_refuse', 404: 'introuvable', 409: 'conflit', 423: 'verrouille' };
-/** Lit une route en GET et valide la réponse 2xx par le schéma (garde:appels : seul ce fichier appelle le réseau). */
 export type SchemaLecture<T> = { safeParse(v: unknown): { success: boolean; data?: T } };
+/**
+ * Lit une route en GET et valide la réponse 2xx par le schéma (garde:appels : seul ce fichier appelle le réseau).
+ * Un 4xx non listé (400, 401...) donne le code reponse_invalide : choix à confirmer (voir corps de la PR).
+ */
 export async function lire<T>(chemin: string, schema: SchemaLecture<T>, signal?: AbortSignal): Promise<T> {
   let r: Response;
   try {

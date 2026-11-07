@@ -19,12 +19,16 @@ const echec = async (p: Promise<unknown>): Promise<ErreurLecture> => {
 describe('lire', () => {
   it('lire-ok-valide-par-schema', async () => {
     const urls: string[] = [];
-    vi.stubGlobal('fetch', (url: string) => {
+    const signaux: unknown[] = [];
+    vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
       urls.push(url);
+      signaux.push(init?.signal);
       return Promise.resolve(Response.json({ total: 1, elements: [{ id: 'E1' }] }));
     });
-    expect(await lire('/ecritures', schema)).toEqual({ total: 1, elements: [{ id: 'E1' }] });
+    const signal = new AbortController().signal;
+    expect(await lire('/ecritures', schema, signal)).toEqual({ total: 1, elements: [{ id: 'E1' }] });
     expect(urls).toEqual([location.origin + '/ecritures']);
+    expect(signaux).toEqual([signal]);
   });
   it('lire-403-acces-refuse', async () => {
     repondre(403, {});
@@ -36,6 +40,18 @@ describe('lire', () => {
     repondre(423, {});
     const e = await echec(lire('/ecritures', schema));
     expect([e.statut, e.code]).toEqual([423, 'verrouille']);
+  });
+  it('lire-codes-404-409-5xx', async () => {
+    for (const [statut, code] of [
+      [404, 'introuvable'],
+      [409, 'conflit'],
+      [500, 'serveur'],
+      [503, 'serveur'],
+    ] as const) {
+      repondre(statut, {});
+      const e = await echec(lire('/ecritures', schema));
+      expect([e.statut, e.code]).toEqual([statut, code]);
+    }
   });
   it('lire-reseau', async () => {
     vi.stubGlobal('fetch', () => Promise.reject(new TypeError('coupé')));
