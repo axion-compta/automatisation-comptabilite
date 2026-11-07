@@ -71,15 +71,17 @@ describe('Palette', () => {
   it('ecouteur-retire-au-demontage', () => {
     const ajout = vi.spyOn(document, 'addEventListener');
     const retrait = vi.spyOn(document, 'removeEventListener');
-    monter(vi.fn());
-    expect(ajout.mock.calls.some(([t]) => t === 'palette:ouvrir')).toBe(true);
-    act(() => racine?.unmount());
-    racine = null;
-    expect(retrait.mock.calls.some(([t]) => t === 'palette:ouvrir')).toBe(true);
-    act(() => ouvrirPalette());
-    expect(document.querySelector('[role="dialog"]')).toBeNull();
-    ajout.mockRestore();
-    retrait.mockRestore();
+    try {
+      monter(vi.fn());
+      const h = ajout.mock.calls.find(([t]) => t === 'palette:ouvrir')?.[1];
+      expect(h).toBeDefined();
+      act(() => racine?.unmount());
+      racine = null;
+      expect(retrait).toHaveBeenCalledWith('palette:ouvrir', h);
+    } finally {
+      ajout.mockRestore();
+      retrait.mockRestore();
+    }
   });
   it('textes affichés identiques aux originaux (venus de packages/textes)', () => {
     monter(vi.fn());

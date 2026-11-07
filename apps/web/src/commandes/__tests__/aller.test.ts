@@ -5,7 +5,7 @@ import { estRaccourciPalette, installerRaccourci, proposer } from '../raccourci.
 
 const PHRASES: ReadonlyArray<readonly [string, string | null]> = [
   ['je veux voir mon activité', 'activite'], ['OUVRE LE TABLEAU DE BORD', 'activite'], ['retour au début', 'activite'], ['affiche le résumé', 'activite'],
-  ['le mensuel', 'mois'], ['une période', 'mois'],
+  ['mon mois', 'mois'], ['mois', 'mois'], ['le mensuel', 'mois'], ['une période', 'mois'],
   ['ouvre la banque', 'banque'], ['relevé bancaire', 'banque'], ['faire le rapprochement', 'banque'], ['ouvre la BNAQUE', 'banque'],
   ['mes factures', 'factures'], ['facutre', 'factures'], ['voir les ventes', 'factures'], ['les dépenses', 'factures'],
   ['mes déclarations', 'declarations'], ['déclarer', 'declarations'],
@@ -15,11 +15,19 @@ const PHRASES: ReadonlyArray<readonly [string, string | null]> = [
   ['mes comptes comptables', 'comptes'], ['le plan', 'comptes'],
   ['liste des clients', 'tiers'], ['mes fournisseurs', 'tiers'], ['clients et fournisseurs', 'tiers'],
   ["j'ai besoin d'aide", 'aide'], ['assistance', 'aide'],
-  ['quelle heure est-il', null], ['compte client', null], ['facture client', null], ['créer un devis', null],
+  ['quelle heure est-il', null], ['compte client', null], ['facture client', null], ['créer un devis', null], ['ma déclaration de TVA', null],
   ['ne pas aller à la banque', null], ['la banque de France monte ses taux', null], ['bonjour tout le monde', null],
 ];
 
 describe('/aller sur des phrases fictives', () => {
+  it('jeu de phrases : 44 phrases dont 8 sans destination', () => {
+    expect(PHRASES).toHaveLength(44);
+    expect(PHRASES.filter(([, id]) => id === null)).toHaveLength(8);
+  });
+  it('mois et proposer(mois) mènent à Mon mois', () => {
+    expect(aller('mois')?.chemin).toBe('/mois');
+    expect(proposer('mois').map((d) => d.id)).toEqual(['mois']);
+  });
   it.each(PHRASES)('« %s » donne %s', (phrase, attendu) => {
     expect(aller(phrase)?.id ?? null).toBe(attendu);
   });
@@ -57,6 +65,7 @@ describe('/aller sur des phrases fictives', () => {
     expect(executerCommande('/aller charabia')?.destination).toBeNull();
     expect(executerCommande('/allerbanque')).toBeNull();
     expect(executerCommande('/aller\nla banque')?.destination?.id).toBe('banque');
+    expect(executerCommande('/aller la\nbanque')?.destination?.id).toBe('banque');
     expect(executerCommande('bonjour')).toBeNull();
     expect(proposer('/allerbanque')).toEqual([]);
     expect(proposer('/aller\ntva').map((d) => d.id)).toEqual(['tva']);

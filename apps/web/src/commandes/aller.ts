@@ -12,7 +12,7 @@ export type Destination = {
 // Mots-clés au singulier, sans accent : la phrase subit le même traitement (voir `racine`).
 export const destinations: readonly Destination[] = [
   { id: 'activite', titre: 'Mon activité', chemin: '/activite', motsCles: ['activite', 'accueil', 'debut', 'tableau', 'bord', 'resume'] },
-  { id: 'mois', titre: 'Mon mois', chemin: '/mois', motsCles: ['mensuel', 'periode'] },
+  { id: 'mois', titre: 'Mon mois', chemin: '/mois', motsCles: ['mois', 'mensuel', 'periode'] },
   { id: 'banque', titre: 'Ma banque', chemin: '/banque', motsCles: ['banque', 'bancaire', 'releve', 'rapprochement'] },
   { id: 'factures', titre: 'Mes factures', chemin: '/factures', motsCles: ['facture', 'vente', 'achat', 'depense'] },
   { id: 'declarations', titre: 'Mes déclarations', chemin: '/declarations', motsCles: ['declaration', 'declarer'] },
@@ -29,9 +29,12 @@ const NEGATIONS = new Set(['ne', 'n', 'pas', 'jamais', 'sans', 'non']);
 // Fautes de frappe courantes : résultat fixé, table volontairement courte.
 const FAUTES: Readonly<Record<string, string>> = { bnaque: 'banque', banqe: 'banque', tba: 'tva', ecritue: 'ecriture', facutre: 'facture', docment: 'document' };
 
-/** Racine d'un mot : le « s » final est retiré (mots de plus de 3 lettres), puis la faute courante est corrigée. */
+// Mots dont le « s » final fait partie du mot : « mois » ne doit pas devenir « moi » (mot vide).
+const INVARIABLES = new Set(['mois']);
+
+/** Racine d'un mot : le « s » final est retiré (mots de plus de 3 lettres, sauf invariables), puis la faute courante est corrigée. */
 function racine(m: string): string {
-  const s = m.length > 3 && m.endsWith('s') ? m.slice(0, -1) : m;
+  const s = m.length > 3 && m.endsWith('s') && !INVARIABLES.has(m) ? m.slice(0, -1) : m;
   return FAUTES[s] ?? s;
 }
 
