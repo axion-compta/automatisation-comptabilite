@@ -9,6 +9,7 @@
 .axion-tableau__page:disabled { opacity: 0.5; cursor: not-allowed; }
 @media (max-width: 719px) {
   .axion-tableau__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .axion-tableau__table thead:focus-within { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
   .axion-tableau__table,
   .axion-tableau__table tbody,
   .axion-tableau__ligne,

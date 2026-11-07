@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { ReactNode } from "react";
@@ -116,7 +119,6 @@ describe("tableau accessible", () => {
       suiv?.click();
     });
     expect(surPage).toHaveBeenCalledWith(2);
-
     const fin = await monter(<Tableau {...props({ pagination: pagination({ decalage: 4, surPage }) })} />);
     const [p2, s2] = [...fin.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
     expect(p2?.disabled).toBe(false);
@@ -125,14 +127,56 @@ describe("tableau accessible", () => {
       p2?.click();
     });
     expect(surPage).toHaveBeenLastCalledWith(2);
+    for (const total of [0, 2]) {
+      const m = await monter(<Tableau {...props({ pagination: pagination({ total }) })} />);
+      const bs = [...m.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
+      expect(bs.map((b) => b.disabled)).toEqual([true, true]);
+    }
+    const N = Number.NaN;
+    const invalides: Partial<PaginationTableau>[] = [{ limite: 0 }, { limite: -2 }, { decalage: N }, { total: N }, { limite: N },
+      { limite: Infinity }, { total: Infinity }, { decalage: 1.5 }, { limite: 1.5 }, { total: 5.5 }, { decalage: -1 }, { total: -3 },
+      { decalage: Number.MAX_SAFE_INTEGER + 2 }];
+    const appels = vi.fn();
+    for (const cas of invalides) {
+      const m = await monter(<Tableau {...props({ pagination: pagination({ surPage: appels, ...cas }) })} />);
+      const boutons = [...m.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
+      expect(boutons.map((b) => b.disabled), JSON.stringify(cas)).toEqual([true, true]);
+      await act(async () => {
+        for (const b of boutons) b.click();
+      });
+      expect(m.querySelector('[aria-live="polite"]')?.textContent, JSON.stringify(cas)).toBe("0 à 0 sur 0");
+    }
+    expect(appels).not.toHaveBeenCalled();
+    const hors = await monter(<Tableau {...props({ pagination: pagination({ decalage: 10, total: 6, surPage }) })} />);
+    expect(hors.querySelector('[aria-live="polite"]')?.textContent).toBe("6 à 6 sur 6");
+    const bh = [...hors.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
+    expect(bh.map((b) => b.disabled)).toEqual([false, true]);
+    const bas = await monter(<Tableau {...props({ pagination: pagination({ decalage: 1, surPage }) })} />);
+    await act(async () => {
+      bas.querySelector<HTMLButtonElement>(".axion-tableau__pagination button")?.click();
+    });
+    expect(surPage).toHaveBeenLastCalledWith(0);
+    const borne = await monter(<Tableau {...props({ pagination: pagination({ decalage: 4, total: 5 }) })} />);
+    expect(borne.querySelector('[aria-live="polite"]')?.textContent).toBe("5 à 5 sur 5");
+  });
 
-    const vide = await monter(<Tableau {...props({ lignes: [], pagination: pagination({ total: 0 }) })} />);
-    const bs = [...vide.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
-    expect(bs.map((b) => b.disabled)).toEqual([true, true]);
+  it("tri-descendant-vers-ascendant", async () => {
+    const surTri = vi.fn();
+    const c = await monter(<Tableau {...props({ surTri, tri: { cle: "nom", sens: "descending" } })} />);
+    await act(async () => c.querySelector<HTMLButtonElement>("thead button")?.click());
+    expect(surTri).toHaveBeenCalledWith({ cle: "nom", sens: "ascending" });
+  });
 
-    const exact = await monter(<Tableau {...props({ pagination: pagination({ total: 2 }) })} />);
-    const be = [...exact.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
-    expect(be.map((b) => b.disabled)).toEqual([true, true]);
+  it("roles-explicites-et-entete-visible-au-focus", async () => {
+    const c = await monter(<Tableau {...props()} />);
+    const roles = (s: string) => [...c.querySelectorAll(s)].map((e) => e.getAttribute("role"));
+    expect(roles("table")).toEqual(["table"]);
+    expect(roles("thead, tbody")).toEqual(["rowgroup", "rowgroup"]);
+    expect(new Set(roles("tr"))).toEqual(new Set(["row"]));
+    expect(new Set(roles("th"))).toEqual(new Set(["columnheader"]));
+    expect(new Set(roles("td"))).toEqual(new Set(["cell"]));
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "tableau.css"), "utf-8");
+    expect(css).toMatch(/thead:focus-within\s*\{[^}]*clip-path:\s*none/);
   });
 
   it("resume-aria-live", async () => {

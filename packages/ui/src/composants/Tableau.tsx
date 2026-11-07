@@ -51,25 +51,28 @@ export function Tableau< L>(props: TableauProps<L>) {
   let navigation: ReactNode = null;
   if (pagination) {
     const { decalage, limite, total } = pagination;
-    const debut = total === 0 ? 0 : decalage + 1;
-    const fin = Math.min(decalage + limite, total);
+    const entier = (n: number) => Number.isSafeInteger(n);
+    const valide = entier(decalage) && decalage >= 0 && entier(limite) && limite > 0 && entier(total) && total >= 0;
+    const totalAffiche = valide ? total : 0;
+    const debut = !valide || total === 0 ? 0 : Math.min(decalage + 1, total);
+    const fin = valide ? Math.min(decalage + limite, total) : 0;
     navigation = (
       <div className="axion-tableau__pagination">
         <button
           type="button"
           className="axion-tableau__page"
-          disabled={decalage <= 0}
+          disabled={!valide || decalage <= 0}
           onClick={() => pagination.surPage(Math.max(0, decalage - limite))}
         >
           {pagination.libellePrecedent}
         </button>
         <span className="axion-tableau__resume" aria-live="polite">
-          {pagination.resume(debut, fin, total)}
+          {pagination.resume(debut, fin, totalAffiche)}
         </span>
         <button
           type="button"
           className="axion-tableau__page"
-          disabled={decalage + limite >= total}
+          disabled={!valide || decalage + limite >= total}
           onClick={() => pagination.surPage(decalage + limite)}
         >
           {pagination.libelleSuivant}
@@ -79,14 +82,15 @@ export function Tableau< L>(props: TableauProps<L>) {
   }
   return (
     <div className="axion-tableau">
-      <table className="axion-tableau__table">
+      <table className="axion-tableau__table" role="table">
         <caption className="axion-tableau__legende">{legende}</caption>
-        <thead>
-          <tr>
+        <thead role="rowgroup">
+          <tr role="row">
             {colonnes.map((c) => (
               <th
                 key={c.cle}
                 scope="col"
+                role="columnheader"
                 className={classeCellule(c)}
                 aria-sort={c.triable ? (tri && tri.cle === c.cle ? tri.sens : SANS_TRI) : undefined}
               >
@@ -105,11 +109,11 @@ export function Tableau< L>(props: TableauProps<L>) {
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody role="rowgroup">
           {lignes.map((ligne) => (
-            <tr key={cleDeLigne(ligne)} className="axion-tableau__ligne">
+            <tr key={cleDeLigne(ligne)} className="axion-tableau__ligne" role="row">
               {colonnes.map((c) => (
-                <td key={c.cle} className={classeCellule(c)} data-entete={c.entete}>
+                <td key={c.cle} className={classeCellule(c)} data-entete={c.entete} role="cell">
                   {c.rendu(ligne)}
                 </td>
               ))}
