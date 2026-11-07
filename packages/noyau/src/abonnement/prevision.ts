@@ -5,10 +5,20 @@ import { ajouterJours, ecartJours, verifierDate, verifierEntier } from './types.
 const MINIMUM_NUL = 0;
 const MINIMUM_UN = 1;
 
-// Division entière en BigInt (même méthode que `diviser` dans argent/index.ts), d >= 1 et n >= 0.
+// Division entière en BigInt par décalages et soustractions (d >= 1, n >= 0) : le noyau interdit `/`
+// et la seule exception de lint permise y est celle de `diviser` (argent/index.ts).
 function quotientInferieur(n: bigint, d: bigint): bigint {
-  // eslint-disable-next-line no-restricted-syntax
-  return n / d;
+  let reste = n;
+  let q = 0n;
+  let pas = 0n;
+  while (d << (pas + 1n) <= reste) pas += 1n;
+  for (; pas >= 0n; pas -= 1n) {
+    if (d << pas <= reste) {
+      reste -= d << pas;
+      q += 1n << pas;
+    }
+  }
+  return q;
 }
 
 export function joursRestantsDuMois(aujourdhui: string): number {
