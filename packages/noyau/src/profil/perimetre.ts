@@ -15,7 +15,7 @@ export type LigneSiege = { effetDebut: string; codePostal: string };
 const FORME_CODE_POSTAL = /^[0-9][0-9][0-9][0-9][0-9]$/;
 
 function verifierPrefixes(regles: ReglesPerimetre): void {
-  if (regles.prefixesPostauxExclus.some((p) => !/^[0-9]+$/.test(p))) throw new ErreurProfil('prefixe_invalide');
+  if (regles.prefixesPostauxExclus.some((p) => !/^\d+$/.test(p))) throw new ErreurProfil('prefixe_invalide');
 }
 
 function motifSiege(codePostal: string, regles: ReglesPerimetre): 'code_postal_invalide' | 'siege_exclu' | null {
