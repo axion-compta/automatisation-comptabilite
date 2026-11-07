@@ -10,8 +10,6 @@ import {
   type Calendrier,
   type EntreeCache,
 } from '../sirene-cache.js';
-
-// Calendrier de test : jours civils en UTC, dates inventées.
 const cal: Calendrier = {
   ajouterJours(date, n) {
     const d = new Date(date + 'T00:00:00Z');
@@ -19,11 +17,9 @@ const cal: Calendrier = {
     return d.toISOString().slice(0, 10);
   },
 };
-
 function entree(numero: string, luLe = '2026-03-01T10:00:00Z', expireLe = '2026-03-02T10:00:00Z'): EntreeCache {
   return { numero, reponse: { nom: 'Société Exemple ' + numero }, etat: 'actif', luLe, expireLe };
 }
-
 function code(f: () => unknown): string | undefined {
   try {
     f();
@@ -33,7 +29,6 @@ function code(f: () => unknown): string | undefined {
   }
   return undefined;
 }
-
 describe('sirene-cache', () => {
   it('second-import-zero-requete', () => {
     const numeros = ['123456782', '987654321', '123456782'];
@@ -45,7 +40,6 @@ describe('sirene-cache', () => {
     expect(lireCache(cache, '987654321', '2026-03-01T12:00:00Z')).toEqual({ etat: 'frais', entree: entree('987654321') });
     expect(aDemander([], cache, '2026-03-01T12:00:00Z')).toEqual([]);
   });
-
   it('entree-expiree-redemandee', () => {
     const cache = [entree('111111118'), entree('222222226', '2026-03-01T10:00:00Z', '2026-03-05T10:00:00Z')];
     expect(aDemander(['222222226', '111111118', '333333334', '111111118'], cache, '2026-03-03T00:00:00Z')).toEqual([
@@ -56,7 +50,6 @@ describe('sirene-cache', () => {
     expect(lireCache(cache, '333333334', '2026-03-03T00:00:00Z')).toEqual({ etat: 'absent' });
     expect(lireCache([], '333333334', '2026-03-03T00:00:00Z')).toEqual({ etat: 'absent' });
   });
-
   it('expiration-a-l-instant-exact', () => {
     const cache = [entree('111111118')];
     expect(lireCache(cache, '111111118', '2026-03-02T09:59:59Z').etat).toBe('frais');
@@ -64,33 +57,26 @@ describe('sirene-cache', () => {
     expect(aDemander(['111111118'], cache, '2026-03-02T10:00:00Z')).toEqual(['111111118']);
     expect(aDemander(['111111118'], cache, '2026-03-02T09:59:59Z')).toEqual([]);
   });
-
   it('etablissement-ferme-carte', () => {
     expect(carteEtablissement({ ...entree('111111118'), etat: 'ferme' })).toBe('etablissement_ferme');
     expect(carteEtablissement(entree('111111118'))).toBeNull();
     expect(code(() => carteEtablissement({ ...entree('111111118'), etat: 'inconnu' as 'actif' }))).toBe('entree_invalide');
   });
-
   it('identifiants-a-29-jours-alerte', () => {
     const e = '2026-06-30';
     expect(alerteIdentifiants({ echeance: e, maintenant: cal.ajouterJours(e, -29), joursAvant: 30 }, cal)).toBe(true);
-    // À la limite exacte (30 jours) l'alerte part.
     expect(alerteIdentifiants({ echeance: e, maintenant: cal.ajouterJours(e, -30), joursAvant: 30 }, cal)).toBe(true);
   });
-
   it('identifiants-a-31-jours-pas-d-alerte', () => {
     const e = '2026-06-30';
     expect(alerteIdentifiants({ echeance: e, maintenant: cal.ajouterJours(e, -31), joursAvant: 30 }, cal)).toBe(false);
-    // Échéance dépassée : alerte.
     expect(alerteIdentifiants({ echeance: e, maintenant: cal.ajouterJours(e, 2), joursAvant: 30 }, cal)).toBe(true);
     expect(alerteIdentifiants({ echeance: e, maintenant: cal.ajouterJours(e, -5), joursAvant: 0 }, cal)).toBe(false);
     expect(alerteIdentifiants({ echeance: e, maintenant: e, joursAvant: 0 }, cal)).toBe(true);
   });
-
   it('panne-saisie-manuelle-rien-de-bloque', () => {
     expect(repliPanne()).toEqual({ saisieManuelle: true, bloque: false });
   });
-
   it('jours-avant-invalide-refuse', () => {
     for (const v of [Number.NaN, -1, 1.5, Number.POSITIVE_INFINITY]) {
       expect(code(() => alerteIdentifiants({ echeance: '2026-06-30', maintenant: '2026-06-01', joursAvant: v }, cal))).toBe(
@@ -98,7 +84,6 @@ describe('sirene-cache', () => {
       );
     }
   });
-
   it('format-mal-forme-refuse', () => {
     const cache = [entree('111111118')];
     for (const mauvais of ['', '2026-3-2', '02/03/2026', '2026-13-01', '2026-02-30', '2026-03-02 10:00:00', 'hier', '2026-03-02T10:00Z', '2026-03-02T25:00:00Z']) {
@@ -111,7 +96,6 @@ describe('sirene-cache', () => {
     }
     expect(code(() => lireCache(cache, '111111118', '2026-03-02'))).toBeUndefined();
   });
-
   it('expire-avant-lu-refuse-et-numero-vide-refuse', () => {
     expect(code(() => mettreEnCache([], entree('111111118', '2026-03-02T10:00:00Z', '2026-03-01T10:00:00Z')))).toBe('ordre_inverse');
     expect(code(() => mettreEnCache([], entree('111111118', '2026-03-02T10:00:00Z', '2026-03-02T10:00:00Z')))).toBeUndefined();
@@ -122,7 +106,6 @@ describe('sirene-cache', () => {
       'ordre_inverse',
     );
   });
-
   it('mettre-en-cache-remplace-sans-modifier-l-entree', () => {
     const ancien = Object.freeze([Object.freeze(entree('111111118')), Object.freeze(entree('222222226'))]);
     const neuf = Object.freeze({ ...entree('111111118', '2026-03-05T10:00:00Z', '2026-03-06T10:00:00Z'), etat: 'ferme' as const });
