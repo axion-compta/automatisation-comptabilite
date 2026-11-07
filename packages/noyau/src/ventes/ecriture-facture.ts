@@ -34,12 +34,12 @@ function ordre<T extends string | number | null>(a: T, b: T): number {
 export function lignesDeTva(groupes: readonly GroupeTva[], sens: LigneTvaVente['sens'] = 'vente'): LigneTvaVente[] {
   const fusion = new Map<string, LigneTvaVente>();
   for (const g of groupes) {
-    const cle = [g.cas, String(g.tauxPdb), String(g.dateExigibilite), g.compte].join('|');
+    const cle = [g.cas, String(g.tauxPdb), String(g.dateExigibilite), g.compte, g.codeTva, g.pieceId].join('|');
     const deja = fusion.get(cle);
     if (deja === undefined) fusion.set(cle, { ...g, sens });
     else fusion.set(cle, { ...deja, baseCentimes: ajouter(deja.baseCentimes, g.baseCentimes), tvaCentimes: ajouter(deja.tvaCentimes, g.tvaCentimes) });
   }
-  return [...fusion.values()].sort((a, b) => ordre(a.cas, b.cas) || ordre(a.tauxPdb, b.tauxPdb) || ordre(a.dateExigibilite, b.dateExigibilite));
+  return [...fusion.values()].sort((a, b) => ordre(a.cas, b.cas) || ordre(a.tauxPdb, b.tauxPdb) || ordre(a.dateExigibilite, b.dateExigibilite) || ordre(a.codeTva, b.codeTva) || ordre(a.pieceId, b.pieceId));
 }
 
 function exigerMontant(v: number): Centimes {

@@ -36,19 +36,16 @@ describe('ecriture-facture', () => {
     expect(r.cartes).toEqual([]);
     expect(r.lignesTva).toEqual([{ compte: 'COL', tauxPdb: 600, baseCentimes: 100000, tvaCentimes: 5500, codeTva: 'COLLECTEE', cas: 'A', sens: 'vente', dateExigibilite: '2026-11-05', pieceId: 'p1' }]);
   });
-
   it('v02-cas-b-services', () => {
     const r = faire([ligne(200000, 1900, 20000, 'service', 'P706')], 220000);
     expect(resume(r)).toEqual([['CLI', 220000, 0], ['P706', 0, 200000], ['ATT', 0, 20000]]);
     expect(r.lignesTva[0]).toMatchObject({ cas: 'B', compte: 'ATT', dateExigibilite: null });
   });
-
   it('v07-deux-taux-cas-b', () => {
     const r = faire([ligne(100000, 900, 10000, 'service', 'P706'), ligne(50000, 1900, 10000, 'service', 'P706')], 170000);
     expect(resume(r)).toEqual([['CLI', 170000, 0], ['P706', 0, 150000], ['ATT', 0, 10000], ['ATT', 0, 10000]]);
     expect(r.lignesTva.map((l) => l.tauxPdb)).toEqual([900, 1900]);
   });
-
   it('mixte-biens-services-une-ecriture', () => {
     const lignes = [ligne(100000, 600, 6000), ligne(50000, 1900, 9500, 'service', 'P706')];
     const r = faire(lignes, 165500);
@@ -56,7 +53,6 @@ describe('ecriture-facture', () => {
     expect(r.lignesTva.map((l) => l.cas)).toEqual(['A', 'B']);
     expect(faire([...lignes].reverse(), 165500)).toEqual(r);
   });
-
   it('v06-option-debits', () => {
     const option = { ...reel, optionDebitsDepuis: '2026-11-01' };
     const r = faire([ligne(100000, 1900, 19000, 'service', 'P706')], 119000, option);
@@ -65,7 +61,6 @@ describe('ecriture-facture', () => {
     const avant = faire([ligne(100000, 1900, 19000, 'service', 'P706')], 119000, option, 'C', piece(119000, { dateOperation: '2026-10-01' }));
     expect(avant.lignesTva[0]?.cas).toBe('B');
   });
-
   it('franchise-sans-tva', () => {
     const f: ProfilVente = { ...reel, regimeTva: 'franchise' };
     const r = faire([ligne(30000, null, 0), ligne(20000, null, 0, 'service', 'P2')], 50000, f);
@@ -73,7 +68,6 @@ describe('ecriture-facture', () => {
     expect(r.lignesTva).toEqual([]);
     expect(r.motif).toBeUndefined();
   });
-
   it('franchise-tva-portee-pas-d-ecriture-a16', () => {
     const f: ProfilVente = { ...reel, regimeTva: 'franchise' };
     const r = faire([ligne(30000, 600, 1800)], 31800, f);
@@ -82,23 +76,19 @@ describe('ecriture-facture', () => {
     expect(r.motif).toBe('tva_en_franchise_a_verifier');
     expect(r.lignesTva).toEqual([]);
   });
-
   it('livre-recettes-pas-d-ecriture', () => {
     const r = faire([ligne(30000, null, 0)], 30000, { ...reel, tenue: 'livre_recettes' });
     expect(r).toEqual({ ecriture: null, lignesTva: [], cartes: [], motif: 'livre_recettes' });
   });
-
   it('regime-a-confirmer-pas-d-ecriture', () => {
     const r = faire([ligne(30000, 600, 1800)], 31800, { ...reel, regimeTva: 'a_confirmer' });
     expect(r).toEqual({ ecriture: null, lignesTva: [], cartes: [], motif: 'regime_a_confirmer' });
   });
-
   it('nature-a-confirmer-brouillon', () => {
     const r = faire([ligne(100000, 1900, 19000, 'a_confirmer')], 119000);
     expect(r.ecriture?.statut).toBe('brouillon');
     expect(r.lignesTva[0]?.cas).toBe('B');
   });
-
   it('client-absent-brouillon', () => {
     for (const aux of [null, '']) {
       const r = faire([ligne(100000, 600, 5500)], 105500, reel, aux);
@@ -106,13 +96,15 @@ describe('ecriture-facture', () => {
       expect(r.ecriture?.lignes[0]?.auxiliaire).toBeUndefined();
     }
   });
-
+  it('pas-de-ligne-d-ecriture-a-zero', () => {
+    expect(resume(faire([ligne(0, 600, 5500)], 5500))).toEqual([['CLI', 5500, 0], ['COL', 0, 5500]]);
+    expect(resume(faire([ligne(100000, 600, 0)], 100000))).toEqual([['CLI', 100000, 0], ['P70', 0, 100000]]);
+  });
   it('ttc-lu-different-carte-a1', () => {
     const r = faire([ligne(100000, 600, 5500)], 105600);
     expect(r.cartes).toEqual(['A1']);
     expect(resume(r)).toEqual([['CLI', 105500, 0], ['P70', 0, 100000], ['COL', 0, 5500]]);
   });
-
   it('entrees-invalides', () => {
     const ok = ligne(100000, 600, 5500);
     const mal = (l: LigneVente): string | undefined => code(() => faire([l], 105500));
@@ -130,7 +122,6 @@ describe('ecriture-facture', () => {
     expect(code(() => faire([ok], Number.NaN))).toBe('montant_invalide');
     expect(code(() => faire([ok], 105500, reel, 'C', piece(105500, { dateFacture: 'x' })))).toBe('date_invalide');
   });
-
   it('lignes-de-tva-fusionne', () => {
     const g = { compte: 'COL', tauxPdb: 600, baseCentimes: c(100), tvaCentimes: c(6), codeTva: 'COLLECTEE' as const, cas: 'A' as const, dateExigibilite: '2026-11-05', pieceId: 'p' };
     const r = lignesDeTva([g, { ...g, baseCentimes: c(50), tvaCentimes: c(3) }, { ...g, tauxPdb: null }, { ...g, dateExigibilite: null }], 'avoir');
@@ -138,8 +129,12 @@ describe('ecriture-facture', () => {
     expect(r.every((l) => l.sens === 'avoir')).toBe(true);
     expect(r.find((l) => l.tauxPdb === 600 && l.dateExigibilite !== null)).toMatchObject({ baseCentimes: 150, tvaCentimes: 9 });
     expect(lignesDeTva([g])[0]?.sens).toBe('vente');
+    const ex = { ...g, tauxPdb: null, baseCentimes: c(1000), tvaCentimes: c(0), codeTva: 'EXONEREE_A_VERIFIER' as const };
+    const au = { ...ex, baseCentimes: c(2000), codeTva: 'AUTOLIQUIDATION_CLIENT' as const };
+    expect(lignesDeTva([ex, au]).map((l) => [l.codeTva, l.baseCentimes])).toEqual(lignesDeTva([au, ex]).map((l) => [l.codeTva, l.baseCentimes]));
+    expect(lignesDeTva([ex, au])).toHaveLength(2);
+    expect(lignesDeTva([g, { ...g, pieceId: 'q' }]).map((l) => l.pieceId)).toEqual(['p', 'q']);
   });
-
   it('equilibre-boucle', () => {
     let graine = 12345;
     const suivant = (n: number): number => {
