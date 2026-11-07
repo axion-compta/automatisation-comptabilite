@@ -36,6 +36,42 @@ describe('numérotation continue', () => {
     }
   });
 
+  it('annee-quatre-chiffres', () => {
+    expect(formaterNumero('AC', 1000, 1, 6)).toBe('AC-1000-000001');
+    expect(formaterNumero('AC', 9999, 1, 6)).toBe('AC-9999-000001');
+    expect(formaterNumero('AC', 2026, 1, 6)).toBe('AC-2026-000001');
+    for (const a of [999, 10000, Number.NaN, Infinity, -Infinity, 2026.5, 1000.5, 9999.5, 1, 0]) {
+      expect(() => formaterNumero('AC', a, 1, 6)).toThrow(RangeError);
+    }
+  });
+
+  it('id-en-double-refuse', () => {
+    const ok = (id: string) => ({ id, reussit: true });
+    const ko = (id: string) => ({ id, reussit: false });
+    expect(() => attribuer(0, [ok('a'), ok('a')])).toThrow(RangeError);
+    expect(() => attribuer(0, [ok('a'), ko('a')])).toThrow(RangeError);
+    expect(() => attribuer(0, [ko('a'), ok('a')])).toThrow(RangeError);
+    expect(() => attribuer(0, [ko('a'), ko('a')])).toThrow(RangeError);
+    expect(() => attribuer(0, [ok('a'), ok('b'), ok('c'), ok('b')])).toThrow(RangeError);
+    // Doublon refusé même quand le compteur est invalide ou valide : toujours RangeError.
+    expect(() => attribuer(3, [ok('a'), ok('a')])).toThrow(RangeError);
+    // Sans doublon : accepté, y compris liste vide.
+    expect(attribuer(0, [ok('a'), ok('b')]).compteur).toBe(2);
+    expect(attribuer(4, [])).toEqual({ attribues: [], compteur: 4 });
+    // Ordre inversé : mêmes rangs selon l'ordre reçu.
+    expect(attribuer(0, [ok('a'), ok('b')]).attribues).toEqual([
+      { id: 'a', rang: 1 },
+      { id: 'b', rang: 2 },
+    ]);
+    expect(attribuer(0, [ok('b'), ok('a')]).attribues).toEqual([
+      { id: 'b', rang: 1 },
+      { id: 'a', rang: 2 },
+    ]);
+    // Les rangs ne dépendent pas des identifiants : un échec change qui reçoit le rang 1.
+    expect(attribuer(0, [ko('b'), ok('a')]).attribues).toEqual([{ id: 'a', rang: 1 }]);
+    expect(attribuer(0, [ok('a'), ko('b')]).attribues).toEqual([{ id: 'a', rang: 1 }]);
+  });
+
   it('rang-trop-grand-refuse', () => {
     expect(formaterNumero('AC', 2026, 999999, 6)).toBe('AC-2026-999999');
     expect(code(() => formaterNumero('AC', 2026, 1000000, 6))).toBe('rang_trop_grand');

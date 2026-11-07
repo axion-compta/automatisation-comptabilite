@@ -37,7 +37,10 @@ export function formaterNumero(
   if (!/^[A-Z0-9]+$/.test(journal)) {
     throw new RangeError('Le journal doit être en majuscules et chiffres, non vide.');
   }
-  entierSur(anneeCloture, 1, 'L\'année de clôture');
+  entierSur(anneeCloture, 1000, 'L\'année de clôture');
+  if (anneeCloture > 9999) {
+    throw new RangeError('L\'année de clôture doit avoir 4 chiffres (1000 à 9999).');
+  }
   entierSur(rang, 1, 'Le rang');
   entierSur(largeur, 1, 'La largeur');
   const chiffres = String(rang);
@@ -50,6 +53,11 @@ export function formaterNumero(
 /** Ne consomme un rang que pour une tentative réussie ; `compteur` = dernier rang attribué. */
 export function attribuer(compteur: number, tentatives: readonly Tentative[]): ResultatAttribution {
   entierSur(compteur, 0, 'Le compteur');
+  const vus = new Set<string>();
+  for (const t of tentatives) {
+    if (vus.has(t.id)) throw new RangeError('Un identifiant de tentative est présent deux fois.');
+    vus.add(t.id);
+  }
   const attribues: RangAttribue[] = [];
   let courant = compteur;
   for (const t of tentatives) {
