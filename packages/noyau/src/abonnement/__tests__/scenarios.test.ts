@@ -199,6 +199,7 @@ describe('scénarios T-ABO', () => {
       expect(() => enregistrerRemise(FIN0, { manifesteEmpreinte: mauvaise, horodatage: H })).toThrow(ErreurAbonnement);
     }
   });
+  // L07-T31 : le manifeste vérifié à 100 % attend l’export complet du lot 05.
   it.todo('T-ABO-13 : attend l’export complet du lot 05');
 
   it('T-ABO-14', () => {
