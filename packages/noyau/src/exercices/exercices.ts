@@ -85,15 +85,19 @@ export function periodesMensuelles(exercice: Exercice): PeriodeMensuelle[] {
   const d = decouper(exercice.debut);
   const { mois } = dureeEnMois(exercice.debut, exercice.fin);
   const liste: PeriodeMensuelle[] = [];
+  let a = d.a;
+  let m = d.m;
   for (let i = 0; i < mois; i++) {
-    const indice = d.a * 12 + (d.m - 1) + i;
-    const a = Math.floor(indice / 12);
-    const m = (indice % 12) + 1;
     liste.push({
       debut: dateDe(a, m, 1),
       fin: dateDe(a, m, joursDuMois(a, m)),
       cle: `${String(a).padStart(4, '0')}-${deux(m)}`,
     });
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      a += 1;
+    }
   }
   return liste;
 }
