@@ -3,9 +3,9 @@
 .axion-tableau__legende { text-align: left; font-weight: var(--graisse-forte); padding: var(--espace-s) 0; }
 .axion-tableau__cellule { text-align: left; padding: var(--espace-s) var(--espace-m); border-bottom: 1px solid var(--couleur-bordure); }
 .axion-tableau__cellule--droite { text-align: right; }
-.axion-tableau__tri { font: inherit; font-weight: var(--graisse-forte); background: transparent; border: 0; padding: 0; cursor: pointer; color: inherit; }
+.axion-tableau__tri { display: inline-flex; align-items: center; min-width: var(--cible-min); min-height: var(--cible-min); font: inherit; font-weight: var(--graisse-forte); background: transparent; border: 0; padding: 0; cursor: pointer; color: inherit; }
 .axion-tableau__pagination { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-m); padding: var(--espace-s) 0; }
-.axion-tableau__page { font: inherit; padding: var(--espace-s) var(--espace-m); border-radius: var(--rayon-m); border: 1px solid var(--couleur-accent); background: transparent; color: var(--couleur-accent); cursor: pointer; }
+.axion-tableau__page { display: inline-flex; align-items: center; justify-content: center; min-width: var(--cible-min); min-height: var(--cible-min); font: inherit; padding: var(--espace-s) var(--espace-m); border-radius: var(--rayon-m); border: 1px solid var(--couleur-accent); background: transparent; color: var(--couleur-accent); cursor: pointer; }
 .axion-tableau__page:disabled { opacity: 0.5; cursor: not-allowed; }
 @media (max-width: 719px) {
   .axion-tableau__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

@@ -19,6 +19,7 @@ export const jetons = {
   espace: { xs: '4px', s: '8px', m: '16px', l: '24px', xl: '40px' },
   rayon: { s: '4px', m: '8px', l: '16px', carte: '22px' },
   taille: { texte: '14px', titre: '24px' },
+  cible: { min: '24px' },
   graisse: { normale: 400, forte: 600 },
   rupture: { mobile: '720px' },
   police: {
