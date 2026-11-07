@@ -277,6 +277,90 @@
           }
         }
       }
+    },
+    "/acces": {
+      "get": {
+        "operationId": "lireAcces",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/volume": {
+      "get": {
+        "operationId": "lireVolume",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/abonnement/demandes-palier": {
+      "post": {
+        "operationId": "demanderPalier",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "code_demande": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "accord": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "code_demande",
+                  "accord"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,39 @@
+/* Zone de dépôt : uniquement des variables de jetons.css. */
+.axion-zone-depot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espace-m);
+  min-height: calc(var(--cible-min) * 2);
+  padding: var(--espace-l);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font-family: var(--police-texte);
+  font-size: var(--taille-texte);
+  border: 2px dashed var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+}
+.axion-zone-depot--survol {
+  border-style: solid;
+  border-width: var(--espace-xs);
+  border-color: var(--couleur-accent);
+}
+.axion-zone-depot__texte {
+  margin: 0;
+}
+.axion-zone-depot__entree {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+.axion-zone-depot .axion-bouton {
+  min-height: calc(var(--cible-min) * 2);
+  min-width: calc(var(--cible-min) * 2);
+}
