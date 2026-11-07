@@ -61,7 +61,6 @@ describe('controle analytique CC-PM03', () => {
   it('ventilation-d-une-ligne-inconnue-refusee', () => {
     const inconnue = entree([ligne('l1', 100)], [vent('zz', ['A', 100])]);
     expect(() => totauxAnalytiques(inconnue.lignes, inconnue.ventilations)).toThrow();
-    expect(regleAnalytique.evaluer).toBeDefined();
     expect(() => regleAnalytique.evaluer(inconnue)).toThrow();
     const trace = executerControles([regleAnalytique], [{ type: 'a', id: 'x', donnee: inconnue }], 'avant_cloture', 't');
     expect(trace[0]?.resultat).toBe('IMPOSSIBLE');
@@ -69,6 +68,16 @@ describe('controle analytique CC-PM03', () => {
     expect(() => totauxAnalytiques(double.lignes, double.ventilations)).toThrow();
     const nan = entree([{ id: 'l1', montant: Number.NaN as never }], []);
     expect(() => totauxAnalytiques(nan.lignes, nan.ventilations)).toThrow();
+  });
+
+  it('ventilation-de-signe-inverse-visible-dans-l-ecart', () => {
+    for (const [montant, part] of [[100, -50], [-100, 50], [0, -10]] as const) {
+      const e = entree([ligne('l1', montant)], [vent('l1', ['A', part])]);
+      const t = totauxAnalytiques(e.lignes, e.ventilations);
+      expect(t.nonAffecte).toBe(0);
+      expect(t.ecart).toBe(montant - part);
+      expect(regleAnalytique.evaluer(e)).toEqual({ resultat: 'ALERTE', ecartCentimes: montant - part });
+    }
   });
 
   it('metadonnees de la regle', () => {

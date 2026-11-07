@@ -61,9 +61,9 @@ export function totauxAnalytiques(
     }
     ventile = ajouter(ventile, somme);
     const reste = soustraire(l.montant, somme);
-    // Une ventilation qui dépasse la ligne n'est pas absorbée : elle reste visible dans l'écart.
-    const depasse = l.montant >= 0 ? reste < 0 : reste > 0;
-    if (!depasse) nonAffecte = ajouter(nonAffecte, reste);
+    // Le reste va à NON_AFFECTE seulement si la somme ventilée est entre 0 et la ligne, du même signe ; sinon il reste dans l'écart.
+    const dansLaLigne = l.montant >= 0 ? somme >= 0 && reste >= 0 : somme <= 0 && reste <= 0;
+    if (dansLaLigne) nonAffecte = ajouter(nonAffecte, reste);
   }
   for (const id of parLigne.keys()) {
     if (!connues.has(id)) throw invalide('Ventilation d’une ligne inconnue.');
