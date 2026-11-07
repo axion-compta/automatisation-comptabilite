@@ -4,7 +4,7 @@ import type { OptionsSecurite } from './index.js';
 export const nom = 'en-tetes';
 
 /** Durée HSTS en secondes (un an, réglage de sécurité et non valeur légale). */
-const DUREE_HSTS_SECONDES = 31536000;
+const HSTS_SECONDES = 31536000;
 const ORIGINE_HTTPS = /^https:\/\/[^\s;,'"]+$/;
 const CORPS_400 = { defined: false, code: 'BAD_REQUEST', status: 400, message: 'Input validation failed' };
 
@@ -36,7 +36,7 @@ export function installer(app: FastifyInstance, options: OptionsSecurite): void 
     reply.header('content-security-policy', csp);
     reply.header('x-content-type-options', 'nosniff');
     reply.header('referrer-policy', 'no-referrer');
-    reply.header('strict-transport-security', `max-age=${DUREE_HSTS_SECONDES}`);
+    reply.header('strict-transport-security', `max-age=${HSTS_SECONDES}`);
     reply.header('cross-origin-opener-policy', 'same-origin');
     reply.header('cache-control', 'no-store');
     if (reply.statusCode !== 400) return charge;
