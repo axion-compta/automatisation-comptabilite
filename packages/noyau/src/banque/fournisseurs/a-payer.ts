@@ -1,11 +1,11 @@
 // Liste « À payer » : le logiciel ne paie jamais, il propose. IBAN hachés seulement.
-import { ajouter, centimes, type Centimes } from "../../argent/index.js";
-import { ajouterJours, comparerDates } from "../../dates/civiles.js";
+import { ajouter, centimes, type Centimes } from '../../argent/index.js';
+import { ajouterJours, comparerDates } from '../../dates/civiles.js';
 
 export class ErreurAPayer extends Error {
-  override name = "ErreurAPayer";
-  readonly code: "reste_invalide" | "horizon_invalide";
-  constructor(code: "reste_invalide" | "horizon_invalide") {
+  override name = 'ErreurAPayer';
+  readonly code: 'reste_invalide' | 'horizon_invalide';
+  constructor(code: 'reste_invalide' | 'horizon_invalide') {
     super(code);
     this.code = code;
   }
@@ -34,7 +34,7 @@ export interface LigneAPayer {
 }
 export interface ExclueAPayer {
   pieceId: string;
-  motif: "iban_change" | "deja_payee" | "dans_un_lot" | "prelevement";
+  motif: 'iban_change' | 'deja_payee' | 'dans_un_lot' | 'prelevement';
 }
 export interface RefPiece {
   fournisseurId: string;
@@ -48,12 +48,10 @@ export interface ListeAPayer {
   premiereVue: RefPiece[];
 }
 
-function motifExclusion(
-  d: DetteFournisseur,
-): ExclueAPayer["motif"] | undefined {
-  if (d.parPrelevement) return "prelevement";
-  if (d.rapprochee || d.reste === 0) return "deja_payee";
-  if (d.dansLotGenere) return "dans_un_lot";
+function motifExclusion(d: DetteFournisseur): ExclueAPayer['motif'] | undefined {
+  if (d.parPrelevement) return 'prelevement';
+  if (d.rapprochee || d.reste === 0) return 'deja_payee';
+  if (d.dansLotGenere) return 'dans_un_lot';
   return undefined;
 }
 
@@ -64,15 +62,10 @@ export function listeAPayer(
   horizonJours: number,
   memeIban: (a: string, b: string) => boolean,
 ): ListeAPayer {
-  if (!Number.isSafeInteger(horizonJours) || horizonJours < 0)
-    throw new ErreurAPayer("horizon_invalide");
-  for (const d of dettes)
-    if (!Number.isSafeInteger(d.reste) || d.reste < 0)
-      throw new ErreurAPayer("reste_invalide");
+  if (!Number.isSafeInteger(horizonJours) || horizonJours < 0) throw new ErreurAPayer('horizon_invalide');
+  for (const d of dettes) if (!Number.isSafeInteger(d.reste) || d.reste < 0) throw new ErreurAPayer('reste_invalide');
   const limite = ajouterJours(aujourdhui, horizonJours);
-  const connus = new Map(
-    ibansConnus.map((i) => [i.fournisseurId, i.ibanHache]),
-  );
+  const connus = new Map(ibansConnus.map((i) => [i.fournisseurId, i.ibanHache]));
   const lignes: LigneAPayer[] = [];
   const exclues: ExclueAPayer[] = [];
   const alertesIban: RefPiece[] = [];
@@ -89,12 +82,10 @@ export function listeAPayer(
     if (connu === undefined) premiereVue.push(ref);
     else if (d.ibanHache !== undefined && !memeIban(d.ibanHache, connu)) {
       alertesIban.push(ref);
-      exclues.push({ pieceId: d.pieceId, motif: "iban_change" });
+      exclues.push({ pieceId: d.pieceId, motif: 'iban_change' });
       continue;
     }
-    const escompte =
-      d.escompteJusquau !== undefined &&
-      comparerDates(d.escompteJusquau, aujourdhui) >= 0;
+    const escompte = d.escompteJusquau !== undefined && comparerDates(d.escompteJusquau, aujourdhui) >= 0;
     lignes.push({
       pieceId: d.pieceId,
       fournisseurId: d.fournisseurId,
