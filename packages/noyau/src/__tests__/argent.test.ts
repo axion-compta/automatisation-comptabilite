@@ -7,6 +7,7 @@ import {
   convertir,
   centimes,
   formater,
+  fraction,
   multiplier,
   pourcentage,
   proportionPointsDeBase,
@@ -143,6 +144,70 @@ describe('formatage', () => {
     expect(formater(c(99))).toBe('0,99');
     expect(formater(c(-5))).toBe('-0,05');
     expect(formater(c(Number.MAX_SAFE_INTEGER))).toBe('90071992547409,91');
+  });
+});
+
+describe('fraction', () => {
+  it('fraction-exacte', () => {
+    // 2 000 000 × 365 × 500 ÷ (10 000 × 365) = 100 000
+    expect(fraction(c(2000000), 365 * 500, 10000 * 365, 'demi-superieur')).toBe(100000);
+    expect(fraction(c(0), 7, 3, 'superieur')).toBe(0);
+    expect(fraction(c(12), 5, 1, 'inferieur')).toBe(60);
+  });
+  it('fraction-un-seul-arrondi', () => {
+    // 368 000 000 × 500 ÷ 3 650 000 = 50 410,958… -> 50 411
+    expect(fraction(c(368000000), 500, 3650000, 'demi-superieur')).toBe(50411);
+    // 44 ÷ 10 = 4,4 -> 4 ; deux arrondis (÷ 5 puis ÷ 2) : 8,8 -> 9 puis 4,5 -> 5.
+    expect(fraction(c(44), 1, 10, 'demi-superieur')).toBe(4);
+    expect(fraction(fraction(c(44), 1, 5, 'demi-superieur'), 1, 2, 'demi-superieur')).toBe(5);
+  });
+  it('fraction-quatre-modes', () => {
+    // 5 ÷ 2 = 2,5
+    expect(fraction(c(5), 1, 2, 'inferieur')).toBe(2);
+    expect(fraction(c(5), 1, 2, 'superieur')).toBe(3);
+    expect(fraction(c(5), 1, 2, 'demi-superieur')).toBe(3);
+    expect(fraction(c(5), 1, 2, 'demi-pair')).toBe(2);
+    // 7 ÷ 2 = 3,5
+    expect(fraction(c(7), 1, 2, 'demi-pair')).toBe(4);
+    // 7 ÷ 3 = 2,33…
+    expect(fraction(c(7), 1, 3, 'inferieur')).toBe(2);
+    expect(fraction(c(7), 1, 3, 'superieur')).toBe(3);
+    expect(fraction(c(7), 1, 3, 'demi-superieur')).toBe(2);
+    expect(fraction(c(7), 1, 3, 'demi-pair')).toBe(2);
+  });
+  it('fraction-negative-symetrique', () => {
+    expect(fraction(c(-5), 1, 2, 'demi-superieur')).toBe(-3);
+    expect(fraction(c(-5), 1, 2, 'demi-pair')).toBe(-2);
+    expect(fraction(c(-5), 1, 2, 'inferieur')).toBe(-3);
+    expect(fraction(c(-5), 1, 2, 'superieur')).toBe(-2);
+    expect(fraction(c(5), -1, 2, 'demi-superieur')).toBe(-3);
+    expect(fraction(c(-5), -1, 2, 'demi-superieur')).toBe(3);
+    expect(fraction(c(-7), 1, 3, 'demi-superieur')).toBe(-2);
+  });
+  it('fraction-denominateur-nul-refuse', () => {
+    for (const d of [0, 0n, -1, -3n]) {
+      expect(() => fraction(c(10), 1, d, 'demi-superieur')).toThrow(ErreurArgent);
+    }
+  });
+  it('fraction-non-entier-refuse', () => {
+    for (const v of [2.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 2]) {
+      expect(() => fraction(c(10), v, 3, 'inferieur')).toThrow(ErreurArgent);
+      expect(() => fraction(c(10), 3, v, 'inferieur')).toThrow(ErreurArgent);
+      expect(() => fraction(v as never, 3, 3, 'inferieur')).toThrow(ErreurArgent);
+    }
+  });
+  it('fraction-grand-produit-sans-perte', () => {
+    const grand = 4000000000000001;
+    const facteur = 7000000001;
+    expect(grand * facteur).toBeGreaterThan(2 ** 53);
+    expect(fraction(c(grand), facteur, facteur, 'demi-superieur')).toBe(grand);
+    expect(fraction(c(grand), facteur, facteur, 'inferieur')).toBe(grand);
+    // Résultat hors entier sûr refusé.
+    expect(() => fraction(c(Number.MAX_SAFE_INTEGER), 2, 1, 'inferieur')).toThrow(ErreurArgent);
+    expect(() => fraction(2n ** 60n, 1n, 1n, 'inferieur')).toThrow(ErreurArgent);
+    // Le résultat exactement égal au maximum sûr passe, une unité de plus est refusée.
+    expect(fraction(c(Number.MAX_SAFE_INTEGER), 1, 1, 'inferieur')).toBe(Number.MAX_SAFE_INTEGER);
+    expect(() => fraction(BigInt(Number.MAX_SAFE_INTEGER) + 1n, 1, 1, 'inferieur')).toThrow(ErreurArgent);
   });
 });
 
