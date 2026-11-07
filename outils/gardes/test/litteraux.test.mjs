@@ -62,6 +62,27 @@ test('exception-sans-raison-refusee', () => {
   }
 });
 
+test('formes-numeriques-refusees', () => {
+  const formes = [`${nombre}0000n`, '10_000', '.5', '1e4', '0x10'];
+  for (const v of formes) {
+    const pb = analyser(f(`const tauxNormal = ${v};`));
+    assert.equal(pb.length, 1, v);
+    assert.match(pb[0], /littéral numérique/);
+  }
+  assert.deepEqual(analyser(f('const tauxNul = 0n;')), []);
+  assert.deepEqual(analyser(f('const tauxUn = 1n;')), []);
+  assert.equal(analyser(f('const tauxUn = 1_0e0 - 9;')).length, 1);
+});
+
+test('gabarit-et-accents', () => {
+  assert.equal(analyser(f('const tauxNormal = `a ${' + nombre + '} b`;')).length, 1);
+  assert.equal(analyser(f('const t = `x ${seuil(' + nombre + ')} ${ {a: 1}.a }`;')).length, 1);
+  assert.deepEqual(analyser(f('const tauxNormal = `valeur ' + nombre + ' ${x}`;')), []);
+  for (const mot of ['délai', 'durée', 'barème', 'delai']) {
+    assert.equal(analyser(f(`const ${mot}Mois = ${nombre};`)).length, 1, mot);
+  }
+});
+
 test('depot-reel-vert', () => {
   assert.deepEqual(analyserDepot(), []);
 });

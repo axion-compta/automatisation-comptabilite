@@ -9,10 +9,10 @@ import { fileURLToPath } from 'node:url';
 
 const CONCERNES = /^(?:packages\/noyau\/src|apps\/serveur\/src)\/.*\.(?:tsx?|mjs)$/;
 const TESTS = /(?:\.test\.|\.spec\.|\/__tests__\/)/;
-const MOTS = /(?:taux|seuil|plafond|delai|duree|franchise|bareme)/i;
+const MOTS = /(?:taux|seuil|plafond|d[eé]lai|dur[eé]e|franchise|bar[eè]me)/i;
 const DATE = /\d{4}-\d{2}-\d{2}/;
 const POURCENT = /\d\s*%/;
-const NOMBRE = /(?<![\w.$])\d+(?:[.,]\d+)?(?![\w$])/g;
+const NOMBRE = /(?<![\w.$])(?:0[xob][\da-f_]+|\d[\d_]*(?:[.,]\d[\d_]*)?(?:e[+-]?\d+)?|\.\d[\d_]*)n?(?![\w$])/gi;
 
 export function estExclu(chemin) {
   return !CONCERNES.test(chemin) || TESTS.test(chemin);
@@ -29,6 +29,21 @@ function decouper(ligne) {
       let j = i + 1;
       let s = '';
       while (j < ligne.length && ligne[j] !== c) {
+        if (c === '`' && ligne[j] === '$' && ligne[j + 1] === '{') {
+          // Le contenu de ${…} est du code : analysé comme tel (accolades imbriquées suivies).
+          let prof = 1;
+          let k = j + 2;
+          while (k < ligne.length && prof > 0) {
+            if (ligne[k] === '{') prof++;
+            else if (ligne[k] === '}') prof--;
+            k++;
+          }
+          const interne = decouper(ligne.slice(j + 2, prof === 0 ? k - 1 : k));
+          code += ' ' + interne.code + ' ';
+          chaines.push(...interne.chaines);
+          j = k;
+          continue;
+        }
         if (ligne[j] === '\\') j++;
         s += ligne[j] ?? '';
         j++;
@@ -66,7 +81,7 @@ export function analyser(fichiers, exceptions = []) {
       if (chaines.some((s) => POURCENT.test(s))) pb.push(`${ou} nombre suivi de % dans une chaîne`);
       if (MOTS.test(code)) {
         const n = [...code.matchAll(NOMBRE)].map((m) => m[0]).find((v) => {
-          const x = Number(v.replace(',', '.'));
+          const x = Number(v.replace(/[_n]$/i, '').replace(/_/g, '').replace(',', '.'));
           return x !== 0 && x !== 1;
         });
         if (n !== undefined) pb.push(`${ou} littéral numérique « ${n} » sur une ligne de taux, seuil ou délai`);
