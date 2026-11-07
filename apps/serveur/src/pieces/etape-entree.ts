@@ -21,9 +21,7 @@ export interface ResultatEntree { piece: PieceEnregistree; enfants: PieceEnregis
 const MS_PAR_MINUTE = 60_000;
 const IMAGES_CONTROLEES = ['jpeg', 'png', 'webp'];
 
-export function sha256Hex(octets: Uint8Array): string {
-  return createHash('sha256').update(octets).digest('hex');
-}
+export const sha256Hex = (octets: Uint8Array): string => createHash('sha256').update(octets).digest('hex');
 
 async function terminer(ctx: ContexteEntree, piece: PieceEnregistree, vers: PieceEnregistree['etat'], code?: string): Promise<PieceEnregistree> {
   const fini = { ...piece, etat: appliquerTransition(piece.etat, vers), ...(code === undefined ? {} : { code }) };
@@ -50,12 +48,15 @@ export async function etapeEntree(octets: Uint8Array, ctx: ContexteEntree, piece
   if (suivi.refus !== undefined) return refuser(suivi.refus);
   if (suivi.erreur !== undefined) return { ...vide, piece: await terminer(ctx, base, 'en_erreur', suivi.erreur) };
   let fichiers: { nom: string; index: number }[] = [];
+  let typeFinal: string = type.type;
   if (type.type === 'zip') {
     if (pieceParenteId !== undefined) return refuser('archive_refusee');
     try {
       const entrees = lireRepertoireZip(octets);
-      if (typeof classerConteneur(entrees) === 'object') return refuser('macro_refusee');
-      const archive = controlerArchive(entrees, ctx.reglage.archive);
+      const classe = classerConteneur(entrees);
+      if (typeof classe === 'object') return refuser('macro_refusee');
+      typeFinal = classe;
+      const archive = classe === 'zip' ? controlerArchive(entrees, ctx.reglage.archive) : { ok: true as const, fichiers };
       if (!archive.ok) return refuser(archive.refus);
       fichiers = archive.fichiers;
     } catch (e) {
@@ -65,7 +66,7 @@ export async function etapeEntree(octets: Uint8Array, ctx: ContexteEntree, piece
   }
   const cle = `compta/${ctx.societeId}/originaux/${sha256}`;
   const depot = await ctx.stockage.deposerSiAbsent(cle, octets);
-  const piece = await terminer(ctx, { ...base, typeReel: type.type, cle, depot }, 'quarantaine');
+  const piece = await terminer(ctx, { ...base, typeReel: typeFinal, cle, depot }, 'quarantaine');
   const enfants: PieceEnregistree[] = [];
   for (const f of fichiers) {
     const contenu = await ctx.decompresser(octets, f.nom, f.index);

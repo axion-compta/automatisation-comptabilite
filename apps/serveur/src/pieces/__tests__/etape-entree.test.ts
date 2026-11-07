@@ -27,9 +27,7 @@ function zip(noms: string[]): Uint8Array {
   const centrale = noms.map((nom) => {
     const e = new Uint8Array(46 + nom.length);
     const v = new DataView(e.buffer);
-    v.setUint32(0, 0x02014b50, true);
-    v.setUint32(20, 10, true);
-    v.setUint32(24, 10, true);
+    [[0, 0x02014b50], [20, 10], [24, 10]].forEach(([o, x]) => v.setUint32(o as number, x as number, true));
     v.setUint16(28, nom.length, true);
     e.set(texte(nom), 46);
     return e;
@@ -80,8 +78,7 @@ describe('etapeEntree', () => {
     expect(r.piece.etat).toBe('quarantaine');
     expect(r.enfants).toHaveLength(noms.length);
     expect(r.recus).toBe(noms.length);
-    expect(r.crees + r.refuses).toBe(r.recus);
-    expect([r.crees, r.refuses]).toEqual([279, 3]);
+    expect([r.crees + r.refuses, r.crees, r.refuses]).toEqual([r.recus, 279, 3]);
     expect(r.enfants.every((e) => e.pieceParenteId === r.piece.id)).toBe(true);
     expect(depot.nombre()).toBe(noms.length + 1);
   });
@@ -92,6 +89,13 @@ describe('etapeEntree', () => {
     expect(r.piece).toMatchObject({ etat: 'refusee', code: 'archive_refusee' });
     expect(r.enfants).toHaveLength(0);
     expect(stockage.taille()).toBe(0);
+  });
+
+  it('docx-non-eclate', async () => {
+    const { ctx } = monde();
+    const r = await etapeEntree(zip(['[Content_Types].xml', 'word/document.xml']), ctx);
+    expect(r.enfants).toHaveLength(0);
+    expect(r.piece).toMatchObject({ etat: 'quarantaine', typeReel: 'docx' });
   });
 
   it('image-trop-grande-refusee', async () => {
@@ -109,8 +113,7 @@ describe('etapeAntivirus', () => {
     antivirus.programmer(sha256Hex(PDF), 'infecte');
     const { ctx } = monde(antivirus);
     const { piece } = await etapeEntree(PDF, ctx);
-    const apres = await etapeAntivirus(piece, ctx);
-    expect(apres).toMatchObject({ etat: 'refusee', code: 'infecte' });
+    expect(await etapeAntivirus(piece, ctx)).toMatchObject({ etat: 'refusee', code: 'infecte' });
     expect((await ctx.depot.parId(piece.id))?.etat).toBe('refusee');
   });
 
@@ -137,9 +140,7 @@ describe('etapeAntivirus', () => {
     const { ctx, stockage } = monde();
     const a = await etapeEntree(PDF, ctx);
     const b = await etapeEntree(PDF, ctx);
-    expect(a.piece.depot).toBe('depose');
-    expect(b.piece.depot).toBe('existe');
-    expect(b.piece.cle).toBe(a.piece.cle);
+    expect([a.piece.depot, b.piece.depot, b.piece.cle]).toEqual(['depose', 'existe', a.piece.cle]);
     expect(stockage.taille()).toBe(1);
   });
 });
