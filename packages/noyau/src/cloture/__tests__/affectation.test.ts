@@ -22,6 +22,7 @@ describe('affectation du résultat', () => {
     expect(affecterResultat(cas(), PARAMS)).toEqual({
       ok: true,
       reserveProposee: 7000,
+      apurementPertes: 0,
       distribuable: 93000,
       dividende: 0,
     });
@@ -41,7 +42,7 @@ describe('affectation du résultat', () => {
 
   it('dividende-egal-distribuable-accepte', () => {
     const r = affecterResultat(cas({ dividendeDemande: 93000 }), PARAMS);
-    expect(r).toEqual({ ok: true, reserveProposee: 7000, distribuable: 93000, dividende: 93000 });
+    expect(r).toEqual({ ok: true, reserveProposee: 7000, apurementPertes: 0, distribuable: 93000, dividende: 93000 });
   });
 
   it('dividende-un-centime-de-trop-refuse', () => {
@@ -62,11 +63,11 @@ describe('affectation du résultat', () => {
 
   it('report-negatif-reduit-distribuable', () => {
     const r = affecterResultat(cas({ reportANouveau: -20000 }), PARAMS);
-    expect(r).toMatchObject({ ok: true, reserveProposee: 7000, distribuable: 73000 });
-    expect(affecterResultat(cas({ reportANouveau: -20000, dividendeDemande: 73001 }), PARAMS)).toEqual({
+    expect(r).toMatchObject({ ok: true, reserveProposee: 5600, apurementPertes: 20000, distribuable: 74400 });
+    expect(affecterResultat(cas({ reportANouveau: -20000, dividendeDemande: 74401 }), PARAMS)).toEqual({
       ok: false,
       code: 'dividende_superieur_distribuable',
-      distribuable: 73000,
+      distribuable: 74400,
     });
     expect(affecterResultat(cas({ reportANouveau: 5000 }), PARAMS)).toMatchObject({ distribuable: 98000 });
   });
@@ -78,6 +79,7 @@ describe('affectation du résultat : cas limites', () => {
       expect(affecterResultat(cas({ resultat, reportANouveau: 9000 }), PARAMS)).toEqual({
         ok: true,
         reserveProposee: 0,
+        apurementPertes: 0,
         distribuable: 0,
         dividende: 0,
       });
@@ -133,5 +135,50 @@ describe('affectation du résultat : cas limites', () => {
     const haut = affecterResultat(cas({ resultat: 12345 }), { ...PARAMS, arrondi: 'superieur' });
     expect(bas).toMatchObject({ reserveProposee: 864 });
     expect(haut).toMatchObject({ reserveProposee: 865 });
+  });
+});
+
+describe('affectation du résultat : pertes antérieures (R06, R09)', () => {
+  const P = PARAMS;
+  const C = { capital: 1000000 };
+  it('pertes-anterieures-reduisent-la-base', () => {
+    const r = affecterResultat(cas({ ...C, resultat: 450000, reportANouveau: -100000 }), P);
+    expect(r).toMatchObject({ ok: true, reserveProposee: 24500, apurementPertes: 100000, distribuable: 325500 });
+  });
+  it('pertes-superieures-au-benefice-dotation-nulle', () => {
+    const e = cas({ ...C, resultat: 80000, reportANouveau: -100000 });
+    expect(affecterResultat(e, P)).toMatchObject({ ok: true, reserveProposee: 0, apurementPertes: 80000, distribuable: 0 });
+    expect(affecterResultat({ ...e, dividendeDemande: centimes(1) }, P)).toEqual({
+      ok: false,
+      code: 'dividende_superieur_distribuable',
+      distribuable: 0,
+    });
+  });
+  it('report-crediteur-hors-de-la-base', () => {
+    const r = affecterResultat(cas({ ...C, resultat: 450000, reportANouveau: 50000 }), P);
+    expect(r).toMatchObject({ ok: true, reserveProposee: 31500, apurementPertes: 0, distribuable: 468500 });
+  });
+  it('reserves-disponibles-ajoutees', () => {
+    const e = { ...cas({ ...C, resultat: 450000 }), reservesDisponibles: centimes(10000) };
+    const base = affecterResultat(cas({ ...C, resultat: 450000 }), P);
+    const r = affecterResultat(e, P);
+    expect(base).toMatchObject({ distribuable: 418500 });
+    expect(r).toMatchObject({ distribuable: 428500 });
+  });
+  it('reserves-disponibles-invalides-refusees-borne-zero-acceptee', () => {
+    const e = cas({ ...C, resultat: 450000 });
+    for (const v of [-1, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      expect(() => affecterResultat({ ...e, reservesDisponibles: v as never }, P)).toThrow(ErreurAffectation);
+    }
+    expect(affecterResultat({ ...e, reservesDisponibles: centimes(0) }, P)).toMatchObject({ distribuable: 418500 });
+  });
+  it('plafond-toujours-applique', () => {
+    const r = affecterResultat(cas({ ...C, resultat: 450000, reserveActuelle: 140000, reportANouveau: -100000 }), P);
+    expect(r).toMatchObject({ ok: true, reserveProposee: 10000 });
+  });
+  it('arrondi-selon-le-mode', () => {
+    const e = cas({ ...C, resultat: 123457 });
+    expect(affecterResultat(e, { ...P, arrondi: 'demi-superieur' })).toMatchObject({ reserveProposee: 8642 });
+    expect(affecterResultat(e, { ...P, arrondi: 'inferieur' })).toMatchObject({ reserveProposee: 8641 });
   });
 });

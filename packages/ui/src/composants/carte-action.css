@@ -1,0 +1,8 @@
+/* Carte d'action : uniquement des variables de jetons.css. */
+.axion-carte-action { display: flex; flex-direction: column; gap: var(--espace-s); padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-carte-action p { margin: 0; overflow-wrap: anywhere; }
+.axion-carte-action__resume { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--espace-s); }
+.axion-carte-action__montant { font-weight: var(--graisse-forte); }
+.axion-carte-action__mention { color: var(--couleur-texte-discret); }
+.axion-carte-action__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-s); }
+.axion-carte-action__actions button { min-width: var(--cible-min); min-height: var(--cible-min); }

@@ -18,3 +18,7 @@ CC-K12H,V3-CTL-027,m,aucun,arrivee|continu|demande,P6,CT-13,,oui
 CC-K13,V3-CTL-060,M,aucun,continu|nocturne|avant_cloture|demande,P6,CT-14,,oui
 CC-K13S,V3-CTL-060,B,validation_mois,continu|nocturne|avant_cloture|demande,P6,CT-14,controle.paiement_sans_piece.seuil,oui
 CC-K14,V3-CTL-046,B,validation_mois|preparation_tva|export_officiel|cloture,arrivee|demande,P6,CT-15,,oui
+TVA-C09,V3-TVA-038,M,aucun,avant_tva,P7,CT-D01,tva.controle.seuil_ecart_ca,oui
+TVA-C10,V3-TVA-034,B,preparation_tva,avant_tva,P7,CT-D02,,oui
+TVA-C11,V3-TVA-033,B,preparation_tva,avant_tva,P7,CT-D03,,oui
+TVA-C13,V3-CTL-025,B,preparation_tva,avant_tva,P7,CT-D04,,oui
