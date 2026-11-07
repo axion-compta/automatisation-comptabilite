@@ -39,6 +39,7 @@ export function ajouterValeur(historique: readonly ChampProfil[], nouvelle: Nouv
   if (!estDans(CONFIANCES, nouvelle.confiance)) throw new ErreurProfil('confiance_inconnue');
   const statut = nouvelle.statut ?? 'a_confirmer';
   if (!estDans(STATUTS_CHAMP, statut)) throw new ErreurProfil('statut_inconnu');
+  if (statut === 'confirme') throw new ErreurProfil('confirmation_par_agent');
   const saisie = exigerDate(dateSaisie, 'dateSaisie');
   const effetDebut = nouvelle.effetDebut === undefined ? saisie : exigerDate(nouvelle.effetDebut, 'effetDebut');
   const dateSource = nouvelle.dateSource === undefined || nouvelle.dateSource === null ? null : exigerDate(nouvelle.dateSource, 'dateSource');

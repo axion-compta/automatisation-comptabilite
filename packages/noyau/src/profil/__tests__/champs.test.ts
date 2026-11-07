@@ -98,6 +98,7 @@ describe('champs du profil', () => {
     expect(ajout({ origine: 'ia' as 'document' })).toBe('origine_inconnue');
     expect(ajout({ confiance: 'haute' as 'sur' })).toBe('confiance_inconnue');
     expect(ajout({ statut: 'ok' as 'confirme' })).toBe('statut_inconnu');
+    expect(ajout({ statut: 'confirme' })).toBe('confirmation_par_agent');
     const ref = { societeId: S, cle: 'nom', effetDebut: '2026-01-10' };
     expect(code(() => confirmer([], ref, pers, 'h'))).toBe('rien_a_confirmer');
     expect(code(() => confirmer(ajouterValeur([], base('A'), '2026-01-09'), ref, pers, 'h'))).toBe('rien_a_confirmer');
