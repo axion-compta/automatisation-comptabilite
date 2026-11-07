@@ -16,6 +16,14 @@ describe('jetons', () => {
   it('couleurs au format hexadécimal', () => {
     for (const c of Object.values(jetons.couleur)) expect(c).toMatch(/^#[0-9a-f]{6}$/);
   });
+  const valide = (v: string) => /^\d+px$/.test(v) && Number.parseInt(v, 10) >= 24;
+  it('le jeton de cible vaut 24 px dans le CSS généré', () => {
+    expect(genererCss()).toContain('--cible-min: 24px;');
+    expect(valide(jetons.cible.min)).toBe(true);
+  });
+  it('un jeton sous 24 px, vide, NaN, Infinity ou non entier est refusé', () => {
+    for (const v of ['23px', '', 'NaNpx', 'Infinitypx', '24.5px', '-24px']) expect(valide(v)).toBe(false);
+  });
   it('polices sous licence libre', () => {
     expect(polices.map((p) => p.famille)).toEqual(['Fraunces', 'Manrope']);
     for (const p of polices) expect(p.licence).toBe('OFL-1.1');

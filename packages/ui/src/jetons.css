@@ -24,6 +24,7 @@
   --rayon-carte: 22px;
   --taille-texte: 14px;
   --taille-titre: 24px;
+  --cible-min: 24px;
   --graisse-normale: 400;
   --graisse-forte: 600;
   --rupture-mobile: 720px;

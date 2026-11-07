@@ -3,6 +3,11 @@
   font-family: var(--police-texte);
   font-size: var(--taille-texte);
   font-weight: var(--graisse-forte);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--cible-min);
+  min-height: var(--cible-min);
   padding: var(--espace-s) var(--espace-m);
   border-radius: var(--rayon-m);
   border: 1px solid var(--couleur-accent);
