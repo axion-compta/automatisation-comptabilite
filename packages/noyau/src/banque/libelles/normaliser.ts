@@ -68,7 +68,8 @@ export function normaliserLibelle(brut: string, villes: readonly string[]): Libe
   }
   const d = RE_DEVISE.exec(t);
   if (d) {
-    r.devise = { code: d[1]!, montantTexte: d[2]!, ...(d[3] ? { tauxTexte: d[3] } : {}) };
+    const [, code, montantTexte, tauxTexte] = d;
+    r.devise = { code: code!, montantTexte: montantTexte!, ...(tauxTexte ? { tauxTexte } : {}) };
     t = t.replace(RE_DEVISE, ' ');
   }
   const k = RE_CARTE.exec(t);
