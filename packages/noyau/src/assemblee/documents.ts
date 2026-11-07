@@ -1,5 +1,4 @@
-// Assemblée : liste des documents selon la forme, le nombre d'associés et le mode de décision.
-// Codes seulement ; un modèle sans version approuvée bloque toute production (aucun document).
+// Assemblée : documents selon la forme, le nombre d'associés et le mode ; codes seulement, modèle non approuvé = aucun document.
 
 export type FormeSociete = 'EI' | 'EURL' | 'SASU' | 'SARL' | 'SAS';
 export type ModeDecision = 'assemblee' | 'consultation_ecrite' | 'acte_unanime';
@@ -13,7 +12,6 @@ export type TypeDocument =
   | 'consultation_ecrite'
   | 'pv_consultation'
   | 'acte_unanime';
-
 export class ErreurAssemblee extends Error {
   override name = 'ErreurAssemblee';
   readonly code: 'entree_invalide';
@@ -22,13 +20,11 @@ export class ErreurAssemblee extends Error {
     this.code = code;
   }
 }
-
 export interface SocieteAssemblee {
   forme: FormeSociete;
   nbAssocies: number;
   modeDecision?: ModeDecision;
 }
-
 export interface ModeleDocument {
   type: TypeDocument;
   version?: string;
@@ -85,7 +81,6 @@ export function documentsAssemblee(
   }
   const liste = requis(societe);
   if (liste === 'mode_absent') return { statut: 'refus', code: 'mode_decision_absent' };
-
   const documents: DocumentAssemblee[] = [];
   const enCause: TypeDocument[] = [];
   for (const type of liste) {

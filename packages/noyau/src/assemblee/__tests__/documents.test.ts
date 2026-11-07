@@ -34,14 +34,12 @@ describe('documents d’assemblée', () => {
       expect(types(r)).toEqual(['decision_associe_unique']);
     }
   });
-
   it('sarl-quatre-documents', () => {
     const r = documentsAssemblee({ forme: 'SARL', nbAssocies: 4 }, modeles());
     expect(types(r)).toEqual(['convocation', 'ordre_du_jour', 'feuille_presence', 'pv_ag']);
     const deux = documentsAssemblee({ forme: 'SARL', nbAssocies: 2, modeDecision: 'acte_unanime' }, modeles());
     expect(types(deux)).toEqual(['convocation', 'ordre_du_jour', 'feuille_presence', 'pv_ag']);
   });
-
   it('sas-selon-le-mode', () => {
     const assemblee = documentsAssemblee({ forme: 'SAS', nbAssocies: 3, modeDecision: 'assemblee' }, modeles());
     expect(types(assemblee)).toEqual(['convocation', 'ordre_du_jour', 'feuille_presence', 'pv_ag']);
@@ -50,18 +48,15 @@ describe('documents d’assemblée', () => {
     const unanime = documentsAssemblee({ forme: 'SAS', nbAssocies: 3, modeDecision: 'acte_unanime' }, modeles());
     expect(types(unanime)).toEqual(['acte_unanime']);
   });
-
   it('mode-absent-refuse', () => {
     const r = documentsAssemblee({ forme: 'SAS', nbAssocies: 3 }, modeles());
     expect(r).toEqual({ statut: 'refus', code: 'mode_decision_absent' });
   });
-
   it('modele-non-approuve-zero-document', () => {
     const liste = modeles().map((m) => (m.type === 'pv_ag' ? { ...m, approuve: false } : m));
     const r = documentsAssemblee({ forme: 'SARL', nbAssocies: 4 }, liste);
     expect(r).toEqual({ statut: 'refus', code: 'modele_a_faire_valider', types: ['pv_ag'] });
     expect('documents' in r).toBe(false);
-    // modèle absent, sans version, sans date, version blanche : tous en cause, liste triée
     const incomplets: ModeleDocument[] = [
       { type: 'pv_ag', version: 'v1', dateModele: '2026-01-15', approuve: true },
       { type: 'ordre_du_jour', approuve: true },
@@ -77,7 +72,6 @@ describe('documents d’assemblée', () => {
     expect(documentsAssemblee({ forme: 'SASU', nbAssocies: 1 }, sansDate).statut).toBe('refus');
     expect(documentsAssemblee({ forme: 'SASU', nbAssocies: 1 }, []).statut).toBe('refus');
   });
-
   it('version-date-et-mention-presentes', () => {
     const liste = modeles().map((m) => ({ ...m, version: 'v-' + m.type, dateModele: '2026-02-01' }));
     const r = documentsAssemblee({ forme: 'SARL', nbAssocies: 4 }, liste);
@@ -90,12 +84,10 @@ describe('documents d’assemblée', () => {
       expect(d.aVerifier).toBe(d.type === 'feuille_presence');
     }
   });
-
   it('ei-non-applicable', () => {
     expect(documentsAssemblee({ forme: 'EI', nbAssocies: 1 }, modeles())).toEqual({ statut: 'non_applicable' });
     expect(documentsAssemblee({ forme: 'EI', nbAssocies: 1 }, []).statut).toBe('non_applicable');
   });
-
   it('nb-associes-invalide', () => {
     for (const nb of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
       let code: string | undefined;
