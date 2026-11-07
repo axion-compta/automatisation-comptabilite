@@ -33,12 +33,8 @@ function specificite(selecteur: string): [number, number, number] {
   return [ids, classes, elements];
 }
 
-function plusFort(a: [number, number, number], b: [number, number, number]): boolean {
-  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i]! > b[i]!;
-  return false;
-}
+const plusFort = (a: number[], b: number[]) => (a[0]! - b[0]! || a[1]! - b[1]! || a[2]! - b[2]!) > 0;
 
-/** Règles `sélecteurs { corps }` du socle, imbriquées dans une media query comprises. */
 const regles = [...socle.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
   selecteurs: m[1]!.replace(/\/\*[\s\S]*?\*\//g, '').split(',').map((s) => s.trim()),
   corps: m[2]!,
