@@ -106,9 +106,9 @@ export function Ecran() {
     );
   }
   return (
-    <main>
+    <section>
       <h1>{n04.titre}</h1>
       {contenu}
-    </main>
+    </section>
   );
 }

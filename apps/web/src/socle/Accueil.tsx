@@ -5,7 +5,7 @@ import type { DefinitionEcran } from './ecrans.js';
 /** Accueil provisoire : liste les écrans découverts. */
 export function Accueil({ ecrans }: { ecrans: readonly DefinitionEcran[] }) {
   return (
-    <main>
+    <section>
       <h1>{socle.accueil.titre}</h1>
       <p>{socle.accueil.message}</p>
       <ul>
@@ -15,6 +15,6 @@ export function Accueil({ ecrans }: { ecrans: readonly DefinitionEcran[] }) {
           </li>
         ))}
       </ul>
-    </main>
+    </section>
   );
 }
