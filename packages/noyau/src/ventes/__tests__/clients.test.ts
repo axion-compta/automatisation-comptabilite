@@ -11,13 +11,13 @@ const code = (f: () => unknown): string | undefined => {
 };
 const SIREN = '987654324';
 const A = { id: 'a', nom: 'Immobilière Marceau', siren: SIREN, tva: 'XX 111 222' };
-const B = { id: 'b', nom: 'Atelier Lumière', siren: '123 456 782', tva: 'XX333444' };
-const C = { id: 'c', nom: 'Boulangerie Dupin' };
-const D = { id: 'd', nom: 'Dupin' };
+const B = { id: 'b', nom: 'Atelier Bertin', tva: 'XX333444' };
+const C = { id: 'c', nom: 'Boulangerie Rivoire' };
+const D = { id: 'd', nom: 'Rivoire' };
 
 describe('clients', () => {
   it('trouve-par-siren-d-abord', () => {
-    const r = chercherClient([B, A], { siren: '987 654 324', tva: 'XX333444', nom: 'Atelier Lumière' });
+    const r = chercherClient([B, A], { siren: '987 654 324', tva: 'XX333444', nom: 'Atelier Bertin' });
     expect(r).toEqual({ client: A, par: 'siren' });
     expect(chercherClient([A], { siren: ' ', tva: 'XX111222' })?.par).toBe('tva');
   });
@@ -30,11 +30,11 @@ describe('clients', () => {
 
   it('trouve-par-nom-normalise', () => {
     expect(normaliserNom('IMMOBILIÈRE  Marceau')).toBe('immobiliere marceau');
-    expect(normaliserNom('  Dupin & Fils, S.A.R.L. ')).toBe('dupin fils s a r l');
+    expect(normaliserNom('  Rivoire & Fils, S.A.R.L. ')).toBe('rivoire fils s a r l');
     expect(normaliserNom('Àéîõü-ç')).toBe('aeiou c');
     expect(chercherClient([A], { nom: 'immobiliere marceau' })).toEqual({ client: A, par: 'nom' });
-    expect(chercherClient([C, D], { nom: 'DUPIN' })?.client).toBe(D);
-    expect(chercherClient([C, D], { nom: 'dupin' })?.client).toBe(D);
+    expect(chercherClient([C, D], { nom: 'RIVOIRE' })?.client).toBe(D);
+    expect(chercherClient([C, D], { nom: 'rivoire' })?.client).toBe(D);
   });
 
   it('absent-donne-null', () => {
@@ -47,9 +47,9 @@ describe('clients', () => {
   });
 
   it('proposition-professionnel-ou-a-confirmer', () => {
-    expect(proposerFiche({ nom: 'Atelier Lumière', siren: SIREN })).toEqual({ origine: 'proposition_ia', nature: 'professionnel', nom: 'Atelier Lumière', siren: SIREN });
+    expect(proposerFiche({ nom: 'Atelier Bertin', siren: SIREN })).toEqual({ origine: 'proposition_ia', nature: 'professionnel', nom: 'Atelier Bertin', siren: SIREN });
     expect(proposerFiche({ nom: 'N', tva: 'XX111222', codePostal: '00000' })).toEqual({ origine: 'proposition_ia', nature: 'professionnel', nom: 'N', tva: 'XX111222', codePostal: '00000' });
-    expect(proposerFiche({ nom: 'Marie Test' })).toEqual({ origine: 'proposition_ia', nature: 'a_confirmer', nom: 'Marie Test' });
+    expect(proposerFiche({ nom: 'Camille Vasseur' })).toEqual({ origine: 'proposition_ia', nature: 'a_confirmer', nom: 'Camille Vasseur' });
     expect(proposerFiche({ nom: 'M', siren: '  ', tva: '' }).nature).toBe('a_confirmer');
   });
 
