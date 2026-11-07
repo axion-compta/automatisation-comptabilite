@@ -84,10 +84,20 @@ describe('securite/arret', () => {
     expect((await get(societeCasse)).statusCode).toBe(503);
   });
 
-  // À activer quand L06-T25 (crochet de corrélation) est fusionnée : remplacer it.skip par it.
-  it.skip('en-tete-de-correlation-present-sur-503', async () => {
+  it('en-tete-de-correlation-present-sur-503', async () => {
     const r = await get(neuf({ correlation: true, arret: { lire: () => ({ global: marque, societes: {} }) } }));
     expect(r.statusCode).toBe(503);
     expect(r.headers['x-correlation-id']).toMatch(/^[0-9a-f-]{36}$/);
   });
+  it('en-tetes-de-societe-ou-de-role-ignores', async () => {
+    const lire = () => ({ societes: { 'societe-a': marque } });
+    const a = neuf({ arret: { lire, societeDe: () => 'societe-b' } });
+    const g = neuf({ arret: { lire: () => ({ global: marque, societes: {} }), societeDe: () => 'societe-b' } });
+    const valeurs: Array<string | string[] | undefined> = [undefined, '', ['societe-a', 'societe-a'], 'societe-a'.padEnd(10000, 'a'), 'societe-a'];
+    for (const v of valeurs) {
+      const headers = v === undefined ? {} : { 'x-societe': v, 'x-role': v, 'x-societe-id': v };
+      expect((await a.inject({ method: 'GET', url: '/ecritures', headers })).statusCode).toBe(200);
+      expect((await g.inject({ method: 'GET', url: '/ecritures', headers })).statusCode).toBe(503);
+    }
+  }, 30000);
 });
