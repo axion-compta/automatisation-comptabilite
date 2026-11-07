@@ -52,6 +52,17 @@ describe('apprentissage C6', () => {
     expect(regleApplicable(promue, true)).toBe(false);
   });
 
+  it('ordre-inverse-meme-resultat', () => {
+    const cs = [corr(1, '606000'), corr(2, '606000'), corr(3, '606000'), corr(4, '626000')];
+    const as = [appli('e1'), appli('e2', { date: '2026-03-01' }), appli('e3')];
+    const droit = etatAvecUsages(cs, as, 's1', CLE, SEUIL);
+    const inverse = etatAvecUsages([...cs].reverse(), [...as].reverse(), 's1', CLE, SEUIL);
+    expect(droit.statut).toBe('eteinte');
+    expect(inverse).toEqual(droit);
+    const t = cs.slice(0, 3);
+    expect(etatAvecUsages([...t].reverse(), [], 's1', CLE, SEUIL)).toEqual(etatAvecUsages(t, [], 's1', CLE, SEUIL));
+  });
+
   it('usages-sans-doublon', () => {
     const apps = [appli('e1'), appli('e1', { date: '2026-03-01' }), appli('e2')];
     expect(compterUsages(apps, CLE)).toBe(2);
@@ -79,7 +90,7 @@ describe('apprentissage C6', () => {
   });
 
   it('seuil-invalide', () => {
-    for (const seuil of [0, Number.NaN, 2.5]) {
+    for (const seuil of [0, Number.NaN, 2.5, Number.POSITIVE_INFINITY, -1]) {
       expect(codeErreur(() => etatAvecUsages([], [], 's1', CLE, seuil))).toBe('seuil_invalide');
     }
   });
