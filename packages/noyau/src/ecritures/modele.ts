@@ -21,6 +21,7 @@ export interface Ecriture {
   type?: 'normale' | 'correction';
   lienOriginale?: string;
   contrePassee?: boolean;
+  motif?: string;
 }
 
 export type CodeErreurEcriture =

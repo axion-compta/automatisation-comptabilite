@@ -78,7 +78,7 @@ export function grandLivre(ecritures: readonly Ecriture[], compte: string): Lign
       cumul = ajouter(cumul, soustraire(l.debit, l.credit));
       sortie.push({
         date: e.date,
-        numero: cle(e),
+        numero: e.numero ?? '',
         ecritureId: e.id,
         journal: e.journal,
         libelle: l.libelle,
@@ -94,5 +94,6 @@ export function grandLivre(ecritures: readonly Ecriture[], compte: string): Lign
 export function journal(ecritures: readonly Ecriture[], codeJournal: string): Ecriture[] {
   return validees(ecritures)
     .filter((e) => e.journal === codeJournal)
-    .sort((a, b) => comparer(cle(a), cle(b)));
+    .sort((a, b) => comparer(cle(a), cle(b)))
+    .map((e) => ({ ...e, lignes: e.lignes.map((l) => ({ ...l })) }));
 }

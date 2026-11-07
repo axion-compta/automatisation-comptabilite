@@ -116,3 +116,51 @@ describe('correction : cas limites', () => {
     expect(AVEC({})).not.toThrow();
   });
 });
+
+describe('correction : motif et identifiants (L01-T41)', () => {
+  it('conserve le motif dans la contre-passation et la correction, pas dans l originale', () => {
+    const o = ORIGINALE();
+    const r = corriger(o, { ...BASE, lignes: NOUVELLES });
+    expect(r.contrePassation.motif).toBe('Mauvais compte');
+    expect(r.correction.motif).toBe('Mauvais compte');
+    expect(o.motif).toBeUndefined();
+    expect(r.marqueOriginale.motif).toBeUndefined();
+    expect(contrePasser(o, PARAMS).motif).toBe('Mauvais compte de charge');
+  });
+
+  it('retire les blancs en bord du motif et garde ceux du milieu', () => {
+    const c = contrePasser(ORIGINALE(), { ...PARAMS, motif: ' \t Erreur  de compte \n' });
+    expect(c.motif).toBe('Erreur  de compte');
+    expect(AVEC({ motif: '  Doublon ' })().correction.motif).toBe('Doublon');
+    expect(AVEC({ motif: '  Doublon ' })().contrePassation.motif).toBe('Doublon');
+  });
+
+  it('refuse params.id égal à l identifiant de l originale', () => {
+    expect(() => contrePasser(ORIGINALE(), { ...PARAMS, id: 'e1' })).toThrow(
+      expect.objectContaining({ code: 'ids_non_distincts' }),
+    );
+    expect(() => contrePasser(ORIGINALE(), { ...PARAMS, id: 'e2' })).not.toThrow();
+  });
+
+  it('reprend le journal de l originale et la date reçue', () => {
+    const o = validee([ligne('6061', 12000, 0), ligne('401', 0, 12000)], { journal: 'OD', date: '2026-01-02' });
+    const r = corriger(o, { ...BASE, date: '2026-03-09', lignes: NOUVELLES });
+    for (const e of [r.contrePassation, r.correction]) {
+      expect(e).toMatchObject({ journal: 'OD', date: '2026-03-09', statut: 'brouillon' });
+    }
+    expect(contrePasser(o, { ...PARAMS, date: '2026-04-01' })).toMatchObject({ journal: 'OD', date: '2026-04-01' });
+  });
+
+  it('ne modifie jamais une entrée gelée et refuse les cas invalides sans effet', () => {
+    const o = ORIGINALE();
+    const lignes = Object.freeze(NOUVELLES.map((l) => Object.freeze({ ...l })));
+    expect(() => corriger(o, { ...BASE, lignes })).not.toThrow();
+    expect(() => corriger({ ...o, statut: 'brouillon' }, { ...BASE, lignes })).toThrow(
+      expect.objectContaining({ code: 'originale_non_validee' }),
+    );
+    expect(() => corriger(o, { ...BASE, motif: '\t', lignes })).toThrow(
+      expect.objectContaining({ code: 'motif_obligatoire' }),
+    );
+    expect(() => corriger(o, { ...BASE, lignes: [] })).toThrow(expect.objectContaining({ code: 'une_seule_ligne' }));
+  });
+});

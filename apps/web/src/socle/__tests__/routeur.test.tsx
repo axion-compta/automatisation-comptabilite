@@ -51,8 +51,21 @@ describe('verifierEcrans', () => {
     expect(() => creerRouteur([def('a', '/essai')])).toThrow('chemin en double');
     expect(() => creerRouteur([def('a', '/')])).toThrow('chemin en double');
   });
-  it('aucun-ecran-decouvert-liste-vide', () => {
-    expect(ecransDecouverts()).toEqual([]);
+  it('chemin-vide-refuse', () => {
+    expect(() => verifierEcrans([def('a', '')])).toThrow('doit commencer par /');
+  });
+  it('ordre-inverse-meme-verdict', () => {
+    expect(() => verifierEcrans([def('b', '/y'), def('a', '/x')])).not.toThrow();
+    expect(() => verifierEcrans([def('b', '/x'), def('a', '/x')])).toThrow('chemin en double');
+  });
+  it('ecrans-decouverts-valides', () => {
+    expect(() => verifierEcrans(ecransDecouverts())).not.toThrow();
+  });
+  it('liste-vide-acceptee', async () => {
+    expect(() => verifierEcrans([])).not.toThrow();
+    const hote = await afficher([], '/');
+    expect(hote.querySelector('h1')?.textContent).toBe(socle.accueil.titre);
+    expect(hote.querySelectorAll('li a')).toHaveLength(0);
   });
 });
 
