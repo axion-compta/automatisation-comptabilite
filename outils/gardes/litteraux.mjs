@@ -1,5 +1,5 @@
 // garde:litteraux : aucun taux, seuil, délai ni date légale en dur (R10, R14).
-// Fichiers examinés : packages/noyau/src et apps/serveur/src (ts, tsx, mjs), hors tests. packages/parametres est exclu.
+// Fichiers examinés : packages/noyau/src et apps/serveur/src (ts, tsx, mts, cts, mjs), hors tests. packages/parametres est exclu.
 // Rouge si une ligne contient : (a) une date AAAA-MM-JJ dans une chaîne ; (b) un nombre autre que 0 et 1 sur une ligne
 // qui nomme taux, seuil, plafond, delai, duree, franchise ou bareme ; (c) une chaîne avec un nombre suivi de %.
 // Exceptions : outils/gardes/litteraux-exceptions.json, signé par une PR fusionnée par Will.
@@ -7,23 +7,37 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const CONCERNES = /^(?:packages\/noyau\/src|apps\/serveur\/src)\/.*\.(?:tsx?|mjs)$/;
+const CONCERNES = /^(?:packages\/noyau\/src|apps\/serveur\/src)\/.*\.(?:tsx?|mts|cts|mjs)$/;
 const TESTS = /(?:\.test\.|\.spec\.|\/__tests__\/)/;
 const MOTS = /(?:taux|seuil|plafond|d[eé]lai|dur[eé]e|franchise|bar[eè]me)/i;
 const DATE = /\d{4}-\d{2}-\d{2}/;
 const POURCENT = /\d\s*%/;
-const NOMBRE = /(?<![\w.$])(?:0[xob][\da-f_]+|\d[\d_]*(?:[.,]\d[\d_]*)?(?:e[+-]?\d+)?|\.\d[\d_]*)n?(?![\w$])/gi;
+const NOMBRE = /(?<![\w.$])(?:0[xob][\da-f_]+|\d[\d_]*(?:\.\d[\d_]*)?(?:e[+-]?\d+)?|\.\d[\d_]*)n?(?![\w$])/gi;
 
 export function estExclu(chemin) {
   return !CONCERNES.test(chemin) || TESTS.test(chemin);
 }
 
-// Sépare une ligne en code (chaînes vidées) et en chaînes ; ignore le commentaire de fin de ligne.
-function decouper(ligne) {
+// Sépare une ligne en code (chaînes vidées) et en chaînes ; ignore les commentaires.
+// etat.bloc reste vrai d'une ligne à l'autre tant qu'un commentaire /* … */ n'est pas fermé.
+function decouper(ligne, etat = { bloc: false }) {
   let code = '';
   const chaines = [];
   for (let i = 0; i < ligne.length; i++) {
     const c = ligne[i];
+    if (etat.bloc) {
+      if (c === '*' && ligne[i + 1] === '/') {
+        etat.bloc = false;
+        i++;
+        code += ' ';
+      }
+      continue;
+    }
+    if (c === '/' && ligne[i + 1] === '*') {
+      etat.bloc = true;
+      i++;
+      continue;
+    }
     if (c === '/' && ligne[i + 1] === '/') break;
     if (c === '"' || c === "'" || c === '`') {
       let j = i + 1;
@@ -56,13 +70,14 @@ function decouper(ligne) {
   return { code, chaines };
 }
 
-const valide = (e) => typeof e?.raison === 'string' && e.raison.trim() !== '' && typeof e.fichier === 'string' && e.fichier !== '' && typeof e.motif === 'string' && e.motif !== '';
+const MOTIF_MIN = 4;
+const valide = (e) => typeof e?.raison === 'string' && e.raison.trim() !== '' && typeof e.fichier === 'string' && e.fichier !== '' && typeof e.motif === 'string' && e.motif.length >= MOTIF_MIN;
 
 export function exceptionsInvalides(exceptions) {
   const pb = [];
   exceptions.forEach((e, i) => {
     if (typeof e?.raison !== 'string' || e.raison.trim() === '') pb.push(`exception n°${i + 1} (${e?.fichier ?? '?'}) sans raison : refusée`);
-    else if (!valide(e)) pb.push(`exception n°${i + 1} sans fichier ou sans motif : refusée`);
+    else if (!valide(e)) pb.push(`exception n°${i + 1} sans fichier, ou avec un motif de moins de ${MOTIF_MIN} caractères : refusée`);
   });
   return pb;
 }
@@ -72,16 +87,19 @@ export function analyser(fichiers, exceptions = []) {
   const valides = exceptions.filter(valide);
   for (const { chemin, texte } of fichiers) {
     if (estExclu(chemin)) continue;
-    const sansBloc = texte.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
-    sansBloc.split(/\r?\n/).forEach((ligne, i) => {
+    for (const e of valides) {
+      if (e.fichier === chemin && !texte.includes(e.motif)) pb.push(`exception ${chemin} : le motif « ${e.motif} » ne correspond à aucune ligne`);
+    }
+    const etat = { bloc: false };
+    texte.split(/\r?\n/).forEach((ligne, i) => {
+      const { code, chaines } = decouper(ligne, etat);
       if (valides.some((e) => e.fichier === chemin && ligne.includes(e.motif))) return;
-      const { code, chaines } = decouper(ligne);
       const ou = `${chemin}:${i + 1}`;
       if (chaines.some((s) => DATE.test(s))) pb.push(`${ou} date littérale dans une chaîne`);
       if (chaines.some((s) => POURCENT.test(s))) pb.push(`${ou} nombre suivi de % dans une chaîne`);
       if (MOTS.test(code)) {
         const n = [...code.matchAll(NOMBRE)].map((m) => m[0]).find((v) => {
-          const x = Number(v.replace(/[_n]$/i, '').replace(/_/g, '').replace(',', '.'));
+          const x = Number(v.replace(/[_n]$/i, '').replace(/_/g, ''));
           return x !== 0 && x !== 1;
         });
         if (n !== undefined) pb.push(`${ou} littéral numérique « ${n} » sur une ligne de taux, seuil ou délai`);

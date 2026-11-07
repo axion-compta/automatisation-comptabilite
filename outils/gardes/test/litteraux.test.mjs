@@ -53,6 +53,42 @@ test('exception-avec-raison-acceptee', () => {
   assert.deepEqual(analyserDepot(git, (p) => contenu[p]), []);
 });
 
+test('exception-limitee-a-son-fichier', () => {
+  const texte = `const tauxNormal = ${nombre};`;
+  const exc = [{ fichier: 'packages/noyau/src/autre.ts', motif: 'tauxNormal', raison: 'essai' }];
+  const pb = analyser([...f(texte), { chemin: 'packages/noyau/src/autre.ts', texte }], exc);
+  assert.equal(pb.filter((p) => /metier\.ts:1 littéral/.test(p)).length, 1);
+  assert.equal(pb.filter((p) => /autre\.ts:1/.test(p)).length, 0);
+});
+
+test('exception-motif-court-ou-orphelin-refuse', () => {
+  const texte = `const tauxNormal = ${nombre};`;
+  const base = { fichier: 'packages/noyau/src/metier.ts', raison: 'essai' };
+  const court = analyser(f(texte), [{ ...base, motif: 'xxx' }]);
+  assert.ok(court.some((p) => /moins de 4/.test(p)));
+  assert.ok(court.some((p) => /littéral numérique/.test(p)));
+  const orphelin = analyser(f(texte), [{ ...base, motif: 'absentDuFichier' }]);
+  assert.ok(orphelin.some((p) => /aucune ligne/.test(p)));
+  assert.ok(orphelin.some((p) => /littéral numérique/.test(p)));
+});
+
+test('commentaires-et-virgule', () => {
+  assert.deepEqual(analyser(f(`const x = a; // taux ${nombre}`)), []);
+  assert.equal(analyser(f(`const s = '/*'; const tauxX = ${nombre}; // */`)).length, 1);
+  assert.deepEqual(analyser(f(`/* début\n taux ${nombre}\n fin */ const x = 0;`)), []);
+  assert.equal(analyser(f(`/* a */ const tauxX = ${nombre};`)).length, 1);
+  assert.deepEqual(analyser(f('Math.min(a,0,1); const plafond = y;')), []);
+});
+
+test('extensions-mts-cts-et-liste-exceptions', () => {
+  for (const ext of ['mts', 'cts']) {
+    assert.equal(analyser(f(`const tauxX = ${nombre};`, `apps/serveur/src/a.${ext}`)).length, 1, ext);
+  }
+  const git = (a) => (a[0] === 'rev-parse' ? '/r\n' : '');
+  const pb = analyserDepot(git, () => '{}');
+  assert.deepEqual(pb, ['litteraux-exceptions.json doit être une liste']);
+});
+
 test('exception-sans-raison-refusee', () => {
   const texte = `const tauxNormal = ${nombre};`;
   for (const raison of [undefined, '', '   ']) {
@@ -78,7 +114,7 @@ test('gabarit-et-accents', () => {
   assert.equal(analyser(f('const tauxNormal = `a ${' + nombre + '} b`;')).length, 1);
   assert.equal(analyser(f('const t = `x ${seuil(' + nombre + ')} ${ {a: 1}.a }`;')).length, 1);
   assert.deepEqual(analyser(f('const tauxNormal = `valeur ' + nombre + ' ${x}`;')), []);
-  for (const mot of ['délai', 'durée', 'barème', 'delai']) {
+  for (const mot of ['taux', 'seuil', 'plafond', 'delai', 'duree', 'franchise', 'bareme', 'délai', 'durée', 'barème']) {
     assert.equal(analyser(f(`const ${mot}Mois = ${nombre};`)).length, 1, mot);
   }
 });
