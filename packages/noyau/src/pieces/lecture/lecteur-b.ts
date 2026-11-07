@@ -13,7 +13,7 @@ export interface SortieLecteurB { champs: ChampLu[]; ambigus: string[] }
 const simple = (t: string): string => Array.from(t, (c) => c.normalize('NFD')[0]?.toLowerCase() ?? c).join('');
 const lettre = (c: string | undefined): boolean => c !== undefined && /[a-z0-9]/.test(c);
 const MONTANT = /\d{1,3}(?:[\s.,]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d+)?/g;
-const POURCENT_LU = /(\d{1,2})(?:[.,](\d{1,2}))?\s*%/;
+const POURCENT_LU = /(?<![\d.,])(\d{1,2})(?:[.,](\d{1,2}))?\s*%/;
 
 /** Première occurrence d'un mot-clé entier : position de début et de fin, ou null. */
 function trouver(ligne: string, mots: readonly string[]): { debut: number; fin: number } | null {
@@ -53,7 +53,10 @@ export function lireAvecRegles(e: EntreeLecteurB): SortieLecteurB {
     else if (pct !== null && montant !== null && (tva !== null || ht !== null)) {
       const pdb = Number((pct[1] ?? '') + (pct[2] ?? '').padEnd(2, '0'));
       if (e.tauxConnusPdb.includes(pdb)) {
-        const estTva = tva !== null && (ht === null || tva.debut < ht.debut);
+        // Mot-clé le plus proche avant le taux (sinon le dernier de la ligne) : il dit si le montant est une TVA ou une base HT.
+        const mots = [tva === null ? null : { debut: tva.debut, estTva: true }, ht === null ? null : { debut: ht.debut, estTva: false }].filter((x) => x !== null);
+        const avant = mots.filter((x) => x.debut < pct.index);
+        const estTva = (avant.length > 0 ? avant : mots).reduce((a, b) => (b.debut > a.debut ? b : a)).estTva;
         ajouter(nomParTaux(estTva ? 'tva' : 'ht', pdb), 'c' + String(montant.c), montant.brut, montant.brut, montant.c);
       }
     }

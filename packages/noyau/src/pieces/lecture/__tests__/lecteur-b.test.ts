@@ -74,6 +74,28 @@ describe('lecteur-b', () => {
     const r = lire('Base HT 19 % 1 000,00\nTVA 19 % 190,00\nTotal TTC 1 190,00', []);
     expect(r.champs.map((c) => c.nom)).toEqual(['ttc']);
   });
+  it('ligne-ht-et-tva-et-pourcentage-borne', () => {
+    const r = lire('Montant HT 1 000,00 TVA 20 % 200,00', [2000]);
+    expect(r.champs.map((c) => c.nom)).toEqual(['tva@2000']);
+    expect(val(r, 'tva@2000')?.valeurCentimes).toBe(20000);
+    expect(val(lire('Montant HT 20 % 100,00', [2000]), 'ht@2000')?.valeurCentimes).toBe(10000);
+    expect(lire('TVA 120 % 50,00', [2000]).champs).toEqual([]);
+    expect(lire('TVA 1.20 % 50,00', [2000]).champs).toEqual([]);
+    expect(val(lire('TVA 5,5 % 50,00', [550]), 'tva@550')?.valeurCentimes).toBe(5000);
+    expect(val(lire('HT 20 % 100,00 TVA', [2000]), 'ht@2000')?.valeurCentimes).toBe(10000);
+  });
+  it('numero-date-identifiants-ancres', () => {
+    expect(lire('Facture n bla ABC-123', []).champs).toEqual([]);
+    expect(lire('Facture n ABC-123', []).champs).toHaveLength(1);
+    expect(lire('Facture n AB', []).champs).toEqual([]);
+    expect(lire('Date du jour fixe 15/03/2025', []).champs).toEqual([]);
+    expect(lire('Date 15/03/2025', []).champs).toHaveLength(1);
+    expect(val(lire(`${SIREN} puis ${luhn('87654321')}`, []), 'fournisseur_siren')?.valeur).toBe(SIREN);
+    const siret = luhn(SIREN + '0001');
+    const faux = siret.slice(0, 13) + String((Number(siret[13]) + 1) % 10);
+    expect(lire(faux, []).champs).toEqual([]);
+    expect(val(lire(siret, []), 'fournisseur_siren')?.citation).toBe(siret);
+  });
   it('echeance-et-mot-colle-ignores', () => {
     const r = lire('Date d\'échéance : 15/04/2025\nDue date 15/04/2025\nChat 12,00\nFacture nette ABC', []);
     expect(r).toEqual({ champs: [], ambigus: [] });
