@@ -31,8 +31,9 @@ describe('catalogue des règles du FEC', () => {
     expect(ids.length).toBeGreaterThan(0);
   });
   it('chaque-test-id-existe', () => {
-    const titres = readdirSync(dossier).filter((f) => f.endsWith('.test.ts')).map((f) => readFileSync(dossier + f, 'utf8')).join('\n');
-    for (const r of REGLES_FEC) expect(titres, r.testId).toContain(r.testId);
+    const sources = readdirSync(dossier).filter((f) => f.endsWith('.test.ts')).map((f) => readFileSync(dossier + f, 'utf8'));
+    const titres = sources.flatMap((s) => [...s.matchAll(/\b(?:it|test)\(\s*(['"`])(.*?)\1/g)].map((m) => m[2] ?? ''));
+    for (const r of REGLES_FEC) expect(titres.some((t) => t.includes(r.testId)), r.testId).toBe(true);
   });
   it('source-jamais-vide', () => {
     for (const r of REGLES_FEC) expect(r.source.trim(), r.id).not.toBe('');
