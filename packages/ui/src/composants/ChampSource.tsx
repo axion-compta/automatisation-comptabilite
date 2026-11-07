@@ -45,8 +45,9 @@ function estVide(valeur: ReactNode): boolean {
 export function ChampSource({ intitule, valeur, statut, confiance, source, libelles }: ChampSourceProps) {
   const id = useId();
   const href = source ? hrefSur(source.href) : null;
+  const classes = ["axion-champ-source", "axion-champ-source--" + statut].join(" ");
   return (
-    <div role="group" aria-labelledby={id} className={`axion-champ-source axion-champ-source--${statut}`}>
+    <div role="group" aria-labelledby={id} className={classes}>
       <span id={id} className="axion-champ-source__intitule">{intitule}</span>
       <span className="axion-champ-source__valeur">{estVide(valeur) ? libelles.vide : valeur}</span>
       <Pastille etat={ETAT_PAR_STATUT[statut]} libelle={libelles.statut[statut]} />
