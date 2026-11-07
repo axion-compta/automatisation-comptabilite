@@ -25,22 +25,27 @@ export interface PaginationTableau {
   surPage(decalage: number): void;
 }
 
+export type CleDeLigne = string;
+
 export interface TableauProps<L> {
   legende: string;
   colonnes: ColonneTableau<L>[];
   lignes: L[];
-  cleDeLigne(ligne: L): string;
+  cleDeLigne(ligne: L): CleDeLigne;
   tri?: TriTableau;
   surTri?(tri: TriTableau): void;
   pagination?: PaginationTableau;
 }
 
-function ariaSort(colonne: { cle: string }, tri?: TriTableau): "ascending" | "descending" | "none" {
-  return tri && tri.cle === colonne.cle ? tri.sens : "none";
-}
+const SANS_TRI = "none" as const;
 
 /** Tableau accessible. Le tri et la pagination sont faits par l'appelant ou le serveur : rien n'est trié ici. */
-export function Tableau<L>({ legende, colonnes, lignes, cleDeLigne, tri, surTri, pagination }: TableauProps<L>) {
+export function Tableau<L>(props: TableauProps<L>) {
+  const { legende, colonnes, lignes, cleDeLigne, tri, surTri, pagination } = props;
+  const trier = (cle: string) => {
+    const sens: SensDeTri = tri && tri.cle === cle && tri.sens === "ascending" ? "descending" : "ascending";
+    if (surTri) surTri({ cle, sens });
+  };
   const classeCellule = (c: ColonneTableau<L>) =>
     c.alignement === "droite" ? "axion-tableau__cellule axion-tableau__cellule--droite" : "axion-tableau__cellule";
   let navigation: ReactNode = null;
@@ -83,15 +88,13 @@ export function Tableau<L>({ legende, colonnes, lignes, cleDeLigne, tri, surTri,
                 key={c.cle}
                 scope="col"
                 className={classeCellule(c)}
-                aria-sort={c.triable ? ariaSort(c, tri) : undefined}
+                aria-sort={c.triable ? (tri && tri.cle === c.cle ? tri.sens : SANS_TRI) : undefined}
               >
                 {c.triable ? (
                   <button
                     type="button"
                     className="axion-tableau__tri"
-                    onClick={() =>
-                      surTri?.({ cle: c.cle, sens: tri && tri.cle === c.cle && tri.sens === "ascending" ? "descending" : "ascending" })
-                    }
+                    onClick={() => trier(c.cle)}
                   >
                     {c.entete}
                   </button>
