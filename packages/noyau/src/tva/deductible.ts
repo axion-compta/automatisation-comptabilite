@@ -4,8 +4,8 @@ import { type Centimes, pourcentage, soustraire } from '../argent/index.js';
 
 export class ErreurTva extends Error {
   override name = 'ErreurTva';
-  readonly code: 'part_invalide';
-  constructor(code: 'part_invalide', message: string) {
+  readonly code: 'part_invalide' | 'montant_negatif';
+  constructor(code: 'part_invalide' | 'montant_negatif', message: string) {
     super(message);
     this.code = code;
   }

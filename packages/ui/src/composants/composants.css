@@ -1,0 +1,78 @@
+/* Composants de base : uniquement des variables de jetons.css. */
+.axion-bouton {
+  font-family: var(--police-texte);
+  font-size: var(--taille-texte);
+  font-weight: var(--graisse-forte);
+  padding: var(--espace-s) var(--espace-m);
+  border-radius: var(--rayon-m);
+  border: 1px solid var(--couleur-accent);
+  cursor: pointer;
+}
+.axion-bouton--principal {
+  background: var(--couleur-accent);
+  color: var(--couleur-accent-texte);
+}
+.axion-bouton--discret {
+  background: transparent;
+  color: var(--couleur-accent);
+}
+.axion-bouton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.axion-bouton:focus-visible {
+  outline: 2px solid var(--couleur-accent);
+  outline-offset: 2px;
+}
+
+.axion-carte {
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-carte);
+  padding: var(--espace-l);
+}
+.axion-carte__titre {
+  margin: 0 0 var(--espace-m);
+  font-family: var(--police-titre);
+  font-size: var(--taille-titre);
+  font-weight: var(--graisse-forte);
+}
+
+.axion-etat {
+  padding: var(--espace-l);
+  text-align: center;
+  color: var(--couleur-texte-discret);
+}
+.axion-etat--erreur {
+  color: var(--couleur-erreur);
+  border: 1px solid var(--couleur-erreur);
+  border-radius: var(--rayon-m);
+}
+.axion-etat__titre {
+  margin: 0 0 var(--espace-s);
+  font-weight: var(--graisse-forte);
+}
+.axion-etat__detail {
+  margin: 0;
+}
+
+.axion-pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-xs);
+  padding: var(--espace-xs) var(--espace-s);
+  border: 1px solid currentColor;
+  border-radius: var(--rayon-l);
+  font-size: var(--taille-texte);
+  font-weight: var(--graisse-forte);
+}
+.axion-pastille--ok {
+  color: var(--couleur-etat-ok);
+}
+.axion-pastille--attente {
+  color: var(--couleur-etat-attente);
+}
+.axion-pastille--bloque {
+  color: var(--couleur-etat-bloque);
+}
