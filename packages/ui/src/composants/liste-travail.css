@@ -1,0 +1,2 @@
+/* Liste de travail : uniquement des variables de jetons.css. */
+.axion-liste-travail__mention { margin: 0 0 var(--espace-s); padding: var(--espace-s) var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); font-family: var(--police-texte); font-size: var(--taille-texte); font-weight: var(--graisse-forte); }
