@@ -1,26 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ACCORDS,
-  CANAUX,
-  CHAMPS_SIMPLES,
-  CODES_ERREUR,
-  CODES_REFUS,
-  ErreurPiece,
-  ETATS_TRAITEMENT,
-  estChampCritique,
-  estDans,
-  MOTIFS_A_VERIFIER,
-  MOTIFS_MASQUAGE,
-  MOTIFS_NON_COMPTEE,
-  MOTIFS_SENSIBLE,
-  MOTS_CONFIANCE,
-  MOYENS_PAIEMENT,
-  nomParTaux,
-  SORTES_LIEN,
-  SOURCES_CHAMP,
-  STATUTS_PERIODE,
-  TYPES_PIECE,
-} from '../types.js';
+import { ACCORDS, CANAUX, CHAMPS_SIMPLES, CODES_ERREUR, CODES_REFUS, ErreurPiece, ETATS_TRAITEMENT, estChampCritique, estDans, MOTIFS_A_VERIFIER, MOTIFS_MASQUAGE, MOTIFS_NON_COMPTEE, MOTIFS_SENSIBLE, MOTS_CONFIANCE, MOYENS_PAIEMENT, nomParTaux, SORTES_LIEN, SOURCES_CHAMP, STATUTS_PERIODE, TYPES_PIECE } from '../types.js';
 
 // Copies écrites à la main : une liste modifiée dans types.ts fait échouer `listes-figees`.
 const mots = (t: string): string[] => t.split(' ');
@@ -75,10 +54,7 @@ describe('types des pièces', () => {
 
   it('nom-par-taux-refuse-non-entier', () => {
     for (const mauvais of [5.5, -1, Number.NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 2]) {
-      expect(
-        code(() => nomParTaux('ht', mauvais)),
-        String(mauvais),
-      ).toBe('nom_de_champ_invalide');
+      expect(code(() => nomParTaux('ht', mauvais)), String(mauvais)).toBe('nom_de_champ_invalide');
     }
     expect(code(() => nomParTaux('tva', -0.5))).toBe('nom_de_champ_invalide');
   });
@@ -93,19 +69,7 @@ describe('types des pièces', () => {
   });
 
   it('champ-non-critique', () => {
-    for (const nom of [
-      'ht@1900',
-      'tva',
-      'xtva@1900',
-      'TTC',
-      'ttc ',
-      '',
-      'devise',
-      'montant_du',
-      'fournisseur_adresse',
-      'langue',
-      'tva_1900',
-    ]) {
+    for (const nom of ['ht@1900', 'tva', 'xtva@1900', 'TTC', 'ttc ', '', 'devise', 'montant_du', 'fournisseur_adresse', 'langue', 'tva_1900']) {
       expect(estChampCritique(nom), nom).toBe(false);
     }
   });
