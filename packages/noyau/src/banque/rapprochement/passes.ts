@@ -3,14 +3,14 @@ import { centimes } from '../../argent/index.js';
 import { estDateValide } from '../../dates/civiles.js';
 import { joursEntre } from '../../interface/dates.js';
 import type { EtatRapprochement, Lien, LigneBancaire, Moyen } from '../types.js';
-import { affecter } from './affectation.js';
+import { affecter, ErreurAffectation, type Affectation } from './affectation.js';
 import type { PieceAvecReste } from './preparation.js';
 import { appliquerAmbiguite, etatSelonScore, scorer, type Bareme, type Constats } from './score.js';
 import { restePiece, verifierNouveauLien } from './sommes.js';
 
 export class ErreurPasses extends Error {
   override name = 'ErreurPasses';
-  constructor(readonly code: 'tolerance_invalide' | 'date_invalide') {
+  constructor(readonly code: 'tolerance_invalide' | 'date_invalide' | 'reglage_invalide') {
     super(code);
   }
 }
@@ -32,6 +32,7 @@ const plein = (s: string | undefined): s is string => s !== undefined && s !== '
 
 function verifierEntree(entree: Entree, r: Reglage): void {
   if (!Object.values(r.toleranceJours).every((n) => Number.isSafeInteger(n) && n >= 0)) throw new ErreurPasses('tolerance_invalide');
+  if (!Number.isSafeInteger(r.maxAffectation) || r.maxAffectation < 1) throw new ErreurPasses('reglage_invalide');
   const dates = [...entree.lignes.map((l) => l.dateOperation), ...entree.pieces.flatMap((p) => [p.date, ...(p.echeance === undefined ? [] : [p.echeance])])];
   if (!dates.every(estDateValide)) throw new ErreurPasses('date_invalide');
 }
@@ -127,7 +128,12 @@ export function rapprocher(entree: Entree, reglage: Reglage): Resultat {
       return c !== undefined && libre(c) ? c.constats.joursEcart : null;
     };
     const el = (id: string) => ({ id, cle: id });
-    const sortie = tous.length > 1 ? affecter(tous.map((a) => el(a.ligne.id)), [...k.pieces].map(el), cout, reglage.maxAffectation) : { paires: [], unique: false };
+    let sortie: Pick<Affectation, 'paires' | 'unique'> = { paires: [], unique: false };
+    try {
+      if (tous.length > 1) sortie = affecter(tous.map((a) => el(a.ligne.id)), [...k.pieces].map(el), cout, reglage.maxAffectation);
+    } catch (e) {
+      if (!(e instanceof ErreurAffectation && e.message === 'trop_grand')) throw e; // composante trop grande : DOUTEUSE avec options, jamais d'exception globale
+    }
     const paires = new Map(sortie.unique ? sortie.paires.map((p) => [p.ligneId, p.pieceId]) : []);
     for (const a of tous) {
       const choisi = trouver(a.ligne.id, paires.get(a.ligne.id) ?? '');

@@ -125,9 +125,17 @@ describe('rapprocher', () => {
     expect(rapprocher({ lignes: [], pieces: [piece('P1', 1)] }, reglage())).toEqual({ liens: [], etats: {}, options: {} });
     expect(rapprocher({ lignes: [ligne('L1', -1)], pieces: [] }, reglage()).liens).toEqual([]);
   });
-  it.each([[Number.NaN], [-1], [1.5], [Infinity]])('tolerance-invalide-%s', (n) => {
+  it.each([[Number.NaN], [-1], [1.5], [Infinity]])('tolerance-et-max-affectation-invalides-%s', (n) => {
     const entree = { lignes: [ligne('L1', -1)], pieces: [piece('P1', 1)] };
     expect(code(() => rapprocher(entree, reglage({ toleranceJours: { ...tol(5), carte: n } })))).toBe('tolerance_invalide');
+    for (const m of [n, 0]) expect(code(() => rapprocher(entree, reglage({ maxAffectation: m })))).toBe('reglage_invalide');
+  });
+  it('affectation-trop-grande-douteuse', () => {
+    const pieces = [piece('P1', 60000), piece('P2', 60000), piece('P3', 60000), piece('P4', 777, { sens: 'vente' })];
+    const r = rapprocher({ lignes: [...lignesJours([10, 10, 10]), ligne('L4', 777, { rang: 4 })], pieces }, reglage({ maxAffectation: 2 }));
+    expect(r.etats).toMatchObject({ L1: 'DOUTEUSE', L2: 'DOUTEUSE', L3: 'DOUTEUSE' });
+    expect(r.options.L1).toEqual(['P1', 'P2', 'P3']);
+    expect(r.liens.filter((l) => ['L1', 'L2', 'L3'].includes(l.ligneId))).toEqual([]);
   });
   it('date-invalide-refusee', () => {
     const entree = { lignes: [ligne('L1', -60000, { dateOperation: '2026-02-30' })], pieces: [piece('P1', 60000)] };
