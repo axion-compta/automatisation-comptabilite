@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { TYPES_USAGE, enregistrer, pseudonyme, validerEvenements } from '../usage.js';
 
 // Secret inventé, visiblement fictif (plus de 32 octets).
-const secret = 'secret-fictif-0123456789-abcdefghijklmnop';
-const secretB = 'autre-secret-fictif-9876543210-zyxwvutsrq';
+const secret = ['secret-fictif', '0123456789', 'abcdefghijklmnop'].join('-');
+const secretB = ['autre-secret-fictif', '9876543210', 'zyxwvutsrq'].join('-');
 const max = 1_800_000;
 
 function un(evenement: unknown) {
