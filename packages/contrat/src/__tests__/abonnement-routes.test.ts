@@ -30,8 +30,7 @@ describe('contrat abonnement', () => {
     expect(post?.operationId).toBe('demanderPalier');
     expect(Object.keys(post!.responses).sort()).toEqual(['201', '404', '422']);
     const err = (contrat.abonnement.demanderPalier as unknown as { '~orpc': { errorMap: Record<string, { status: number }> } })['~orpc'].errorMap;
-    const statuts = Object.fromEntries(Object.entries(err).map(([k, v]) => [k, v.status]));
-    expect(statuts).toEqual({ ACCORD_MANQUANT: 422, PALIER_INCONNU: 404, PALIER_IDENTIQUE: 422, PALIER_NON_SUPERIEUR: 422 });
+    expect(Object.fromEntries(Object.entries(err).map(([k, v]) => [k, v.status]))).toEqual({ ACCORD_MANQUANT: 422, PALIER_INCONNU: 404, PALIER_IDENTIQUE: 422, PALIER_NON_SUPERIEUR: 422 });
     expect(Object.keys(contrat.abonnement).sort()).toEqual(['demanderPalier', 'lireAcces', 'lireVolume']);
   });
 
@@ -65,22 +64,16 @@ describe('contrat abonnement', () => {
 
   it('cles-existantes-inchangees', () => {
     expect(Object.keys(contrat.ecritures).sort()).toEqual(['creer', 'lister', 'modifier']);
-    expect(contrat.plan).toBeDefined();
-    expect(contrat.tiers).toBeDefined();
     expect(Object.keys(contrat).sort()).toEqual(['abonnement', 'ecritures', 'plan', 'tiers']);
-
-    const volume = { palier: { code: 'P1', nom_affiche: 'P' }, compris: 10, utilise: 1, prevision_fin_de_mois: 2, seuils_bps: [8000],
-      alertes_bps: [], depasse: false, proposer_choix: false, comportement: 'continuer', palier_superieur: null };
+    const volume = { palier: { code: 'P1', nom_affiche: 'P' }, compris: 10, utilise: 1, prevision_fin_de_mois: 2, seuils_bps: [8000], alertes_bps: [], depasse: false, proposer_choix: false, comportement: 'continuer', palier_superieur: null };
     const acces = { etat: 'ACTIF', banniere: null, reprise: { pieces_traitees: 3 } };
-    const ban = { cause: 'c', consequence: 'x', lien: 'portail_abonnement' };
     const ok = (schema: z.ZodType, v: unknown) => schema.safeParse(v).success;
     expect(ok(Volume, volume) && ok(Acces, acces)).toBe(true);
     for (const n of [-1, 1.5, NaN, Infinity]) {
       expect(ok(Volume, { ...volume, compris: n })).toBe(false);
+      expect(ok(Volume, { ...volume, seuils_bps: [n] })).toBe(false);
       expect(ok(Acces, { ...acces, reprise: { pieces_traitees: n } })).toBe(false);
     }
-    expect(ok(Volume, { ...volume, seuils_bps: [1.5] })).toBe(false);
-    expect(ok(Acces, { ...acces, banniere: { ...ban, prochaine_etape_le: '2026-12-31' } })).toBe(true);
-    expect(ok(Acces, { ...acces, banniere: { ...ban, prochaine_etape_le: '2026-13-45' } })).toBe(false);
+    for (const [d, bon] of [['2026-12-31', true], ['2026-13-45', false]] as const) expect(ok(Acces, { ...acces, banniere: { cause: 'c', consequence: 'x', lien: 'contacter_axion', prochaine_etape_le: d } })).toBe(bon);
   });
 });
