@@ -37,6 +37,7 @@ describe('imposition', () => {
 
   it('associe-unique-inconnu', () => {
     expect(impotParDefaut(MATRICE, 'EURL', null)).toEqual({ impot: null, statut: 'a_confirmer', motif: 'associe_unique_inconnu' });
+    expect(impotParDefaut([r('SARL', 'XYZ')], 'SARL', null)).toEqual({ impot: null, statut: 'a_confirmer', motif: 'valeur_matrice_invalide' });
     expect(impotParDefaut([], 'SARL', null)).toEqual({ impot: null, statut: 'a_confirmer', motif: 'forme_sans_regle' });
   });
 
@@ -59,6 +60,8 @@ describe('imposition', () => {
     expect(code(() => ajouterLigneImposition(ferme, ligne('2025-06-01')))).toBe('chevauchement');
     expect(ajouterLigneImposition(ferme, ligne('2026-01-01'))).toHaveLength(2);
     expect(code(() => ajouterLigneImposition(h, ligne('2025-02-30')))).toBe('date_invalide');
+    expect(code(() => ajouterLigneImposition([], ligne('2026-01-01', '2025-01-01')))).toBe('ordre_inverse');
+    expect(code(() => ajouterLigneImposition([], ligne('2026-01-01', '2026-01-01')))).toBe('ordre_inverse');
   });
 
   it('lecture-a-la-date', () => {

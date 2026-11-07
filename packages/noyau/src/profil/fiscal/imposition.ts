@@ -1,6 +1,6 @@
 import { regleDeForme } from '../forme.js';
 import type { LigneRegleForme } from '../forme.js';
-import { ErreurProfil, exigerDate } from '../types.js';
+import { ErreurProfil, IMPOTS, exigerDate } from '../types.js';
 import type { Categorie, Impot, RegimeImposition } from '../types.js';
 
 export type LigneImposition = {
@@ -14,13 +14,16 @@ export type LigneImposition = {
   motif: string;
   statut: 'propose' | 'confirme';
 };
-export type ImpotParDefaut = { impot: string | null; statut: 'a_confirmer'; motif?: string };
+export type ImpotParDefaut = { impot: Impot | null; statut: 'a_confirmer'; motif?: string };
 
 const FORMES_SANS_OPTION_IS = ['EI', 'EURL', 'SCI'];
 
 function verifierLigne(l: LigneImposition): void {
   exigerDate(l.effetDebut, 'effetDebut');
-  if (l.effetFin !== null) exigerDate(l.effetFin, 'effetFin');
+  if (l.effetFin !== null) {
+    exigerDate(l.effetFin, 'effetFin');
+    if (l.effetFin <= l.effetDebut) throw new ErreurProfil('ordre_inverse');
+  }
 }
 
 export function ajouterLigneImposition(historique: readonly LigneImposition[], nouvelle: LigneImposition): readonly LigneImposition[] {
@@ -54,7 +57,9 @@ export function impotParDefaut(matrice: readonly LigneRegleForme[], forme: strin
     cle = associeUniquePersonnePhysique ? 'EURL_PP' : 'EURL_PM';
   }
   const impot = regleDeForme(matrice, cle, 'impot_par_defaut');
-  return impot === null ? { impot: null, statut: 'a_confirmer', motif: 'forme_sans_regle' } : { impot, statut: 'a_confirmer' };
+  if (impot === null) return { impot: null, statut: 'a_confirmer', motif: 'forme_sans_regle' };
+  const valide = IMPOTS.find((i) => i === impot);
+  return valide === undefined ? { impot: null, statut: 'a_confirmer', motif: 'valeur_matrice_invalide' } : { impot: valide, statut: 'a_confirmer' };
 }
 
 /** Option vers l'IS d'une EI, d'une EURL ou d'une SCI : champ prêt, refusée au MVP. */
