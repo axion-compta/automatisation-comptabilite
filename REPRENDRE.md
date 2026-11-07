@@ -27,7 +27,7 @@ Dépôt public, données fictives seulement : aucun secret, aucun prix. Lis ce b
 - Remplacées : les fiches L01-T39 et L01-T47 restent « a_faire » dans leurs fichiers, mais leur travail est fait par L01-T54 (PR 115) et L01-T52 (PR 106). Le relevé ne les compte donc pas comme faites : 53/55, pas 54 ni 55.
 - Reste : clore ou marquer ces deux fiches remplacées, puis fusionner cette fiche L01-T05.
 Mesures sans IA, relevées le 07/11/2026 :
-- 70 PR fusionnées (53 fiches distinctes, dont des PR de création de fiche), relevé `gh pr list --state merged`.
+- 70 PR du lot 01 fusionnées (53 fiches distinctes, dont des PR de création de fiche), relevé `gh pr list --state merged`.
 - Délai médian ouverture à fusion : 29,8 min pour 31 PR de fiches sensibles ; 15,3 min pour 37 PR de fiches non sensibles.
 - `pilotage/calibrage.csv` : en-tête seul, aucune ligne ; temps d'attente de Will : non mesuré.
 - 5 dernières CI vertes de main : 49, 63, 48, 64 et 49 s.
