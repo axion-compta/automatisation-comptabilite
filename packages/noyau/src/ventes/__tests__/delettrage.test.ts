@@ -93,8 +93,10 @@ describe('delettrage', () => {
 
   it('montants-invalides-refuses', () => {
     for (const v of [Number.NaN, Number.POSITIVE_INFINITY, 1.5, -100]) {
-      expect(code(() => delettrer(entree({ lignesTvaEncaissement: [tva(1900, 200000, v)] })))).toBeDefined();
+      expect(code(() => delettrer(entree({ lignesTvaEncaissement: [tva(1900, 200000, v)] })))).toBe('montant_invalide');
+      expect(code(() => delettrer(entree({ lignesTvaEncaissement: [tva(1900, v, 100)] })))).toBe('montant_invalide');
     }
+    expect(code(() => delettrer(entree({ lignesTvaEncaissement: [tva(1900, -1000, 0)] })))).toBe('montant_invalide');
     expect(() => delettrer(entree({ lignesTvaEncaissement: [tva(1900, 200000, centimes(5))] }))).not.toThrow();
   });
 

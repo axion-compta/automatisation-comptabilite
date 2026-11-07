@@ -26,6 +26,10 @@ export function delettrer(entree: EntreeDelettrage): ResultatDelettrage {
   exigerDate(dateCorrection, 'dateCorrection');
   if (vide(entree.lettrageId) || vide(entree.idAnnulation) || vide(entree.idEcriture)) throw new ErreurVente('identifiant_obligatoire', 'Identifiant manquant.');
 
+  for (const l of entree.lignesTvaEncaissement) {
+    if (!Number.isSafeInteger(l.baseCentimes) || l.baseCentimes < 0 || !Number.isSafeInteger(l.tvaCentimes) || l.tvaCentimes < 0) throw new ErreurVente('montant_invalide', 'Base ou TVA invalide (entier positif ou nul attendu).');
+  }
+
   const lignesTva = entree.lignesTvaEncaissement.map((l): LigneTvaVente => ({
     ...l, baseCentimes: soustraire(zero, centimes(l.baseCentimes)), tvaCentimes: soustraire(zero, centimes(l.tvaCentimes)), dateExigibilite: dateCorrection,
   }));
