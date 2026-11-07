@@ -65,7 +65,7 @@
     background: transparent;
     font: inherit;
   }
-  .barre-discuter {
+  .barre-mobile .barre-discuter {
     position: absolute;
     right: var(--espace-m);
     bottom: 100%;
