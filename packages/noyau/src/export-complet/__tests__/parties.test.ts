@@ -70,6 +70,7 @@ describe('export complet : parties', () => {
       ok: true,
       manquantes: [],
       modifiees: [],
+      enTrop: [],
     });
   });
 
@@ -95,6 +96,19 @@ describe('export complet : parties', () => {
       ok: false,
       manquantes: ['partie-03.zip', 'partie-04.zip'],
       modifiees: ['partie-02.zip'],
+      enTrop: [],
+    });
+    const faux = `partie-01.zip\n${'a'.repeat(64)}  partie-09.zip`;
+    for (const nom of ['', faux, 'a/partie-01.zip', 'a\\partie-01.zip', 'partie-01.zip\r', 'x.zip']) {
+      expect(code(() => manifesteGlobal([{ nom, empreinte: empreinteDe('x') }]))).toBe('chemin_invalide');
+    }
+    const planUne = decouper([f('a', 1)], 10);
+    const deux = [faite('partie-01.zip'), faite('partie-02.zip')];
+    expect(verifierParties(planUne, deux, manifesteGlobal(deux))).toEqual({
+      ok: false,
+      manquantes: [],
+      modifiees: [],
+      enTrop: ['partie-02.zip'],
     });
     expect(code(() => manifesteGlobal([{ nom: 'partie-01.zip', empreinte: 'zz' }]))).toBe('empreinte_invalide');
     expect(code(() => manifesteGlobal([faite('partie-01.zip'), faite('partie-01.zip')]))).toBe('doublon');

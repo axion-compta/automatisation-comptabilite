@@ -6,6 +6,7 @@ export type PartiePlan = { nom: string; chemins: string[]; taille: number };
 export type PartieFaite = { nom: string; empreinte: string };
 
 const LARGEUR_MIN_NUMERO = 2;
+const FORME_NOM = /^partie-[0-9]{2,}[.]zip$/;
 const ORDRE = (a: string, b: string): number => (a < b ? -1 : 1);
 
 function tailleValide(n: number, min: number): void {
@@ -56,6 +57,7 @@ export function decouper(fichiers: readonly FichierAExporter[], tailleMax: numbe
 export function manifesteGlobal(parties: readonly PartieFaite[]): string {
   const noms = new Set<string>();
   for (const p of parties) {
+    if (!FORME_NOM.test(p.nom)) throw new ErreurExploitation('chemin_invalide');
     verifierEmpreinte(p.empreinte);
     if (noms.has(p.nom)) throw new ErreurExploitation('doublon');
     noms.add(p.nom);
@@ -88,12 +90,14 @@ export function verifierParties(
   plan: readonly PartiePlan[],
   faites: readonly PartieFaite[],
   manifesteGlobalTexte: string,
-): { ok: boolean; manquantes: string[]; modifiees: string[] } {
+): { ok: boolean; manquantes: string[]; modifiees: string[]; enTrop: string[] } {
   const valides = faitesValides(faites);
   const attendu = new Map(lireManifeste(manifesteGlobalTexte).map((l) => [l.nom, l.sha256]));
   const manquantes = plan.filter((p) => !valides.has(p.nom)).map((p) => p.nom);
   const modifiees = plan
     .filter((p) => valides.has(p.nom) && attendu.get(p.nom) !== valides.get(p.nom))
     .map((p) => p.nom);
-  return { ok: manquantes.length === 0 && modifiees.length === 0, manquantes, modifiees };
+  const nomsPlan = new Set(plan.map((p) => p.nom));
+  const enTrop = [...attendu.keys()].filter((n) => !nomsPlan.has(n)).sort(ORDRE);
+  return { ok: manquantes.length === 0 && modifiees.length === 0 && enTrop.length === 0, manquantes, modifiees, enTrop };
 }
