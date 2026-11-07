@@ -71,6 +71,14 @@ describe('schéma de vente', () => {
       expect(code(() => dateExigibilite('A', 'bien', { dateFacture: mauvaise }))).toBe('date_invalide');
       expect(code(() => dateExigibilite('A', 'bien', { dateFacture: '2026-11-03', dateOperation: mauvaise }))).toBe('date_invalide');
       expect(code(() => dateExigibilite('B', 'service', { dateFacture: '2026-11-03', dateEncaissement: mauvaise }))).toBe('date_invalide');
+      for (const cas of ['B', 'C', 'D'] as const) {
+        expect(code(() => dateExigibilite(cas, 'bien', { dateFacture: mauvaise }))).toBe('date_invalide');
+      }
+      expect(code(() => casDeLaLigne(option, 'bien', mauvaise))).toBe('date_invalide');
+      expect(code(() => casDeLaLigne({ ...option, regimeTva: 'franchise' }, 'bien', mauvaise))).toBe('date_invalide');
+      expect(code(() => casDeLaLigne({ ...option, regimeTva: 'a_confirmer' }, 'bien', mauvaise))).toBe('date_invalide');
+      expect(code(() => casDeLaLigne(option, 'a_confirmer', mauvaise))).toBe('date_invalide');
+      expect(code(() => casDeLaLigne({ ...option, tenue: 'livre_recettes' }, 'bien', mauvaise))).toBe('date_invalide');
     }
     expect(code(() => casDeLaLigne(option, 'service', undefined as unknown as string))).toBe('date_invalide');
     expect(code(() => dateExigibilite('A', 'bien', { dateFacture: undefined as unknown as string }))).toBe('date_invalide');
