@@ -124,3 +124,12 @@ export function formater(a: Centimes): string {
   const reste = String(absolu % 100n).padStart(2, '0');
   return (negatif ? '-' : '') + String(euros) + ',' + reste;
 }
+
+/** Convertit un montant par un taux entier « taux × 10^8 » (0,92000000 donne 92000000n). */
+export function convertir(montant: Centimes, tauxHuitDecimales: bigint, mode: Arrondi): Centimes {
+  if (!Number.isSafeInteger(montant)) {
+    throw new ErreurArgent('Un montant doit être un entier de centimes : ' + String(montant));
+  }
+  if (tauxHuitDecimales <= 0n) throw new ErreurArgent('Le taux doit être strictement positif');
+  return verifier(Number(diviser(BigInt(montant) * tauxHuitDecimales, 100_000_000n, mode)));
+}
