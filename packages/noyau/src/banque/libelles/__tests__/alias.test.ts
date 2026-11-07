@@ -85,8 +85,7 @@ describe('vie d’un alias appris', () => {
     expect(aliasApplicable(p, 'ATELIER', [])).toBe(true);
     expect(aliasApplicable(p, 'LE ATELIER', [])).toBe(false);
     expect(aliasApplicable(p, 'ATELIER DU PAIN', [{ motif: 'ATELIER DU PAIN', contrepartieId: 'c1' }])).toBe(false);
-    const e = suite(base, [A, A, A, A, A]);
-    expect(aliasApplicable(e, 'ATELIER DU PAIN 12', [])).toBe(false);
+    expect(aliasApplicable(suite(base, [A, A, A, A, A]), 'ATELIER DU PAIN 12', [])).toBe(false);
   });
 
   it('entree-non-modifiee', () => {

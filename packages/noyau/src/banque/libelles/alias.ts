@@ -1,5 +1,4 @@
-// Vie d'un alias de libellé appris : proposition, activation, désactivation, « jamais ça ».
-// Les seuils sont des réglages passés en argument ; aucun calcul par division.
+// Vie d'un alias appris : seuils en réglage, aucune division.
 export type Alias = {
   readonly id: string;
   readonly contrepartieId: string;
@@ -35,9 +34,7 @@ function verifier(r: ReglageAlias): void {
   if (!ok) throw new Error('reglage_invalide');
 }
 
-function motifValide(motif: string): boolean {
-  return motif.trim() !== '';
-}
+const motifValide = (motif: string): boolean => motif.trim() !== '';
 
 export function enregistrerDecision(
   alias: Alias,
@@ -70,9 +67,7 @@ export function reactiver(alias: Alias): Alias {
 }
 
 export function bloqueParJamais(alias: Alias, reglesJamais: readonly RegleJamais[]): boolean {
-  return reglesJamais.some(
-    (r) => r.contrepartieId === alias.contrepartieId && r.motif === alias.motif,
-  );
+  return reglesJamais.some((r) => r.contrepartieId === alias.contrepartieId && r.motif === alias.motif);
 }
 
 export function aliasApplicable(
