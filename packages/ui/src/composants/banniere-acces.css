@@ -1,0 +1,7 @@
+/* Bannière d'accès : uniquement des variables de jetons.css, sens porté par le titre. */
+.axion-banniere-acces { display: flex; flex-direction: column; gap: var(--espace-s); padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-left-width: var(--espace-xs); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-banniere-acces[data-gravite="info"] { border-left-color: var(--couleur-accent); }
+.axion-banniere-acces[data-gravite="attention"] { border-left-color: var(--couleur-alerte); }
+.axion-banniere-acces__titre { margin: 0; font-family: var(--police-texte); font-size: var(--taille-texte); font-weight: var(--graisse-forte); }
+.axion-banniere-acces__texte { margin: 0; color: var(--couleur-texte-discret); }
+.axion-banniere-acces__lien { display: inline-flex; align-items: center; min-height: var(--cible-min); font-weight: var(--graisse-forte); color: var(--couleur-accent); }
