@@ -40,13 +40,8 @@ function montant(l: LigneTvaAchat): Centimes {
 /** Les quatre montants sont toujours rendus, même à 0. */
 export function troisMontants(lignes: readonly LigneTvaAchat[]): TroisMontants {
   const m = { solide: centimes(0), sousReserve: centimes(0), perdue: centimes(0), enDoute: centimes(0) };
-  for (const l of lignes) {
-    const v = montant(l);
-    if (l.certitude === 'solide') m.solide = ajouter(m.solide, v);
-    else if (l.certitude === 'sous_reserve') m.sousReserve = ajouter(m.sousReserve, v);
-    else if (l.certitude === 'perdue') m.perdue = ajouter(m.perdue, v);
-    else m.enDoute = ajouter(m.enDoute, v);
-  }
+  const cle = { solide: 'solide', sous_reserve: 'sousReserve', perdue: 'perdue', en_doute: 'enDoute' } as const;
+  for (const l of lignes) m[cle[l.certitude]] = ajouter(m[cle[l.certitude]], montant(l));
   const totalLu = ajouter(ajouter(m.solide, m.sousReserve), ajouter(m.perdue, m.enDoute));
   return { ...m, totalLu };
 }
@@ -55,10 +50,9 @@ export type DeductionPreparee = { etat: 'bloquee'; piecesEnDoute: number } | { e
 
 /** Somme des lignes solides seulement ; une pièce en doute bloque, sans montant. */
 export function deductionPreparee(lignes: readonly LigneTvaAchat[]): DeductionPreparee {
-  const montants = troisMontants(lignes);
   const piecesEnDoute = new Set(lignes.filter((l) => l.certitude === 'en_doute').map((l) => l.pieceId));
   if (piecesEnDoute.size > 0) return { etat: 'bloquee', piecesEnDoute: piecesEnDoute.size };
-  return { etat: 'preparee', centimes: montants.solide };
+  return { etat: 'preparee', centimes: troisMontants(lignes).solide };
 }
 
 export interface RefusInterrupteur {

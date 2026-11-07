@@ -90,43 +90,38 @@ describe('interrupteur verrouillé', () => {
 
 describe('passerEnSousReserve', () => {
   const le = '2026-01-15T10:00:00Z';
+  const pers = { type: 'personne', id: 'u1' } as const;
+  const passer = (l: LigneTvaAchat, acteur: { type: 'personne' | 'ia'; id: string }, motif = 'ok') =>
+    passerEnSousReserve(l, { acteur, motif, pieceId: l.pieceId, le });
 
   it('t2-personne-passe-en-sous-reserve-avec-trace', () => {
     const l = ligne('l5', 'p5', 500, 'en_doute');
-    const r = passerEnSousReserve(l, { acteur: { type: 'personne', id: 'u1' }, motif: 'Ticket illisible', pieceId: 'p5', le });
+    const r = passer(l, pers, 'Ticket illisible');
     expect(r.ligne).toEqual({ ...l, certitude: 'sous_reserve' });
     expect(r.trace).toEqual({ acteurId: 'u1', le, motif: 'Ticket illisible', pieceId: 'p5' });
     expect(l.certitude).toBe('en_doute');
   });
 
   it('t2-sous-reserve-toujours-non-deductible', () => {
-    const l = [...jeu, ligne('l5', 'p5', 500, 'en_doute')];
-    const r = passerEnSousReserve(l[4]!, { acteur: { type: 'personne', id: 'u1' }, motif: 'ok', pieceId: 'p5', le });
-    const apres = [...jeu, r.ligne];
+    const apres = [...jeu, passer(ligne('l5', 'p5', 500, 'en_doute'), pers).ligne];
     expect(deductionPreparee(apres)).toEqual({ etat: 'preparee', centimes: 180000 });
     expect(troisMontants(apres).sousReserve).toBe(3500);
   });
 
   it('ia-ne-passe-pas-en-sous-reserve', () => {
     const l = ligne('l5', 'p5', 500, 'en_doute');
-    expect(() => passerEnSousReserve(l, { acteur: { type: 'ia', id: 'm1' }, motif: 'ok', pieceId: 'p5', le })).toThrow(
-      expect.objectContaining({ code: 'ia_non_autorisee' }),
-    );
+    expect(() => passer(l, { type: 'ia', id: 'm1' })).toThrow(expect.objectContaining({ code: 'ia_non_autorisee' }));
   });
 
   it('transition interdite hors en_doute', () => {
     for (const c of ['solide', 'sous_reserve', 'perdue'] as const) {
-      expect(() =>
-        passerEnSousReserve(ligne('l', 'p', 1, c), { acteur: { type: 'personne', id: 'u' }, motif: 'm', pieceId: 'p', le }),
-      ).toThrow(expect.objectContaining({ code: 'transition_interdite' }));
+      expect(() => passer(ligne('l', 'p', 1, c), pers)).toThrow(expect.objectContaining({ code: 'transition_interdite' }));
     }
   });
 
   it('motif vide ou blanc : refus', () => {
     for (const motif of ['', '   ']) {
-      expect(() =>
-        passerEnSousReserve(ligne('l', 'p', 1, 'en_doute'), { acteur: { type: 'personne', id: 'u' }, motif, pieceId: 'p', le }),
-      ).toThrow(expect.objectContaining({ code: 'motif_vide' }));
+      expect(() => passer(ligne('l', 'p', 1, 'en_doute'), pers, motif)).toThrow(expect.objectContaining({ code: 'motif_vide' }));
     }
   });
 });
