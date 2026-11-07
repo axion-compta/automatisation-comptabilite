@@ -27,7 +27,7 @@ const BITS_PAR_CHIFFRE_HEX = 4;
 const LONGUEUR_JETON = BITS_JETON / BITS_PAR_CHIFFRE_HEX;
 const PREFIXE = 'pieces+';
 
-const vide: ResultatCourriel = { statut: 'refuse', origine: 'verifiee', pieces: [], motifs: [], aVerifier: false, contexteCorps: '' };
+const vide: ResultatCourriel = { statut: 'refuse', origine: 'origine_non_verifiee', pieces: [], motifs: [], aVerifier: false, contexteCorps: '' };
 
 function extraireJeton(adresse: string, domaine: string): string | null {
   const [local, hote, ...reste] = adresse.trim().toLowerCase().split('@');
@@ -43,15 +43,17 @@ export async function recevoir(brut: Uint8Array, format: string, ctx: ContexteCo
   const cible = jeton === null ? null : await ctx.jetons.resoudre(jeton);
   if (cible === null || cible.revoque) return { ...vide, code: 'jeton_invalide', messageId: message.messageId };
   const { societeId } = cible;
-  const base = { ...vide, societeId, messageId: message.messageId, contexteCorps: message.corps };
+  const base = { ...vide, societeId, messageId: message.messageId };
   if (message.spf === 'fail' || message.dkim === 'fail') {
     await ctx.quarantaine.garder(societeId, message);
     return { ...base, statut: 'quarantaine', code: 'authentification_en_echec' };
   }
-  const origine = (await ctx.expediteurConnu(societeId, message.expediteur.toLowerCase())) ? 'verifiee' : 'origine_non_verifiee';
+  const authentifie = message.spf === 'pass' || message.dkim === 'pass';
+  const connu = await ctx.expediteurConnu(societeId, message.expediteur.toLowerCase());
+  const origine = connu && authentifie ? 'verifiee' : 'origine_non_verifiee';
   const entree = ctx.entree(societeId);
   const pieces: ResultatEntree[] = [];
   for (const jointe of message.pieces) pieces.push(await etapeEntree(jointe.octets, entree));
   const factureDansCorps = ctx.corpsEstFacture(message.corps);
-  return { ...base, statut: 'recu', origine, pieces, motifs: factureDansCorps ? ['facture_dans_corps'] : [], aVerifier: factureDansCorps };
+  return { ...base, statut: 'recu', origine, contexteCorps: message.corps, pieces, motifs: factureDansCorps ? ['facture_dans_corps'] : [], aVerifier: factureDansCorps };
 }

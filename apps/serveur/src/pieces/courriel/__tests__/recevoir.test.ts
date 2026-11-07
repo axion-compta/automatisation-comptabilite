@@ -64,7 +64,7 @@ describe('réception de courriel (T-LEC-5)', () => {
       const m = message(echec);
       const { ctx, depot, stockage, gardes } = monter(m);
       const r = await recevoir(texte('brut'), 'eml', ctx);
-      expect(r).toMatchObject({ statut: 'quarantaine', pieces: [] });
+      expect(r).toMatchObject({ statut: 'quarantaine', pieces: [], origine: 'origine_non_verifiee', contexteCorps: '' });
       expect(gardes).toEqual([m]);
       expect(depot.nombre()).toBe(0);
       expect(stockage.taille()).toBe(0);
@@ -77,6 +77,13 @@ describe('réception de courriel (T-LEC-5)', () => {
     expect(r.statut).toBe('recu');
     expect(r.origine).toBe('origine_non_verifiee');
     expect(r.pieces).toHaveLength(3);
+  });
+
+  it('expediteur-connu-sans-authentification-non-verifiee', async () => {
+    const { ctx } = monter(message({ spf: 'none', dkim: 'none' }));
+    const r = await recevoir(texte('brut'), 'eml', ctx);
+    expect(r.statut).toBe('recu');
+    expect(r.origine).toBe('origine_non_verifiee');
   });
 
   it('facture-dans-le-corps', async () => {
@@ -93,7 +100,7 @@ describe('réception de courriel (T-LEC-5)', () => {
     for (const destinataire of [`pieces+${JETON_REVOQUE}@${DOMAINE}`, `pieces+${'d'.repeat(32)}@${DOMAINE}`, `pieces+${JETON}@autre.exemple.fr`, `pieces+court@${DOMAINE}`, `${SOCIETE}@${DOMAINE}`]) {
       const { ctx, depot, gardes } = monter(message({ destinataire }));
       const r = await recevoir(texte('brut'), 'eml', ctx);
-      expect(r).toMatchObject({ statut: 'refuse', code: 'jeton_invalide', pieces: [] });
+      expect(r).toMatchObject({ statut: 'refuse', code: 'jeton_invalide', pieces: [], origine: 'origine_non_verifiee' });
       expect(depot.nombre()).toBe(0);
       expect(gardes).toEqual([]);
     }
