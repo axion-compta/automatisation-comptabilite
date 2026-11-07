@@ -2,6 +2,7 @@
 // Taux INVENTÉS en points de base : T6 = 600, T9 = 900, T19 = 1 900. Montants en centimes.
 // Correspondance : V08 et V13 sont recalculés au taux T19 (HT 333,33 → attendue 63,33, lue 64,00 ; TTC 1 190,00 → HT 1 000,00, TVA 190,00).
 // V14 : HT 5 000,00, TVA 950,00, TTC 5 950,00, acompte 1 190,00, client reste 4 760,00. V12 : seuil inventé.
+// TVA recalculée aux taux inventés : T6 sur HT 1 000,00 = 60,00 ; T9 sur HT 2 000,00 = 180,00 (TTC 2 180,00) ; V07 : T9 sur 1 000,00 = 90,00 et T19 sur 500,00 = 95,00 ; V16 : T6 sur 100,00 = 6,00.
 // Cas V10 et V11 : franchise sans TVA, puis franchise avec TVA portée par erreur (carte A16).
 import { describe, expect, it } from 'vitest';
 import type { ParametreLegal } from '../../../../parametres/src/au-jour.js';
@@ -21,6 +22,7 @@ const c = (n: number): Centimes => centimes(n);
 const T6 = 600;
 const T9 = 900;
 const T19 = 1900;
+const anomalies = (lignes: { tauxPdb: number; baseCentimes: Centimes; tvaLueCentimes: Centimes }[]) => controleTvaParTaux(lignes, [T6, T9, T19]).filter((x) => x.anomalie);
 const comptes: ComptesVente = { client: '411', tvaCollectee: '445710', tvaEnAttente: '445740', avancesClients: '419100', banque: '512' };
 const reel: ProfilVente = { tenue: 'partie_double', regimeTva: 'reel', optionDebitsDepuis: null };
 const piece = (ht: number, tva: number, extra: Partial<PieceVente> = {}): PieceVente => ({
@@ -42,6 +44,8 @@ function encaisser(facture: ResultatEcritureFacture, ttc: number, paiements: num
   const ecritures: Ecriture[] = [];
   const tva: number[][] = [];
   const bases: number[][] = [];
+  const details: [number, string | null][][] = [];
+  const cartes: string[][] = [];
   const lettrages: { code: string; partiel: boolean; reste: number }[] = [];
   let cumul = dejaEncaisse;
   let lettre: string | undefined;
@@ -59,77 +63,93 @@ function encaisser(facture: ResultatEcritureFacture, ttc: number, paiements: num
     ecritures.push(r.ecriture);
     tva.push(r.lignesTva.map((t) => t.tvaCentimes));
     bases.push(r.lignesTva.map((t) => t.baseCentimes));
+    details.push(r.lignesTva.map((t) => [t.tauxPdb as number, t.dateExigibilite]));
+    cartes.push([...r.cartes]);
     lettrages.push({ code: r.lettrage.code, partiel: r.lettrage.partiel, reste: r.lettrage.reste });
     lettre = r.lettrage.code;
     cumul += p;
   });
-  return { ecritures, tva, bases, lettrages };
+  return { ecritures, tva, bases, lettrages, details, cartes };
 }
 
 const paramValide: ParametreLegal = { cle: 'cle.inventee.acompte', pays: 'FR', valeur: 'x', effet_debut: '2026-01-01', effet_fin: null, statut: 'valide', source: 'Source inventée', date_releve: '2026-06-01' };
 
 describe('cas chiffrés V01 à V16', () => {
   it('v01', () => {
-    const r = facturer(piece(100000, 5500, { dateOperation: '2026-11-02' }), [ligne(100000, 5500, T6, 'bien', '707')]);
-    expect(resume(r.ecriture)).toEqual([['411', 105500, 0], ['707', 0, 100000], ['445710', 0, 5500]]);
-    expect(r.lignesTva).toEqual([{ compte: '445710', tauxPdb: T6, baseCentimes: 100000, tvaCentimes: 5500, codeTva: 'COLLECTEE', cas: 'A', sens: 'vente', dateExigibilite: '2026-11-02', pieceId: 'f1' }]);
+    const r = facturer(piece(100000, 6000, { dateOperation: '2026-11-02' }), [ligne(100000, 6000, T6, 'bien', '707')]);
+    expect(resume(r.ecriture)).toEqual([['411', 106000, 0], ['707', 0, 100000], ['445710', 0, 6000]]);
+    expect(r.lignesTva).toEqual([{ compte: '445710', tauxPdb: T6, baseCentimes: 100000, tvaCentimes: 6000, codeTva: 'COLLECTEE', cas: 'A', sens: 'vente', dateExigibilite: '2026-11-02', pieceId: 'f1' }]);
     expect(r.cartes).toEqual([]);
+    expect(anomalies([{ tauxPdb: T6, baseCentimes: c(100000), tvaLueCentimes: c(6000) }])).toEqual([]);
     expect(r.ecriture?.statut).toBe('propose');
   });
   it('v02', () => {
-    const r = facturer(piece(200000, 20000), [ligne(200000, 20000, T9, 'service', '706')]);
-    expect(resume(r.ecriture)).toEqual([['411', 220000, 0], ['706', 0, 200000], ['445740', 0, 20000]]);
-    expect(r.lignesTva).toEqual([{ compte: '445740', tauxPdb: T9, baseCentimes: 200000, tvaCentimes: 20000, codeTva: 'COLLECTEE', cas: 'B', sens: 'vente', dateExigibilite: null, pieceId: 'f1' }]);
+    const r = facturer(piece(200000, 18000), [ligne(200000, 18000, T9, 'service', '706')]);
+    expect(resume(r.ecriture)).toEqual([['411', 218000, 0], ['706', 0, 200000], ['445740', 0, 18000]]);
+    expect(r.lignesTva).toEqual([{ compte: '445740', tauxPdb: T9, baseCentimes: 200000, tvaCentimes: 18000, codeTva: 'COLLECTEE', cas: 'B', sens: 'vente', dateExigibilite: null, pieceId: 'f1' }]);
     expect(r.cartes).toEqual([]);
+    expect(anomalies([{ tauxPdb: T9, baseCentimes: c(200000), tvaLueCentimes: c(18000) }])).toEqual([]);
   });
   it('v03', () => {
-    const f = facturer(piece(200000, 20000), [ligne(200000, 20000, T9, 'service', '706')]);
-    const e = encaisser(f, 220000, [220000]);
-    expect(resume(e.ecritures[0] ?? null)).toEqual([['512', 220000, 0], ['411', 0, 220000], ['445740', 20000, 0], ['445710', 0, 20000]]);
-    expect(e.tva).toEqual([[20000]]);
+    const f = facturer(piece(200000, 18000), [ligne(200000, 18000, T9, 'service', '706')]);
+    const e = encaisser(f, 218000, [218000]);
+    expect(resume(e.ecritures[0] ?? null)).toEqual([['512', 218000, 0], ['411', 0, 218000], ['445740', 18000, 0], ['445710', 0, 18000]]);
+    expect(e.tva).toEqual([[18000]]);
+    expect(e.details).toEqual([[[T9, '2026-12-01']]]);
+    expect(e.cartes).toEqual([[]]);
     expect(e.bases).toEqual([[200000]]);
     expect(e.lettrages).toEqual([{ code: 'A', partiel: false, reste: 0 }]);
     const tout = [f.ecriture as Ecriture, ...e.ecritures];
     expect(solde('445740', tout)).toBe(0);
     expect(solde('411', tout)).toBe(0);
-    expect(solde('445710', tout)).toBe(20000);
+    expect(solde('445710', tout)).toBe(18000);
   });
   it('v04', () => {
-    const f = facturer(piece(200000, 20000), [ligne(200000, 20000, T9, 'service', '706')]);
-    const e = encaisser(f, 220000, [110000, 110000]);
-    expect(e.tva).toEqual([[10000], [10000]]);
+    const f = facturer(piece(200000, 18000), [ligne(200000, 18000, T9, 'service', '706')]);
+    const e = encaisser(f, 218000, [109000, 109000]);
+    expect(e.tva).toEqual([[9000], [9000]]);
+    expect(e.details).toEqual([[[T9, '2026-12-01']], [[T9, '2026-12-02']]]);
+    expect(e.cartes).toEqual([[], []]);
+    e.ecritures.forEach((x) => expect(resume(x)).toEqual([['512', 109000, 0], ['411', 0, 109000], ['445740', 9000, 0], ['445710', 0, 9000]]));
     expect(e.bases).toEqual([[100000], [100000]]);
-    expect(e.lettrages).toEqual([{ code: 'A', partiel: true, reste: 110000 }, { code: 'A', partiel: false, reste: 0 }]);
+    expect(e.lettrages).toEqual([{ code: 'A', partiel: true, reste: 109000 }, { code: 'A', partiel: false, reste: 0 }]);
     expect(solde('445740', [f.ecriture as Ecriture, ...e.ecritures])).toBe(0);
-    expect(solde('445740', [f.ecriture as Ecriture, ...e.ecritures.slice(0, 1)])).toBe(10000);
+    expect(solde('445740', [f.ecriture as Ecriture, ...e.ecritures.slice(0, 1)])).toBe(9000);
     expect(solde('411', [f.ecriture as Ecriture, ...e.ecritures])).toBe(0);
   });
   it('v05', () => {
-    const f = facturer(piece(200000, 20000), [ligne(200000, 20000, T9, 'service', '706')]);
-    const e = encaisser(f, 220000, [73333, 73333, 73334]);
-    expect(e.tva).toEqual([[6667], [6667], [6666]]);
+    const f = facturer(piece(200000, 18000), [ligne(200000, 18000, T9, 'service', '706')]);
+    const e = encaisser(f, 218000, [72666, 72666, 72668]);
+    expect(e.tva).toEqual([[6000], [6000], [6000]]);
+    expect(e.details).toEqual([[[T9, '2026-12-01']], [[T9, '2026-12-02']], [[T9, '2026-12-03']]]);
+    expect(e.cartes).toEqual([[], [], []]);
+    expect(e.ecritures.map(resume)).toEqual([72666, 72666, 72668].map((m) => [['512', m, 0], ['411', 0, m], ['445740', 6000, 0], ['445710', 0, 6000]]));
     expect(e.bases.flat().reduce((s, b) => s + b, 0)).toBe(200000);
     expect(e.lettrages.map((l) => l.partiel)).toEqual([true, true, false]);
     expect(solde('445740', [f.ecriture as Ecriture, ...e.ecritures])).toBe(0);
-    expect(solde('445710', e.ecritures)).toBe(20000);
+    expect(solde('445710', e.ecritures)).toBe(18000);
   });
   it('v06', () => {
     const option: ProfilVente = { ...reel, optionDebitsDepuis: '2026-10-01' };
-    const apres = facturer(piece(200000, 20000, { dateOperation: '2026-11-02' }), [ligne(200000, 20000, T9, 'service', '706')], option);
-    expect(resume(apres.ecriture)).toEqual([['411', 220000, 0], ['706', 0, 200000], ['445710', 0, 20000]]);
+    const apres = facturer(piece(200000, 18000, { dateOperation: '2026-11-02' }), [ligne(200000, 18000, T9, 'service', '706')], option);
+    expect(resume(apres.ecriture)).toEqual([['411', 218000, 0], ['706', 0, 200000], ['445710', 0, 18000]]);
     expect(apres.lignesTva[0]).toMatchObject({ cas: 'A', dateExigibilite: '2026-11-03' });
-    const avant = facturer(piece(200000, 20000, { dateOperation: '2026-09-02' }), [ligne(200000, 20000, T9, 'service', '706')], option);
-    expect(resume(avant.ecriture)[2]).toEqual(['445740', 0, 20000]);
+    const avant = facturer(piece(200000, 18000, { dateOperation: '2026-09-02' }), [ligne(200000, 18000, T9, 'service', '706')], option);
+    expect(resume(avant.ecriture)[2]).toEqual(['445740', 0, 18000]);
     expect(avant.lignesTva[0]).toMatchObject({ cas: 'B', dateExigibilite: null });
   });
   it('v07', () => {
-    const f = facturer(piece(150000, 20000), [ligne(100000, 10000, T9, 'service', '706'), ligne(50000, 10000, T19, 'service', '706')]);
-    expect(resume(f.ecriture)).toEqual([['411', 170000, 0], ['706', 0, 150000], ['445740', 0, 10000], ['445740', 0, 10000]]);
-    expect(f.lignesTva.map((t) => [t.tauxPdb, t.baseCentimes, t.tvaCentimes])).toEqual([[T9, 100000, 10000], [T19, 50000, 10000]]);
-    const e = encaisser(f, 170000, [85000]);
-    expect(e.tva).toEqual([[5000, 5000]]);
+    const f = facturer(piece(150000, 18500), [ligne(100000, 9000, T9, 'service', '706'), ligne(50000, 9500, T19, 'service', '706')]);
+    expect(resume(f.ecriture)).toEqual([['411', 168500, 0], ['706', 0, 150000], ['445740', 0, 9000], ['445740', 0, 9500]]);
+    expect(f.lignesTva.map((t) => [t.tauxPdb, t.baseCentimes, t.tvaCentimes])).toEqual([[T9, 100000, 9000], [T19, 50000, 9500]]);
+    expect(anomalies([{ tauxPdb: T9, baseCentimes: c(100000), tvaLueCentimes: c(9000) }, { tauxPdb: T19, baseCentimes: c(50000), tvaLueCentimes: c(9500) }])).toEqual([]);
+    const e = encaisser(f, 168500, [84250]);
+    expect(e.tva).toEqual([[4500, 4750]]);
     expect(e.bases).toEqual([[50000, 25000]]);
-    expect(solde('445740', [f.ecriture as Ecriture, ...e.ecritures])).toBe(10000);
+    expect(e.details).toEqual([[[T9, '2026-12-01'], [T19, '2026-12-01']]]);
+    expect(e.cartes).toEqual([[]]);
+    expect(e.ecritures.map(resume)).toEqual([[['512', 84250, 0], ['411', 0, 84250], ['445740', 4500, 0], ['445710', 0, 4500], ['445740', 4750, 0], ['445710', 0, 4750]]]);
+    expect(solde('445740', [f.ecriture as Ecriture, ...e.ecritures])).toBe(9250);
   });
   it('v08', () => {
     const f = facturer(piece(33333, 6400), [ligne(33333, 6400, T19, 'service', '706')]);
@@ -200,11 +220,11 @@ describe('cas chiffrés V01 à V16', () => {
     expect(solde('411', tout)).toBe(0);
   });
   it('v16', () => {
-    const f = facturer(piece(10000, 550), [ligne(10000, 550, T6, 'bien', '707')]);
-    const avoir = piece(10000, 550, { id: 'av1', type: 'avoir', numero: 'AV-1', dateFacture: '2026-11-15', factureOrigineId: 'f1' });
-    const r = ecritureAvoir({ id: 'ec-a1', journal: 'VE', avoir, lignes: [ligne(10000, 550, T6, 'bien', '707')], casParTaux: { [T6]: 'A' }, tvaEnAttenteParTaux: {}, resteDuFacture: c(10550), comptes, auxiliaire: 'CLIENT1' });
-    expect(resume(r.ecriture)).toEqual([['707', 10000, 0], ['445710', 550, 0], ['411', 0, 10550]]);
-    expect(r.lignesTva).toEqual([{ compte: '445710', tauxPdb: T6, baseCentimes: 10000, tvaCentimes: 550, codeTva: 'COLLECTEE', cas: 'A', sens: 'avoir', dateExigibilite: '2026-11-15', pieceId: 'av1' }]);
+    const f = facturer(piece(10000, 600), [ligne(10000, 600, T6, 'bien', '707')]);
+    const avoir = piece(10000, 600, { id: 'av1', type: 'avoir', numero: 'AV-1', dateFacture: '2026-11-15', factureOrigineId: 'f1' });
+    const r = ecritureAvoir({ id: 'ec-a1', journal: 'VE', avoir, lignes: [ligne(10000, 600, T6, 'bien', '707')], casParTaux: { [T6]: 'A' }, tvaEnAttenteParTaux: {}, resteDuFacture: c(10600), comptes, auxiliaire: 'CLIENT1' });
+    expect(resume(r.ecriture)).toEqual([['707', 10000, 0], ['445710', 600, 0], ['411', 0, 10600]]);
+    expect(r.lignesTva).toEqual([{ compte: '445710', tauxPdb: T6, baseCentimes: 10000, tvaCentimes: 600, codeTva: 'COLLECTEE', cas: 'A', sens: 'avoir', dateExigibilite: '2026-11-15', pieceId: 'av1' }]);
     expect(r.cartes).toEqual([]);
     const tout = [f.ecriture as Ecriture, r.ecriture];
     expect(solde('411', tout)).toBe(0);
