@@ -19,7 +19,7 @@ function ligne(forme: string, comportement: string, valeur: string, source: stri
 const exploitant = ['EI'].map((f) => ligne(f, 'compte_exploitant', '108', SRC_COMPTE));
 const associe = ['EURL', 'SARL', 'SASU', 'SAS', 'SCI'].map((f) => ligne(f, 'compte_courant_associe', '455', SRC_COMPTE));
 const capital = ['EURL', 'SARL', 'SASU', 'SAS'].map((f) => ligne(f, 'compte_capital', '1013', SRC_COMPTE));
-const dividendes = ['EURL', 'SARL', 'SASU', 'SAS'].map((f) => ligne(f, 'dividendes', 'societe_a_l_is', SRC_IMPOT));
+const dividendes = ['EURL_PM', 'SARL', 'SASU', 'SAS'].map((f) => ligne(f, 'dividendes', 'societe_a_l_is', SRC_IMPOT));
 const impot: [string, string][] = [
   ['EI', 'IR'],
   ['EURL_PP', 'IR'],
@@ -42,6 +42,7 @@ export const PERIMETRE = {
   formesHorsPerimetre: ['SA', 'cooperative', 'GIE'],
   prefixesPostauxExclus: ['20', '971', '972', '973', '974', '976'],
   effet_debut: RELEVE,
-  source: 'périmètre du produit, spec 09 §01 règle 6',
+  source_titre: 'périmètre du produit, spec 09 §01 règle 6',
+  source: 'Spécification 09, §01 règle 6 (décision de produit)',
   statut: 'decision_produit',
 } as const;

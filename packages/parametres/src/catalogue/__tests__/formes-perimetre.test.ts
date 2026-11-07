@@ -19,7 +19,7 @@ describe('formes-perimetre', () => {
     expect(de('compte_courant_associe')).toEqual(['EURL', 'SARL', 'SAS', 'SASU', 'SCI']);
     expect(de('compte_courant_associe')).not.toContain('EI');
     expect(de('compte_capital')).toEqual(['EURL', 'SARL', 'SAS', 'SASU']);
-    expect(de('dividendes')).toEqual(['EURL', 'SARL', 'SAS', 'SASU']);
+    expect(de('dividendes')).toEqual(['EURL_PM', 'SARL', 'SAS', 'SASU']);
   });
 
   it('impot-par-defaut-a-confirmer', () => {
@@ -51,5 +51,6 @@ describe('formes-perimetre', () => {
       if (l.comportement.startsWith('compte_')) expect(l.valeur).toMatch(/^[0-9]+$/);
     }
     expect(PERIMETRE.source.trim()).not.toBe('');
+    expect(PERIMETRE.source_titre).toBe('périmètre du produit, spec 09 §01 règle 6');
   });
 });
