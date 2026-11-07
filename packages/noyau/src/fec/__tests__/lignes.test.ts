@@ -91,12 +91,8 @@ describe('lignes du FEC', () => {
       'AC-5',
     ]);
     const contradiction = [ecr('p', 'AC-1', 'AC', 'valide'), ecr('q', 'AC-2', 'AC', 'valide')];
-    expect(numeros(lignesFec(contradiction, contexte, colonnes, options))).toEqual([
-      'AC-2',
-      'AC-2',
-      'AC-1',
-      'AC-1',
-    ]);
+    const obtenu = numeros(lignesFec(contradiction, contexte, colonnes, options));
+    expect(obtenu).toEqual(['AC-2', 'AC-2', 'AC-1', 'AC-1']);
     const deuxANouveaux = [ecr('r', 'AN-1', 'AN', 'valide'), ecr('s', 'AN-2', 'AN', 'valide')];
     expect(numeros(lignesFec(deuxANouveaux, contexte, colonnes, options))[0]).toBe('AN-2');
     const longueur = [ecr('z', 'AC-10', 'AC', 'valide'), ecr('b', 'AC-9', 'AC', 'valide')];
