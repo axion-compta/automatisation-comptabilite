@@ -83,6 +83,17 @@ describe('ajouterPeriodeRegime', () => {
     expect(regimeAuJour(n, '2024-06-01').formulaire).toBe('FORM_B');
   });
 
+  it('ferme la ligne dont la fin est postérieure au début de la nouvelle', () => {
+    const n = ajouterPeriodeRegime([periode('2020-01-01', '2025-01-01', 'FORM_A')], periode('2024-06-01', null, 'FORM_B'));
+    expect(n[0]?.effetFin).toBe('2024-06-01');
+    expect(regimeAuJour(n, '2024-07-01').formulaire).toBe('FORM_B');
+  });
+
+  it('laisse intacte la fin d une ligne close avant la nouvelle', () => {
+    const n = ajouterPeriodeRegime([periode('2020-01-01', '2023-01-01', 'FORM_A')], periode('2024-06-01', null, 'FORM_B'));
+    expect(n[0]?.effetFin).toBe('2023-01-01');
+  });
+
   it('accepte un premier ajout et ignore l ordre reçu', () => {
     const premier = ajouterPeriodeRegime([], periode('2020-01-01', null, 'FORM_A'));
     expect(premier).toHaveLength(1);
