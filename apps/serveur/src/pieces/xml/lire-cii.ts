@@ -66,20 +66,26 @@ function dateIso(brut: string): string {
 }
 
 function champsTaxes(reglement: unknown): ChampLu[] {
-  const champs: ChampLu[] = [];
-  const vus = new Set<string>();
+  // Plusieurs ventilations au même taux (catégories E et Z à 0, par exemple) : on additionne par taux.
+  const parTaux = new Map<number, { ht?: ChampLu; tva?: ChampLu }>();
+  const ajoute = (taux: number, cle: 'ht' | 'tva', brut: string | undefined): void => {
+    if (brut === undefined) return;
+    const lu = montant(nomParTaux(cle, taux), brut);
+    const ligne = parTaux.get(taux) ?? {};
+    const avant = ligne[cle];
+    const somme = Number(avant?.valeurCentimes ?? 0) + Number(lu.valeurCentimes ?? 0);
+    ligne[cle] = avant === undefined ? lu : montant(lu.nom, (somme / 100).toFixed(2));
+    parTaux.set(taux, ligne);
+  };
   for (const t of enTableau(fils(reglement, 'ApplicableTradeTax'))) {
     const taux = texte(fils(t, 'RateApplicablePercent'));
     if (taux === undefined) continue;
     const pdb = lireMontant(taux, CONVENTION);
-    if ('erreur' in pdb || vus.has(String(pdb.centimes))) throw new Invalide();
-    vus.add(String(pdb.centimes));
-    const base = texte(fils(t, 'BasisAmount'));
-    const tva = texte(fils(t, 'CalculatedAmount'));
-    if (base !== undefined) champs.push(montant(nomParTaux('ht', pdb.centimes), base));
-    if (tva !== undefined) champs.push(montant(nomParTaux('tva', pdb.centimes), tva));
+    if ('erreur' in pdb) throw new Invalide();
+    ajoute(pdb.centimes, 'ht', texte(fils(t, 'BasisAmount')));
+    ajoute(pdb.centimes, 'tva', texte(fils(t, 'CalculatedAmount')));
   }
-  return champs;
+  return [...parTaux.values()].flatMap((l) => [l.ht, l.tva].filter((c): c is ChampLu => c !== undefined));
 }
 
 function simple(nom: string, valeur: string | undefined): ChampLu[] {

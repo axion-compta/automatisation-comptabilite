@@ -62,6 +62,14 @@ describe('lireCii', () => {
     expect(r.champs.filter((c) => c.nom.startsWith('ht@'))).toHaveLength(3);
   });
 
+  it('cii-meme-taux-additionne', () => {
+    const r = lire(cii({ taxes: taxe('0', '100.00', '0.00') + taxe('0.00', '50.50', '0.00') }));
+    expect(champ(r, 'ht@0')?.valeurCentimes).toBe(15050);
+    expect(champ(r, 'ht@0')?.valeur).toBe('150.50');
+    expect(champ(r, 'tva@0')?.valeurCentimes).toBe(0);
+    expect(r.champs.filter((c) => c.nom.startsWith('ht@'))).toHaveLength(1);
+  });
+
   it('profil-minimum-sans-lignes', () => {
     const r = lire(cii({ profil: 'minimum', taxes: '' }));
     expect(r.profil).toBe('minimum');
@@ -69,6 +77,7 @@ describe('lireCii', () => {
     expect(r.champs.some((c) => c.nom.startsWith('ht@') || c.nom.startsWith('tva@'))).toBe(false);
     expect(lire(cii({ profil: 'basicwl' })).profil).toBe('basicwl');
     expect(lire(cii({ profil: 'extended' })).profil).toBe('extended');
+    expect(lire(cii({ profil: 'en16931' })).profil).toBe('en16931');
   });
 
   it('doctype-refuse', () => {
@@ -80,6 +89,8 @@ describe('lireCii', () => {
     const entete = '<!ENTITY x "valeur">';
     expect(lireCii(cii({ entete }), MAX)).toEqual({ erreur: 'xml_invalide' });
     expect(analyserXmlSur('<a>&lt;</a>' + entete, MAX)).toEqual({ erreur: 'xml_invalide' });
+    expect(analyserXmlSur('<a>&lt;b&gt;</a>', MAX)).toEqual({ arbre: { a: '&lt;b&gt;' } });
+    expect(analyserXmlSur('<a><!-- <!ENTITY x "y"> --></a>', MAX)).toEqual({ erreur: 'xml_invalide' });
     expect(analyserXmlSur(cii(), 10)).toEqual({ erreur: 'xml_invalide' });
     for (const max of [Number.NaN, Number.POSITIVE_INFINITY, -1, 1.5]) {
       expect(analyserXmlSur('<a/>', max)).toEqual({ erreur: 'xml_invalide' });
