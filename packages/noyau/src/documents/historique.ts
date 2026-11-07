@@ -39,22 +39,18 @@ export class ErreurHistorique extends Error {
   }
 }
 
-function vide(texte: string | undefined): boolean {
-  return texte === undefined || texte.trim() === '';
-}
+const vide = (texte: string | undefined): boolean => texte === undefined || texte.trim() === '';
 
-function memeCouple(d: DocumentProduit, type: TypeDocument, exerciceId: string): boolean {
-  return d.type === type && d.exerciceId === exerciceId;
-}
+const memeCouple = (d: DocumentProduit, type: TypeDocument, exerciceId: string): boolean =>
+  d.type === type && d.exerciceId === exerciceId;
 
 function controler(historique: readonly DocumentProduit[]): void {
   const vus = new Set<string>();
   for (const d of historique) {
-    if (!Number.isInteger(d.version) || d.version < 1) {
-      throw new ErreurHistorique('version_invalide', 'Version invalide.');
-    }
     const cle = JSON.stringify([d.type, d.exerciceId, d.version]);
-    if (vus.has(cle)) throw new ErreurHistorique('version_invalide', 'Version en double.');
+    if (!Number.isInteger(d.version) || d.version < 1 || vus.has(cle)) {
+      throw new ErreurHistorique('version_invalide', 'Version invalide ou en double.');
+    }
     vus.add(cle);
   }
 }
@@ -65,10 +61,7 @@ export function ajouterVersion(
 ): DocumentProduit[] {
   controler(historique);
   if (nouveau.statut === 'valide' || nouveau.statut === 'remplace') {
-    throw new ErreurHistorique(
-      'validation_incomplete',
-      'Un nouveau document doit être validé après coup.',
-    );
+    throw new ErreurHistorique('validation_incomplete', 'Validation après coup obligatoire.');
   }
   const couple = historique.filter((d) => memeCouple(d, nouveau.type, nouveau.exerciceId));
   const version = couple.reduce((max, d) => Math.max(max, d.version), 0) + 1;
@@ -93,10 +86,7 @@ export function valider(
   const cible = historique.find((d) => d.id === id);
   if (cible === undefined) throw new ErreurHistorique('document_inconnu', 'Document inconnu.');
   if (cible.statut === 'indicatif') {
-    throw new ErreurHistorique(
-      'indicatif_non_validable',
-      'Un document indicatif ne se valide pas.',
-    );
+    throw new ErreurHistorique('indicatif_non_validable', 'Document indicatif non validable.');
   }
   if (cible.statut === 'valide' || cible.statut === 'remplace') {
     throw new ErreurHistorique('deja_valide', 'Document déjà validé.');
@@ -106,12 +96,7 @@ export function valider(
   }
   return historique.map((d) =>
     d === cible
-      ? {
-          ...d,
-          statut: 'valide' as const,
-          validePar: validation.par,
-          valideLe: validation.le,
-        }
+      ? { ...d, statut: 'valide' as const, validePar: validation.par, valideLe: validation.le }
       : { ...d },
   );
 }
@@ -121,10 +106,9 @@ export function dernierEnVigueur(
   type: TypeDocument,
   exerciceId: string,
 ): DocumentProduit | undefined {
-  let meilleur: DocumentProduit | undefined;
-  for (const d of historique) {
-    if (!memeCouple(d, type, exerciceId) || d.statut === 'remplace') continue;
-    if (meilleur === undefined || d.version > meilleur.version) meilleur = d;
-  }
-  return meilleur;
+  const vigueur = historique.filter((d) => memeCouple(d, type, exerciceId) && d.statut !== 'remplace');
+  return vigueur.reduce<DocumentProduit | undefined>(
+    (m, d) => (m === undefined || d.version > m.version ? d : m),
+    undefined,
+  );
 }
