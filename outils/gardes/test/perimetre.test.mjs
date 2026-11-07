@@ -373,12 +373,12 @@ test('T32-1b accolade échappée : classée « motif invalide »', () => {
 const OA = 'packages/contrat/openapi.json';
 const ficheOA = (taille, plus = []) =>
   `---\nid: L00-T03\nfichiers_autorises: ${JSON.stringify(['a.txt', OA, ...plus])}\ntaille_max_lignes: ${taille}\n---\n`;
-// diff : liste [chemin, lignes ajoutées] ; noms et numstat cohérents
+// diff : liste [chemin, lignes ajoutées, lignes supprimées (0 par défaut)] ; noms et numstat cohérents
 const gitOA = (liste, taille, plus = []) =>
   fauxGit({
     'show origin/main:pilotage/fiches/L00-T03.md': ficheOA(taille, plus),
     'diff --name-only --no-renames -z origin/main...HEAD': liste.map(([n]) => n).join('\0') + '\0',
-    'diff --numstat --text --no-renames -z origin/main...HEAD': liste.map(([n, k]) => `${k}\t0\t${n}\0`).join(''),
+    'diff --numstat --text --no-renames -z origin/main...HEAD': liste.map(([n, k, d = 0]) => `${k}\t${d}\t${n}\0`).join(''),
   });
 const genere = { estGenere: () => true };
 
@@ -406,7 +406,9 @@ test('T38-4 collecte : exemption confirmée, message avec les lignes d’openapi
 
 test('T38-5 sans confirmation « généré » (absent, faux ou qui échoue) : tout est compté', () => {
   for (const outils of [undefined, {}, { estGenere: () => false }, { estGenere: () => { throw new Error('x'); } }]) {
-    assert.match(evaluer(gitOA([[OA, 132], ['a.txt', 50]], 50), env, outils).pb[0], /taille 182 lignes > 50/);
+    const r = evaluer(gitOA([[OA, 132], ['a.txt', 50]], 50), env, outils);
+    assert.match(r.pb[0], /taille 182 lignes > 50/);
+    assert.doesNotMatch(r.msg ?? '', /openapi/);
   }
 });
 
@@ -442,4 +444,12 @@ test('T38-9 openapi.json hors fichiers_autorises : l’exemption n’autorise ri
 
 test('T38-10 cas de la PR 625 : 258 + 132, taille 300 : vert', () => {
   assert.deepEqual(evaluer(gitOA([[OA, 132], ['a.txt', 258]], 300), env, genere).pb, []);
+});
+
+test('T38-11 les suppressions d’openapi.json comptent : 200 + 101 = 301, rouge', () => {
+  assert.match(evaluer(gitOA([[OA, 200, 101]], 100), env, genere).pb[0], /openapi\.json : 301 lignes > 300/);
+});
+
+test('T38-12 openapi.json : 150 ajoutées + 150 supprimées = 300, vert', () => {
+  assert.deepEqual(evaluer(gitOA([[OA, 150, 150]], 100), env, genere).pb, []);
 });
