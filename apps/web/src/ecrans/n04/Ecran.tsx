@@ -1,7 +1,6 @@
 import { useId, useState, type ChangeEvent } from 'react';
-import { z } from 'zod';
 import { n04 } from '../../../../../packages/textes/src/ecrans/n04.js';
-import { CompteDuPlan, Exercice } from '../../../../../packages/contrat/src/domaines/plan.js';
+import { ReponseExercices, ReponsePlan, type CompteDuPlan } from '../../../../../packages/contrat/src/domaines/plan.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Montant } from '../../../../../packages/ui/src/composants/Montant.js';
@@ -11,10 +10,6 @@ import type { ErreurLecture } from '../../api.js';
 import { useLecture } from '../../donnees/lecture.js';
 
 const TAILLE_PAGE = 50;
-const enveloppe = <T extends z.ZodType>(corps: T) =>
-  z.object({ body: z.array(corps), decalage: z.number().int().min(0), total: z.number().int().min(0) });
-const ReponseExercices = enveloppe(Exercice);
-const ReponsePlan = enveloppe(CompteDuPlan);
 const remplir = (modele: string, valeurs: Record<string, string | number>): string =>
   Object.entries(valeurs).reduce((t, [k, v]) => t.replace('{' + k + '}', String(v)), modele);
 
