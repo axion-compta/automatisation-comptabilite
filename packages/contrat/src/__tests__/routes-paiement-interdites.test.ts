@@ -47,6 +47,12 @@ describe('routes de paiement interdites (le logiciel ne paie jamais)', () => {
     expect(routesInterdites(actuel)).toEqual([]);
   });
 
+  it('listes-interdites-figees', () => {
+    expect(SEGMENTS).toEqual(['payer', 'paiement', 'paiements', 'virer', 'initier', 'envoyer', 'relancer', 'relances']);
+    expect(PREFIXES).toEqual(['payer', 'initier', 'virer', 'envoyer', 'relancer']);
+    expect(APPELS).toEqual(['fetch(', 'XMLHttpRequest', 'node:http', 'node:https', 'undici', 'axios']);
+  });
+
   it('segment-payer-detecte', () => {
     expect(routesInterdites(doc('/fournisseurs/lots/{id}/payer', 'autre'))).toEqual([
       { methode: 'post', chemin: '/fournisseurs/lots/{id}/payer', operationId: 'autre', motif: 'segment:payer' },
@@ -76,6 +82,8 @@ describe('routes de paiement interdites (le logiciel ne paie jamais)', () => {
     expect(routesInterdites(doc('/Relancer'))).toHaveLength(1);
     expect(routesInterdites(doc('/PAIEMENTS'))).toHaveLength(1);
     expect(routesInterdites(doc('/x', 'Initier'))).toHaveLength(1);
+    expect(routesInterdites(doc('/Envoyér'))).toHaveLength(1);
+    expect(routesInterdites(doc('/RELANCÉR'))).toHaveLength(1);
   });
 
   it('cas-limites-sans-exception', () => {
