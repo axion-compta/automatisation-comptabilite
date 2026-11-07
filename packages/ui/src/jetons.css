@@ -10,6 +10,9 @@
   --couleur-succes: #2e7d4f;
   --couleur-alerte: #b26a00;
   --couleur-erreur: #b3261e;
+  --couleur-etat-ok: #2e7d4f;
+  --couleur-etat-attente: #6e5a7e;
+  --couleur-etat-bloque: #b3261e;
   --espace-xs: 4px;
   --espace-s: 8px;
   --espace-m: 16px;
@@ -18,6 +21,12 @@
   --rayon-s: 4px;
   --rayon-m: 8px;
   --rayon-l: 16px;
+  --rayon-carte: 22px;
+  --taille-texte: 14px;
+  --taille-titre: 24px;
+  --graisse-normale: 400;
+  --graisse-forte: 600;
+  --rupture-mobile: 720px;
   --police-titre: 'Fraunces', Georgia, serif;
   --police-texte: 'Manrope', system-ui, sans-serif;
 }
