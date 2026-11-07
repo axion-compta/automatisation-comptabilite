@@ -23,9 +23,9 @@ function verifierSeuils(seuils: SeuilsConfiance): void {
 export function situation(e: EntreeConfiance): keyof BaremeConfiance {
   if (e.accord === 'desaccord' || (e.accord !== 'seul_b' && !e.citationRetrouvee) || !e.controlesPasses) return 'echec';
   if (e.source === 'xml') return 'xml';
+  // Accord d'une source vision : la fiche ne distingue pas ce cas, il suit la note de l'accord texte (hors OCR).
   if (e.accord === 'accord') return e.source === 'ocr' ? 'accordOcr' : 'accordTextePdf';
-  if (e.accord === 'seul_a' || e.accord === 'seul_b') return 'aSeul';
-  return 'visionSeule';
+  return e.source === 'vision' ? 'visionSeule' : 'aSeul';
 }
 
 export function confianceInterne(entree: EntreeConfiance, bareme: BaremeConfiance): number {
@@ -35,6 +35,7 @@ export function confianceInterne(entree: EntreeConfiance, bareme: BaremeConfianc
 
 export function motDeConfiance(valeur: number, seuils: SeuilsConfiance): MotConfiance {
   verifierSeuils(seuils);
+  if (!entierDeEchelle(valeur)) return 'douteux';
   if (valeur >= seuils.sur) return 'sur';
   return valeur >= seuils.douteux ? 'a_verifier' : 'douteux';
 }

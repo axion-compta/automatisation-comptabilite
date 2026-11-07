@@ -21,7 +21,7 @@ describe('confiance interne', () => {
     expect(confianceInterne(entree('texte_pdf', 'seul_a'), BAREME)).toBe(73);
     expect(confianceInterne(entree('ocr', 'seul_b'), BAREME)).toBe(73);
     expect(confianceInterne(entree('texte_pdf', 'seul_b', { citationRetrouvee: false }), BAREME)).toBe(73);
-    expect(confianceInterne(entree('vision', 'seul_b'), BAREME)).toBe(73);
+    expect(confianceInterne(entree('vision', 'seul_b'), BAREME)).toBe(64);
   });
   it('desaccord-donne-echec', () => {
     expect(confianceInterne(entree('texte_pdf', 'desaccord'), BAREME)).toBe(15);
@@ -34,12 +34,12 @@ describe('confiance interne', () => {
     expect(confianceInterne(entree('texte_pdf', 'accord', { citationRetrouvee: false }), BAREME)).toBe(15);
     expect(confianceInterne(entree('xml', 'seul_a', { citationRetrouvee: false }), BAREME)).toBe(15);
     expect(situation(entree('vision', 'seul_a', { citationRetrouvee: false }))).toBe('echec');
-    expect(situation(entree('vision', 'seul_a'))).toBe('aSeul');
+    expect(situation(entree('vision', 'seul_a'))).toBe('visionSeule');
+    expect(situation(entree('ocr', 'seul_a'))).toBe('aSeul');
   });
   it('mots-aux-bornes', () => {
-    const cas: [number, string][] = [[100, 'sur'], [80, 'sur'], [79, 'a_verifier'], [41, 'a_verifier'], [40, 'a_verifier'], [39, 'douteux'], [0, 'douteux'], [Number.NaN, 'douteux'], [-5, 'douteux']];
+    const cas: [number, string][] = [[100, 'sur'], [80, 'sur'], [79, 'a_verifier'], [41, 'a_verifier'], [40, 'a_verifier'], [39, 'douteux'], [0, 'douteux'], [Number.NaN, 'douteux'], [-5, 'douteux'], [101, 'douteux'], [1.5, 'douteux'], [Number.POSITIVE_INFINITY, 'douteux']];
     expect(cas.map(([v]) => motDeConfiance(v, SEUILS))).toEqual(cas.map(([, mot]) => mot));
-    expect(motDeConfiance(Number.POSITIVE_INFINITY, SEUILS)).toBe('sur');
     expect(motDeConfiance(1, { sur: 1, douteux: 0 })).toBe('sur');
     expect(motDeConfiance(0, { sur: 1, douteux: 0 })).toBe('a_verifier');
   });
