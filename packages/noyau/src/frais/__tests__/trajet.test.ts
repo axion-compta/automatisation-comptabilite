@@ -12,7 +12,7 @@ const trajet = (p: Partial<Trajet> = {}): Trajet => ({
   allerRetour: false,
   ...p,
 });
-const vehicule = (p: Partial<Vehicule> = {}): Vehicule => ({
+const vehicule = (p: { [K in keyof Vehicule]?: Vehicule[K] | undefined } = {}): Vehicule => ({
   id: 'v1',
   personneId: 'p1',
   puissanceCv: 5,
@@ -20,7 +20,7 @@ const vehicule = (p: Partial<Vehicule> = {}): Vehicule => ({
   proprietaire: 'personne',
   categorie: 'voiture',
   carteGrisePieceId: 'cg1',
-  ...p,
+  ...(p as Partial<Vehicule>),
 });
 const invalide = { code: 'entree_invalide' };
 
