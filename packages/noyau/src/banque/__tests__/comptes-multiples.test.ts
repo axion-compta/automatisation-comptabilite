@@ -4,8 +4,8 @@ import { apparierVirementsInternes, ErreurComptesMultiples, soldeCarteDiffere, s
 import type { LigneBancaire } from '../types.js';
 
 const c = (n: number): Centimes => n as Centimes;
-const l = (id: string, compteId: string, date: string, montant: number, societeId = 's1'): LigneBancaire => ({
-  id, societeId, compteId, releveId: 'r', rang: 1, dateOperation: date, montant: c(montant), devise: 'EUR',
+const l = (id: string, compteId: string, date: string, montant: number, societeId = 's1', contrepartieId?: string): LigneBancaire => ({
+  ...(contrepartieId === undefined ? {} : { contrepartieId }), id, societeId, compteId, releveId: 'r', rang: 1, dateOperation: date, montant: c(montant), devise: 'EUR',
   libelleBrut: 'VIR', moyen: 'virement', etatTechnique: 'completee', etatRapprochement: 'A_QUALIFIER',
 });
 const R = { joursOuvres: 2, joursFermes: [] as string[] };
@@ -22,9 +22,14 @@ describe('virements internes', () => {
     expect(r.orphelines).toEqual([]);
   });
   it('moitie-manquante-a-qualifier', () => {
-    const r = apparierVirementsInternes([l('o', 'A', '2026-09-10', -50000)], COMPTES, R);
+    const r = apparierVirementsInternes([l('o', 'A', '2026-09-10', -50000, 's1', 'B')], COMPTES, R);
     expect(r.paires).toEqual([]);
     expect(r.orphelines).toEqual([{ ligneId: 'o', code: 'moitie_manquante' }]);
+  });
+  it('virement client isolé : ni paire ni orpheline', () => {
+    const r = apparierVirementsInternes([l('c', 'A', '2026-09-10', 12000, 's1', 'client-9')], COMPTES, R);
+    expect(r).toEqual({ paires: [], orphelines: [] });
+    expect(apparierVirementsInternes([l('c', 'A', '2026-09-10', 12000)], COMPTES, R)).toEqual({ paires: [], orphelines: [] });
   });
   it('autre-societe-jamais-interne', () => {
     const r = apparierVirementsInternes([l('o', 'A', '2026-09-10', -50000), l('i', 'B', '2026-09-10', 50000, 's2')], COMPTES, R);
@@ -41,6 +46,9 @@ describe('virements internes', () => {
     expect(apparierVirementsInternes(lignes, COMPTES, { joursOuvres: 1, joursFermes: [] }).paires).toHaveLength(1);
     expect(apparierVirementsInternes(lignes, COMPTES, { joursOuvres: 0, joursFermes: [] }).paires).toHaveLength(0);
     expect(apparierVirementsInternes(lignes, COMPTES, { joursOuvres: 1, joursFermes: ['2026-09-14'] }).paires).toHaveLength(1);
+    const ferme = [l('o', 'A', '2026-09-11', -100), l('i', 'B', '2026-09-15', 100)];
+    expect(apparierVirementsInternes(ferme, COMPTES, { joursOuvres: 1, joursFermes: [] }).paires).toHaveLength(0);
+    expect(apparierVirementsInternes(ferme, COMPTES, { joursOuvres: 1, joursFermes: ['2026-09-14'] }).paires).toHaveLength(1);
   });
   it('plus proche en date ; égalité = orphelines pour les deux', () => {
     const proche = apparierVirementsInternes([l('o1', 'A', '2026-09-09', -100), l('o2', 'A', '2026-09-10', -100), l('i', 'B', '2026-09-10', 100)], COMPTES, R);

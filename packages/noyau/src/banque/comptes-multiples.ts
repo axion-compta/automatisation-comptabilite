@@ -74,8 +74,12 @@ export function apparierVirementsInternes(
       pris.add(s.x.id).add(eid);
     }
   }
+  // Orpheline seulement si la ligne est repérée interne : contrepartie = compte de la société, ou jambe opposée existante (hors délai ou ambiguë).
+  const interne = (e: (typeof candidates)[number]): boolean =>
+    (e.x.contrepartieId !== undefined && comptes.has(e.x.contrepartieId)) ||
+    candidates.some((o) => o.x.societeId === e.x.societeId && o.x.compteId !== e.x.compteId && o.m === -e.m);
   const orphelines = candidates
-    .filter((e) => !pris.has(e.x.id))
+    .filter((e) => !pris.has(e.x.id) && interne(e))
     .map((e): Orpheline => ({ ligneId: e.x.id, code: 'moitie_manquante' }))
     .sort((a, b) => cmp(a.ligneId, b.ligneId));
   return { paires, orphelines };
