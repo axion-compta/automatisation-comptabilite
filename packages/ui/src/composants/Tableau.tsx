@@ -40,7 +40,7 @@ export interface TableauProps<L> {
 const SANS_TRI = "none" as const;
 
 /** Tableau accessible. Le tri et la pagination sont faits par l'appelant ou le serveur : rien n'est trié ici. */
-export function Tableau<L>(props: TableauProps<L>) {
+export function Tableau< L>(props: TableauProps<L>) {
   const { legende, colonnes, lignes, cleDeLigne, tri, surTri, pagination } = props;
   const trier = (cle: string) => {
     const sens: SensDeTri = tri && tri.cle === cle && tri.sens === "ascending" ? "descending" : "ascending";
