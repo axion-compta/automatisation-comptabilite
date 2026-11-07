@@ -48,7 +48,7 @@ describe('comparerClientFacture', () => {
   it('email-concorde', () => {
     expect(comparerClientFacture({ email: 'DIRECTION@exemple.fr' }, societe, 'facture')).toMatchObject({ statut: 'concorde', tvaSousReserve: false });
     expect(comparerClientFacture({ email: 'autre@exemple.fr' }, societe, 'facture').statut).toBe('douteux');
-    expect(comparerClientFacture({ nom: 'Société B', email: 'compta@exemple.fr' }, societe, 'facture').statut).toBe('concorde');
+    expect(comparerClientFacture({ nom: 'Société B', email: 'compta@exemple.fr' }, societe, 'facture')).toMatchObject({ statut: 'douteux', tvaSousReserve: true });
   });
   it('entrees-vides', () => {
     expect(comparerClientFacture({ nom: '', tva: ' ', siren: '', email: '' }, societe, 'facture')).toMatchObject({ statut: 'absent', tvaSousReserve: true });

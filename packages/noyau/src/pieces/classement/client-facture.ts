@@ -29,7 +29,11 @@ export function comparerClientFacture(lu: ClientLu | null, societe: SocieteRef, 
   if (comparables.some(([a, b]) => a !== b)) return { statut: 'douteux', tvaSousReserve: true, raison: 'Numéro de TVA ou SIREN différent de la société.' };
   if (comparables.length > 0) return { statut: 'concorde', tvaSousReserve: false, raison: 'Numéro de TVA ou SIREN identique.' };
   const nomLu = nomNormaliseSociete(nom);
-  if (nomLu !== '' && nomLu === nomNormaliseSociete(societe.nom)) return { statut: 'concorde', tvaSousReserve: false, raison: 'Nom identique.' };
+  if (nomLu !== '') {
+    return nomLu === nomNormaliseSociete(societe.nom)
+      ? { statut: 'concorde', tvaSousReserve: false, raison: 'Nom identique.' }
+      : { statut: 'douteux', tvaSousReserve: true, raison: 'Client lu différent de la société.' };
+  }
   if (email !== '' && societe.emails.some((e) => e.trim().toLowerCase() === email)) return { statut: 'concorde', tvaSousReserve: false, raison: 'E-mail identique.' };
   return { statut: 'douteux', tvaSousReserve: true, raison: 'Client lu différent de la société.' };
 }
