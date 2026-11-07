@@ -29,7 +29,10 @@ export type CodeErreurEcriture =
   | 'montant_negatif'
   | 'une_seule_ligne'
   | 'montant_nul'
-  | 'desequilibre';
+  | 'desequilibre'
+  | 'transition_interdite'
+  | 'delai_invalide'
+  | 'delai_depasse';
 
 export class ErreurEcriture extends Error {
   override name = 'ErreurEcriture';
