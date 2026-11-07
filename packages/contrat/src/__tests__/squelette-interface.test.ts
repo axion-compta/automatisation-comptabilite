@@ -9,7 +9,8 @@ describe('squelette du lot 15', () => {
     const c = contrat as Record<string, unknown>;
     for (const nom of SEPT) {
       expect(Object.keys(c)).toContain(nom);
-      expect(typeof c[nom]).toBe('object');
+      expect(c[nom]).toBeTypeOf('object');
+      expect(c[nom]).not.toBeNull();
     }
   });
 
