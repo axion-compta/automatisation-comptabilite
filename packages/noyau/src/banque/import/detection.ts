@@ -42,8 +42,7 @@ function contient(octets: Uint8Array, motif: string): boolean {
 
 function utf8Valide(octets: Uint8Array): boolean {
   try {
-    new TextDecoder('utf-8', { fatal: true }).decode(octets);
-    return true;
+    return new TextDecoder('utf-8', { fatal: true }).decode(octets) !== undefined;
   } catch {
     return false;
   }
@@ -58,29 +57,17 @@ export function detecterEncodage(octets: Uint8Array): Encodage {
 
 export function decoder(octets: Uint8Array, encodage: Encodage): string {
   if (encodage !== 'windows-1252') return new TextDecoder('utf-8').decode(octets);
-  const morceaux: string[] = [];
-  for (const o of octets) {
-    morceaux.push(String.fromCharCode(o >= 0x80 && o <= 0x9f ? (CP1252_HAUT[o - 0x80] ?? o) : o));
-  }
-  return morceaux.join('');
+  return Array.from(octets, (o) => String.fromCharCode(o >= 0x80 && o <= 0x9f ? (CP1252_HAUT[o - 0x80] ?? o) : o)).join('');
 }
 
 function comptePar(ligne: string, separateur: Separateur): number {
-  let compte = 0;
-  let dansGuillemets = false;
-  for (const c of ligne) {
-    if (c === '"') dansGuillemets = !dansGuillemets;
-    else if (c === separateur && !dansGuillemets) compte += 1;
-  }
-  return compte;
+  const [compte] = [...ligne].reduce(([n, dedans], c) => [n + (c === separateur && !dedans ? 1 : 0), c === '"' ? !dedans : dedans], [0, false]);
+  return compte ?? 0;
 }
 
 /** Séparateur constant sur les 10 premières lignes non vides ; une seule ligne de titre sans séparateur est tolérée. */
 export function detecterSeparateur(texte: string): Separateur | null {
-  const lignes = texte
-    .split(/\r\n|\r|\n/)
-    .filter((l) => l.trim() !== '')
-    .slice(0, LIGNES_ECHANTILLON);
+  const lignes = texte.split(/\r\n|\r|\n/).filter((l) => l.trim() !== '').slice(0, LIGNES_ECHANTILLON);
   let meilleur: Separateur | null = null;
   let meilleurCompte = 0;
   for (const sep of SEPARATEURS) {
@@ -113,10 +100,6 @@ export function detecterFormat(octets: Uint8Array): FormatFichier {
   return detecterSeparateur(texte) === null ? 'inconnu' : 'csv';
 }
 
-function limiteValide(n: number): boolean {
-  return Number.isSafeInteger(n) && n > 0;
-}
-
 function compterLignes(texte: string): number {
   let lignes = 0;
   for (let i = 0; i < texte.length; i += 1) {
@@ -129,7 +112,7 @@ function compterLignes(texte: string): number {
 }
 
 export function verifierLimites(octets: Uint8Array, texte: string, limites: LimitesFichier): void {
-  if (!limiteValide(limites.octetsMax) || !limiteValide(limites.lignesMax)) {
+  if (![limites.octetsMax, limites.lignesMax].every((n) => Number.isSafeInteger(n) && n > 0)) {
     throw new ErreurDetection('limites_invalides');
   }
   if (octets.length > limites.octetsMax) throw new ErreurDetection('trop_gros');

@@ -34,8 +34,7 @@ describe('détection du format par le contenu', () => {
 
   it('camt-reconnu', () => {
     const camt = '<?xml version="1.0"?>\n<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02"><BkToCstmrStmt/></Document>';
-    expect(detecterFormat(o(camt))).toBe('camt053');
-    expect(detecterFormat(o('\n  ' + camt))).toBe('camt053');
+    for (const t of [camt, '\n  ' + camt]) expect(detecterFormat(o(t))).toBe('camt053');
     expect(detecterFormat(o('<?xml version="1.0"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"/>'))).toBe('inconnu');
     expect(detecterFormat(o('<?xml version="1.0"?><autre/>'))).toBe('inconnu');
   });
@@ -109,13 +108,8 @@ describe('détection du format par le contenu', () => {
     const lim = { octetsMax: 10, lignesMax: 3 };
     expect(code(() => verifierLimites(o('0123456789'), '0123456789', lim))).toBeUndefined();
     expect(code(() => verifierLimites(o('01234567890'), 'x', lim))).toBe('trop_gros');
-    expect(code(() => verifierLimites(o('a'), 'a\nb\nc', lim))).toBeUndefined();
-    expect(code(() => verifierLimites(o('a'), 'a\nb\nc\n', lim))).toBeUndefined();
-    expect(code(() => verifierLimites(o('a'), 'a\nb\nc\nd', lim))).toBe('trop_de_lignes');
-    expect(code(() => verifierLimites(o('a'), 'a\r\nb\r\nc\r\nd\r\n', lim))).toBe('trop_de_lignes');
-    expect(code(() => verifierLimites(o('a'), 'a\rb\rc\rd', lim))).toBe('trop_de_lignes');
-    expect(code(() => verifierLimites(o('a'), 'a\r\nb\r\nc', lim))).toBeUndefined();
-    expect(code(() => verifierLimites(o('a'), '', lim))).toBeUndefined();
+    for (const t of ['a\nb\nc', 'a\nb\nc\n', 'a\r\nb\r\nc', '']) expect(code(() => verifierLimites(o('a'), t, lim))).toBeUndefined();
+    for (const t of ['a\nb\nc\nd', 'a\r\nb\r\nc\r\nd\r\n', 'a\rb\rc\rd']) expect(code(() => verifierLimites(o('a'), t, lim))).toBe('trop_de_lignes');
     for (const n of [Number.NaN, Infinity, -Infinity, -1, 0, 1.5, 2 ** 53]) {
       expect(code(() => verifierLimites(o('a'), 'a', { octetsMax: n, lignesMax: 3 }))).toBe('limites_invalides');
       expect(code(() => verifierLimites(o('a'), 'a', { octetsMax: 10, lignesMax: n }))).toBe('limites_invalides');
