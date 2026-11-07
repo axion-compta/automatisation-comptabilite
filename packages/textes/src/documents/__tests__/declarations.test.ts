@@ -28,6 +28,8 @@ describe('textes des déclarations', () => {
     expect(datesIndicatives('2025-07-01', '2026-06-30')).toContain('du 01/07 au 30/06.');
     expect(() => datesIndicatives('2026-13-01', '2026-12-31')).toThrow();
     expect(() => datesIndicatives('2026-01-01', '31/12/2026')).toThrow();
+    expect(() => datesIndicatives('2026-12-31', '2026-01-01')).toThrow();
+    expect(() => datesIndicatives('2026-05-12', '2026-05-12')).toThrow();
   });
 
   it('mention-avant-et-apres-validation', () => {
@@ -35,9 +37,10 @@ describe('textes des déclarations', () => {
     expect(mentionDocument({ validePar: 'Camille Fictif', valideLe: '2026-05-12' })).toBe(
       'Préparé par IA, à valider. Validé par Camille Fictif le 12/05/2026',
     );
-    for (const mauvaise of ['', '12/05/2026', '2026-5-12', '2026-00-12', '2026-05-32', 'NaN', '2026-05-12x']) {
+    for (const mauvaise of ['', '12/05/2026', '2026-5-12', '2026-00-12', '2026-05-32', '2026-02-30', '2026-04-31', '2025-02-29', 'NaN', '2026-05-12x']) {
       expect(() => mentionDocument({ validePar: 'Camille Fictif', valideLe: mauvaise })).toThrow();
     }
+    expect(mentionDocument({ validePar: 'Camille Fictif', valideLe: '2024-02-29' })).toContain('le 29/02/2024');
     expect(() => mentionDocument({ validePar: 'Camille Fictif' })).toThrow();
     expect(() => mentionDocument({ valideLe: '2026-05-12' })).toThrow();
     expect(() => mentionDocument({ validePar: '  ', valideLe: '2026-05-12' })).toThrow();

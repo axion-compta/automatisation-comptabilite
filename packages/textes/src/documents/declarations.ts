@@ -35,9 +35,12 @@ const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 function decouper(date: string): { a: string; m: string; j: string } {
   const r = DATE.exec(date);
+  const an = Number(r?.[1]);
   const mois = Number(r?.[2]);
   const jour = Number(r?.[3]);
-  if (!r || mois < 1 || mois > 12 || jour < 1 || jour > 31) throw new RangeError(`date attendue au format AAAA-MM-JJ : ${date}`);
+  const bissextile = (an % 4 === 0 && an % 100 !== 0) || an % 400 === 0;
+  const max = [31, bissextile ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mois - 1];
+  if (!r || max === undefined || jour < 1 || jour > max) throw new RangeError(`date attendue au format AAAA-MM-JJ : ${date}`);
   return { a: r[1] as string, m: r[2] as string, j: r[3] as string };
 }
 
@@ -59,5 +62,6 @@ export function piecesARegarder(n: number): string {
 export function datesIndicatives(debut: string, fin: string): string {
   const d = decouper(debut);
   const f = decouper(fin);
+  if (debut >= fin) throw new RangeError('debut doit précéder fin');
   return `Dates indicatives, calculées sur votre année comptable du ${d.j}/${d.m} au ${f.j}/${f.m}. À vérifier sur impots.gouv.fr et urssaf.fr.`;
 }
