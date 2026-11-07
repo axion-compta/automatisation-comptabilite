@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { Centimes } from '../../argent/index.js';
 import * as T from '../types.js';
 
 const COPIES: Record<string, { liste: readonly string[]; copie: string[] }> = {
@@ -83,6 +84,11 @@ describe('types du chat', () => {
     expect(T.microCentimes(0)).toBe(0);
     expect(T.microCentimes(12)).toBe(12);
     expect(T.microCentimes(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER);
+  });
+  it('micro-centimes-disjoint-de-centimes', () => {
+    // @ts-expect-error MicroCentimes ne doit pas être assignable à Centimes.
+    const c: Centimes = T.microCentimes(1);
+    expect(c).toBe(1);
   });
   it('micro-centimes-refuse', () => {
     for (const v of [-1, 1.5, Number.NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {

@@ -1,6 +1,5 @@
 // Types communs, listes fermées et codes d'erreur du lot 05 (chat et agents).
 // Fichier partagé : les autres fiches du lot ne le modifient pas.
-import type { Centimes } from '../argent/index.js';
 
 export const NIVEAUX = ['L', 'B', 'M', 'I'] as const;
 export type Niveau = (typeof NIVEAUX)[number];
@@ -63,8 +62,10 @@ export class ErreurChat extends Error {
   }
 }
 
-/** Montant en micro-centimes : entier sûr >= 0, marqué comme Centimes. */
-export type MicroCentimes = Centimes & { readonly micro: true };
+declare const marqueMicro: unique symbol;
+
+/** Montant en micro-centimes : entier sûr >= 0, marque disjointe de Centimes. */
+export type MicroCentimes = number & { readonly [marqueMicro]: 'MicroCentimes' };
 
 /** -0 est accepté et normalisé en 0. */
 export function microCentimes(n: number): MicroCentimes {
