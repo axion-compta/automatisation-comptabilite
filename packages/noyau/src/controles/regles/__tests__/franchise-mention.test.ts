@@ -49,6 +49,16 @@ describe('CC-T13 mention de franchise', () => {
     expect(mentionsAdmises(liste, '2020-01-01').map((m) => m.texte)).toEqual([ANCIENNE]);
   });
 
+  it('ordre-inverse-meme-resultat', () => {
+    const inverse = [...liste].reverse();
+    for (const d of ['2031-06-30', '2031-07-01', '2030-01-01', '2029-12-31']) {
+      for (const lues of [[ANCIENNE], [NOUVELLE], [ANCIENNE, NOUVELLE], ['texte libre', NOUVELLE]]) {
+        expect(evaluer(d, [...lues].reverse(), inverse)).toEqual(evaluer(d, lues, liste));
+      }
+      expect(mentionsAdmises(inverse, d).map((m) => m.texte).sort()).toEqual(mentionsAdmises(liste, d).map((m) => m.texte).sort());
+    }
+  });
+
   it('mention-nouvelle-trop-tot', () => {
     expect(evaluer('2029-12-31', [NOUVELLE])).toEqual({ resultat: 'ALERTE', valeur: 'non_admise_a_cette_date' });
     expect(evaluer('2030-01-01', [NOUVELLE])).toEqual(OK);
