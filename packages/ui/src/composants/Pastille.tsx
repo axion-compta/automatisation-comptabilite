@@ -13,8 +13,9 @@ const FORMES: Record<EtatPastille, string> = {
 };
 
 export function Pastille({ etat, libelle }: PastilleProps) {
+  const classes = ["axion-pastille", `axion-pastille--${etat}`].join(" ");
   return (
-    <span className={`axion-pastille axion-pastille--${etat}`}>
+    <span className={classes}>
       <svg className="axion-pastille__icone" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
         <path d={FORMES[etat]} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
