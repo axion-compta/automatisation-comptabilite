@@ -44,7 +44,7 @@ describe('lettrage', () => {
     expect(code(() => lettrer([ligne('l1', 100, 0), ligne('l2', 0, 100, { auxiliaire: 'AUTRE' })], 'A'))).toBe(
       'comptes_differents',
     );
-    expect(code(() => lettrer([ligne('l1', 100, 0), ligne('l2', 0, 100, { auxiliaire: undefined })], 'A'))).toBe(
+    expect(code(() => lettrer([ligne('l1', 100, 0), { id: 'l2', compte: '411', debit: centimes(0), credit: centimes(100) }], 'A'))).toBe(
       'comptes_differents',
     );
     expect(code(() => lettrer([ligne('l1', 100, 0), ligne('l2', 50, 0), ligne('l3', 0, 150, { compte: '401' })], 'A'))).toBe(
