@@ -22,3 +22,13 @@ TVA-C09,V3-TVA-038,M,aucun,avant_tva,P7,CT-D01,tva.controle.seuil_ecart_ca,oui
 TVA-C10,V3-TVA-034,B,preparation_tva,avant_tva,P7,CT-D02,,oui
 TVA-C11,V3-TVA-033,B,preparation_tva,avant_tva,P7,CT-D03,,oui
 TVA-C13,V3-CTL-025,B,preparation_tva,avant_tva,P7,CT-D04,,oui
+CC-V01,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V01,,oui
+CC-V02,V3-VEN-021,M,aucun,arrivee|avant_tva|demande,P7,CT-V02,,oui
+CC-V03,V3-VEN-021,B,preparation_tva,arrivee|avant_tva|demande,P7,CT-V03,,oui
+CC-V04,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V04,,oui
+CC-V05,V3-VEN-021,M,validation_mois,arrivee|demande,P7,CT-V05,,oui
+CC-V06,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V06,,oui
+CC-V07,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V07,,oui
+CC-V08,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V08,,oui
+CC-V09,V3-VEN-021,M,aucun,arrivee|avant_tva|demande,P7,CT-V09,,oui
+CC-V10,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V10,,oui
