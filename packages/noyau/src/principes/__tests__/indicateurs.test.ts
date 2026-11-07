@@ -46,6 +46,16 @@ describe('indicateurs', () => {
       expect(croissancePointsDeBase(100000, v)).toEqual(sansPoint);
     }
     expect(croissancePointsDeBase(null, 100000)).toEqual(manquant);
+    // non entiers ou écart hors entiers sûrs : donnée absente, jamais d'exception
+    expect(croissancePointsDeBase(100000.5, 100000)).toEqual(manquant);
+    expect(croissancePointsDeBase(100000, 99999.5)).toEqual(manquant);
+    expect(croissancePointsDeBase(Number.MAX_SAFE_INTEGER, 1)).toEqual(manquant);
+    expect(croissancePointsDeBase(-Number.MAX_SAFE_INTEGER, 5)).toEqual(manquant);
+    // nbElements invalide : donnée absente
+    for (const n of [Number.NaN, Infinity, -1, 1.5]) {
+      expect(indicateurDepuis({ nbElements: n, valeur: 5 })).toEqual(manquant);
+    }
+    expect(indicateurDepuis({ nbElements: 1, valeur: 5 })).toEqual({ etat: 'ok', valeur: 5 });
   });
 
   it('formation-declaration-apres-immatriculation', () => {

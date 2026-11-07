@@ -1,5 +1,5 @@
 // Indicateurs à vide : jamais 0 quand la donnée manque. Codes seulement, aucune phrase.
-import { proportionPointsDeBase } from '../argent/index.js';
+import { ErreurArgent, proportionPointsDeBase } from '../argent/index.js';
 
 export type Indicateur =
   | { readonly etat: 'ok'; readonly valeur: number }
@@ -20,6 +20,7 @@ const manquant: Indicateur = { etat: 'donnee_manquante', valeur: null, raison: '
 const sansPoint: Indicateur = { etat: 'donnee_manquante', valeur: null, raison: 'pas_de_point_de_comparaison' };
 
 export function indicateurDepuis(e: { readonly nbElements: number; readonly valeur: number | null | undefined }): Indicateur {
+  if (!Number.isSafeInteger(e.nbElements) || e.nbElements < 0) return manquant;
   if (e.nbElements === 0) return { etat: 'vide', valeur: null, raison: 'aucune_donnee' };
   if (!fini(e.valeur)) return manquant;
   return { etat: 'ok', valeur: e.valeur };
@@ -30,7 +31,14 @@ export function croissancePointsDeBase(actuel: number | null | undefined, preced
   if (!fini(precedent) || precedent <= 0) return sansPoint;
   if (!fini(actuel)) return manquant;
   const ecart = actuel - precedent;
-  const p = proportionPointsDeBase(Math.abs(ecart), precedent, 'inferieur');
+  if (![actuel, precedent, ecart].every(Number.isSafeInteger)) return manquant;
+  let p: number | null;
+  try {
+    p = proportionPointsDeBase(Math.abs(ecart), precedent, 'inferieur');
+  } catch (e) {
+    if (e instanceof ErreurArgent) return manquant;
+    throw e;
+  }
   if (p === null || p === 0) return { etat: 'ok', valeur: 0 };
   return { etat: 'ok', valeur: ecart < 0 ? -p : p };
 }
