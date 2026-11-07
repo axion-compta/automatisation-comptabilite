@@ -33,12 +33,12 @@ const code = (f: () => unknown): string | undefined => {
 
 describe('ecriture-avoir', () => {
   it('v16-avoir-cas-a', () => {
-    const r = faire({ ttc: 105500, lignes: [ligne(100000, 600, 5500)], casParTaux: { 600: 'A' }, resteDuFacture: c(200000) });
-    expect(resume(r)).toEqual([['P70', 100000, 0], ['COL', 5500, 0], ['CLI', 0, 105500]]);
+    const r = faire({ ttc: 10550, lignes: [ligne(10000, 600, 550)], casParTaux: { 600: 'A' }, resteDuFacture: c(200000) });
+    expect(resume(r)).toEqual([['P70', 10000, 0], ['COL', 550, 0], ['CLI', 0, 10550]]);
     expect(r.ecriture.lignes[2]?.auxiliaire).toBe('CLIENT1');
     expect(r.ecriture).toMatchObject({ statut: 'propose', date: '2026-11-20', journal: 'VT', id: 'e1' });
     expect(r.cartes).toEqual([]);
-    expect(r.lignesTva).toEqual([{ compte: 'COL', tauxPdb: 600, baseCentimes: 100000, tvaCentimes: 5500, codeTva: 'COLLECTEE', cas: 'A', sens: 'avoir', dateExigibilite: '2026-11-20', pieceId: 'av1' }]);
+    expect(r.lignesTva).toEqual([{ compte: 'COL', tauxPdb: 600, baseCentimes: 10000, tvaCentimes: 550, codeTva: 'COLLECTEE', cas: 'A', sens: 'avoir', dateExigibilite: '2026-11-20', pieceId: 'av1' }]);
   });
   it('avoir-cas-b-facture-non-payee', () => {
     const r = faire({ tvaEnAttenteParTaux: { 600: c(20000) } });
