@@ -55,8 +55,15 @@ function controler(originale: Ecriture, motif: string): void {
 /** Brouillon de correction dont chaque ligne a son débit et son crédit inversés. */
 export function contrePasser(originale: Ecriture, params: ParamsContrePassation): Ecriture {
   controler(originale, params.motif);
+  if (params.id === originale.id) {
+    throw new ErreurCorrection(
+      'ids_non_distincts',
+      "L'originale et la contre-passation ont chacune leur identifiant.",
+    );
+  }
   const contre: Ecriture = {
     id: params.id,
+    motif: params.motif.trim(),
     journal: originale.journal,
     date: params.date,
     statut: 'brouillon',
@@ -88,6 +95,7 @@ export function corriger(originale: Ecriture, params: ParamsCorrection): Resulta
   });
   const correction: Ecriture = {
     id: idCorrection,
+    motif: params.motif.trim(),
     journal: originale.journal,
     date: params.date,
     statut: 'brouillon',
