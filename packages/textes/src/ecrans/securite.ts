@@ -1,6 +1,6 @@
 // Textes de sécurité : une phrase par raison de refus, réauthentification, bandeau du support, signalement. Vouvoiement.
 // Le front n'invente aucune raison : il affiche la phrase de la raison renvoyée par le serveur.
-export const RAISONS_TEXTE: Readonly<Record<string, string>> = {
+const RAISONS_TEXTE: Readonly<Record<string, string>> = {
   non_authentifie: 'Pour continuer, connectez-vous.',
   mfa_requis: 'Pour continuer, activez la vérification en deux étapes de votre compte.',
   reauthentification_requise: 'Pour cette action, reconnectez-vous.',
@@ -21,15 +21,26 @@ export const RAISONS_TEXTE: Readonly<Record<string, string>> = {
   entree_invalide: 'Les informations saisies ne sont pas valides. Vérifiez-les puis réessayez.',
 };
 
-export const CAPACITE_INCONNUE = 'Vérification de vos droits en cours.';
+const CAPACITE_INCONNUE = 'Vérification de vos droits en cours.';
 
-export const SIGNALEMENT = {
+const SIGNALEMENT = {
   merci: 'Merci, ça nous aide à améliorer le produit.',
   titre: 'Signaler un problème',
   champCapture: 'Joindre une capture de cet écran',
 } as const;
 
-export const BANDEAU_SUPPORT = (heureFin: string): string =>
+const bandeauSupport = (heureFin: string): string =>
   `Le support Axion consulte votre dossier en lecture seule jusqu’à ${heureFin}.`;
 
-export const finDeConsultation = 'Fin de la consultation';
+// Un seul objet exporté (contrôle des textes par écran) ; bandeauSupport est non énumérable : ce contrôle ne parcourt que les chaînes.
+export const securite = Object.defineProperty(
+  { raisons: RAISONS_TEXTE, capaciteInconnue: CAPACITE_INCONNUE, signalement: SIGNALEMENT, finDeConsultation: 'Fin de la consultation' },
+  'bandeauSupport',
+  { value: bandeauSupport },
+) as {
+  readonly raisons: Readonly<Record<string, string>>;
+  readonly capaciteInconnue: string;
+  readonly signalement: typeof SIGNALEMENT;
+  readonly finDeConsultation: string;
+  readonly bandeauSupport: typeof bandeauSupport;
+};

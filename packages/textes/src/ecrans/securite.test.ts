@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { RAISONS } from '../../../noyau/src/securite/types.js';
-import { BANDEAU_SUPPORT, CAPACITE_INCONNUE, RAISONS_TEXTE, SIGNALEMENT, finDeConsultation } from './securite.js';
+import { securite } from './securite.js';
+
+const { raisons: RAISONS_TEXTE, capaciteInconnue: CAPACITE_INCONNUE, signalement: SIGNALEMENT, finDeConsultation, bandeauSupport: BANDEAU_SUPPORT } = securite;
 
 const garde = (await import(new URL('../../../../outils/gardes/textes.mjs', import.meta.url).href)) as { MOTS_INTERDITS: string[] };
 const MOTS_INTERDITS = garde.MOTS_INTERDITS;
