@@ -4,7 +4,7 @@ import { estDateValide } from '../../dates/civiles.js';
 import type { Demande, Reponse } from './demandes.js';
 
 export type CodeReponses =
-  | 'deja_repondue' | 'horodatage_invalide' | 'reponse_inconnue' | 'reponse_reservee_a_une_personne' | 'motif_invalide' | 'compte_associe_invalide' | 'montant_invalide';
+  | 'deja_repondue' | 'horodatage_invalide' | 'reponse_inconnue' | 'reponse_reservee_a_une_personne' | 'motif_invalide' | 'compte_associe_invalide' | 'montant_invalide' | 'acteur_invalide';
 export class ErreurReponses extends Error {
   override name = 'ErreurReponses';
   constructor(readonly code: CodeReponses) {
@@ -22,13 +22,15 @@ export type Effet =
   | { type: 'attendre_depot' }
   | { type: 'brouillon_a_preparer' };
 
-const HORODATAGE = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}/;
+const HORODATAGE = /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+const DEPOT: readonly Reponse[] = ['je_les_depose', 'ou_les_trouver'];
 const RESERVEES: readonly Reponse[] = ['pas_de_facture', 'c_est_personnel'];
 
 export function repondre(demande: DemandeSuivie, reponse: ReponseDonnee, contexte: Contexte): { demande: DemandeSuivie; effets: Effet[] } {
   if (demande.etat !== 'ouverte') throw new ErreurReponses('deja_repondue');
   const date = typeof contexte.horodatage === 'string' ? HORODATAGE.exec(contexte.horodatage)?.[1] : undefined;
   if (date === undefined || !estDateValide(date)) throw new ErreurReponses('horodatage_invalide');
+  if (typeof contexte.acteur.id !== 'string' || contexte.acteur.id === '') throw new ErreurReponses('acteur_invalide');
   if (!demande.reponsesPretes.includes(reponse.type)) throw new ErreurReponses('reponse_inconnue');
   if (contexte.acteur.type === 'ia' && RESERVEES.includes(reponse.type)) throw new ErreurReponses('reponse_reservee_a_une_personne');
   const ligneIds = [...demande.ligneIds];
@@ -54,7 +56,7 @@ export function resoudreAutomatiquement(demandes: readonly DemandeSuivie[], lien
     if (!montants.has(l.ligneId)) montants.set(l.ligneId, centimes(Math.abs(l.montantLigne)));
   }
   return demandes.map((d) => {
-    const liees = d.etat === 'ouverte' ? d.ligneIds.filter((id) => montants.has(id)) : [];
+    const liees = d.etat === 'ouverte' || (d.etat === 'repondue' && d.reponse !== undefined && DEPOT.includes(d.reponse)) ? d.ligneIds.filter((id) => montants.has(id)) : [];
     if (liees.length === 0) return d;
     const restantes = d.ligneIds.filter((id) => !montants.has(id));
     if (restantes.length === 0) return { ...d, etat: 'auto_resolue', codeMessage: 'piece_arrivee' };

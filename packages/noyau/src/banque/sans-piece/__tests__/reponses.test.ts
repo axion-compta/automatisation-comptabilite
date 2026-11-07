@@ -57,8 +57,9 @@ describe('repondre', () => {
   it('cas-limites', () => {
     const faite = repondre(d1, { type: 'je_les_depose' }, ctx()).demande;
     expect(code(() => repondre(faite, { type: 'je_les_depose' }, ctx()))).toBe('deja_repondue');
-    for (const h of ['', 'hier', '2026-02-30T09:30:00Z', '2026-03-10']) expect(code(() => repondre(d1, { type: 'je_les_depose' }, ctx({ horodatage: h })))).toBe('horodatage_invalide');
+    for (const h of ['', 'hier', '2026-02-30T09:30:00Z', '2026-03-10', '2026-03-10T99:99:99Z', '2026-03-10T24:00:00Z', '2026-03-10T09:60:00Z', '2026-03-10T09:30:00nimportequoi', '2026-03-10T09:30:00']) expect(code(() => repondre(d1, { type: 'je_les_depose' }, ctx({ horodatage: h })))).toBe('horodatage_invalide');
     expect(code(() => repondre(d1, { type: 'c_est_personnel' }, ctx({ compteAssocie: '' })))).toBe('compte_associe_invalide');
+    expect(code(() => repondre(d1, { type: 'c_est_personnel' }, ctx({ acteur: { type: 'personne', id: '' } })))).toBe('acteur_invalide');
     expect(code(() => repondre(d1, { type: 'inconnue' as never }, ctx()))).toBe('reponse_inconnue');
   });
 });
@@ -78,10 +79,14 @@ describe('resoudreAutomatiquement', () => {
     expect(entree).toEqual(avant);
   });
   it('liens-vides-et-ligne-inconnue-ne-changent-rien', () => {
-    const entree = [demande(['l1'], 3000), demande(['l9'], 100, { etat: 'repondue' }), demande(['l8'], 100, { etat: 'auto_resolue' })];
+    const entree = [demande(['l1'], 3000), demande(['l9'], 100, { etat: 'repondue', reponse: 'c_est_personnel' }), demande(['l8'], 100, { etat: 'auto_resolue' })];
     expect(resoudreAutomatiquement(entree, [])).toEqual(entree);
     expect(resoudreAutomatiquement(entree, [lien('inconnue', -5)])).toEqual(entree);
     expect(resoudreAutomatiquement(entree, [lien('l9', -100), lien('l8', -100)]).map((x) => x.etat)).toEqual(['ouverte', 'repondue', 'auto_resolue']);
+  });
+  it('depot-apres-je-les-depose-auto-resolue', () => {
+    const entree = [demande(['l9'], 100, { etat: 'repondue', reponse: 'je_les_depose' }), demande(['l8'], 100, { etat: 'repondue', reponse: 'ou_les_trouver' })];
+    expect(resoudreAutomatiquement(entree, [lien('l9', -100), lien('l8', -100)]).map((x) => x.etat)).toEqual(['auto_resolue', 'auto_resolue']);
   });
   it('montant-invalide-refuse', () => {
     expect(code(() => resoudreAutomatiquement([demande(['l1', 'l2'], 5000)], [{ ligneId: 'l1', montantLigne: Number.NaN as never }]))).toBe('montant_invalide');
