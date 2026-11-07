@@ -14,6 +14,7 @@ function codeErreur(f: () => unknown): string | undefined {
 describe('dates civiles du lot 15', () => {
   it('date-valide-bissextile', () => {
     expect(dateValide('1900-02-29')).toBe(false);
+    expect(dateValide('1800-02-29')).toBe(false);
     expect(dateValide('2000-02-29')).toBe(true);
     expect(dateValide('2024-02-29')).toBe(true);
     expect(dateValide('2026-02-29')).toBe(false);
@@ -72,7 +73,7 @@ describe('dates civiles du lot 15', () => {
     }
     expect(departs).toHaveLength(400);
     for (const depart of departs) {
-      for (let n = -800; n <= 800; n += 37) {
+      for (let n = -800; n <= 800; n += 1) {
         const avance = ajouterJours(depart, n);
         expect(dateValide(avance)).toBe(true);
         expect(joursEntre(depart, avance)).toBe(n);
@@ -90,7 +91,7 @@ describe('dates civiles du lot 15', () => {
     expect(ajouterJours('2026-01-01', 365)).toBe('2027-01-01');
     expect(ajouterJours('2024-01-01', 366)).toBe('2025-01-01');
     expect(ajouterJours('2026-05-17', 15)).toBe('2026-06-01');
-  });
+  }, 180000);
 
   it('ajouter-jours-nombre-invalide', () => {
     for (const n of [0.5, Number.NaN, Infinity, -Infinity, 2 ** 60]) {
