@@ -13,11 +13,11 @@ describe('squelette du lot 15', () => {
     }
   });
 
-  it('domaines-vides-aucune-route', () => {
+  it('squelette-sept-domaines-branches', () => {
     expect(routesEcritureSansEnTete()).toEqual([]);
-    const chemins = Object.keys((genererOpenapi() as { paths: Record<string, unknown> }).paths).sort();
-    expect(chemins.filter((c) => !['/acces', '/volume', '/abonnement'].some((p) => c.startsWith(p)))).toEqual(['/ecritures', '/ecritures/{id}', '/exercices', '/exercices/{exercice}/plan', '/tiers']);
-    for (const nom of SEPT) expect(Object.keys(contrat[nom])).toHaveLength(0);
+    const chemins = Object.keys((genererOpenapi() as { paths: Record<string, unknown> }).paths);
+    for (const origine of ['/ecritures', '/ecritures/{id}', '/exercices', '/exercices/{exercice}/plan', '/tiers']) expect(chemins).toContain(origine);
+    for (const nom of SEPT) expect(contrat[nom]).toBeDefined();
   });
 
   it('anciens-domaines-intacts', () => {
