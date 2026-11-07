@@ -94,6 +94,12 @@ describe('date de clôture', () => {
     expect(changerDateCloture(cloture({ dureeMinMois: 6, dureeMaxMois: 6 })).exerciceSuivant?.fin).toBe('2027-06-30');
     expect(code(() => changerDateCloture(cloture({ nouvelleFinJourMois: '12-31', dureeMaxMois: 11 })))).toBe('duree_exercice_hors_bornes');
   });
+  it('duree-mois-entame-refusee-a-chaque-borne', () => {
+    expect(code(() => changerDateCloture(cloture({ nouvelleFinJourMois: '07-15', dureeMinMois: 1, dureeMaxMois: 6 })))).toBe('duree_exercice_hors_bornes');
+    expect(changerDateCloture(cloture({ nouvelleFinJourMois: '07-15', dureeMinMois: 1, dureeMaxMois: 7 })).exerciceSuivant?.fin).toBe('2027-07-15');
+    expect(code(() => changerDateCloture(cloture({ nouvelleFinJourMois: '06-15', dureeMinMois: 6, dureeMaxMois: 12 })))).toBe('duree_exercice_hors_bornes');
+    expect(changerDateCloture(cloture({ nouvelleFinJourMois: '06-15', dureeMinMois: 5, dureeMaxMois: 6 })).exerciceSuivant?.fin).toBe('2027-06-15');
+  });
   it('entrees-invalides', () => {
     const e = (f: () => unknown): string | undefined => code(f);
     expect(e(() => apercuChangement({ ...effet, effetDebut: '2026-13-01' }, objets()))).toBe('date_invalide');

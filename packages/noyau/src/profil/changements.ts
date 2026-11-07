@@ -79,10 +79,14 @@ function prochaineFin(depuis: string, jourMois: string): string {
   throw new ErreurProfil('date_invalide', 'date_invalide: resultat');
 }
 
-function dureeMois(debut: string, fin: string): number {
+/** Durée en mois : arrondie au mois inférieur (borne min) ou au mois supérieur si un mois est entamé (borne max). */
+function dureeMois(debut: string, fin: string, entame: boolean): number {
   const apres = ajouterJours(fin, 1);
   const mois = (Number(apres.slice(0, 4)) - Number(debut.slice(0, 4))) * MOIS_PAR_AN + Number(apres.slice(5, 7)) - Number(debut.slice(5, 7));
-  return Number(apres.slice(8)) < Number(debut.slice(8)) ? mois - 1 : mois;
+  const jourApres = Number(apres.slice(8));
+  const jourDebut = Number(debut.slice(8));
+  if (jourApres < jourDebut) return entame ? mois : mois - 1;
+  return entame && jourApres > jourDebut ? mois + 1 : mois;
 }
 
 type Exercice = { debut: string; fin: string };
@@ -101,8 +105,7 @@ export function changerDateCloture(p: {
   const entier = (n: unknown): boolean => typeof n === 'number' && Number.isSafeInteger(n) && n > 0;
   if (!entier(min) || !entier(max) || min > max) throw new ErreurProfil('bornes_invalides');
   const controler = (e: Exercice): Exercice => {
-    const d = dureeMois(e.debut, e.fin);
-    if (d < min || d > max) throw new ErreurProfil('duree_exercice_hors_bornes');
+    if (dureeMois(e.debut, e.fin, false) < min || dureeMois(e.debut, e.fin, true) > max) throw new ErreurProfil('duree_exercice_hors_bornes');
     return e;
   };
   if (ex.datesFigees) {
