@@ -13,6 +13,11 @@ const DUREE = 7 * JOUR;
 const PILOTE = Date.UTC(2026, 10, 6, 9, 0);
 const HABILITE = { type: 'personne', habilite: true } as const;
 
+const refus = (code: string) => ({ ok: false, code });
+const accepte = (etat: string, depuis: number) => ({
+  ok: true,
+  etat: { code: 'envoi-relances', etat, depuis },
+});
 function ctx(maintenant: number, extra: Partial<ContexteTransition> = {}): ContexteTransition {
   return { maintenant, dureePiloteMs: DUREE, acteur: HABILITE, ...extra };
 }
@@ -39,19 +44,10 @@ describe('interrupteurs fermes par defaut', () => {
 
   it('passage-direct-refuse', () => {
     const ferme = creerInterrupteur('envoi-relances', PILOTE);
-    expect(demanderTransition(ferme, 'ouvert', ctx(PILOTE + 30 * JOUR, { motif: 'ok' }))).toEqual({
-      ok: false,
-      code: 'passage_direct_interdit',
-    });
-    expect(demanderTransition(ferme, 'ferme', ctx(PILOTE + 1))).toEqual({ ok: false, code: 'deja_dans_cet_etat' });
-    expect(demanderTransition(ferme, 'pilote', ctx(PILOTE + 1))).toEqual({
-      ok: true,
-      etat: { code: 'envoi-relances', etat: 'pilote', depuis: PILOTE + 1 },
-    });
-    expect(demanderTransition(enPilote(), 'pilote', ctx(PILOTE + DUREE))).toEqual({
-      ok: false,
-      code: 'deja_dans_cet_etat',
-    });
+    expect(demanderTransition(ferme, 'ouvert', ctx(PILOTE + 30 * JOUR, { motif: 'ok' }))).toEqual(refus('passage_direct_interdit'));
+    expect(demanderTransition(ferme, 'ferme', ctx(PILOTE + 1))).toEqual(refus('deja_dans_cet_etat'));
+    expect(demanderTransition(ferme, 'pilote', ctx(PILOTE + 1))).toEqual(accepte('pilote', PILOTE + 1));
+    expect(demanderTransition(enPilote(), 'pilote', ctx(PILOTE + DUREE))).toEqual(refus('deja_dans_cet_etat'));
   });
 
   it('pilote-duree-pleine', () => {
@@ -60,13 +56,10 @@ describe('interrupteurs fermes par defaut', () => {
     const j4 = Date.UTC(2026, 10, 10, 9, 0);
     const veille = Date.UTC(2026, 10, 13, 8, 59);
     const pile = Date.UTC(2026, 10, 13, 9, 0);
-    expect(demanderTransition(e, 'ouvert', ctx(j4, m))).toEqual({ ok: false, code: 'pilote_trop_court' });
-    expect(demanderTransition(e, 'ouvert', ctx(veille, m))).toEqual({ ok: false, code: 'pilote_trop_court' });
-    expect(demanderTransition(e, 'ouvert', ctx(pile - 1, m))).toEqual({ ok: false, code: 'pilote_trop_court' });
-    expect(demanderTransition(e, 'ouvert', ctx(pile, m))).toEqual({
-      ok: true,
-      etat: { code: 'envoi-relances', etat: 'ouvert', depuis: pile },
-    });
+    expect(demanderTransition(e, 'ouvert', ctx(j4, m))).toEqual(refus('pilote_trop_court'));
+    expect(demanderTransition(e, 'ouvert', ctx(veille, m))).toEqual(refus('pilote_trop_court'));
+    expect(demanderTransition(e, 'ouvert', ctx(pile - 1, m))).toEqual(refus('pilote_trop_court'));
+    expect(demanderTransition(e, 'ouvert', ctx(pile, m))).toEqual(accepte('ouvert', pile));
     expect(demanderTransition(e, 'ouvert', ctx(pile + 1, m)).ok).toBe(true);
     // durée nulle : acceptée immédiatement
     expect(demanderTransition(e, 'ouvert', ctx(PILOTE, { ...m, dureePiloteMs: 0 })).ok).toBe(true);
@@ -76,17 +69,14 @@ describe('interrupteurs fermes par defaut', () => {
     const tache = { type: 'tache', habilite: false } as const;
     for (const acteur of [tache, { type: 'agent', habilite: false } as const, { type: 'service', habilite: true } as const]) {
       const r = demanderTransition(enPilote(), 'ferme', ctx(PILOTE + 1, { acteur }));
-      expect(r).toEqual({ ok: true, etat: { code: 'envoi-relances', etat: 'ferme', depuis: PILOTE + 1 } });
+      expect(r).toEqual(accepte('ferme', PILOTE + 1));
     }
     const ouvert: EtatInterrupteur = { code: 'envoi-relances', etat: 'ouvert', depuis: PILOTE };
     expect(demanderTransition(ouvert, 'ferme', ctx(PILOTE, { acteur: tache })).ok).toBe(true);
     // la fermeture ne dépend ni de la durée ni de l'horloge
     expect(demanderTransition(ouvert, 'ferme', ctx(PILOTE - 5, { acteur: tache })).ok).toBe(true);
     // la réouverture en pilote repart d'une nouvelle date
-    expect(demanderTransition(ouvert, 'pilote', ctx(PILOTE + 9))).toEqual({
-      ok: true,
-      etat: { code: 'envoi-relances', etat: 'pilote', depuis: PILOTE + 9 },
-    });
+    expect(demanderTransition(ouvert, 'pilote', ctx(PILOTE + 9))).toEqual(accepte('pilote', PILOTE + 9));
   });
 
   it('ouverture-exige-personne-et-motif', () => {
@@ -99,38 +89,26 @@ describe('interrupteurs fermes par defaut', () => {
       { type: 'tache', habilite: true },
     ] as const;
     for (const acteur of sansGeste) {
-      expect(demanderTransition(e, 'ouvert', ctx(pile, { acteur, motif: 'ok' }))).toEqual({
-        ok: false,
-        code: 'geste_requis',
-      });
-      expect(demanderTransition(creerInterrupteur('envoi-relances', 1), 'pilote', ctx(PILOTE, { acteur }))).toEqual({
-        ok: false,
-        code: 'geste_requis',
-      });
+      expect(demanderTransition(e, 'ouvert', ctx(pile, { acteur, motif: 'ok' }))).toEqual(refus('geste_requis'));
+      expect(demanderTransition(creerInterrupteur('envoi-relances', 1), 'pilote', ctx(PILOTE, { acteur }))).toEqual(refus('geste_requis'));
     }
     // le geste prime sur la durée trop courte
     expect(
       demanderTransition(e, 'ouvert', ctx(PILOTE + 1, { acteur: { type: 'tache', habilite: false }, motif: 'ok' })),
-    ).toEqual({ ok: false, code: 'geste_requis' });
+    ).toEqual(refus('geste_requis'));
     for (const motif of [undefined, '', '   ', '\t\n']) {
-      expect(demanderTransition(e, 'ouvert', ctx(pile, motif === undefined ? {} : { motif }))).toEqual({
-        ok: false,
-        code: 'motif_obligatoire',
-      });
+      expect(demanderTransition(e, 'ouvert', ctx(pile, motif === undefined ? {} : { motif }))).toEqual(refus('motif_obligatoire'));
     }
     expect(demanderTransition(e, 'ouvert', ctx(pile, { motif: ' raison ' })).ok).toBe(true);
     // la durée trop courte prime sur le motif manquant
-    expect(demanderTransition(e, 'ouvert', ctx(PILOTE + 1))).toEqual({ ok: false, code: 'pilote_trop_court' });
+    expect(demanderTransition(e, 'ouvert', ctx(PILOTE + 1))).toEqual(refus('pilote_trop_court'));
   });
 
   it('horloge-incoherente', () => {
     const e = enPilote();
-    expect(demanderTransition(e, 'ouvert', ctx(PILOTE - 1, { motif: 'ok' }))).toEqual({
-      ok: false,
-      code: 'horloge_incoherente',
-    });
+    expect(demanderTransition(e, 'ouvert', ctx(PILOTE - 1, { motif: 'ok' }))).toEqual(refus('horloge_incoherente'));
     const ferme = creerInterrupteur('envoi-relances', PILOTE);
-    expect(demanderTransition(ferme, 'pilote', ctx(PILOTE - 1))).toEqual({ ok: false, code: 'horloge_incoherente' });
+    expect(demanderTransition(ferme, 'pilote', ctx(PILOTE - 1))).toEqual(refus('horloge_incoherente'));
     expect(demanderTransition(ferme, 'pilote', ctx(PILOTE)).ok).toBe(true);
   });
 
