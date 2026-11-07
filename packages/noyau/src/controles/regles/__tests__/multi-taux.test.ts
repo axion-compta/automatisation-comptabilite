@@ -6,59 +6,29 @@ import { regleCCT06, regleCCT16, type HistoriqueCode } from '../multi-taux.js';
 
 const c = (n: number): Centimes => centimes(n);
 const ligne = (taux: number, nature: string, ht: number, tva: number, compte?: string): LignePiece => ({
-  taux,
-  nature,
-  ht: c(ht),
-  tva: c(tva),
-  ttc: c(ht + tva),
-  ...(compte === undefined ? {} : { compte }),
+  taux, nature, ht: c(ht), tva: c(tva), ttc: c(ht + tva), ...(compte === undefined ? {} : { compte }),
 });
 const piece = (lignes: LignePiece[], pied: [number, number, number]): PieceControlee => ({
-  id: 'p1',
-  sens: 'achat',
-  date: '2026-01-10',
-  lignes,
+  id: 'p1', sens: 'achat', date: '2026-01-10', lignes, mentions: [],
   totaux: { ht: c(pied[0]), tva: c(pied[1]), ttc: c(pied[2]) },
-  mentions: [],
 });
 const COMPTES = ['275000'];
 const NATURES = ['depot'];
 const t06 = (p: PieceControlee, comptes: readonly string[] = COMPTES, natures: readonly string[] = NATURES) =>
-  regleCCT06.evaluer({
-    piece: p,
-    comptesDepot: comptes,
-    naturesCaution: natures,
-  });
+  regleCCT06.evaluer({ piece: p, comptesDepot: comptes, naturesCaution: natures });
 const loyer = ligne(2000, 'loyer', 100000, 20000, '613200');
 const depot = ligne(0, 'depot', 200000, 0, '275000');
 const OK = { resultat: 'OK' };
-const alerte = (valeur: string, ecart?: number) => ({
-  resultat: 'ALERTE',
-  valeur,
-  ...(ecart === undefined ? {} : { ecartCentimes: ecart }),
-});
+const alerte = (valeur: string, ecart?: number) => ({ resultat: 'ALERTE', valeur, ...(ecart === undefined ? {} : { ecartCentimes: ecart }) });
 const codeDe = (f: () => unknown): unknown => {
-  try {
-    f();
-  } catch (e) {
-    return (e as { code?: unknown }).code;
-  }
+  try { f(); } catch (e) { return (e as { code?: unknown }).code; }
   return undefined;
 };
 
 const EX = { debut: '2026-01-01', fin: '2026-12-31' };
-const h = (date: string, code: CodeTraitement, fournisseurId = 'f1', nature = 'loyer'): HistoriqueCode => ({
-  fournisseurId,
-  nature,
-  code,
-  date,
-});
+const h = (date: string, code: CodeTraitement, fournisseurId = 'f1', nature = 'loyer'): HistoriqueCode => ({ fournisseurId, nature, code, date });
 const t16 = (code: CodeTraitement, historique: readonly HistoriqueCode[], exercice = EX, fournisseurId = 'f1') =>
-  regleCCT16.evaluer({
-    ligne: { fournisseurId, nature: 'loyer', code },
-    historique,
-    exercice,
-  });
+  regleCCT16.evaluer({ ligne: { fournisseurId, nature: 'loyer', code }, historique, exercice });
 
 describe('CC-T06 et CC-T16', () => {
   it('metadonnees', () => {
