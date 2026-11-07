@@ -56,6 +56,7 @@ describe('sous-traitants', () => {
     const ia = { ...base, type: 'ia' as const, conservationChezFournisseur: true };
     expect(activationPossible(ia, reglage, '2026-03-01').raisons).toEqual(['conservation_chez_fournisseur']);
     expect(activationPossible({ ...ia, conservationChezFournisseur: false }, reglage, '2026-03-01').permise).toBe(true);
+    expect(activationPossible({ ...base, type: 'hebergeur' as const, conservationChezFournisseur: true }, reglage, '2026-03-01').permise).toBe(true);
   });
 
   it('hors-ue-refuse', () => {
@@ -63,6 +64,8 @@ describe('sous-traitants', () => {
       { ...base, traitementDansUe: false, contratArchiveLe: null, annonceLe: null }, reglage, '2026-03-01',
     );
     expect(r.raisons).toEqual(['contrat_absent', 'hors_ue', 'non_annonce']);
+    const ordre = activationPossible({ ...base, type: 'ia' as const, conservationChezFournisseur: true, traitementDansUe: false }, reglage, '2026-03-01');
+    expect(ordre.raisons).toEqual(['conservation_chez_fournisseur', 'hors_ue']);
     expect(code(() => activationPossible(base, { oppositionJours: Number.NaN }, '2026-03-01'))).toBe('delai_invalide');
     for (const j of [Infinity, 1.5, -1]) expect(code(() => activationPossible(base, { oppositionJours: j }, '2026-03-01'))).toBe('delai_invalide');
     expect(code(() => activationPossible({ ...base, annonceLe: '2026-02-30' }, reglage, '2026-03-01'))).toBe('date_invalide');
