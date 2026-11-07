@@ -31,6 +31,8 @@ describe('periode ventes', () => {
     expect(rangerFacture({ ...base, dateFacture: '2031-06-10' })).toEqual({ periode: '2032-01', cartes: ['annee_close'] });
     const r = rangerFacture({ ...base, periodesVerrouillees: [...base.periodesVerrouillees, '2032-01'], dateFacture: '2031-12-31', exercices: [...ex2].reverse() });
     expect(r).toEqual({ periode: '2032-02', cartes: ['annee_close'] });
+    const e3 = [2033, 2032, 2031].map((a) => ({ id: `e${a}`, debut: `${a}-01-01`, fin: `${a}-12-31` }));
+    expect(rangerFacture({ exercices: e3, periodesVerrouillees: ['2031-06'], dateFacture: '2031-06-10' })).toEqual({ periode: '2031-07', cartes: ['annee_close'] });
   });
 
   it('aucune-periode-ouverte-apres', () => {
