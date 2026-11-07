@@ -1,0 +1,20 @@
+id,libelle,source,gravite,test_id
+FEC-C01,Trou ou doublon de numérotation dans un journal,a_sourcer,B,trou-detecte-fec-c01
+FEC-C02,Deux libellés pour un même compte,a_sourcer,B,deux-libelles-meme-compte-fec-c02
+FEC-C03,Tiers incohérent (numéro ou nom manquant),a_sourcer,B,tiers-sans-nom-fec-c03
+FEC-C04,Code journal hors de la liste fermée,a_sourcer,B,journal-hors-liste-fec-c04
+FEC-E01,Écriture déséquilibrée,a_sourcer,B,un-centime-sur-ve-1-fec-e01
+FEC-E02,Fichier déséquilibré,a_sourcer,B,fichier-desequilibre-fec-e02
+FEC-E03,Date d'écriture hors exercice,a_sourcer,B,date-hors-exercice-fec-e03
+FEC-I01,Total différent entre FEC et balance pour un compte,a_sourcer,B,un-centime-sur-un-compte-fec-i01
+FEC-I02,Compte présent d'un seul côté,a_sourcer,B,compte-absent-du-fec-fec-i02
+FEC-I03,Solde final du grand livre différent de la balance,a_sourcer,B,grand-livre-coherent-fec-i03
+FEC-S01,En-tête différent des colonnes attendues,a_sourcer,B,entete-different-s01
+FEC-S02,Nombre de colonnes différent de celui attendu,a_sourcer,B,colonne-manquante-s02
+FEC-S03,Date invalide,a_sourcer,B,date-30-fevrier-s03
+FEC-S04,Montant au mauvais format,a_sourcer,B,montant-avec-point-s04
+FEC-S05,Champ obligatoire vide,a_sourcer,B,obligatoire-vide-s05
+FEC-S06,Ligne vide,a_sourcer,B,ligne-vide-s06
+FEC-S07,Marque d'ordre présente alors qu'elle n'est pas acceptée,a_sourcer,B,marque-ordre-refusee-s07
+FEC-S08,Débit et crédit tous deux non nuls,a_sourcer,B,debit-et-credit-s08
+FEC-S09,Encodage UTF-8 invalide,a_sourcer,B,encodage-invalide-s09
