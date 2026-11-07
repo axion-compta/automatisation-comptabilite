@@ -6,14 +6,12 @@ export type VerdictSensibles = { readonly zones: readonly ZoneSensible[] } | { r
 export type DetecteurSensibles = (texte: string) => VerdictSensibles;
 export type EntreePreparee = { entree: string; signaux: Signal[]; refus?: 'donnee_sensible' };
 export type Detection = { suspect: boolean; motifs: string[] };
-
 const BALISE = 'donnees_non_fiables';
 const INVISIBLES = /[\u200b-\u200d\ufeff]/gu;
 const LETTRES_ISOLEES = /(?<!\p{L})(?:\p{L}[ .\-_]){2,}\p{L}(?!\p{L})/gu;
 const SEPARATEURS = /[ .\-_]/gu;
 const FIN = '[^.!?\\n]{0,40}';
 const SUJET = '(?:consignes?|instructions?|regles?|directives?|prompts?)';
-
 // Formes sur texte normalisé : minuscules, sans accent, sans caractère invisible, espaces simples.
 export const MOTIFS_INJECTION: readonly { nom: string; re: RegExp }[] = [
   { nom: 'ignore_consignes', re: new RegExp(`\\bignor(?:e|ez|er)\\b${FIN}\\b${SUJET}\\b`) },
@@ -31,13 +29,11 @@ export const MOTIFS_INJECTION: readonly { nom: string; re: RegExp }[] = [
   { nom: 'appliquer_sans_confirmation', re: /\b(?:applique|execute|approuve|valide) (?:automatiquement|sans (?:confirmation|verification|demander))/ },
   { nom: 'envoyer_vers_adresse', re: /\b(?:envoie|envoyez|envoyer|transmets|transmettez|transfere|forward|send)\b[^.!?\n]{0,60}\S@\S/ },
 ];
-
 const MOTIFS_CONSIGNES: readonly RegExp[] = [
   /\b(?:montre|montrez|affiche|affichez|donne|donnez|dis|dites|revele|revelez|ecris|repete|repetez|liste|recite)(?:-moi|-nous)? ?[^.!?\n]{0,30}\b(?:tes|ton|vos|votre|your|the)\b[^.!?\n]{0,20}\b(?:consignes?|instructions?|prompt|directives?|configuration)\b/,
   /\b(?:show|reveal|print|repeat|display|tell)\b[^.!?\n]{0,30}\b(?:your|the) (?:system )?(?:prompt|instructions|rules)\b/,
   /\bquel(?:le)? (?:est|sont) (?:ton|tes|votre|vos) (?:prompt|consignes?|instructions?)\b/,
 ];
-
 function normaliser(texte: string): string {
   return texte
     .replace(/[’‘]/gu, "'")
@@ -48,33 +44,27 @@ function normaliser(texte: string): string {
     .replace(/\s+/gu, ' ')
     .trim();
 }
-
 // Deux lectures : le texte normalisé, et le même texte avec les lettres isolées recollées (« i.g.n.o.r.e »).
 function lectures(texte: string): string[] {
   const n = normaliser(texte);
   const recolle = n.replace(LETTRES_ISOLEES, (m) => m.replace(SEPARATEURS, ''));
   return recolle === n ? [n] : [n, recolle];
 }
-
 export function encadrer(texteNonFiable: string): string {
   if (texteNonFiable === '') return '';
   const neutre = texteNonFiable.replace(/</gu, '&lt;').replace(/>/gu, '&gt;');
   return `<${BALISE}>\n${neutre}\n</${BALISE}>`;
 }
-
 export function detecterInjection(texte: string): Detection {
   const l = lectures(texte);
   const motifs = MOTIFS_INJECTION.filter((m) => l.some((t) => m.re.test(t))).map((m) => m.nom);
   return { suspect: motifs.length > 0, motifs };
 }
-
 export function demandeDeConsignes(texte: string): boolean {
   const l = lectures(texte);
   return MOTIFS_CONSIGNES.some((re) => l.some((t) => re.test(t)));
 }
-
 type Remplacement = { texte: string } | { refus: true };
-
 function remplacer(texte: string, verdict: VerdictSensibles, jetons: Map<string, string>, compteurs: Map<string, number>): Remplacement {
   if ('refus' in verdict) return { refus: true };
   const zones = [...verdict.zones].sort((a, b) => a.debut - b.debut);
@@ -96,7 +86,6 @@ function remplacer(texte: string, verdict: VerdictSensibles, jetons: Map<string,
   }
   return { texte: sortie + texte.slice(curseur) };
 }
-
 export function preparerEntree(p: {
   texteUtilisateur: string;
   textesNonFiables: readonly string[];
