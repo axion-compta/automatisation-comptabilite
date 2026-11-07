@@ -44,10 +44,14 @@ describe('calendrier', () => {
   });
   it('ordre-inverse-refuse', () => {
     expect(code(() => calendrier([], { ...F, du: '2026-12-31', au: '2026-01-01' }))).toBe('ordre_inverse');
+    expect(code(() => calendrier([], { ...F, du: '2026-05-05', au: '2026-05-05' }))).toBe('aucune');
   });
   it('tri-inconnues-a-la-fin', () => {
     const l = calendrier([e({ id: 'u2', dateLimite: undefined }), e({ id: 'd2', dateLimite: '2026-09-01' }), e({ id: 'u1', dateLimite: undefined }), e({ id: 'd1', dateLimite: '2026-08-01' }), e({ id: 'd0', dateLimite: '2026-08-01' })], F);
     expect(l.map((x) => x.id)).toEqual(['d0', 'd1', 'd2', 'u1', 'u2']);
+    const fen = { ...F, du: '2026-03-01', au: '2026-09-01' };
+    const w = calendrier([e({ id: 'avant', dateLimite: '2026-02-28' }), e({ id: 'apres', dateLimite: '2026-09-02' }), e({ id: 'du', dateLimite: '2026-03-01' }), e({ id: 'au', dateLimite: '2026-09-01' }), e({ id: 'sans', dateLimite: undefined })], fen);
+    expect(w.map((x) => x.id)).toEqual(['du', 'au', 'sans']);
   });
   it('faite-le-jour-limite-pas-en-retard', () => {
     const j = { ...F, jour: '2026-07-01' };
