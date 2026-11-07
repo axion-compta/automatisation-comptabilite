@@ -24,30 +24,37 @@ export interface EntreeContenu {
 
 /** Plages Unicode [début, fin] : largeur nulle, marques et contrôles bidirectionnels, BOM. */
 const PLAGES_INVISIBLES: readonly (readonly [number, number])[] = [
+  [0x00ad, 0x00ad],
+  [0x061c, 0x061c],
+  [0x180e, 0x180e],
   [0x200b, 0x200f],
   [0x202a, 0x202e],
   [0x2060, 0x2064],
+  [0x206a, 0x206f],
   [0x2066, 0x2069],
   [0xfeff, 0xfeff],
+  [0xe0000, 0xe007f],
 ];
 const BALISES = ['<script', '<!--'];
 const ACCENTS = /[̀-ͯ]/g;
 const BLANCS = /\s+/g;
 
 function estInvisible(code: number): boolean {
+  if (code < 0xad) return false;
   return PLAGES_INVISIBLES.some(([debut, fin]) => code >= debut && code <= fin);
 }
 
 function contientInvisible(texte: string): boolean {
-  for (let i = 0; i < texte.length; i += 1) {
-    if (estInvisible(texte.charCodeAt(i))) return true;
+  for (const c of texte) {
+    if (estInvisible(c.codePointAt(0) ?? 0)) return true;
   }
   return false;
 }
 
 function sansInvisibles(texte: string): string {
+  if (!contientInvisible(texte)) return texte;
   return Array.from(texte)
-    .filter((c) => !estInvisible(c.charCodeAt(0)))
+    .filter((c) => !estInvisible(c.codePointAt(0) ?? 0))
     .join('');
 }
 
