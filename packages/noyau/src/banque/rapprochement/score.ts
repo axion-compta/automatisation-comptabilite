@@ -1,5 +1,5 @@
 export class ErreurScore extends Error {
-  constructor(readonly code: 'bareme_invalide') {
+  constructor(readonly code: 'bareme_invalide' | 'constats_invalides') {
     super(code);
     this.name = 'ErreurScore';
   }
@@ -61,6 +61,7 @@ function verifier(b: Bareme): void {
 
 export function scorer(c: Constats, b: Bareme): { brut: number; score: number; facteurs: Facteur[]; penalites: Facteur[] } {
   verifier(b);
+  if (!Number.isInteger(c.joursEcart)) throw new ErreurScore('constats_invalides');
   const facteurs: Facteur[] = [
     { nom: 'montant', points: c.montant === 'exact' ? b.montantExact : c.montant === 'centime' ? b.montantCentime : 0 },
     {
@@ -84,6 +85,7 @@ export function scorer(c: Constats, b: Bareme): { brut: number; score: number; f
 
 export function etatSelonScore(score: number, b: Bareme): EtatLigne | null {
   verifier(b);
+  if (!Number.isFinite(score)) throw new ErreurScore('constats_invalides');
   if (score >= b.seuils.rapprochee) return 'RAPPROCHEE';
   if (score >= b.seuils.proposee) return 'PROPOSEE';
   if (score >= b.seuils.douteuse) return 'DOUTEUSE';
@@ -92,6 +94,7 @@ export function etatSelonScore(score: number, b: Bareme): EtatLigne | null {
 
 export function appliquerAmbiguite(scores: readonly number[], b: Bareme): number[] {
   verifier(b);
+  if (!scores.every(Number.isFinite)) throw new ErreurScore('constats_invalides');
   const [premier, second] = [...scores].sort((x, y) => y - x);
   const ambigu = premier !== undefined && second !== undefined && premier - second < b.ecartAmbiguite;
   return scores.map((s) => (ambigu ? Math.min(s, b.plafondAmbigu) : s));

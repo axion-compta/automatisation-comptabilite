@@ -68,6 +68,7 @@ describe('score', () => {
     expect(scorer({ ...c, joursEcart: -60 }, bareme).score).toBe(90);
     expect(scorer({ ...c, joursEcart: 60 }, bareme).score).toBe(90);
     expect(scorer({ ...plein, joursEcart: 61 }, bareme).score).toBe(90);
+    for (const j of [Number.NaN, Infinity, 1.5]) expect(code(() => scorer({ ...plein, joursEcart: j }, bareme))).toBe('constats_invalides');
   });
   it('jamais-negatif', () => {
     expect(scorer({ ...nul, dejaPartielle: true, joursEcart: 99 }, bareme).score).toBe(0);
@@ -80,10 +81,12 @@ describe('score', () => {
     expect(appliquerAmbiguite([70, 68], bareme)).toEqual([70, 68]);
     expect(appliquerAmbiguite([95], bareme)).toEqual([95]);
     expect(appliquerAmbiguite([], bareme)).toEqual([]);
+    expect(code(() => appliquerAmbiguite([90, Number.NaN], bareme))).toBe('constats_invalides');
   });
   it('seuils-aux-bornes', () => {
     const etats = [94, 95, 79, 80, 59, 60].map((s) => etatSelonScore(s, bareme));
     expect(etats).toEqual(['PROPOSEE', 'RAPPROCHEE', 'DOUTEUSE', 'PROPOSEE', null, 'DOUTEUSE']);
+    for (const v of [Number.NaN, Infinity]) expect(code(() => etatSelonScore(v, bareme))).toBe('constats_invalides');
     expect(code(() => scorer(plein, { ...bareme, montantExact: Number.NaN }))).toBe('bareme_invalide');
     for (const v of [Infinity, -1, 1.5, '5' as unknown as number])
       expect(code(() => scorer(plein, { ...bareme, plafond: v }))).toBe('bareme_invalide');
