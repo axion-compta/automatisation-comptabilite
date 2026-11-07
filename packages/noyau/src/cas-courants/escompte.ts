@@ -14,56 +14,28 @@ export class ErreurCasCourant extends Error {
   }
 }
 
-export interface ComptesEscompteObtenu {
-  fournisseur: string;
-  escompteObtenu: string;
-}
+export interface ComptesEscompteObtenu { fournisseur: string; escompteObtenu: string }
+export interface ComptesEscompteConsenti { escompteConsenti: string; client: string }
+export interface ComptesTaxeVehicule { charge: string; etat: string }
 
-export interface ComptesEscompteConsenti {
-  escompteConsenti: string;
-  client: string;
-}
+interface EntreeBase { id: string; date: string; journal: string }
 
-export interface ComptesTaxeVehicule {
-  charge: string;
-  etat: string;
-}
-
-export interface EntreeEscompte {
-  id: string;
-  date: string;
-  journal: string;
-  du: number;
-  paye: number;
-  tvaSurEscompte: boolean;
-}
+export interface EntreeEscompte extends EntreeBase { du: number; paye: number; tvaSurEscompte: boolean }
 
 export interface EntreeEscompteConsenti extends EntreeEscompte {
   /** Le client a déduit l'escompte de son règlement : une carte « avoir à demander » est levée. */
   deduitParClient?: boolean;
 }
 
-export interface ResultatEscompte {
-  ecriture: Ecriture;
-  blocageTva: boolean;
-}
-
-export interface ResultatEscompteConsenti extends ResultatEscompte {
-  carteAvoirADemander: boolean;
-}
-
-export interface EntreeTaxeVehicule {
-  id: string;
-  date: string;
-  journal: string;
-  montantLu: number | undefined;
-}
+export interface ResultatEscompte { ecriture: Ecriture; blocageTva: boolean }
+export interface ResultatEscompteConsenti extends ResultatEscompte { carteAvoirADemander: boolean }
+export interface EntreeTaxeVehicule extends EntreeBase { montantLu: number | undefined }
 
 function texteValide(v: unknown): v is string {
   return typeof v === 'string' && v.trim() !== '';
 }
 
-function verifierBase(e: { id: string; date: string; journal: string }): void {
+function verifierBase(e: EntreeBase): void {
   if (!texteValide(e.id) || !texteValide(e.date) || !texteValide(e.journal)) {
     throw new ErreurCasCourant('entree_invalide', 'Identifiant, date et journal sont obligatoires.');
   }
@@ -84,9 +56,7 @@ function montantEntier(v: number): Centimes {
 
 function calculerEscompte(e: EntreeEscompte): Centimes {
   verifierBase(e);
-  const du = montantEntier(e.du);
-  const paye = montantEntier(e.paye);
-  const escompte = soustraire(du, paye);
+  const escompte = soustraire(montantEntier(e.du), montantEntier(e.paye));
   if (escompte <= 0) {
     throw new ErreurCasCourant('pas_d_escompte', 'Aucun escompte : le dû moins le payé doit être positif.');
   }
@@ -97,13 +67,7 @@ function bloque(e: EntreeEscompte, statutParametreTva: string): boolean {
   return e.tvaSurEscompte === true && statutParametreTva !== 'valide';
 }
 
-function brouillon(
-  e: { id: string; date: string; journal: string },
-  libelle: string,
-  debit: string,
-  credit: string,
-  montant: Centimes,
-): Ecriture {
+function brouillon(e: EntreeBase, libelle: string, debit: string, credit: string, montant: Centimes): Ecriture {
   return {
     id: e.id,
     journal: e.journal,
