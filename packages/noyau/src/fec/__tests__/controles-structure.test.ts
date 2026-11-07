@@ -45,7 +45,7 @@ describe('contrôles de structure du FEC', () => {
     const r = lire(fichier(entete.replace('debit', 'Debit'), bonne));
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S01', ligne: 1 }]);
     expect(r.lignes).toHaveLength(1); // les lignes suivantes sont quand même lues
-    expect(ids(lire(fichier('a|b', bonne)))).toEqual(['FEC-S01']);
+    expect(ids(lire(fichier('a|b', bonne)))).toEqual(['FEC-S01']); expect(ids(lire(fichier('journalCode|ecritureNum', bonne)))).toEqual(['FEC-S01']);
   });
   it('colonne-manquante-s02', () => {
     const r = lire(fichier(entete, 'AC|AC-1|20260115||Achat fictif|10,00', bonne));
@@ -106,13 +106,14 @@ describe('contrôles de structure du FEC', () => {
   it('cas-limites-zero-octet-entete-seul-fin-de-ligne', () => {
     expect(lire(new Uint8Array(0))).toEqual({ lignes: [], ecarts: [{ regleId: 'FEC-S01', ligne: 1 }] });
     expect(lire(fichier(entete))).toEqual({ lignes: [], ecarts: [] });
+    expect(ids(lire(octets(CRLF + bonne)))).toEqual(['FEC-S01']);
     // LF au lieu de CR LF : écart, pas d'exception
     const lf = octets([entete, bonne].join(LF) + LF);
     expect(() => lire(lf)).not.toThrow();
-    expect(lire(lf).ecarts.length).toBeGreaterThan(0);
+    expect(ids(lire(lf))).toEqual(['FEC-S01']);
     expect(lire(lf, { finDeLigne: LF }).ecarts).toEqual([]); // avec LF attendu, le même fichier est propre
     // CR LF dans le fichier mais LF attendu : écart de structure, pas d'exception
-    expect(lire(fichier(entete, bonne), { finDeLigne: LF }).ecarts.length).toBeGreaterThan(0);
+    expect(ids(lire(fichier(entete, bonne), { finDeLigne: LF }))).toEqual(['FEC-S01', 'FEC-S02']);
   });
   it('mille-lignes-a-graine-fixe', () => {
     let graine = 12345;

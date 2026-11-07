@@ -132,7 +132,7 @@ export function lireFichierFec(
     try {
       cellules = lireLigne(brut, options);
     } catch (e) {
-      if (!(e instanceof ErreurFec)) throw e;
+      if (!(e instanceof ErreurFec) || e.code === 'option_invalide') throw e;
       ecarts.push({ regleId: numero === 1 ? 'FEC-S01' : 'FEC-S02', ligne: numero });
       return;
     }
