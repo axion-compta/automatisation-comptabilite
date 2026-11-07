@@ -34,6 +34,15 @@ const moteurOrdre: Moteur = (entree) => {
   };
   return { liens: [lien], etats: { [l.id]: 'RAPPROCHEE' }, options: {} };
 };
+// Moteur fabriqué rejoué : au n-ième appel, rend les couples [ligne, pièce] de la n-ième liste.
+const sequence = (appels: string[][][]): Moteur => {
+  let n = 0;
+  return () => {
+    const couples = appels[n++] ?? [];
+    const liens = couples.map(([l, p]) => moteurOrdre({ lignes: [ligne(l as string, -1, 1)], pieces: [piece(p as string, 1)] }, reglage).liens[0] as Lien);
+    return { liens, etats: Object.fromEntries(couples.map(([l]) => [l as string, 'RAPPROCHEE' as const])), options: {} };
+  };
+};
 const erreur = (f: () => unknown): string | undefined => {
   try {
     f();
@@ -62,7 +71,7 @@ describe('rapprocherEnTroisOrdres', () => {
     expect(r.options.L1?.length).toBeGreaterThan(1);
     expect(r.liens.length).toBeGreaterThan(1);
     for (const l of r.liens) {
-      expect(l).toMatchObject({ codeRaison: CODE_DEPEND_ORDRE, etat: 'propose', score: bareme.plafondAmbigu });
+      expect(l).toMatchObject({ codeRaison: 'depend_de_l_ordre', etat: 'propose', score: bareme.plafondAmbigu });
     }
   });
   it('graines-dans-l-execution', () => {
@@ -101,5 +110,18 @@ describe('rapprocherEnTroisOrdres', () => {
     const memes = rapprocherEnTroisOrdres({ lignes: lignes50, pieces: pieces50 }, reglage, [9, 9, 9]);
     expect(memes.execution.notes).toEqual(['graines_identiques']);
     expect(memes.execution.ecartEntreOrdres).toBe(false);
+  });
+  it('un-seul-ordre-sur-trois-differe', () => {
+    const m = sequence([[['L1', 'P1']], [['L1', 'P1']], [['L1', 'P2']]]);
+    const r = rapprocherEnTroisOrdres({ lignes: [], pieces: [] }, reglage, GRAINES, m);
+    expect(r.etats.L1).toBe('DOUTEUSE');
+    expect(r.execution.ecartEntreOrdres).toBe(true);
+    expect(r.options.L1).toEqual(['P1', 'P2']);
+  });
+  it('ordre-de-sortie-et-empreinte-de-reference', () => {
+    const m = sequence([[['L2', 'P2'], ['L1', 'P2']], [['L2', 'P1'], ['L1', 'P1']], [['L2', 'P1'], ['L1', 'P1']]]);
+    const r = rapprocherEnTroisOrdres({ lignes: [], pieces: [] }, reglage, GRAINES, m);
+    expect(r.liens.map((l) => `${l.ligneId}${l.pieceId}`)).toEqual(['L1P1', 'L1P2', 'L2P1', 'L2P2']);
+    expect(r.execution.empreinteResultat).toBe('750f102683cfb7d6ce136a83a8fecd6d8c13fbc8c6a83614e44bdab97ae3a720');
   });
 });
