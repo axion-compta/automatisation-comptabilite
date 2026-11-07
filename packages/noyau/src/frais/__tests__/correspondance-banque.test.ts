@@ -64,6 +64,7 @@ describe('lignesCorrespondantes', () => {
     expect(commercantCompatible('', 'N importe quoi')).toBe(true);
     expect(commercantCompatible('Café Élysée', 'CB CAFE ELYSEE PARIS')).toBe(true);
     expect(commercantCompatible('Le Bar', 'CB Le Bar')).toBe(false);
+    expect(commercantCompatible('Chez Remi', 'CB REMI 75')).toBe(true);
     expect(ids(ticket('2025-03-10', 4590, ''), [ligne('a', '2025-03-10', 4590)], 0)).toEqual(['a']);
   });
 
