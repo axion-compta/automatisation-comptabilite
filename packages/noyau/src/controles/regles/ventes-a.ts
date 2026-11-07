@@ -55,13 +55,17 @@ export const regleCCV04 = regle<ObjetSerieVente>('CC-V04', 'M', [], ARRIVEE, (o)
 export const regleCCV05 = regle<ObjetSerieVente>('CC-V05', 'M', ['validation'], ARRIVEE, (o) => compte(series(o).reduce((n, s) => n + s.doublons.length, 0)));
 export const regleCCV06 = regle<ObjetSerieVente>('CC-V06', 'm', [], ARRIVEE, (o) => compte(series(o).reduce((n, s) => n + s.datesQuiReculent.length, 0)));
 export const regleCCV07 = regle<EntreeMentions>('CC-V07', 'M', [], ARRIVEE, (o) => {
-  const carte = controlerMentions(o).cartes.find((x) => x.anomalie === 'A7');
+  const m = controlerMentions(o);
+  if (m.parametreAbsent) throw new ErreurControle('parametre_absent');
+  const carte = m.cartes.find((x) => x.anomalie === 'A7');
   return carte === undefined ? ok() : alerte(undefined, carte.code);
 });
 export const regleCCV08 = regle<ObjetDateOperation>('CC-V08', 'm', [], ARRIVEE, (o) => dateExigibilite(o.cas, o.nature, o.dates).dateOperationSupposee ? alerte() : ok());
 export const regleCCV09 = regle<DemandeRangement>('CC-V09', 'M', [], ARRIVEE_TVA, (o) => rangerFacture(o).cartes.includes('A9') ? alerte() : ok());
 export const regleCCV10 = regle<readonly PieceRecue[]>('CC-V10', 'm', [], ARRIVEE, (pieces) => {
-  if (!Array.isArray(pieces)) throw new ErreurControle('entree_invalide');
+  const chaine = (v: unknown) => typeof v === 'string';
+  const valide = Array.isArray(pieces) && pieces.every((p) => p && chaine(p.id) && chaine(p.recuLe) && (p.cle === null || chaine(p.cle)));
+  if (!valide) throw new ErreurControle('entree_invalide');
   return compte(dedoublonner(pieces).doublons.length);
 });
 

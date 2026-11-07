@@ -102,7 +102,6 @@ describe('CC-V07 mention de franchise (A7)', () => {
   it('CT-V07 mention presente, non exigee ou liste absente : OK', () => {
     expect(res(V07, o({ 'M-FRANCHISE': 'presente' }))).toBe('OK');
     expect(res(V07, o({}, false))).toBe('OK');
-    expect(res(V07, o({}, true, undefined))).toBe('OK');
   });
   it('CT-V07 mention de franchise absente ou illisible : ALERTE', () => {
     expect(ev(V07, o({}))).toEqual(A('M-FRANCHISE'));
@@ -164,7 +163,15 @@ describe('moteur', () => {
     expect(lancer(V01 as never, { ht: c(1), tva: c(1), ttc: Number.NaN })[0]?.resultat).toBe('IMPOSSIBLE');
     const inf = [{ ...piece('a', 'FA-001', '2026-03-01', 1), ttc: Number.POSITIVE_INFINITY }];
     expect(lancer(V04 as never, serie(inf))[0]?.resultat).toBe('IMPOSSIBLE');
-    expect(lancer(V04 as never, serie([], 0))[0]?.resultat).toBe('IMPOSSIBLE');
+    const o7 = { lues: {}, contexte: { natureClient: 'professionnel', franchise: true, htCentimes: c(100) } };
+    const cas: [unknown, unknown][] = [
+      [V01, { ht: c(1), tva: c(0), ttc: 1.5 }], [V01, { ht: c(1), tva: c(0), ttc: -1 }],
+      [V02, taux([{ tauxPdb: 1900, baseCentimes: 1.5, tvaLueCentimes: c(1) }])], [V02, taux([ligne(1900, -1, 1)])],
+      [V02, taux([{ tauxPdb: 1900, baseCentimes: c(1), tvaLueCentimes: 0.5 }])], [V03, taux([ligne(-1, 1, 1)])],
+      [V03, taux([ligne(19.5, 1, 1)])], [V07, { ...o7, requises: undefined }], [V10, [{}, {}]],
+      ...[0, 1.5, Number.NaN, -1].flatMap((m) => [V04, V05, V06].map((r) => [r, serie([], m)] as [unknown, unknown])),
+    ];
+    for (const [r, d] of cas) expect(lancer(r as never, d)[0]?.resultat).toBe('IMPOSSIBLE');
   });
 
   it('exigence-et-version-renseignees : ids, version 1, gravite, blocages, declencheurs, catalogue', () => {
