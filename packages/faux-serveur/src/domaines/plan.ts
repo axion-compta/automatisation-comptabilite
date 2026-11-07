@@ -1,14 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import { z } from 'zod';
+import { QueryPlan } from '../../../contrat/src/domaines/plan.js';
 import { creerServicePlan } from '../../../contrat/src/domaines/plan-service.js';
-
-/** Mêmes bornes que la query du contrat (`listerPlan`) ; le filtrage, lui, reste dans le service du contrat. Copie locale : voir la fiche de suivi L01-T39 (export `QueryPlan` dans le contrat). */
-const QueryPlan = z.object({
-  classe: z.coerce.number().int().min(1).max(7).optional(),
-  q: z.string().max(50).optional(),
-  limite: z.coerce.number().int().min(1).max(100).optional(),
-  decalage: z.coerce.number().int().min(0).optional(),
-});
 
 const erreur = (code: string, status: number) =>
   HttpResponse.json({ defined: status === 404, code, status, message: code }, { status });
