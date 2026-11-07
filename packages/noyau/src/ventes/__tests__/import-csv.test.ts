@@ -50,11 +50,11 @@ describe('import csv ventes', () => {
   });
 
   it('profil-par-nom', () => {
-    const lignes = lireCsv('c,n,d,x,h,v,t,tx,s\nAcme,F1,2026-01-05,z,100,20,120,2000,123456782\n', { separateur: ',' });
+    const lignes = lireCsv('c,n,d,x,h,v,t,tx,s\nAcme,F1,2026-01-05,z,100,19,119,1900,123456782\n', { separateur: ',' });
     const r = appliquerProfil(lignes, { enTete: true, colonnes: { ...BASE, taux: 'tx', sirenClient: 's' } });
     expect(r.rejets).toEqual([]);
     expect(r.objets).toEqual([
-      { numero: 'F1', date: '2026-01-05', client: 'Acme', ht: '100', tva: '20', ttc: '120', taux: '2000', sirenClient: '123456782' },
+      { numero: 'F1', date: '2026-01-05', client: 'Acme', ht: '100', tva: '19', ttc: '119', taux: '1900', sirenClient: '123456782' },
     ]);
     const sans = appliquerProfil(lignes, { enTete: true, colonnes: BASE });
     expect(Object.keys(sans.objets[0] ?? {})).toEqual(['numero', 'date', 'client', 'ht', 'tva', 'ttc']);
@@ -83,7 +83,7 @@ describe('import csv ventes', () => {
     const nom = appliquerProfil([['1']], { enTete: false, colonnes: { ...BASE } });
     expect(nom.rejets).toEqual([{ ligne: 1, raison: 'colonne_absente' }]);
     const tous = { numero: 0, date: 0, client: 0, ht: 0, tva: 0, ttc: 0 };
-    for (const mauvais of [Number.NaN, Infinity, 1.5, -1, 9]) {
+    for (const mauvais of [Number.NaN, Infinity, 1.5, -1, 1, 9]) {
       const r = appliquerProfil([['x']], { enTete: false, colonnes: { ...tous, ttc: mauvais } });
       expect(r.rejets).toEqual([{ ligne: 1, raison: 'colonne_absente' }]);
     }
