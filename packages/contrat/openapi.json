@@ -278,6 +278,66 @@
         }
       }
     },
+    "/recherche": {
+      "post": {
+        "operationId": "chercher",
+        "tags": [
+          "lecture-par-post",
+          "sans-effet",
+          "acces:lecture"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "q": {
+                    "type": "string"
+                  },
+                  "types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "piece",
+                        "ecriture",
+                        "tiers",
+                        "commentaire"
+                      ]
+                    }
+                  },
+                  "limite": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "curseur": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "q"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/acces": {
       "get": {
         "operationId": "lireAcces",
