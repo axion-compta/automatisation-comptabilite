@@ -2,18 +2,19 @@ import { ErreurRgpd, type EvenementPersonne } from './types.js';
 
 export type Effacement = { objet: string; faitLe: string; decisionId: string };
 
-const FORME = /^([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})Z$/;
+const FORME = /^([0-9]{4}-[0-9]{2}-[0-9]{2})T([0-9]{2}:[0-9]{2}:[0-9]{2})(.[0-9]{1,3})?Z$/;
 
 function verifierHorodatage(h: string): void {
   const m = typeof h === 'string' ? FORME.exec(h) : null;
-  const ms = m === null ? NaN : Date.parse(h);
+  const ms = m === null ? NaN : Date.parse(`${m[1]}T${m[2]}Z`);
   const ok = m !== null && Number.isFinite(ms) && new Date(ms).toISOString() === `${m[1]}T${m[2]}.000Z`;
   if (!ok) throw new ErreurRgpd('horodatage_invalide');
 }
 
+const seconde = (h: string): string => h.slice(0, 19);
 const comparer = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-// Un effacement fait à la même seconde que le dump est rejoué aussi : on ne sait pas s'il est dans la photo.
+// Comparaison à la seconde (millisecondes ignorées). Un effacement fait à la même seconde que le dump est rejoué aussi : on ne sait pas s'il est dans la photo.
 export function aRejouer(effacements: readonly Effacement[], dumpPrisLe: string): Effacement[] {
   verifierHorodatage(dumpPrisLe);
   const ids = new Set<string>();
@@ -26,7 +27,7 @@ export function aRejouer(effacements: readonly Effacement[], dumpPrisLe: string)
     ids.add(x.decisionId);
   }
   const tries = effacements
-    .filter((x) => x.faitLe >= dumpPrisLe)
+    .filter((x) => seconde(x.faitLe) >= seconde(dumpPrisLe))
     .sort((a, b) => comparer(a.faitLe, b.faitLe) || comparer(a.decisionId, b.decisionId));
   const vus = new Set<string>();
   return tries.filter((x) => !vus.has(x.objet) && vus.add(x.objet));

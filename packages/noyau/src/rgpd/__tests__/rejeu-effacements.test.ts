@@ -15,7 +15,7 @@ const code = (action: () => unknown): string | undefined => {
 
 describe('rejeu des effacements', () => {
   it('r12-trois-rejoues', () => {
-    const liste = [e('c', '2026-03-12T08:00:00Z', 'd3'), e('a', '2026-03-10T09:00:00Z', 'd1'), e('b', '2026-03-11T09:00:00Z', 'd2')];
+    const liste = [e('c', '2026-03-12T08:00:00Z', 'd1'), e('a', '2026-03-10T09:00:00Z', 'd3'), e('b', '2026-03-11T09:00:00Z', 'd2')];
     const r = aRejouer(liste, DUMP);
     expect(r.map((x) => x.objet)).toEqual(['a', 'b', 'c']);
     expect(aRejouer([...liste].reverse(), DUMP)).toEqual(r);
@@ -31,8 +31,15 @@ describe('rejeu des effacements', () => {
   });
 
   it('un-objet-une-fois', () => {
-    const r = aRejouer([e('a', '2026-03-11T00:00:00Z', 'd2'), e('a', '2026-03-10T05:00:00Z', 'd1'), e('b', '2026-03-10T05:00:00Z', 'd0')], DUMP);
-    expect(r.map((x) => x.decisionId)).toEqual(['d0', 'd1']);
+    const r = aRejouer([e('a', '2026-03-11T00:00:00Z', 'd1'), e('a', '2026-03-10T05:00:00Z', 'd9'), e('b', '2026-03-10T06:00:00Z', 'd0')], DUMP);
+    expect(r.map((x) => x.decisionId)).toEqual(['d9', 'd0']);
+  });
+
+  it('millisecondes-comparees-a-la-seconde', () => {
+    expect(aRejouer([e('a', '2026-03-10T02:00:00.500Z', 'd1')], DUMP)).toHaveLength(1);
+    expect(aRejouer([e('a', '2026-03-10T02:00:00Z', 'd1')], '2026-03-10T02:00:00.900Z')).toHaveLength(1);
+    expect(aRejouer([e('a', '2026-03-10T01:59:59.999Z', 'd1')], '2026-03-10T02:00:00.500Z')).toEqual([]);
+    expect(code(() => aRejouer([e('a', '2026-03-10T02:00:00.1234Z', 'd1')], DUMP))).toBe('horodatage_invalide');
   });
 
   it('remise-refusee-si-un-manque', () => {
