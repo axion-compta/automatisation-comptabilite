@@ -22,33 +22,33 @@ const code = (f: () => unknown): string | undefined => {
   }
   return undefined;
 };
-const un = [tx(2000, 20000, 100000)];
+const un = [tx(600, 20000, 200000)];
 
 describe('part encaissée (TVA et base exigibles à l\'encaissement)', () => {
   it('v03-paiement-total', () => {
     const r = run(220000, 0, 220000, un);
-    expect(r.parTaux).toEqual([{ tauxPdb: 2000, tva: 20000, base: 100000 }]);
+    expect(r.parTaux).toEqual([{ tauxPdb: 600, tva: 20000, base: 200000 }]);
     expect(r.dernier).toBe(true);
     expect(r.tropPercu).toBe(0);
   });
 
   it('v04-deux-moities', () => {
     const p1 = run(220000, 0, 110000, un);
-    expect(p1.parTaux).toEqual([{ tauxPdb: 2000, tva: 10000, base: 50000 }]);
+    expect(p1.parTaux).toEqual([{ tauxPdb: 600, tva: 10000, base: 100000 }]);
     expect(p1.dernier).toBe(false);
-    const p2 = run(220000, 110000, 110000, [tx(2000, 20000, 100000, 10000, 50000)]);
-    expect(p2.parTaux).toEqual([{ tauxPdb: 2000, tva: 10000, base: 50000 }]);
+    const p2 = run(220000, 110000, 110000, [tx(600, 20000, 200000, 10000, 100000)]);
+    expect(p2.parTaux).toEqual([{ tauxPdb: 600, tva: 10000, base: 100000 }]);
     expect(p2.dernier).toBe(true);
   });
 
   it('v05-trois-paiements-le-dernier-solde', () => {
-    const base = 1000000;
+    const base = 200000;
     let tvaDeja = 0;
     let baseDeja = 0;
     let encaisse = 0;
     const tvas: number[] = [];
     for (const p of [73333, 73333, 73334]) {
-      const r = run(220000, encaisse, p, [tx(1000, 20000, base, tvaDeja, baseDeja)]);
+      const r = run(220000, encaisse, p, [tx(900, 20000, base, tvaDeja, baseDeja)]);
       tvas.push(r.parTaux[0]?.tva ?? -1);
       tvaDeja += r.parTaux[0]?.tva ?? 0;
       baseDeja += r.parTaux[0]?.base ?? 0;
@@ -60,22 +60,22 @@ describe('part encaissée (TVA et base exigibles à l\'encaissement)', () => {
   });
 
   it('v07-deux-taux', () => {
-    const r = run(170000, 0, 85000, [tx(600, 5000, 50000 * 2), tx(900, 5000, 50000)]);
+    const r = run(170000, 0, 85000, [tx(600, 10000, 100000), tx(900, 10000, 50000)]);
     expect(r.parTaux).toEqual([
-      { tauxPdb: 600, tva: 2500, base: 50000 },
-      { tauxPdb: 900, tva: 2500, base: 25000 },
+      { tauxPdb: 600, tva: 5000, base: 50000 },
+      { tauxPdb: 900, tva: 5000, base: 25000 },
     ]);
     expect(r.dernier).toBe(false);
   });
 
   it('trop-percu-isole', () => {
     const r = run(220000, 0, 225000, un);
-    expect(r.parTaux).toEqual([{ tauxPdb: 2000, tva: 20000, base: 100000 }]);
+    expect(r.parTaux).toEqual([{ tauxPdb: 600, tva: 20000, base: 200000 }]);
     expect(r.dernier).toBe(true);
     expect(r.tropPercu).toBe(5000);
-    const p = run(220000, 200000, 20000, [tx(2000, 20000, 100000, 18182, 90909)]);
+    const p = run(220000, 200000, 20000, [tx(600, 20000, 100000, 18182, 90909)]);
     expect(p.tropPercu).toBe(0);
-    expect(p.parTaux[0]).toEqual({ tauxPdb: 2000, tva: 1818, base: 9091 });
+    expect(p.parTaux[0]).toEqual({ tauxPdb: 600, tva: 1818, base: 9091 });
   });
 
   it('paiement-invalide-refuse', () => {
@@ -97,10 +97,10 @@ describe('part encaissée (TVA et base exigibles à l\'encaissement)', () => {
     for (const d of [-1, 1.5, NaN, Infinity]) {
       expect(code(() => run(220000, d, 100, un))).toBe('deja_encaisse_invalide');
     }
-    expect(code(() => run(220000, 0, 100, [tx(2000, 20000, 100000, 20001, 0)]))).toBe('deja_exigible_incoherent');
-    expect(code(() => run(220000, 0, 100, [tx(2000, 20000, 100000, 0, 100001)]))).toBe('deja_exigible_incoherent');
-    expect(code(() => run(220000, 0, 100, [tx(2000, 20000, 100000, 20000, 100000)]))).toBeUndefined();
-    expect(code(() => run(220000, 0, 100, [tx(2000, 20000, 100000, -1, 0)]))).toBe('deja_exigible_incoherent');
+    expect(code(() => run(220000, 0, 100, [tx(600, 20000, 100000, 20001, 0)]))).toBe('deja_exigible_incoherent');
+    expect(code(() => run(220000, 0, 100, [tx(600, 20000, 100000, 0, 100001)]))).toBe('deja_exigible_incoherent');
+    expect(code(() => run(220000, 0, 100, [tx(600, 20000, 100000, 20000, 100000)]))).toBeUndefined();
+    expect(code(() => run(220000, 0, 100, [tx(600, 20000, 100000, -1, 0)]))).toBe('deja_exigible_incoherent');
   });
 
   it('ordre-des-taux-sans-effet', () => {
@@ -110,6 +110,19 @@ describe('part encaissée (TVA et base exigibles à l\'encaissement)', () => {
     const tri = (l: typeof droit) => [...l].sort((x, y) => x.tauxPdb - y.tauxPdb);
     expect(tri(envers)).toEqual(tri(droit));
     expect(run(250000, 0, 77777, []).parTaux).toEqual([]);
+  });
+
+  it('plafond-au-reste', () => {
+    let tvaDeja = 0;
+    const parts: number[] = [];
+    for (let k = 0; k < 5; k++) {
+      const r = run(5, k, 1, [tx(600, 3, 5, tvaDeja, 0)]);
+      const t = r.parTaux[0]?.tva ?? -1;
+      parts.push(t);
+      tvaDeja += t;
+    }
+    expect(parts).toEqual([1, 1, 1, 0, 0]);
+    expect(parts.every((x) => x >= 0)).toBe(true);
   });
 
   it('somme-exacte-boucle', () => {
