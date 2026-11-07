@@ -43,11 +43,14 @@ describe('banc FEC 1', () => {
   });
   it('decale-octet-par-octet', () => {
     identique(decale, ATTENDU_DECALE);
+    expect(lire(produire(decale))).toBe(ATTENDU_DECALE);
   });
   it('contre-passation-octet-par-octet', () => {
     identique(contrePassation, ATTENDU_CONTRE_PASSATION);
+    expect(lire(produire(contrePassation))).toBe(ATTENDU_CONTRE_PASSATION);
   });
   it('lettrage-partiel-octet-par-octet', () => {
     identique(lettragePartiel, ATTENDU_LETTRAGE_PARTIEL);
+    expect(lire(produire(lettragePartiel))).toBe(ATTENDU_LETTRAGE_PARTIEL);
   });
 });
