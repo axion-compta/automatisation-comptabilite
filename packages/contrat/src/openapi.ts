@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { contrat } from './routes.js';
+import { contrat, contratChat } from './routes.js';
 
 type Sch = z.ZodType;
 interface Def {
@@ -13,7 +13,7 @@ interface Def {
 }
 
 function definitions(): Def[] {
-  return Object.values(contrat).flatMap((domaine) => Object.values(domaine)).map((r) => {
+  return Object.values({ ...contrat, ...contratChat }).flatMap((domaine) => Object.values(domaine)).map((r) => {
     const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string; tags?: string[]; successStatus?: number }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
     return { ...d.route, inputSchema: d.inputSchema, errors: d.errorMap ?? {} };
   });
@@ -57,6 +57,7 @@ export function genererOpenapi(): object {
     const chemin = d.path;
     const reponses: Record<string, unknown> = { [String(d.successStatus ?? 200)]: { description: d.successStatus === 201 ? 'Créé' : 'OK' } };
     for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: e.status === 409 ? 'Conflit de version' : e.status === 422 ? 'Refusé' : 'Introuvable' };
+    if (d.tags?.includes('flux:evenements')) reponses['200'] = { description: 'Flux d\'événements', content: { 'text/event-stream': { schema: { type: 'string' } } } };
     (paths[chemin] ??= {})[d.method.toLowerCase()] = {
       operationId: d.operationId,
       ...(d.tags ? { tags: d.tags } : {}),
