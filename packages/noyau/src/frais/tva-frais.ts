@@ -55,7 +55,10 @@ export function traiterTvaFrais(entree: EntreeTvaFrais, parametre: ParametreTva 
     throw new ErreurFrais('entree_invalide', 'TVA lue : entier de centimes positif ou nul attendu');
   }
   const zero = centimes(0);
-  if (entree.estIk) return resultat('AUCUNE', zero, zero);
+  if (entree.estIk) {
+    if (tvaLue !== 0) throw new ErreurFrais('entree_invalide', 'IK : pas de TVA possible');
+    return resultat('AUCUNE', zero, zero);
+  }
   if (entree.justificatifPerdu) return resultat('SANS_PIECE', zero, tvaLue);
   if (entree.ticketAuNomDeLaPersonne) return resultat('NON_DEDUCTIBLE_NOM', zero, tvaLue);
   if (parametre?.statut !== 'valide') return resultat('A_VERIFIER', zero, tvaLue, true);

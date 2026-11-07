@@ -12,28 +12,34 @@ const entree = (surcharge: Partial<EntreeTvaFrais> = {}): EntreeTvaFrais => ({
   estIk: false,
   ...surcharge,
 });
+const somme = (r: { deductible: number; nonDeductible: number }, tva: number) => expect(r.deductible + r.nonDeductible).toBe(tva);
 const NUL = { deductible: 0, bloquePreparationTva: false };
 
 describe('traiterTvaFrais', () => {
   it('ik-sans-tva', () => {
-    const r = traiterTvaFrais(entree({ estIk: true, justificatifPerdu: true }), valide(7000));
+    const r = traiterTvaFrais(entree({ estIk: true, justificatifPerdu: true, tvaLue: centimes(0) }), valide(7000));
     expect(r).toEqual({ code: 'AUCUNE', ...NUL, nonDeductible: 0 });
+    somme(r, 0);
+    expect(() => traiterTvaFrais(entree({ estIk: true }), valide(7000))).toThrow(ErreurFrais);
   });
 
   it('perdu-sans-piece-zero', () => {
     const r = traiterTvaFrais(entree({ justificatifPerdu: true, ticketAuNomDeLaPersonne: true }), valide(7000));
     expect(r).toEqual({ code: 'SANS_PIECE', ...NUL, nonDeductible: 1001 });
+    somme(r, 1001);
   });
 
   it('nom-de-la-personne', () => {
     const r = traiterTvaFrais(entree({ ticketAuNomDeLaPersonne: true }), undefined);
     expect(r).toEqual({ code: 'NON_DEDUCTIBLE_NOM', ...NUL, nonDeductible: 1001 });
+    somme(r, 1001);
   });
 
   it('nf20-parametre-a-verifier-bloque', () => {
     for (const statut of ['a_verifier', 'non_verifie'] as const) {
       const r = traiterTvaFrais(entree(), { statut, partPointsDeBase: 7000 });
       expect(r).toEqual({ code: 'A_VERIFIER', deductible: 0, nonDeductible: 1001, bloquePreparationTva: true });
+      somme(r, 1001);
     }
   });
 
@@ -42,6 +48,7 @@ describe('traiterTvaFrais', () => {
     expect(r.code).toBe('A_VERIFIER');
     expect(r.bloquePreparationTva).toBe(true);
     expect(r.deductible).toBe(0);
+    somme(r, 1001);
   });
 
   it('parametre-retire-bloque', () => {
