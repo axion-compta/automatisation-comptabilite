@@ -96,5 +96,17 @@ describe('controles avant remise de l export complet', () => {
     ]);
     expect(somme.map((x) => x.resultat)).toEqual(['OK', 'IMPOSSIBLE']);
     expect(deciderRemise(somme, CLIENT, LE).remise).toBe('bloquee');
+    for (const m of [1.5, Number.NaN, Infinity]) {
+      const avant = controleGrandLivre([{ exercice: '2026', debit: m, credit: 1 }, { exercice: '2026', debit: 1, credit: 1 }]);
+      expect(avant.map((x) => x.resultat)).toEqual(['IMPOSSIBLE']);
+      expect(deciderRemise(avant, CLIENT, LE).remise).toBe('bloquee');
+    }
+    const debord = controleGrandLivre([
+      { exercice: '2026', debit: Number.MAX_SAFE_INTEGER, credit: 0 },
+      { exercice: '2026', debit: 1, credit: 0 },
+      { exercice: '2026', debit: 0, credit: 1 },
+    ]);
+    expect(debord.map((x) => x.resultat)).toEqual(['IMPOSSIBLE']);
+    expect(deciderRemise(debord, CLIENT, LE).remise).toBe('bloquee');
   });
 });
