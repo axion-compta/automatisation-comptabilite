@@ -1,5 +1,4 @@
-// Rémunération du dirigeant : écritures proposées en brouillon, jamais de calcul de paie ni de cotisation.
-// Les numéros de compte viennent du plan du millésime (à vérifier) et sont passés en argument.
+// Rémunération du dirigeant : écritures en brouillon, jamais de calcul de paie ; comptes passés en argument.
 import { centimes } from '../argent/index.js';
 import type { Ecriture, LigneEcriture } from '../ecritures/modele.js';
 import { verifierEcriture } from '../ecritures/modele.js';
@@ -17,28 +16,14 @@ export class ErreurDirigeant extends Error {
   }
 }
 
-export interface DonneesPaie {
-  brut: number;
-  retenues: number;
-  net: number;
-  chargesPatronales: number;
-}
+export interface DonneesPaie { brut: number; retenues: number; net: number; chargesPatronales: number }
 
 export interface ComptesRemuneration {
-  remuneration?: string;
-  personnel?: string;
-  organismes?: string;
-  chargesSociales?: string;
-  exploitant?: string;
-  banque?: string;
+  remuneration?: string; personnel?: string; organismes?: string;
+  chargesSociales?: string; exploitant?: string; banque?: string;
 }
 
-export interface ContexteRemuneration {
-  idBase: string;
-  date: string;
-  journal: string;
-}
-
+export interface ContexteRemuneration { idBase: string; date: string; journal: string }
 type DonneesDirigeant = DonneesPaie | { remuneration: number } | { prelevement: number };
 
 function montant(v: number) {
@@ -56,18 +41,10 @@ function compte(comptes: ComptesRemuneration, cle: keyof ComptesRemuneration): s
   return c;
 }
 
-const debit = (c: string, m: number, libelle: string): LigneEcriture => ({
-  compte: c,
-  libelle,
-  debit: centimes(m),
-  credit: centimes(0),
-});
-const credit = (c: string, m: number, libelle: string): LigneEcriture => ({
-  compte: c,
-  libelle,
-  debit: centimes(0),
-  credit: centimes(m),
-});
+const debit = (c: string, m: number, libelle: string): LigneEcriture =>
+  ({ compte: c, libelle, debit: centimes(m), credit: centimes(0) });
+const credit = (c: string, m: number, libelle: string): LigneEcriture =>
+  ({ compte: c, libelle, debit: centimes(0), credit: centimes(m) });
 
 function brouillon(ctx: ContexteRemuneration, rang: number, lignes: LigneEcriture[]): Ecriture {
   const e: Ecriture = {
