@@ -19,6 +19,12 @@ describe('cartes des ventes', () => {
       expect(v.detail, c).toBe(v.detail.trim());
     }
     expect(new Set(cartes.map(([, v]) => v.titre)).size).toBe(cartes.length);
+    // Sens de chaque carte : un mot-clé attendu par code (spec 10, fiches L10-T27 et L10-T28).
+    const MOTS: Record<string, RegExp> = {
+      A1: /total/i, A3: /taux/i, A5: /deux factures/i, A9: /exercice/i, A10: /doublon/i, A11: /immatriculation/i,
+      A12: /avoir/i, A13: /reste dû/i, A14: /acomptes/i, A15: /SIREN/, A17: /TVA/, A18: /créditeur/i, A19: /balance/i,
+    };
+    for (const [c, mot] of Object.entries(MOTS)) expect(`${cartesVentes[c as 'A1'].titre} ${cartesVentes[c as 'A1'].detail}`, c).toMatch(mot);
   });
 
   it('vouvoiement', () => {
