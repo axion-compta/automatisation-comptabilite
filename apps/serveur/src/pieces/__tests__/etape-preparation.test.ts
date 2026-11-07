@@ -75,6 +75,24 @@ describe('étape préparation', () => {
     expect(r).toEqual({ etat: 'a_verifier', texteTransmissible: null, texteCache: false, sensible: false, motifs: ['photo_floue'] });
   });
 
+  it('photo-sans-gris-ou-heic-floue-a-verifier', async () => {
+    const sansGris = await contexte(extraction(el('Ticket fictif')));
+    for (const t of ['jpeg', 'heic', 'tiff']) {
+      const r = await etapePreparation(piece(t), sansGris.ctx);
+      expect(r).toEqual({ etat: 'a_verifier', texteTransmissible: null, texteCache: false, sensible: false, motifs: ['photo_floue'] });
+    }
+    const { ctx } = await contexte({ ...extraction(el('Ticket fictif')), gris: uni(128) });
+    for (const t of ['heic', 'tiff']) expect((await etapePreparation(piece(t), ctx)).etat).toBe('a_verifier');
+  });
+
+  it('reglage-nettete-invalide-en-erreur', async () => {
+    const { ctx } = await contexte({ ...extraction(el('Ticket fictif')), gris: uni(128) });
+    for (const seuilNettete of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      const r = await etapePreparation(piece('jpeg'), { ...ctx, reglage: { ...ctx.reglage, seuilNettete } });
+      expect(r).toEqual({ etat: 'en_erreur', texteTransmissible: null, texteCache: false, sensible: false, motifs: ['reglage_invalide'] });
+    }
+  });
+
   it('photo-nette-preparee', async () => {
     const pixels = new Uint8Array(64).map((_, i) => (i % 2 === 0 ? 0 : 255));
     const { ctx } = await contexte({ ...extraction(el('Ticket fictif')), gris: { largeur: 8, hauteur: 8, pixels } });
@@ -90,6 +108,7 @@ describe('étape préparation', () => {
       expect(r.etat).toBe('a_verifier');
       expect(r.texteTransmissible).toBeNull();
       expect(r.motifs).toEqual(['ocr_trop_faible']);
+      expect(r.texteCache).toBe(elements.length === 1 && elements[0]!.texte === 'seulement caché');
     }
   });
 

@@ -1,4 +1,4 @@
-// Étape 3 (préparation), sans réseau : texte caché retiré, puis masquage, puis décision de sensibilité, puis netteté.
+// Étape 3 (préparation), sans réseau : netteté des photos d'abord, puis texte caché retiré, masquage, décision de sensibilité.
 import { estFloue } from '../../../../packages/noyau/src/pieces/entree/nettete.js';
 import { detecterChiffres, masquer } from '../../../../packages/noyau/src/pieces/sensibles/chiffres.js';
 import { deciderSensibilite } from '../../../../packages/noyau/src/pieces/sensibles/identite.js';
@@ -11,7 +11,7 @@ export interface ResultatPreparation {
   etat: 'preparee' | 'a_verifier' | 'en_erreur'; texteTransmissible: string | null; texteCache: boolean; sensible: boolean; motifs: string[];
 }
 
-const PHOTOS = ['jpeg', 'png', 'webp'];
+const PHOTOS = ['jpeg', 'png', 'webp', 'heic', 'tiff'];
 const sortie = (etat: ResultatPreparation['etat'], motifs: string[], extra: Partial<ResultatPreparation> = {}): ResultatPreparation =>
   ({ etat, texteTransmissible: null, texteCache: false, sensible: false, motifs, ...extra });
 
@@ -24,8 +24,9 @@ export async function etapePreparation(piece: PieceEnregistree, ctx: ContextePre
   } catch {
     return sortie('en_erreur', ['extraction_impossible']);
   }
-  if (PHOTOS.includes(piece.typeReel ?? '') && extrait.gris !== undefined && estFloue(extrait.gris, ctx.reglage.seuilNettete)) {
-    return sortie('a_verifier', ['photo_floue']);
+  if (PHOTOS.includes(piece.typeReel ?? '')) {
+    if (!Number.isInteger(ctx.reglage.seuilNettete) || ctx.reglage.seuilNettete < 0) return sortie('en_erreur', ['reglage_invalide']);
+    if (extrait.gris === undefined || estFloue(extrait.gris, ctx.reglage.seuilNettete)) return sortie('a_verifier', ['photo_floue']);
   }
   const { texteVisible, texteCache } = separerTexteCache(extrait.elements, extrait.pages, ctx.reglage.texteCache);
   if (texteVisible.trim() === '') return sortie('a_verifier', ['ocr_trop_faible'], { texteCache });
