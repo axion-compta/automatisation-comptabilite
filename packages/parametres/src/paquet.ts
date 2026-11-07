@@ -46,20 +46,14 @@ export type ComparaisonVersion =
 export function identifiantParametre(ligne: ParametreLegal): string {
   return `${ligne.cle}|${ligne.pays}|${ligne.effet_debut}`;
 }
-
-function verifierVersion(version: string): void {
-  if (version === '') throw new ErreurPaquet('version_vide');
-}
-
 function verifierDate(date: string): void {
   if (!ParametreLegal.shape.effet_debut.safeParse(date).success) throw new ErreurPaquet('date_invalide', date);
   const t = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))));
   if (t.toISOString().slice(0, 10) !== date) throw new ErreurPaquet('date_invalide', date);
 }
-
 /** Règle en vigueur au jour D dans ce paquet ; absent ou ambigu : ErreurParametre, sans valeur par défaut. */
 export function regleAuJour(paquet: PaquetParametres, cle: string, pays: string, date: string): RegleAuJour {
-  verifierVersion(paquet.version);
+  if (paquet.version === '') throw new ErreurPaquet('version_vide');
   if (cle === '') throw new ErreurPaquet('cle_vide');
   if (!ParametreLegal.shape.pays.safeParse(pays).success) throw new ErreurPaquet('pays_invalide', pays);
   verifierDate(date);
@@ -71,19 +65,13 @@ export function regleAuJour(paquet: PaquetParametres, cle: string, pays: string,
     aVerifier: ligne.statut !== 'valide',
   };
 }
-
 function trouverPaquet(version: string, paquets: readonly PaquetParametres[]): PaquetParametres {
-  verifierVersion(version);
-  const versions = new Set<string>();
-  for (const p of paquets) {
-    if (versions.has(p.version)) throw new ErreurPaquet('version_en_double', p.version);
-    versions.add(p.version);
-  }
+  if (version === '') throw new ErreurPaquet('version_vide');
+  if (new Set(paquets.map((p) => p.version)).size !== paquets.length) throw new ErreurPaquet('version_en_double');
   const trouve = paquets.find((p) => p.version === version);
   if (trouve === undefined) throw new ErreurPaquet('version_inconnue', version);
   return trouve;
 }
-
 /** Ligne de la version ENREGISTRÉE ; jamais de repli sur la dernière version. */
 export function rejouer(utilisation: UtilisationParametre, paquets: readonly PaquetParametres[]): ParametreLegal {
   const paquet = trouverPaquet(utilisation.versionPaquet, paquets);
@@ -91,11 +79,7 @@ export function rejouer(utilisation: UtilisationParametre, paquets: readonly Paq
   if (ligne === undefined) throw new ErreurPaquet('parametre_inconnu', utilisation.parametreId);
   return ligne;
 }
-
-function empreinte(l: ParametreLegal): string {
-  return JSON.stringify([l.cle, l.pays, l.valeur, l.effet_debut, l.effet_fin, l.statut, l.source, l.date_releve]);
-}
-
+const empreinte = (l: ParametreLegal): string => JSON.stringify(Object.entries(l).sort());
 /** Compare à la dernière version (dernier paquet de la liste) ; une différence ne produit qu'une proposition en brouillon. */
 export function comparerAvecDerniere(
   utilisation: UtilisationParametre,

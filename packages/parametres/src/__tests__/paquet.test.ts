@@ -25,7 +25,6 @@ function ligne(sur: Partial<ParametreLegal> = {}): ParametreLegal {
     ...sur,
   };
 }
-
 const ANCIENNE = ligne();
 const NOUVELLE = ligne({ valeur: '2100', effet_debut: '2027-01-01', effet_fin: null });
 const P1_SIMPLE: PaquetParametres = { version: 'v1', lignes: [ANCIENNE] };
@@ -44,27 +43,23 @@ function code(f: () => unknown): string | undefined {
   }
   return undefined;
 }
-
 describe('regleAuJour', () => {
   it('r1-31-decembre-ancienne-valeur', () => {
     const r = regleAuJour(P2, 'fictif.taux_a', 'XX', '2026-12-31');
     expect(r.ligne.valeur).toBe('2000');
     expect(tva(Number(r.ligne.valeur))).toBe(20_000);
   });
-
   it('r1-1er-janvier-nouvelle-valeur', () => {
     const r = regleAuJour(P2, 'fictif.taux_a', 'XX', '2027-01-01');
     expect(r.ligne.valeur).toBe('2100');
     expect(tva(Number(r.ligne.valeur))).toBe(21_000);
   });
-
   it('r1-version-du-paquet-portee', () => {
     const r = regleAuJour(P2, 'fictif.taux_a', 'XX', '2027-06-01');
     expect(r.versionPaquet).toBe('v2');
     expect(r.parametreId).toBe('fictif.taux_a|XX|2027-01-01');
     expect(r.parametreId).toBe(identifiantParametre(NOUVELLE));
   });
-
   it('statut-non-valide-a-verifier', () => {
     expect(regleAuJour(P2, 'fictif.taux_a', 'XX', '2026-06-01').aVerifier).toBe(false);
     for (const statut of ['non_verifie', 'a_verifier'] as const) {
@@ -74,21 +69,20 @@ describe('regleAuJour', () => {
       expect(r.ligne.valeur).toBe('2000');
     }
   });
-
   it('meme-entree-meme-sortie', () => {
     const a = regleAuJour(P2, 'fictif.taux_a', 'XX', '2027-02-02');
     const b = regleAuJour(P2, 'fictif.taux_a', 'XX', '2027-02-02');
     expect(a).toEqual(b);
     expect(a).not.toBe(b);
   });
-
   it('entrees-invalides-refusees', () => {
     expect(code(() => regleAuJour({ version: 'v0', lignes: [] }, 'fictif.taux_a', 'XX', '2026-06-01'))).toBe(
       'parametre_absent',
     );
     expect(code(() => regleAuJour(P2, '', 'XX', '2026-06-01'))).toBe('cle_vide');
-    expect(code(() => regleAuJour(P2, 'fictif.taux_a', 'XXX', '2026-06-01'))).toBe('pays_invalide');
-    expect(code(() => regleAuJour(P2, 'fictif.taux_a', 'X', '2026-06-01'))).toBe('pays_invalide');
+    for (const pays of ['XXX', 'X']) {
+      expect(code(() => regleAuJour(P2, 'fictif.taux_a', pays, '2026-06-01'))).toBe('pays_invalide');
+    }
     for (const d of ['2026-6-1', '', 'demain', '01/06/2026', '2026-13-01']) {
       expect(code(() => regleAuJour(P2, 'fictif.taux_a', 'XX', d))).toBe('date_invalide');
     }
@@ -98,31 +92,26 @@ describe('regleAuJour', () => {
     expect(code(() => regleAuJour(P2, 'fictif.taux_a', 'YY', '2026-06-01'))).toBe('parametre_absent');
   });
 });
-
 const UTILISATION: UtilisationParametre = {
   ecritureId: 'ec-1',
   parametreId: 'fictif.taux_a|XX|2026-01-01',
   versionPaquet: 'v1',
   dateReference: '2026-12-31',
 };
-
 describe('rejouer', () => {
   it('r2-rejeu-2027-garde-la-version-2026', () => {
     // Écriture validée en 2026 avec v1 ; v2 existe, mais le rejeu reste sur v1.
-    const ancienne = { ...ANCIENNE, valeur: '2000' };
-    const v1: PaquetParametres = { version: 'v1', lignes: [ancienne] };
-    const v2: PaquetParametres = { version: 'v2', lignes: [{ ...ancienne, valeur: '2050' }, NOUVELLE] };
+    const v1: PaquetParametres = { version: 'v1', lignes: [ANCIENNE] };
+    const v2: PaquetParametres = { version: 'v2', lignes: [{ ...ANCIENNE, valeur: '2050' }, NOUVELLE] };
     const r = rejouer(UTILISATION, [v1, v2]);
     expect(r.valeur).toBe('2000');
     expect(tva(Number(r.valeur))).toBe(20_000);
   });
-
   it('version-inconnue-refusee', () => {
     expect(code(() => rejouer({ ...UTILISATION, versionPaquet: 'v9' }, [P1_SIMPLE, P2]))).toBe('version_inconnue');
     expect(code(() => rejouer(UTILISATION, []))).toBe('version_inconnue');
     expect(code(() => rejouer({ ...UTILISATION, versionPaquet: '' }, [P1_SIMPLE]))).toBe('version_vide');
   });
-
   it('parametre-inconnu-et-versions-en-double-refuses', () => {
     expect(code(() => rejouer({ ...UTILISATION, parametreId: 'autre|XX|2026-01-01' }, [P1_SIMPLE]))).toBe(
       'parametre_inconnu',
@@ -130,7 +119,6 @@ describe('rejouer', () => {
     expect(code(() => rejouer(UTILISATION, [P1_SIMPLE, P1_SIMPLE]))).toBe('version_en_double');
   });
 });
-
 describe('comparerAvecDerniere', () => {
   it('nouvelle-version-seulement-proposee-en-brouillon', () => {
     const v1: PaquetParametres = { version: 'v1', lignes: [ligne({ effet_fin: null })] };
@@ -143,19 +131,16 @@ describe('comparerAvecDerniere', () => {
     // Rien n'est remplacé : le rejeu reste sur la version enregistrée.
     expect(rejouer(UTILISATION, [v1, v2]).valeur).toBe('2000');
   });
-
   it('identique-quand-la-derniere-ne-change-rien', () => {
     expect(comparerAvecDerniere(UTILISATION, [P1_SIMPLE, { version: 'v2', lignes: [{ ...ANCIENNE }] }])).toEqual({
       identique: true,
     });
     expect(comparerAvecDerniere(UTILISATION, [P1_SIMPLE])).toEqual({ identique: true });
   });
-
   it('statut-different-n-est-pas-identique', () => {
     const v2 = { version: 'v2', lignes: [ligne({ statut: 'a_verifier' })] };
     expect(comparerAvecDerniere(UTILISATION, [P1_SIMPLE, v2]).identique).toBe(false);
   });
-
   it('refus-versions-en-double', () => {
     expect(code(() => comparerAvecDerniere(UTILISATION, [P1_SIMPLE, P1_SIMPLE]))).toBe('version_en_double');
     expect(code(() => comparerAvecDerniere(UTILISATION, []))).toBe('version_inconnue');
