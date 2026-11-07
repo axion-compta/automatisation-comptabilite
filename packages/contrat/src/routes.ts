@@ -7,6 +7,7 @@ import {
   ModificationEcriture,
   NouvelleEcriture,
 } from './schemas.js';
+import { plan } from './domaines/plan.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -34,5 +35,5 @@ export const modifier = oc
   .input(z.object({ params: z.object({ id: z.string().min(1) }), headers: EnTeteEcriture, body: ModificationEcriture }))
   .output(z.object({ body: Ecriture }));
 
-export const contrat = { ecritures: { lister, creer, modifier } };
+export const contrat = { ecritures: { lister, creer, modifier }, plan };
 export type Contrat = typeof contrat;
