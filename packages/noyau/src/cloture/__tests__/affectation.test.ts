@@ -165,6 +165,13 @@ describe('affectation du résultat : pertes antérieures (R06, R09)', () => {
     expect(base).toMatchObject({ distribuable: 418500 });
     expect(r).toMatchObject({ distribuable: 428500 });
   });
+  it('reserves-disponibles-invalides-refusees-borne-zero-acceptee', () => {
+    const e = cas({ ...C, resultat: 450000 });
+    for (const v of [-1, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      expect(() => affecterResultat({ ...e, reservesDisponibles: v as never }, P)).toThrow(ErreurAffectation);
+    }
+    expect(affecterResultat({ ...e, reservesDisponibles: centimes(0) }, P)).toMatchObject({ distribuable: 418500 });
+  });
   it('plafond-toujours-applique', () => {
     const r = affecterResultat(cas({ ...C, resultat: 450000, reserveActuelle: 140000, reportANouveau: -100000 }), P);
     expect(r).toMatchObject({ ok: true, reserveProposee: 10000 });

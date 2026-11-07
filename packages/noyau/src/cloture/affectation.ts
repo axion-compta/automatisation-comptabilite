@@ -43,8 +43,11 @@ export function affecterResultat(
   verifierFraction('Le plafond de réserve', params.plafondReservePointsDeBase);
   if (entree.dividendeDemande < 0) throw new ErreurAffectation('Le dividende demandé ne peut pas être négatif.');
   if (entree.capital < 0) throw new ErreurAffectation('Le capital ne peut pas être négatif.');
-  if (entree.reservesDisponibles !== undefined && entree.reservesDisponibles < 0) {
-    throw new ErreurAffectation('Les réserves disponibles ne peuvent pas être négatives.');
+  if (
+    entree.reservesDisponibles !== undefined &&
+    (!Number.isSafeInteger(entree.reservesDisponibles) || entree.reservesDisponibles < 0)
+  ) {
+    throw new ErreurAffectation('Les réserves disponibles doivent être un entier de centimes positif ou nul.');
   }
   if (entree.reserveActuelle < 0) throw new ErreurAffectation('La réserve actuelle ne peut pas être négative.');
 
