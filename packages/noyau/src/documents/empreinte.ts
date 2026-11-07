@@ -28,7 +28,7 @@ export interface ResultatVerification {
   enTrop: string[];
 }
 
-const LIGNE = /^([0-9a-f]{64}) {2}(.+)$/;
+const LIGNE = /^([0-9a-f]{64}) {2}([^\n\r]+)$/;
 
 export function empreinteSha256(octets: OctetsOuTexte): string {
   return createHash('sha256').update(octets).digest('hex');

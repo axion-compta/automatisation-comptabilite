@@ -58,27 +58,31 @@ describe('empreinte', () => {
       { nom: 'vide', sha256: empreinteSha256('') },
     ]);
     expect(lireManifeste('')).toEqual([]);
+    const sep = [{ nom: 'a\u2028b', octets: '' }];
+    expect(verifierManifeste(manifeste(sep), sep).ok).toBe(true);
     expect(verifierManifeste('', []).ok).toBe(true);
   });
 
   it('fichier-modifie-detecte', () => {
-    const texte = manifeste([
-      { nom: 'a', octets: new Uint8Array([1, 2, 3]) },
+    const a = { nom: 'a', octets: new Uint8Array([1, 2, 3]) };
+    const a2 = { nom: 'a', octets: new Uint8Array([1, 2, 4]) };
+    const [b, c, d] = [
       { nom: 'b', octets: 'x' },
       { nom: 'c', octets: 'y' },
-    ]);
-    const r = verifierManifeste(texte, [
-      { nom: 'a', octets: new Uint8Array([1, 2, 4]) },
-      { nom: 'c', octets: 'y' },
       { nom: 'd', octets: 'z' },
-    ]);
-    expect(r).toEqual({
-      ok: false,
-      manquants: ['b'],
-      modifies: ['a'],
-      enTrop: ['d'],
-    });
+    ];
+    const res = (p: object) => ({ ok: false, manquants: [], modifies: [], enTrop: [], ...p });
+    const texte = manifeste([a, b, c]);
+    expect(verifierManifeste(texte, [a2, b, c])).toEqual(res({ modifies: ['a'] }));
+    expect(verifierManifeste(texte, [a, c])).toEqual(res({ manquants: ['b'] }));
+    expect(verifierManifeste(texte, [a, b, c, d])).toEqual(res({ enTrop: ['d'] }));
+    expect(verifierManifeste(texte, [a2, c, d])).toEqual(
+      res({ manquants: ['b'], modifies: ['a'], enTrop: ['d'] }),
+    );
     expect(verifierManifeste(texte, []).manquants).toEqual(['a', 'b', 'c']);
+    const h = empreinteSha256('');
+    const nonTrie = `${h}  b\n${h}  a\n`;
+    expect(verifierManifeste(nonTrie, []).manquants).toEqual(['a', 'b']);
   });
 
   it('nom-en-double-refuse', () => {
