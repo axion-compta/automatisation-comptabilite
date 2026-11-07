@@ -39,6 +39,9 @@ describe('preparer', () => {
     const r = preparer('s1', [], [piece('p1', 300), piece('p2', 300), piece('p3', 300)], [lien('l1', 'p1', 300), lien('l1', 'p2', 100, 'propose')]);
     expect(r.pieces.map((p) => [p.id, p.reste])).toEqual([['p2', 200], ['p3', 300]]);
     expect(r.ecartees).toEqual([{ id: 'p1', motif: 'piece_soldee' }]);
+    const s = preparer('s1', [], [piece('p1', 100)], [lien('l1', 'p1', 150)]);
+    expect(s.pieces).toEqual([]);
+    expect(s.ecartees).toEqual([{ id: 'p1', motif: 'piece_soldee' }]);
   });
   it('cas-limites', () => {
     expect(() => preparer('', [], [], [])).toThrow('societe_absente');
@@ -77,6 +80,9 @@ describe('neutraliser', () => {
     expect(neutraliser([sans('l1', -500), sans('l2', 500)])).toEqual([]);
     expect(neutraliser([ligne('l1', -500, vide), ligne('l2', 500, vide)])).toEqual([]);
     expect(neutraliser([ligne('l1', 0), ligne('l2', 0)])).toEqual([]);
+    expect(neutraliser([ligne('l1', -Infinity), ligne('l2', NaN)])).toEqual([]);
+    expect(neutraliser([ligne('l1', -Infinity), ligne('l2', Infinity)])).toEqual([]);
+    expect(neutraliser([ligne('l1', -1.5), ligne('l2', 1.5)])).toEqual([]);
     expect(neutraliser([])).toEqual([]);
   });
 });

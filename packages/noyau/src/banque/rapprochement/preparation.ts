@@ -32,7 +32,7 @@ export function preparer(
       continue;
     }
     const reste = restePiece(p, liens);
-    if (reste === 0) sortie.ecartees.push({ id: p.id, motif: 'piece_soldee' });
+    if (reste <= 0) sortie.ecartees.push({ id: p.id, motif: 'piece_soldee' });
     else sortie.pieces.push({ ...p, reste });
   }
   return sortie;
@@ -44,7 +44,7 @@ const parRang = (a: LigneBancaire, b: LigneBancaire): number => a.rang - b.rang 
 export function neutraliser(lignes: readonly LigneBancaire[]): { debitId: string; creditId: string }[] {
   const groupes = new Map<string, { debits: LigneBancaire[]; credits: LigneBancaire[] }>();
   for (const l of [...lignes].sort(parRang)) {
-    if (l.montant === 0 || l.contrepartieId === undefined || l.contrepartieId === '') continue;
+    if (!Number.isSafeInteger(l.montant) || l.montant === 0 || l.contrepartieId === undefined || l.contrepartieId === '') continue;
     const cle = JSON.stringify([l.compteId, l.dateOperation, l.contrepartieId, Math.abs(l.montant)]);
     const g = groupes.get(cle) ?? { debits: [], credits: [] };
     (l.montant < 0 ? g.debits : g.credits).push(l);
