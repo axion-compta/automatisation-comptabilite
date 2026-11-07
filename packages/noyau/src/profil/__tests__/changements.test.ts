@@ -100,6 +100,13 @@ describe('date de clôture', () => {
     expect(code(() => changerDateCloture(cloture({ nouvelleFinJourMois: '06-15', dureeMinMois: 6, dureeMaxMois: 12 })))).toBe('duree_exercice_hors_bornes');
     expect(changerDateCloture(cloture({ nouvelleFinJourMois: '06-15', dureeMinMois: 5, dureeMaxMois: 6 })).exerciceSuivant?.fin).toBe('2027-06-15');
   });
+  it('duree-mois-entame-debut-en-cours-de-mois', () => {
+    const ex = { debut: '2026-01-15', fin: '2026-12-31', datesFigees: false };
+    const c = (min: number, max: number) => changerDateCloture(cloture({ exerciceEnCours: ex, nouvelleFinJourMois: '07-10', dureeMinMois: min, dureeMaxMois: max }));
+    expect(code(() => c(6, 12))).toBe('duree_exercice_hors_bornes');
+    expect(code(() => c(1, 5))).toBe('duree_exercice_hors_bornes');
+    expect(c(5, 6).exerciceEnCours.fin).toBe('2026-07-10');
+  });
   it('entrees-invalides', () => {
     const e = (f: () => unknown): string | undefined => code(f);
     expect(e(() => apercuChangement({ ...effet, effetDebut: '2026-13-01' }, objets()))).toBe('date_invalide');
