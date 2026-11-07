@@ -56,11 +56,11 @@ export function controleTvaParTaux(lignes: readonly LigneControleTva[], tauxAtte
     });
 }
 
-const FORME_TAUX = /^[0-9]+$/;
+const FORME_ENTIER = /^\d+$/;
 
 function lireTaux(valeur: string): number[] {
   return valeur.split('|').map((t) => {
-    const n = FORME_TAUX.test(t) ? Number(t) : Number.NaN;
+    const n = FORME_ENTIER.test(t) ? Number(t) : Number.NaN;
     if (!Number.isSafeInteger(n)) throw new ErreurVente('parametre_mal_forme', 'Paramètre de taux mal formé.');
     return n;
   });
