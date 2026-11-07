@@ -39,7 +39,7 @@ export function reprendre(
       throw new ErreurAbonnement('parametre_invalide');
     }
   }
-  const triee = [...file].sort((a, b) => comparer(a.recueLe, b.recueLe) || comparer(a.id, b.id));
+  const triee = [...file].sort((a, b) => Date.parse(a.recueLe) - Date.parse(b.recueLe) || comparer(a.id, b.id));
   const vues = new Set<string>();
   const aTraiter: PieceEnAttente[] = [];
   const doublons: string[] = [];

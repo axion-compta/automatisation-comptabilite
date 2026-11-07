@@ -48,6 +48,10 @@ describe('orientation et reprise des pièces', () => {
     expect(u.aTraiter.map((p) => p.id)).toEqual(Array.from({ length: 20 }, (_, i) => 'q' + String(i).padStart(2, '0')));
     expect(u.doublons).toEqual([]);
     expect(u.resume.piecesTraitees).toBe(20);
+    const formes = (id: string, c: string, t: string): PieceEnAttente => ({ ...piece(id, c, 0), recueLe: '2030-01-01T10:00:' + t });
+    const m = reprendre([formes('tard', 'a', '00.500Z'), formes('tot', 'a', '00Z'), formes('b', 'b', '00.95Z'), formes('a', 'b', '00.9Z')], new Set());
+    expect(m.aTraiter.map((p) => p.id)).toEqual(['tot', 'a']);
+    expect(m.doublons).toEqual(['tard', 'b']);
   });
 
   it('resilie-refusee-meme-sous-plafond', () => {
