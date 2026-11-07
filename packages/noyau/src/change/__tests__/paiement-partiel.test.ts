@@ -83,6 +83,21 @@ describe('paiementPartiel', () => {
     expect(code(() => paiementPartiel(PIECE, RIEN, paiement(1, 1, -1), 'demi-superieur'))).toBe('parametre_invalide');
   });
 
+  it('part-plafonnee-au-reliquat-en-euros', () => {
+    const r = paiementPartiel(PIECE, { devise: 40000, euros: 91900 }, paiement(10000, 9200), 'demi-superieur');
+    expect(r).toMatchObject({ dernier: false, partEuros: 100, ecart: 9100 });
+  });
+
+  it('surplus-fraction-arrondie-selon-le-mode', () => {
+    const r = paiementPartiel(PIECE, APRES_40K, paiement(70000, 66501), 'demi-superieur');
+    expect(r).toMatchObject({ eurosImputes: 57001, eurosSurplus: 9500, surplusDevise: 10000 });
+    expect(r.eurosImputes + r.eurosSurplus).toBe(66501);
+  });
+
+  it('reliquat-en-euros-negatif-refuse', () => {
+    expect(code(() => paiementPartiel(PIECE, { devise: 40000, euros: 92001 }, paiement(1, 1), 'demi-superieur'))).toBe('parametre_invalide');
+  });
+
   it('entrees-non-entieres', () => {
     for (const v of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
       expect(code(() => paiementPartiel(PIECE, RIEN, paiement(v, 1), 'demi-superieur'))).toBe('parametre_invalide');
