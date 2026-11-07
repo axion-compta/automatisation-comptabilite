@@ -3,7 +3,7 @@
 import { ajouter, centimes, soustraire, type Centimes } from '../argent/index.js';
 import type { Ecriture } from '../ecritures/modele.js';
 
-export type CodeErreurDeclaration = 'ligne_sans_regle' | 'ligne_en_double' | 'prefixe_vide' | 'periode_invalide';
+export type CodeErreurDeclaration = 'ligne_sans_regle' | 'ligne_en_double' | 'ligne_ambigue' | 'prefixe_vide' | 'periode_invalide';
 
 export class ErreurDeclaration extends Error {
   override name = 'ErreurDeclaration';
@@ -62,6 +62,9 @@ function verifierTable(table: TableFormulaire): void {
       throw new ErreurDeclaration('ligne_sans_regle', `La ligne « ${l.code} » n'a ni alimentation ni formule.`);
     }
     const a = l.alimentation;
+    if (a !== undefined && l.formule !== undefined) {
+      throw new ErreurDeclaration('ligne_ambigue', `La ligne « ${l.code} » a une alimentation et une formule.`);
+    }
     if (a !== undefined && (a.comptes.length === 0 || a.comptes.some((p) => p === ''))) {
       throw new ErreurDeclaration('prefixe_vide', `La ligne « ${l.code} » a un préfixe de compte vide.`);
     }
@@ -92,22 +95,15 @@ export function alimenterCases(
     for (const e of retenues) {
       e.lignes.forEach((ligne, ligneIndex) => {
         if (!a.comptes.some((p) => ligne.compte.startsWith(p))) return;
-        const compte = a.sens === 'debit' ? ligne.debit > 0 : a.sens === 'credit' ? ligne.credit > 0 : ligne.debit > 0 || ligne.credit > 0;
-        if (!compte) return;
+        if (!(a.sens === 'debit' ? ligne.debit > 0 : a.sens === 'credit' ? ligne.credit > 0 : ligne.debit > 0 || ligne.credit > 0)) return;
         debit = ajouter(debit, ligne.debit);
         credit = ajouter(credit, ligne.credit);
         sources.push({ ecritureId: e.id, ligneIndex });
       });
     }
     const solde = soustraire(debit, credit);
-    const montant =
-      a.sens === 'debit'
-        ? debit
-        : a.sens === 'credit'
-          ? credit
-          : a.sens === 'solde_debiteur'
-            ? centimes(Math.max(0, solde))
-            : centimes(Math.max(0, -solde));
+    const montants = { debit, credit, solde_debiteur: centimes(Math.max(0, solde)), solde_crediteur: centimes(Math.max(0, -solde)) };
+    const montant = montants[a.sens];
     return { code: l.code, montant, sources, aCalculer: false };
   });
 }

@@ -44,12 +44,10 @@ const ECRITURES: Ecriture[] = [
 
 describe('alimenterCases', () => {
   it('case-alimentee-par-prefixe', () => {
-    const res = alimenterCases(TABLE, ECRITURES, PERIODE);
-    expect(res.map((r) => [r.code, r.montant])).toEqual([
-      ['X01', 1500],
-      ['X02', 1500],
-      ['X03', 600],
-    ]);
+    // '89A' contient le préfixe '9A' sans commencer par lui : exclu.
+    const res = alimenterCases(TABLE, [...ECRITURES, ecr('e7', '2026-01-15', [['89A', 0, 400]])], PERIODE);
+    expect(res.map((r) => [r.code, r.montant])).toEqual([['X01', 1500], ['X02', 1500], ['X03', 600]]);
+    expect(res[0]?.sources.some((s) => s.ecritureId === 'e7')).toBe(false);
     expect(res.every((r) => r.aCalculer === false)).toBe(true);
   });
 
@@ -82,6 +80,10 @@ describe('alimenterCases', () => {
       { ecritureId: 'e3', ligneIndex: 0 },
       { ecritureId: 'e3', ligneIndex: 1 },
     ]);
+    // Sens : seules les lignes du bon côté sont des sources.
+    const mixte = alimenterCases(TABLE, [...ECRITURES, ecr('e6', '2026-01-07', [['9A5', 200, 0], ['9B5', 0, 200]])], PERIODE);
+    expect(mixte.slice(0, 2).map((r) => r.sources.map((x) => x.ecritureId))).toEqual([['e1', 'e2'], ['e1', 'e2']]);
+    expect(mixte.slice(0, 2).map((r) => r.montant)).toEqual([1500, 1500]);
     // Une ligne retenue par deux préfixes n'apparaît qu'une fois.
     const t: TableFormulaire = { ...TABLE, lignes: [{ code: 'X01', alimentation: { comptes: ['9A', '9A1'], sens: 'credit' } }] };
     const r = alimenterCases(t, ECRITURES, PERIODE);
@@ -109,14 +111,8 @@ describe('alimenterCases', () => {
 
   it('ligne-sans-regle-refusee', () => {
     const t: TableFormulaire = { ...TABLE, lignes: [...TABLE.lignes, { code: 'X09' }] };
-    try {
-      alimenterCases(t, ECRITURES, PERIODE);
-      expect.unreachable();
-    } catch (e) {
-      expect(e).toBeInstanceOf(ErreurDeclaration);
-      expect((e as ErreurDeclaration).code).toBe('ligne_sans_regle');
-      expect((e as ErreurDeclaration).message).toContain('X09');
-    }
+    expect(code(() => alimenterCases(t, ECRITURES, PERIODE))).toBe('ligne_sans_regle');
+    expect(() => alimenterCases(t, ECRITURES, PERIODE)).toThrow(/X09/);
   });
 
   it('formule-laissee-a-calculer', () => {
@@ -150,6 +146,9 @@ describe('alimenterCases', () => {
     expect(code(() => alimenterCases({ ...TABLE, lignes: [...TABLE.lignes, TABLE.lignes[0] as never] }, ECRITURES, PERIODE))).toBe('ligne_en_double');
     expect(code(() => alimenterCases(TABLE, ECRITURES, { debut: '2026-02-01', fin: '2026-01-01' }))).toBe('periode_invalide');
     expect(code(() => alimenterCases(TABLE, ECRITURES, { debut: '2026-13-01', fin: '2026-14-01' }))).toBe('periode_invalide');
+    expect(code(() => alimenterCases(TABLE, ECRITURES, { debut: '2026-02-30', fin: '2026-03-01' }))).toBe('periode_invalide');
+    const ambigue: TableFormulaire = { ...TABLE, lignes: [{ code: 'X01', formule: 'X02', alimentation: { comptes: ['9A'], sens: 'credit' } }] };
+    expect(code(() => alimenterCases(ambigue, ECRITURES, PERIODE))).toBe('ligne_ambigue');
     expect(code(() => alimenterCases(TABLE, ECRITURES, { debut: '', fin: '2026-01-01' }))).toBe('periode_invalide');
   });
 });
