@@ -12,7 +12,7 @@ export const CANAUX = ['glisser', 'chat', 'selecteur', 'photo_mobile', 'email', 
 export type Canal = (typeof CANAUX)[number];
 
 export const MOTIFS_NON_COMPTEE = ['annulee', 'montant_zero', 'releve', 'commande', 'contrat', 'reservation', 'rappel', 'devis', 'autre', 'plusieurs_factures', 'doublon', 'depot_errone', 'inconnu', 'a_verifier'] as const;
-export type MotifNonCompteee = (typeof MOTIFS_NON_COMPTEE)[number];
+export type MotifNonComptee = (typeof MOTIFS_NON_COMPTEE)[number];
 
 export const CODES_REFUS = ['type_refuse', 'macro_refusee', 'archive_refusee', 'image_refusee', 'trop_grand', 'infecte', 'destinataire_different'] as const;
 export type CodeRefus = (typeof CODES_REFUS)[number];
