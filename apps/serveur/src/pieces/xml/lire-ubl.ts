@@ -7,6 +7,7 @@ import { analyserXmlSur } from './xml-sur.js';
 const CONVENTION = { decimal: '.', ordreDate: 'JMA' } as const;
 const SCHEMA_SIREN = '0002';
 const CENTIMES_PAR_UNITE = 100;
+const DECIMALES = 2;
 const DECIMAL_XML = /^-?[0-9]+(\.[0-9]+)?$/; // UBL : point décimal, aucun séparateur de milliers
 class Invalide extends Error {}
 
@@ -74,8 +75,8 @@ function champsTaxes(racine: unknown): ChampLu[] {
     }
   }
   return [...parTaux].flatMap(([taux, l]) => [
-    ...(l.aHt ? [montant(nomParTaux('ht', taux), (l.ht / CENTIMES_PAR_UNITE).toFixed(2))] : []),
-    ...(l.aTva ? [montant(nomParTaux('tva', taux), (l.tva / CENTIMES_PAR_UNITE).toFixed(2))] : []),
+    ...(l.aHt ? [montant(nomParTaux('ht', taux), (l.ht / CENTIMES_PAR_UNITE).toFixed(DECIMALES))] : []),
+    ...(l.aTva ? [montant(nomParTaux('tva', taux), (l.tva / CENTIMES_PAR_UNITE).toFixed(DECIMALES))] : []),
   ]);
 }
 
