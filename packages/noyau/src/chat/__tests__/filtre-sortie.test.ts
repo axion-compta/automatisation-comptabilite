@@ -24,6 +24,7 @@ describe('filtrerSortie', () => {
     expect(r.texte).toBe('un guide utile ici');
     expect(r.retraits).toEqual([{ sorte: 'lien', nombre: 1 }]);
     expect(f('[x](y) et [z](w)').texte).toBe('x et z');
+    expect(f('[[x](y)](evil.exemple.fr)').texte).toBe('x');
   });
 
   it('image-retiree', () => {
@@ -38,6 +39,8 @@ describe('filtrerSortie', () => {
     expect(r.texte).not.toMatch(/[<>]/);
     expect(r.texte).toContain('x');
     expect(r.texte).toContain('y');
+    expect(f('<scr<script>ipt>alert(1)</scr</script>ipt>').texte).not.toMatch(/[<>]/);
+    expect(f('<<b>img src=x onerror=y>').texte).not.toMatch(/[<>]/);
     expect(nb('<p a="1\n2">t</p>', 'html')).toBe(2);
   });
 
@@ -60,9 +63,11 @@ describe('filtrerSortie', () => {
   });
 
   it('reference-intacte', () => {
-    const t = 'voir {{ref:constat_42}} et {{ref:ecr-2025-01}}';
+    const t = 'voir {{ref:constat.champ_42}} et {{ref:ecr.total_1}}';
     expect(f(t)).toEqual({ texte: t, retraits: [] });
-    expect(f('{{ref:a1}} vaut 5').texte).toBe(`{{ref:a1}} vaut ${SRC}`);
+    const mal = f('{{ref:1 250,00 € http://evil.fr <b>x</b>}}').texte;
+    expect(mal).not.toMatch(/[<>]|http|\d/);
+    expect(f('{{ref:a1.b2}} vaut 5').texte).toBe(`{{ref:a1.b2}} vaut ${SRC}`);
   });
 
   it('lexique-remplace', () => {

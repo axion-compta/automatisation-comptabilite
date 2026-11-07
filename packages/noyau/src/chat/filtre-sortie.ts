@@ -7,7 +7,7 @@ export type ResultatFiltre = { readonly texte: string; readonly retraits: readon
 export const MARQUEUR_CHIFFRE = '⟦voir_source⟧';
 export const MARQUEUR_LEXIQUE = '⟦lexique⟧';
 
-const REFERENCE = /(\{\{ref:[^{}]*\}\})/;
+const REFERENCE = /(\{\{ref:[a-z0-9_]+\.[a-z0-9_]+\}\})/;
 const IMAGE = /!\[[^\]\n]{0,200}\]\([^)\n]{0,500}\)/g;
 const LIEN_MD = /\[([^\]\n]{0,200})\]\([^)\n]{0,500}\)/g;
 const HTML = /<[^<>]*>/g;
@@ -33,6 +33,16 @@ function retirer(texte: string, motif: RegExp, sorte: SorteRetrait, c: Compteurs
 
 const sansAccent = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 const estLettre = (ch: string | undefined) => ch !== undefined && /[\p{L}\p{N}]/u.test(ch);
+
+// Répète le retrait jusqu'à stabilité : un retrait ne doit pas recomposer une balise ou un lien.
+function retirerStable(texte: string, motif: RegExp, sorte: SorteRetrait, c: Compteurs, remplacement = ''): string {
+  let t = texte;
+  for (;;) {
+    const suite = retirer(t, motif, sorte, c, remplacement);
+    if (suite === t) return t;
+    t = suite;
+  }
+}
 
 function remplacerLexique(texte: string, lexique: readonly string[], c: Compteurs): string {
   const mots = lexique.map(sansAccent).filter((m) => m.length > 0).sort((a, b) => b.length - a.length);
@@ -66,9 +76,9 @@ function remplacerLexique(texte: string, lexique: readonly string[], c: Compteur
 }
 
 function filtrerSegment(segment: string, lexique: readonly string[], c: Compteurs): string {
-  let t = retirer(segment, HTML, 'html', c);
+  let t = retirerStable(segment, HTML, 'html', c);
   t = retirer(t, IMAGE, 'image', c);
-  t = retirer(t, LIEN_MD, 'lien', c, '$1');
+  t = retirerStable(t, LIEN_MD, 'lien', c, '$1');
   t = retirer(t, URL_BRUTE, 'lien', c);
   t = retirer(t, EMAIL, 'email', c);
   t = remplacerLexique(t, lexique, c);
