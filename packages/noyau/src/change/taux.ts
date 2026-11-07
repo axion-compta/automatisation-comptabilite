@@ -44,15 +44,12 @@ export type TauxResolu =
       dateDuTaux: string;
       aVerifier: boolean;
     };
-
 function tauxValide(t: unknown): t is number {
   return typeof t === 'number' && Number.isSafeInteger(t) && t > 0;
 }
-
 function exigerDate(d: string): void {
   if (!estDateValide(d)) throw new ErreurChange('date_invalide');
 }
-
 function succes(tauxE8: number, origine: 'parite_fixe' | 'bce' | 'saisi', dateDuTaux: string, aVerifier: boolean): TauxResolu {
   if (!tauxValide(tauxE8)) throw new ErreurChange('taux_invalide');
   return { ok: true, tauxE8, origine, dateDuTaux, aVerifier };
@@ -84,7 +81,6 @@ export function resoudreTaux(
   if (saisi !== undefined) return succes(saisi.tauxE8, 'saisi', date, saisi.statut !== 'ok');
   return { ok: false, code: 'taux_manquant' };
 }
-
 function vide(texte: unknown): boolean {
   return typeof texte !== 'string' || texte.trim() === '';
 }
