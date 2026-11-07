@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserDepot, analyserMotsInterdits, analyserTexte, ECRANS_EXEMPTES, estExclu, MOTS_INTERDITS } from '../textes.mjs';
+import { analyserDepot, analyserMotsInterdits, analyserTexte, ECRANS_EXEMPTES, estExclu, MOTS_INTERDITS, MOTS_INTERDITS_ENTIERS } from '../textes.mjs';
 
 test('vert : textes venus de packages/textes et dépôt réel', () => {
   assert.deepEqual(analyserTexte('<button>{fr.actions.valider}</button>', 'a.tsx'), []);
@@ -69,4 +69,30 @@ test('palette-plus-exemptee : la palette est analysée et le dépôt reste vert'
   assert.ok(!estExclu('apps/web/src/commandes/Palette.tsx'));
   assert.equal(analyserTexte('<div aria-label="Palette de commandes" />', 'apps/web/src/commandes/Palette.tsx').length, 1);
   assert.deepEqual(analyserDepot(), []);
+});
+
+const JETER = ['je', 'ter'].join('');
+
+test('jeter-refuse', () => {
+  assert.equal(MOTS_INTERDITS_ENTIERS.length, 6);
+  for (const mot of MOTS_INTERDITS_ENTIERS) {
+    assert.equal(analyserMotsInterdits(`on va ${mot} ceci`, 'fr.ts').length, 1, mot);
+    assert.equal(analyserMotsInterdits(mot, 'fr.ts').length, 1, mot);
+    assert.equal(analyserMotsInterdits(`« ${mot}. »`, 'fr.ts').length, 1, mot);
+  }
+  assert.match(analyserMotsInterdits(`pour ${JETER} le fichier`, 'fr.ts')[0], /^fr\.ts:1 mot interdit « /);
+});
+
+test('rejeter-et-projeter-acceptes', () => {
+  for (const t of ['rejeter', 'projeter', 'Rejeter la demande', 'rejetez', 'projetée', 'objeter', `é${JETER}`, `${JETER}a`]) {
+    assert.deepEqual(analyserMotsInterdits(t, 'fr.ts'), [], t);
+  }
+  assert.deepEqual(analyserMotsInterdits('', 'fr.ts'), []);
+});
+
+test('jetez-majuscule-refuse', () => {
+  const jetez = ['Je', 'tez'].join('');
+  assert.equal(analyserMotsInterdits(`${jetez} cette pièce`, 'fr.ts').length, 1);
+  assert.equal(analyserMotsInterdits(JETER.toUpperCase(), 'fr.ts').length, 1);
+  assert.equal(analyserMotsInterdits(`${['Je', 'tés'].join('')} hier`, 'fr.ts').length, 1);
 });
