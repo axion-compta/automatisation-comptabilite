@@ -47,6 +47,9 @@ describe('écriture de règlement fournisseur en devise', () => {
     expect(soldeTiers(ecritures, 'FO')).toBe(0);
     expect(soldeTiers([FACTURE], 'FO')).toBe(-92000);
     expect(soldeTiers(ecritures.slice(0, 2), 'FO')).toBe(-55200);
+    expect(soldeTiers([], 'FO')).toBe(0);
+    expect(soldeTiers(ecritures, 'ABSENT')).toBe(0);
+    expect(soldeTiers([...ecritures].reverse(), 'FO')).toBe(0);
   });
 
   it('avec-frais-ligne-separee', () => {
@@ -59,6 +62,10 @@ describe('écriture de règlement fournisseur en devise', () => {
       ['GA', 0, 1300],
     ]);
     expect(verifierEcriture(e).equilibree).toBe(true);
+    // Frais non concordants, négatifs, NaN, infinis ou non entiers : erreur.
+    for (const f of [0, 400, 501, -500, Number.NaN, Infinity, 500.5]) {
+      expect(() => ecritureReglementFournisseur(r, f, COMPTES, CTX)).toThrow();
+    }
   });
 
   it('ecart-nul-pas-de-ligne', () => {

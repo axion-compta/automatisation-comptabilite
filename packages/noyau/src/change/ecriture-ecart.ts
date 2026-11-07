@@ -1,6 +1,6 @@
 // Règlement fournisseur en devise : écriture proposée (brouillon) avec écart de change et frais à part.
 import { centimes, type Centimes } from '../argent/index.js';
-import type { Ecriture, LigneEcriture } from '../ecritures/modele.js';
+import { verifierEcriture, type Ecriture, type LigneEcriture } from '../ecritures/modele.js';
 import type { ResultatPaiementPartiel } from './paiement-partiel.js';
 
 export interface ComptesReglement {
@@ -27,6 +27,7 @@ export function ecritureReglementFournisseur(
   comptes: ComptesReglement,
   ctx: ContexteReglement,
 ): Ecriture {
+  if (frais < 0) throw new RangeError('Des frais bancaires ne peuvent pas être négatifs : ' + String(frais));
   const { partEuros, eurosImputes, ecart } = resultat;
   const lignes = [
     ligne(comptes.fournisseur, 'Règlement fournisseur', partEuros, 0),
@@ -35,7 +36,10 @@ export function ecritureReglementFournisseur(
     ligne(comptes.banque, 'Paiement en banque', 0, eurosImputes),
     ligne(comptes.gain, 'Gain de change', 0, ecart < 0 ? -ecart : 0),
   ].filter((l) => l.debit !== 0 || l.credit !== 0);
-  return { id: ctx.id, journal: ctx.journal, date: ctx.date, statut: 'brouillon', lignes };
+  const ecriture: Ecriture = { id: ctx.id, journal: ctx.journal, date: ctx.date, statut: 'brouillon', lignes };
+  // Une proposition déséquilibrée (frais différents de ceux du paiement) ne sort jamais d'ici.
+  verifierEcriture(ecriture);
+  return ecriture;
 }
 
 /** Débits moins crédits du compte. */
