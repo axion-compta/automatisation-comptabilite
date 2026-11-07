@@ -27,7 +27,7 @@ export const Carte = z.discriminatedUnion('type', [
   carte('rapprochement', avecMontant),
   carte('tva', { montant_centimes: montant, devise }),
   carte('telechargement', {
-    lien_interne: z.string().regex(/^\/(?!\/)/).refine(sansInterdit),
+    lien_interne: z.string().regex(/^\/(?![\/\\])[^\s\\]*$/).refine(sansInterdit),
     expire_le: z.iso.datetime(),
   }),
 ]);

@@ -62,7 +62,7 @@ describe('cartes du chat', () => {
   });
 
   it('lien-telechargement-absolu-refuse', () => {
-    for (const l of ['https://x.fr/a', '//x.fr/a', 'export/fec.csv', '', 'http://x.fr']) {
+    for (const l of ['https://x.fr/a', '//x.fr/a', 'export/fec.csv', '', 'http://x.fr', '/\\x.fr/a', '/\t/x.fr']) {
       expect(avec('telechargement', { lien_interne: l })).toEqual(IND);
     }
     expect(avec('telechargement', { expire_le: 'demain' })).toEqual(IND);
