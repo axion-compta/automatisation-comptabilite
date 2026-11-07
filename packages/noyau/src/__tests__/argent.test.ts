@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  type Centimes,
   ErreurArgent,
   ajouter,
+  appliquerFraction,
+  convertir,
   centimes,
   formater,
   fraction,
   multiplier,
   pourcentage,
+  proportionPointsDeBase,
   repartir,
   soustraire,
 } from '../argent/index.js';
@@ -204,5 +208,113 @@ describe('fraction', () => {
     // Le résultat exactement égal au maximum sûr passe, une unité de plus est refusée.
     expect(fraction(c(Number.MAX_SAFE_INTEGER), 1, 1, 'inferieur')).toBe(Number.MAX_SAFE_INTEGER);
     expect(() => fraction(BigInt(Number.MAX_SAFE_INTEGER) + 1n, 1, 1, 'inferieur')).toThrow(ErreurArgent);
+  });
+});
+
+describe('appliquerFraction', () => {
+  it('fraction-exacte', () => {
+    expect(appliquerFraction(c(1_000_000), 6000, 10_000, 'inferieur')).toBe(600_000);
+  });
+  it('fraction-arrondie-selon-mode', () => {
+    expect(appliquerFraction(c(123_457), 700, 10_000, 'demi-superieur')).toBe(8642);
+    expect(appliquerFraction(c(123_457), 700, 10_000, 'inferieur')).toBe(8641);
+    expect(appliquerFraction(c(123_457), 700, 10_000, 'superieur')).toBe(8642);
+  });
+  it('fraction-negative', () => {
+    expect(appliquerFraction(c(-123_457), 700, 10_000, 'demi-superieur')).toBe(-8642);
+    expect(appliquerFraction(c(-123_457), 700, 10_000, 'inferieur')).toBe(-8642);
+    expect(appliquerFraction(c(-123_457), 700, 10_000, 'superieur')).toBe(-8641);
+  });
+  it('fraction-huit-decimales', () => {
+    const grandDenominateur = 100_000_000;
+    expect(appliquerFraction(c(40_000), 92_000_000, grandDenominateur, 'demi-pair')).toBe(36_800);
+  });
+  it('numérateur nul donne 0 et pas -0', () => {
+    expect(Object.is(appliquerFraction(c(-5), 0, 3, 'inferieur'), 0)).toBe(true);
+  });
+  it('denominateur-nul-refuse', () => {
+    expect(() => appliquerFraction(c(100), 1, 0, 'inferieur')).toThrow(ErreurArgent);
+    expect(() => appliquerFraction(c(100), 1, -1, 'inferieur')).toThrow(ErreurArgent);
+  });
+  it('entrees-non-entieres-refusees', () => {
+    for (const v of [NaN, Infinity, -Infinity, 1.5, 2 ** 53]) {
+      expect(() => appliquerFraction(c(100), v, 10, 'inferieur')).toThrow(ErreurArgent);
+      expect(() => appliquerFraction(c(100), 1, v, 'inferieur')).toThrow(ErreurArgent);
+    }
+    expect(() => appliquerFraction(c(100), -1, 10, 'inferieur')).toThrow(ErreurArgent);
+  });
+  it('résultat hors entier sûr refusé', () => {
+    expect(() => appliquerFraction(c(Number.MAX_SAFE_INTEGER), 2, 1, 'inferieur')).toThrow(ErreurArgent);
+  });
+});
+
+describe('proportionPointsDeBase', () => {
+  it('proportion-197-sur-200', () => {
+    expect(proportionPointsDeBase(197, 200, 'inferieur')).toBe(9850);
+  });
+  it('proportion-total-nul-null', () => {
+    expect(proportionPointsDeBase(0, 0, 'inferieur')).toBeNull();
+    expect(proportionPointsDeBase(5, 0, 'demi-superieur')).toBeNull();
+  });
+  it('proportion-arrondie', () => {
+    expect(proportionPointsDeBase(1, 3, 'demi-superieur')).toBe(3333);
+    expect(proportionPointsDeBase(2, 3, 'demi-superieur')).toBe(6667);
+    expect(proportionPointsDeBase(2, 3, 'inferieur')).toBe(6666);
+    expect(proportionPointsDeBase(2, 3, 'superieur')).toBe(6667);
+  });
+  it('partie nulle donne 0 et pas -0', () => {
+    expect(Object.is(proportionPointsDeBase(0, 7, 'inferieur'), 0)).toBe(true);
+  });
+  it('entrées invalides refusées', () => {
+    for (const v of [NaN, Infinity, 1.5]) {
+      expect(() => proportionPointsDeBase(v, 10, 'inferieur')).toThrow(ErreurArgent);
+      expect(() => proportionPointsDeBase(1, v, 'inferieur')).toThrow(ErreurArgent);
+    }
+    expect(() => proportionPointsDeBase(1, -1, 'inferieur')).toThrow(ErreurArgent);
+    expect(() => proportionPointsDeBase(NaN, 0, 'inferieur')).toThrow(ErreurArgent);
+  });
+});
+
+describe('conversion par un taux à 8 décimales', () => {
+  const demi = 50_000_000n;
+  it('convertir-t09-1', () => {
+    expect(convertir(c(100_000), 92_000_000n, 'demi-pair')).toBe(92_000);
+    expect(convertir(c(0), 92_000_000n, 'demi-pair')).toBe(0);
+    expect(Object.is(convertir(c(0), 1n, 'inferieur'), 0)).toBe(true);
+    expect(convertir(c(100_000_000), 1n, 'inferieur')).toBe(1);
+  });
+  it('convertir-arrondi-demi-pair', () => {
+    expect(convertir(c(1), demi, 'demi-pair')).toBe(0);
+    expect(convertir(c(3), demi, 'demi-pair')).toBe(2);
+    expect(convertir(c(5), demi, 'demi-pair')).toBe(2);
+    expect(convertir(c(1), demi, 'demi-superieur')).toBe(1);
+    expect(convertir(c(1), 50_000_001n, 'demi-pair')).toBe(1);
+  });
+  it('convertir-arrondi-superieur-et-inferieur', () => {
+    expect(convertir(c(1), 1n, 'superieur')).toBe(1);
+    expect(convertir(c(1), 1n, 'inferieur')).toBe(0);
+    expect(convertir(c(2), demi, 'superieur')).toBe(1);
+    expect(convertir(c(2), demi, 'inferieur')).toBe(1);
+  });
+  it('convertir-montant-negatif', () => {
+    expect(convertir(c(-1), demi, 'demi-superieur')).toBe(-1);
+    expect(convertir(c(-3), demi, 'demi-pair')).toBe(-2);
+    expect(convertir(c(-1), 1n, 'inferieur')).toBe(-1);
+    expect(convertir(c(-1), 1n, 'superieur')).toBe(0);
+    expect(Object.is(convertir(c(-1), 1n, 'superieur'), 0)).toBe(true);
+    expect(convertir(c(-100_000), 92_000_000n, 'demi-pair')).toBe(-92_000);
+  });
+  it('convertir-taux-nul-refuse', () => {
+    expect(() => convertir(c(100), 0n, 'inferieur')).toThrow(ErreurArgent);
+  });
+  it('convertir-taux-negatif-refuse', () => {
+    expect(() => convertir(c(100), -1n, 'inferieur')).toThrow(ErreurArgent);
+  });
+  it('convertir-hors-limites-refuse', () => {
+    expect(() => convertir(c(Number.MAX_SAFE_INTEGER), 200_000_000n, 'inferieur')).toThrow(ErreurArgent);
+    expect(convertir(c(Number.MAX_SAFE_INTEGER), 100_000_000n, 'inferieur')).toBe(Number.MAX_SAFE_INTEGER);
+    for (const m of [Number.NaN, 1.5, Number.POSITIVE_INFINITY]) {
+      expect(() => convertir(m as Centimes, 1n, 'inferieur')).toThrow(ErreurArgent);
+    }
   });
 });

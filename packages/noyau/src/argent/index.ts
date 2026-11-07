@@ -108,6 +108,38 @@ export function fraction(
 }
 
 /**
+ * Multiplie par une fraction `numerateur / denominateur` (entiers sûrs, numérateur ≥ 0,
+ * dénominateur > 0) en bigint, puis arrondit selon le mode explicite.
+ */
+export function appliquerFraction(a: Centimes, numerateur: number, denominateur: number, mode: Arrondi): Centimes {
+  if (!Number.isSafeInteger(numerateur) || numerateur < 0) {
+    throw new ErreurArgent('Le numérateur doit être un entier sûr positif ou nul : ' + String(numerateur));
+  }
+  if (!Number.isSafeInteger(denominateur) || denominateur <= 0) {
+    throw new ErreurArgent('Le dénominateur doit être un entier sûr strictement positif : ' + String(denominateur));
+  }
+  const brut = BigInt(a) * BigInt(numerateur);
+  return verifier(Number(diviser(brut, BigInt(denominateur), mode)));
+}
+
+/**
+ * Proportion `partie / total` en points de base (10000 = 100 %), arrondie selon le mode.
+ * Un total nul n'a pas de proportion : `null` (jamais 0 ni Infinity).
+ */
+export function proportionPointsDeBase(partie: number, total: number, mode: Arrondi): number | null {
+  if (!Number.isSafeInteger(partie)) {
+    throw new ErreurArgent('La partie doit être un entier sûr : ' + String(partie));
+  }
+  if (!Number.isSafeInteger(total) || total < 0) {
+    throw new ErreurArgent('Le total doit être un entier sûr positif ou nul : ' + String(total));
+  }
+  if (total === 0) return null;
+  const q = Number(diviser(BigInt(partie) * 10000n, BigInt(total), mode));
+  if (!Number.isSafeInteger(q)) throw new ErreurArgent('Proportion hors des entiers sûrs');
+  return q;
+}
+
+/**
  * Répartit un montant selon des poids entiers positifs ; la somme des parts est exacte.
  * Méthode du plus grand reste ; à reste égal, l'indice le plus petit passe d'abord.
  * Un total négatif donne l'opposé de la répartition du total positif.
@@ -147,4 +179,15 @@ export function formater(a: Centimes): string {
   const euros = diviser(absolu, 100n, 'inferieur');
   const reste = String(absolu % 100n).padStart(2, '0');
   return (negatif ? '-' : '') + String(euros) + ',' + reste;
+}
+
+const ECHELLE_HUIT_DECIMALES = 10n ** 8n;
+
+/** Convertit un montant par un taux entier « taux × 10^8 » (0,92000000 donne 92000000n). */
+export function convertir(montant: Centimes, tauxHuitDecimales: bigint, mode: Arrondi): Centimes {
+  if (!Number.isSafeInteger(montant)) {
+    throw new ErreurArgent('Un montant doit être un entier de centimes : ' + String(montant));
+  }
+  if (tauxHuitDecimales <= 0n) throw new ErreurArgent('Le taux doit être strictement positif');
+  return verifier(Number(diviser(BigInt(montant) * tauxHuitDecimales, ECHELLE_HUIT_DECIMALES, mode)));
 }

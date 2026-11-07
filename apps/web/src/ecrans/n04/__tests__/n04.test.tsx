@@ -130,9 +130,10 @@ describe('N04', () => {
     ];
     for (const action of actions) {
       await act(async () => bouton(n04.pagination.suivant).click());
-      await attendre(() => appels.at(-1)?.includes('decalage=50') === true);
+      await attendre(() => appels.at(-1)?.includes('decalage=50') === true && numeros()[0] === '600050');
       await action();
-      await attendre(() => appels.at(-1)?.includes('decalage=0') === true);
+      // la page de départ est réellement affichée (le tableau et ses boutons reviennent après le chargement)
+      await attendre(() => appels.at(-1)?.includes('decalage=0') === true && numeros()[0] === '600000' && bouton(n04.pagination.suivant) !== undefined);
     }
     for (const t of ['/EX2025/plan?', 'classe=6', 'q=achat']) expect(appels.at(-1)).toContain(t);
     expect(champ<HTMLSelectElement>(n04.champs.annee).value).toBe('EX2025');
