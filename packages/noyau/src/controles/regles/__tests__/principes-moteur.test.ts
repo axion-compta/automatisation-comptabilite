@@ -82,6 +82,25 @@ describe('CC-PM04 à CC-PM07', () => {
     expect(regleRelectureExercice.evaluer(relecture(1001))).toEqual({ resultat: 'ALERTE', ecartCentimes: 1 });
   });
 
+  it('CT-PM07 limites : crédit seul, totaux égaux, vide, ordre inverse', () => {
+    const base = instantaneCloture('ex-2026', [ecr(1000)]);
+    const avec = (l2: LigneEcriture): Ecriture => ({ ...ecr(1000), lignes: [ligne('411000', 1000, 0), l2] });
+    const evalue = (ecritures: Ecriture[], instantane = base) => regleRelectureExercice.evaluer({ ecritures, instantane });
+    expect(evalue([avec(ligne('706000', 0, 1001))])).toEqual({ resultat: 'ALERTE', ecartCentimes: 1 });
+    expect(evalue([avec(ligne('707000', 0, 1000))])).toEqual({ resultat: 'ALERTE' });
+    expect(evalue([])).toMatchObject({ resultat: 'ALERTE' });
+    const e2: Ecriture = { ...ecr(500), id: '2', numero: 'VE-2' };
+    const inst2 = instantaneCloture('ex-2026', [ecr(1000), e2]);
+    expect(evalue([ecr(1000), e2], inst2)).toEqual({ resultat: 'OK' });
+    expect(evalue([e2, ecr(1000)], inst2)).toEqual({ resultat: 'OK' });
+  });
+
+  it('CT-PM04 limites : aucun associé, ordre inverse', () => {
+    expect(reglePartsCapital.evaluer({ associes: [], partsCapital: 100 })).toMatchObject({ resultat: 'ALERTE', valeur: -100 });
+    const o = parts(100, 60, 40);
+    expect(reglePartsCapital.evaluer({ ...o, associes: [...o.associes].reverse() })).toEqual({ resultat: 'OK' });
+  });
+
   it('cas-normaux-ok', () => {
     expect(reglePartsCapital.evaluer(parts(100, 60, 40))).toEqual({ resultat: 'OK' });
     expect(regleLiberation.evaluer(libe(2500))).toEqual({ resultat: 'OK' });

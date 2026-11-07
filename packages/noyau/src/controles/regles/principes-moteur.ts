@@ -91,6 +91,8 @@ export const regleRelectureExercice: RegleControle<ObjetRelecture> = {
   evaluer: (o): SortieRegle => {
     const r = relireExercice(o.ecritures, o.instantane);
     if (r.statut === 'intact') return ok();
-    return alerte(r.ecartDebit !== 0 ? r.ecartDebit : r.ecartCredit);
+    const ecart = r.ecartDebit !== 0 ? r.ecartDebit : r.ecartCredit;
+    // Altération à totaux égaux : pas d'écart chiffré.
+    return ecart !== 0 ? alerte(ecart) : alerte();
   },
 };
