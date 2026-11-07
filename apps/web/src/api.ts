@@ -72,6 +72,54 @@ export async function lire<T>(chemin: string, schema: SchemaLecture<T>, signal?:
   if (!v.success) throw new ErreurLecture(r.status, 'reponse_invalide');
   return v.data as T;
 }
+export type CodeEcriture = 'cle_invalide' | 'reseau' | 'serveur' | 'reponse_invalide' | (string & {});
+/** Erreur d'une écriture ; statut 0 = pas de réponse ; code = code du corps d'erreur serveur s'il existe. */
+export class ErreurEcriture extends Error {
+  constructor(
+    readonly statut: number,
+    readonly code: CodeEcriture,
+    readonly donnees?: unknown,
+  ) {
+    super('Écriture impossible : ' + code);
+    this.name = 'ErreurEcriture';
+  }
+}
+/** Clé d'idempotence neuve (UUID, 36 caractères). */
+export const nouvelleCle = (): string => crypto.randomUUID();
+/**
+ * Écrit (POST, PUT, DELETE) avec l'en-tête Idempotency-Key ; aucune nouvelle tentative automatique :
+ * un rejeu se fait avec la MÊME clé, à l'initiative de l'écran.
+ */
+export async function ecrire<T>(
+  methode: 'POST' | 'PUT' | 'DELETE',
+  chemin: string,
+  corps: unknown,
+  schema: SchemaLecture<T>,
+  cle: string,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (cle.length < 8 || cle.length > 128) throw new ErreurEcriture(0, 'cle_invalide');
+  const init: RequestInit = {
+    method: methode,
+    headers: { 'content-type': 'application/json', 'idempotency-key': cle },
+    ...(corps === undefined ? {} : { body: JSON.stringify(corps) }),
+    ...(signal ? { signal } : {}),
+  };
+  let r: Response;
+  try {
+    r = await fetch(new URL(chemin, location.origin).toString(), init);
+  } catch {
+    throw new ErreurEcriture(0, 'reseau');
+  }
+  const recu: unknown = await r.json().catch(() => undefined);
+  if (!r.ok) {
+    const code = (recu as { code?: unknown } | null | undefined)?.code;
+    throw new ErreurEcriture(r.status, typeof code === 'string' && code ? code : r.status >= 500 ? 'serveur' : 'reponse_invalide', recu);
+  }
+  const v = schema.safeParse(recu);
+  if (!v.success) throw new ErreurEcriture(r.status, 'reponse_invalide');
+  return v.data as T;
+}
 export type EtatLecture<T> = { etat: 'chargement' | 'erreur' | 'vide' | 'pret'; donnees?: T; erreur?: ErreurLecture };
 /** Forme de useLecture (déclarée ici : la garde textes lit mal les génériques dans un .tsx). */
 export type UseLecture = <T>(chemin: string, schema: SchemaLecture<T>) => EtatLecture<T>;
