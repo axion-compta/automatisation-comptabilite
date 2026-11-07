@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Centimes } from '../../../argent/index.js';
 import type { LigneBancaire, PieceCandidate } from '../../types.js';
+import { resteLigne } from '../sommes.js';
 import { groupeNPourUn, groupeUnPourN, liensNPourUn, liensUnPourN } from '../groupes.js';
 
 const c = (n: number): Centimes => n as Centimes;
@@ -55,6 +56,15 @@ describe('groupeUnPourN', () => {
     expect(() => groupeUnPourN(ligne('L0', 0), base, B)).toThrow('montant_nul');
     expect(groupeUnPourN(L, [], B)).toEqual({ type: 'aucun' });
     expect(groupeUnPourN(L, [piece('P1', 153000, { reste: c(0) })], B)).toEqual({ type: 'aucun' });
+    const p0 = piece('P0', 50000, { reste: c(0), date: '2026-02-01' });
+    expect(groupeUnPourN(L, [p0, ...base], B)).toEqual({ type: 'proposee', pieces: ['P1', 'P2', 'P3'] });
+  });
+  it('charge-bornee-explosion-combinatoire', () => {
+    const tas = Array.from({ length: 60 }, (_, i) => piece(`Q${String(i).padStart(2, '0')}`, 1));
+    const debut = Date.now();
+    expect(() => groupeUnPourN(ligne('LC', -100), tas, B)).toThrow('explosion_combinatoire');
+    expect(Date.now() - debut).toBeLessThan(5000);
+    expect(() => groupeUnPourN(ligne('LC', -100), [...tas, piece('AV', 1, { avoir: true })], B)).toThrow('explosion_combinatoire');
   });
 });
 
@@ -77,8 +87,13 @@ describe('groupeNPourUn', () => {
 
 describe('liens', () => {
   it('un-pour-n-propose-meme-groupe', () => {
-    const ls = liensUnPourN('g1', ligne('L2', -80000), [piece('F1', 100000), piece('A1', 20000, { avoir: true })], []);
-    expect(ls.map((l) => [l.pieceId, l.montantAffecte, l.etat, l.groupeId])).toEqual([['F1', 100000, 'propose', 'g1'], ['A1', 20000, 'propose', 'g1']]);
+    const l2 = ligne('L2', -80000);
+    const ls = liensUnPourN('g1', l2, [piece('F1', 50000), piece('F2', 30000)], []);
+    expect(ls.map((l) => [l.pieceId, l.montantAffecte, l.etat, l.groupeId])).toEqual([['F1', 50000, 'propose', 'g1'], ['F2', 30000, 'propose', 'g1']]);
+    expect(resteLigne(l2, ls)).toBe(0);
+  });
+  it('un-pour-n-refuse-avoir-ligne-sur-affectee', () => {
+    expect(() => liensUnPourN('g1', ligne('L2', -80000), [piece('F1', 100000), piece('A1', 20000, { avoir: true })], [])).toThrow('lien_invalide');
   });
   it('un-pour-n-refuse-somme-differente', () => {
     expect(() => liensUnPourN('g1', ligne('L2', -70000), [piece('F1', 100000), piece('A1', 20000, { avoir: true })], [])).toThrow('lien_invalide');

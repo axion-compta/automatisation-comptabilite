@@ -4,7 +4,7 @@ import { ajouterJours, comparerDates } from '../../dates/civiles.js';
 import type { Lien, LigneBancaire, PieceCandidate } from '../types.js';
 import { verifierNouveauLien } from './sommes.js';
 
-export type CodeGroupe = 'bornes_invalides' | 'montant_nul' | 'lien_invalide';
+export type CodeGroupe = 'bornes_invalides' | 'montant_nul' | 'lien_invalide' | 'explosion_combinatoire';
 export class ErreurGroupe extends Error {
   override name = 'ErreurGroupe';
   constructor(readonly code: CodeGroupe) {
@@ -16,6 +16,8 @@ export class ErreurGroupe extends Error {
 export const LIMITE_TECHNIQUE_PIECES = 12;
 /** Rang de passe attribué aux liens de groupe. */
 export const PASSE_GROUPE = 4;
+/** Plafond de nœuds visités par recherche : au-delà, erreur explicite (explosion combinatoire). */
+export const NOEUDS_MAX = 200_000;
 const NB_COMBINAISONS_MAX = 3;
 
 export type PieceAvecReste = PieceCandidate & { reste: Centimes };
@@ -42,8 +44,12 @@ export function groupeUnPourN(ligne: LigneBancaire, pieces: readonly PieceAvecRe
     .sort(parDateId);
   const cible = Math.abs(ligne.montant);
   const trouvees: string[][] = [];
+  const sansAvoir = cibles.every((p) => p.avoir !== true);
+  let noeuds = 0;
   const explorer = (taille: number, depart: number, choisies: PieceAvecReste[], somme: number): void => {
     if (trouvees.length >= NB_COMBINAISONS_MAX) return;
+    if (++noeuds > NOEUDS_MAX) throw new ErreurGroupe('explosion_combinatoire');
+    if (sansAvoir && somme > cible) return;
     if (choisies.length === taille) {
       if (somme === cible) trouvees.push(choisies.map((p) => p.id));
       return;
@@ -79,15 +85,13 @@ const lienPropose = (groupeId: string, ligneId: string, pieceId: string, m: numb
   passe: PASSE_GROUPE, codeRaison: code, proposePar: 'regle', etat: 'propose', version: 1,
 });
 
-/** Liens d'un débit pour plusieurs pièces : écart total nul exigé (net des avoirs égal au montant de la ligne). */
+/** Liens d'un débit pour plusieurs pièces (sans avoir : le modèle de liens positifs de L02-T30 ne peut pas porter un avoir) ; écart total nul exigé. */
 export function liensUnPourN(groupeId: string, ligne: LigneBancaire, pieces: readonly PieceAvecReste[], existants: Existants): Lien[] {
-  const total = pieces.reduce((s, p) => s + p.reste, 0);
   const net = pieces.reduce((s, p) => s + valeur(p), 0);
-  if (net !== Math.abs(ligne.montant) || ligne.montant === 0) throw new ErreurGroupe('lien_invalide');
-  const etendue = { id: ligne.id, montant: total };
+  if (net !== Math.abs(ligne.montant) || ligne.montant === 0 || pieces.some((p) => p.avoir === true)) throw new ErreurGroupe('lien_invalide');
   const liens: Lien[] = [];
   for (const p of pieces) {
-    const v = verifierNouveauLien({ ligneId: ligne.id, pieceId: p.id, montantAffecte: p.reste }, etendue, p, [...existants, ...liens]);
+    const v = verifierNouveauLien({ ligneId: ligne.id, pieceId: p.id, montantAffecte: p.reste }, ligne, p, [...existants, ...liens]);
     if (!v.ok) throw new ErreurGroupe('lien_invalide');
     liens.push(lienPropose(groupeId, ligne.id, p.id, p.reste, 'groupe_1_n'));
   }
