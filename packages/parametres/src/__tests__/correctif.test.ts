@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parametreAuJour } from '../au-jour.js';
-import { ErreurCorrectif, appliquerPaquet, rapportImpact, type PaquetCorrectif } from '../correctif.js';
+import { ErreurCorrectif, appliquerPaquet, rapportImpact, type ObjetSociete, type PaquetCorrectif } from '../correctif.js';
 import type { ParametreSource } from '../source.js';
 
 const URL_OFF = 'https://www.legifrance.gouv.fr/exemple-fictif';
@@ -123,6 +123,26 @@ describe('paquet correctif', () => {
     expect(r.A).toMatchObject({ periodesDeposeesTouchees: ['2026-01'], regularisationProposee: true, carte: true });
     expect(r.B).toMatchObject({ periodesDeposeesTouchees: [], regularisationProposee: false, carte: false });
     expect(JSON.stringify(o)).toBe(copie);
+  });
+
+  it('ajout-invalide-refuse', () => {
+    const mauvais = [corrigee({ source: '', source_titre: '', source_url: 'http://pirate' }), corrigee({ source_url: 'http://pirate' }), corrigee({ statut: 'valide' }), corrigee({ statut: 'retire' })];
+    for (const a of mauvais) expect(code(() => appliquerPaquet(entree(), paquet({ ajouts: [a] }), []))).toBe('ajout_invalide');
+    expect(code(() => appliquerPaquet(entree(), paquet({ ajouts: [corrigee({ statut: 'non_verifie' })] }), []))).toBeUndefined();
+  });
+
+  it('impact-fenetre-et-dates', () => {
+    const borne = [ligne({ effet_fin: '2026-03-01' })];
+    const nouveau = appliquerPaquet(borne, paquet({ ajouts: [corrigee({ effet_fin: '2026-03-01' })] }), []);
+    const o = (type: 'periode_deposee' | 'brouillon', date: string, periode?: string): ObjetSociete => (periode === undefined ? { type, date } : { type, date, periode });
+    const dates = ['n/a', '', '2026-13-45', '2025-12-31'].map((d) => o('brouillon', d));
+    const deposees = [o('periode_deposee', '2026-09-30', '2026-09'), o('periode_deposee', '2026-03-01', '2026-03'), o('periode_deposee', '2026-02-28', '2026-02')];
+    const r = rapportImpact(borne, nouveau, [{ id: 'A', objets: [...deposees, ...dates] }]);
+    expect(r.A).toMatchObject({ periodesDeposeesTouchees: ['2026-02'], brouillons: 0, regularisationProposee: true });
+    // ordre inversé : fin avant début, aucun jour ne vérifie debut <= date < fin
+    const inverse = [ligne({ effet_fin: '2025-12-01' })];
+    const ri = rapportImpact(inverse, appliquerPaquet(inverse, paquet({ ajouts: [corrigee({ effet_fin: '2025-12-01' })] }), []), [{ id: 'A', objets: [o('brouillon', '2026-02-01'), o('brouillon', '2025-11-01')] }]);
+    expect(ri.A).toMatchObject({ brouillons: 0, carte: false });
   });
 
   it('catalogue-d-entree-non-modifie', () => {
