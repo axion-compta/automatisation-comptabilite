@@ -4,12 +4,7 @@ import { ErreurRgpd, donneesPermises, verifierMotif } from './types.js';
 const SECONDES_PAR_HEURE = 3600;
 const HEURES_PAR_JOUR = 24;
 
-export type EcheancesViolation = {
-  qualifierAvant: string;
-  informerSocietesAvant: string;
-  autoriteAvant: string;
-  retourExperienceAvant: string;
-};
+export type EcheancesViolation = { qualifierAvant: string; informerSocietesAvant: string; autoriteAvant: string; retourExperienceAvant: string };
 export type EcheancesFaille = { qualifierAvant: string; premiereAlerteAvant: string };
 export type EtatEcheance = 'faite_a_temps' | 'faite_en_retard' | 'a_faire' | 'depassee';
 
@@ -48,10 +43,7 @@ export function echeancesViolation(
   };
 }
 
-export function echeancesFaille(
-  recueLe: string,
-  r: { qualificationHeures: number; premiereAlerteHeures: number },
-): EcheancesFaille {
+export function echeancesFaille(recueLe: string, r: { qualificationHeures: number; premiereAlerteHeures: number }): EcheancesFaille {
   horodatage(recueLe);
   return {
     qualifierAvant: apres(recueLe, r.qualificationHeures),
@@ -112,16 +104,10 @@ export function validerLigneRegistre(ligne: LigneRegistre): void {
   else verifierMotif(n.motif);
 }
 
-export type RaisonExercice =
-  | 'message_en_retard' | 'dossier_en_retard' | 'arret_non_essaye' | 'arret_plus_d_une_action';
+export type RaisonExercice = 'message_en_retard' | 'dossier_en_retard' | 'arret_non_essaye' | 'arret_plus_d_une_action';
 
 export function resultatExercice(
-  e: {
-    debutLe: string;
-    messageSocietePretLe: string | null;
-    dossierAutoritePretLe: string | null;
-    arretUrgenceActions: number | null;
-  },
+  e: { debutLe: string; messageSocietePretLe: string | null; dossierAutoritePretLe: string | null; arretUrgenceActions: number | null },
   r: { limiteHeures: number },
 ): { reussi: boolean; raisons: RaisonExercice[] } {
   horodatage(e.debutLe);
