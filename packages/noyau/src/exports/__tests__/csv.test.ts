@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { centimes } from '../../argent/index.js';
+import { centimes, formater } from '../../argent/index.js';
 import { ErreurCsv, ecrireCsv } from '../csv.js';
 import type { ColonneCsv } from '../csv.js';
 import { neutraliserTexte } from '../neutraliser.js';
@@ -88,10 +88,25 @@ describe('écriture CSV', () => {
   });
 
   it('centimes-sans-milliers', () => {
-    const lire = (n: number): string => ecrireCsv({ colonnes: [M], lignes: [{ mt: n }] }).split('\r\n')[1]!;
+    const lire = (n: unknown): string => ecrireCsv({ colonnes: [M], lignes: [{ mt: n }] }).split('\r\n')[1]!;
     expect(lire(123456789)).toBe('1234567,89');
     expect(lire(5)).toBe('0,05');
     expect(lire(0)).toBe('0,00');
+    const code = (v: unknown, col: ColonneCsv = M): unknown => {
+      try {
+        ecrireCsv({ colonnes: [col], lignes: [{ mt: v }] });
+      } catch (e) {
+        return (e as ErreurCsv).code;
+      }
+      return 'aucune';
+    };
+    const E: ColonneCsv = { code: 'mt', type: 'entier', entete: 'N' };
+    for (const v of [NaN, Infinity, -Infinity, 1.5, '12', true, 2 ** 53]) {
+      expect(code(v)).toBe('montant_invalide');
+      expect(code(v, E)).toBe('montant_invalide');
+    }
+    for (const v of [null, undefined, '']) expect(lire(v)).toBe('""');
+    expect(ecrireCsv({ colonnes: [M], lignes: [{}] }).split('\r\n')[1]).toBe('""');
     const autres: ColonneCsv[] = [
       { code: 'n', type: 'entier', entete: 'N' },
       { code: 'd', type: 'date', entete: 'D' },
@@ -116,6 +131,11 @@ describe('écriture CSV', () => {
     expect(() => ecrireCsv({ colonnes: [T], lignes: [], total: { etiquette: 'x', colonne: 'zz', valeurCentimes: centimes(0) } })).toThrow(
       ErreurCsv,
     );
+    for (const v of [1.5, NaN, Infinity]) {
+      const f = (): string => ecrireCsv({ colonnes: [M], lignes: [], total: { etiquette: 'x', colonne: 'mt', valeurCentimes: v as never } });
+      expect(f).toThrow(ErreurCsv);
+      expect(f).toThrow('montant_invalide');
+    }
     expect(ecrireCsv({ colonnes: [T], lignes: [] })).toBe(BOM + '"Libellé"\r\n');
   });
 
@@ -133,7 +153,8 @@ describe('écriture CSV', () => {
     expect(relu).toHaveLength(202);
     lignes.forEach((l, i) => {
       expect(relu[i + 1]![0]).toBe(neutraliserTexte(l['lib'] as string));
-      expect(relu[i + 1]![1]).toMatch(/^-?[0-9]+,[0-9]{2}$/);
+      expect(relu[i + 1]).toHaveLength(2);
+      expect(relu[i + 1]![1]).toBe(formater(centimes(l['mt'] as number)));
     });
     expect(relu[201]).toEqual(['Total', '-0,42']);
   });

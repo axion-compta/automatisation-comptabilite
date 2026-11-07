@@ -5,8 +5,8 @@ import { cellule } from './neutraliser.js';
 import type { TypeColonne } from './neutraliser.js';
 
 export class ErreurCsv extends Error {
-  readonly code: 'colonne_total_inconnue';
-  constructor(code: 'colonne_total_inconnue') {
+  readonly code: 'colonne_total_inconnue' | 'montant_invalide';
+  constructor(code: 'colonne_total_inconnue' | 'montant_invalide') {
     super(code);
     this.name = 'ErreurCsv';
     this.code = code;
@@ -39,6 +39,9 @@ const texteCsv = (v: string): string => entourer(cellule(v, 'texte').valeur);
 
 function valeurCsv(valeur: unknown, type: TypeColonne): string {
   const c = cellule(valeur, type);
+  const absent = valeur === null || valeur === undefined || valeur === '';
+  // Colonne numérique : seul un entier sûr est écrit ; absent = cellule vide ; le reste est refusé.
+  if (c.genre === 'texte' && (type === 'centimes' || type === 'entier') && !absent) throw new ErreurCsv('montant_invalide');
   if (c.genre === 'texte') return entourer(c.valeur);
   if (c.genre === 'date') return c.valeur.slice(8, 10) + '/' + c.valeur.slice(5, 7) + '/' + c.valeur.slice(0, 4);
   return type === 'centimes' ? formater(centimes(Number(c.valeur))) : c.valeur;
@@ -59,6 +62,7 @@ export function ecrireCsv(entree: {
   sortie.push(colonnes.map((c) => texteCsv(c.entete)).join(SEPARATEUR));
   for (const l of lignes) sortie.push(colonnes.map((c) => valeurCsv(l[c.code], c.type)).join(SEPARATEUR));
   if (total !== undefined) {
+    if (!Number.isSafeInteger(total.valeurCentimes)) throw new ErreurCsv('montant_invalide');
     const libelle = colonnes.find((c) => c.code !== total.colonne)?.code;
     const cellules = colonnes.map((c) =>
       c.code === total.colonne ? formater(total.valeurCentimes) : c.code === libelle ? texteCsv(total.etiquette) : '',
