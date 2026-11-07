@@ -18,7 +18,7 @@ export function ToastAnnulation({ dureeMs, libelleAnnuler, texteRestant, onAnnul
   const [restant, setRestant] = useState(valide ? dureeMs : 0);
   const [annonce, setAnnonce] = useState(() => (valide ? texteRestant(Math.ceil(dureeMs / 1000)) : ""));
   const [ferme, setFerme] = useState(!valide);
-  const pause = useRef(false);
+  const pause = useRef({ focus: false, survol: false });
   const fini = useRef(false);
   const annule = useRef(false);
   const rappels = useRef({ onFin, texteRestant, maintenant });
@@ -34,7 +34,7 @@ export function ToastAnnulation({ dureeMs, libelleAnnuler, texteRestant, onAnnul
     let annonceA3 = false;
     const id = setInterval(() => {
       const t = rappels.current.maintenant();
-      if (!pause.current) reste -= t - dernier;
+      if (!pause.current.focus && !pause.current.survol) reste -= t - dernier;
       dernier = t;
       setRestant(Math.max(reste, 0));
       if (!annonceA3 && reste <= SEUIL_ANNONCE_S * 1000 && dureeMs > SEUIL_ANNONCE_S * 1000) { annonceA3 = true; setAnnonce(rappels.current.texteRestant(SEUIL_ANNONCE_S)); }
@@ -55,10 +55,10 @@ export function ToastAnnulation({ dureeMs, libelleAnnuler, texteRestant, onAnnul
     setFerme(true);
     onAnnuler();
   };
-  const suspendre = (v: boolean) => () => { pause.current = v; };
+  const suspendre = (k: "focus" | "survol", v: boolean) => () => { pause.current[k] = v; };
 
   return (
-    <div className="axion-toast" onMouseEnter={suspendre(true)} onMouseLeave={suspendre(false)} onFocus={suspendre(true)} onBlur={suspendre(false)}>
+    <div className="axion-toast" onMouseEnter={suspendre("survol", true)} onMouseLeave={suspendre("survol", false)} onFocus={suspendre("focus", true)} onBlur={suspendre("focus", false)}>
       <span role="status" className="axion-toast__annonce">{annonce}</span>
       <span aria-hidden="true" className="axion-toast__restant">{texteRestant(Math.ceil(restant / 1000))}</span>
       <button

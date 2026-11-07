@@ -41,7 +41,6 @@ describe("ToastAnnulation", () => {
     await avancer(2000);
     expect(visible(el)).toBe("reste 2");
   });
-
   it("fin-appelee-une-fois", async () => {
     const { el, onFin, onAnnuler } = await monter(2000);
     await avancer(1900);
@@ -51,7 +50,6 @@ describe("ToastAnnulation", () => {
     expect(onAnnuler).not.toHaveBeenCalled();
     expect(el.querySelector("button")).toBeNull();
   });
-
   it("annuler-une-seule-fois", async () => {
     const { el, onAnnuler, onFin } = await monter(5000);
     await act(async () => { bouton(el).click(); bouton(el).click(); });
@@ -60,7 +58,6 @@ describe("ToastAnnulation", () => {
     await avancer(10000);
     expect(onFin).not.toHaveBeenCalled();
   });
-
   it("annuler-au-clavier", async () => {
     for (const [key, appels] of [["Enter", 1], [" ", 1], ["a", 0]] as const) {
       const { el, onAnnuler } = await monter(5000);
@@ -78,10 +75,11 @@ describe("ToastAnnulation", () => {
     await act(async () => { bouton(el).blur(); });
     await avancer(4500);
     expect(onFin).toHaveBeenCalledTimes(1);
-    const survol = await monter(4000);
-    await act(async () => { survol.el.firstElementChild?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); });
-    await avancer(10000);
-    expect(survol.onFin).not.toHaveBeenCalled();
+    for (const [focus, ...evts] of [[false, "mouseover"], [true, "mouseover", "mouseout"]] as const) {
+      const t = await monter(4000);
+      await act(async () => { if (focus) bouton(t.el).focus(); for (const e of evts) t.el.firstElementChild?.dispatchEvent(new MouseEvent(e, { bubbles: true })); });
+      await avancer(10000); expect(t.onFin).not.toHaveBeenCalled();
+    }
   });
 
   it("annonces-limitees", async () => {
