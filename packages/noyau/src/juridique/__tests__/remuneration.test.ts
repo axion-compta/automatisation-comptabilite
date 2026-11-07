@@ -33,7 +33,6 @@ describe('controlerRemuneration', () => {
   it('r1-sans-decision-brouillon-et-carte', () => {
     expect(controlerRemuneration(ECR, [], FORMES)).toEqual({ etat: 'brouillon', carte: 'decision_absente' });
   });
-
   it('r1-decision-couvrante-carte-levee', () => {
     expect(controlerRemuneration(ECR, [decision()], FORMES)).toEqual({ etat: 'proposable', decisionId: 'dec-1' });
     const validee = decision({ statut: 'validee' });
@@ -41,7 +40,6 @@ describe('controlerRemuneration', () => {
     expect(r).toEqual({ etat: 'proposable', decisionId: 'dec-1' });
     expect(JSON.stringify(r)).not.toContain('validee');
   });
-
   it('r1-350-000-ecart-50-000', () => {
     expect(controlerRemuneration({ date: '2026-06-15', montantCentimes: 350_000 }, [decision()], FORMES)).toEqual({
       etat: 'brouillon',
@@ -53,7 +51,6 @@ describe('controlerRemuneration', () => {
       controlerRemuneration({ date: '2026-06-15', montantCentimes: 300_001 }, [decision()], FORMES),
     ).toMatchObject({ carte: 'ecart_montant', ecartCentimes: 1 });
   });
-
   it('decision-hors-periode-ignoree', () => {
     const attendu = { etat: 'brouillon', carte: 'decision_absente' };
     expect(controlerRemuneration({ date: '2025-12-31', montantCentimes: 1 }, [decision()], FORMES)).toEqual(attendu);
@@ -62,7 +59,6 @@ describe('controlerRemuneration', () => {
     expect(controlerRemuneration({ date: '2026-01-01', montantCentimes: 1 }, [decision()], FORMES).etat).toBe('proposable');
     expect(controlerRemuneration({ date: '2026-12-31', montantCentimes: 1 }, [decision()], FORMES).etat).toBe('proposable');
   });
-
   it('forme-non-admise-ignoree', () => {
     expect(controlerRemuneration(ECR, [decision({ forme: 'autre_forme' })], FORMES)).toEqual({
       etat: 'brouillon',
@@ -70,7 +66,6 @@ describe('controlerRemuneration', () => {
     });
     expect(controlerRemuneration(ECR, [decision()], [])).toEqual({ etat: 'brouillon', carte: 'decision_absente' });
   });
-
   it('decision-absente-statut-ignoree', () => {
     expect(controlerRemuneration(ECR, [decision({ statut: 'absente' })], FORMES)).toEqual({
       etat: 'brouillon',
@@ -79,7 +74,6 @@ describe('controlerRemuneration', () => {
     expect(controlerRemuneration(ECR, [decision({ objet: 'convention' })], FORMES).etat).toBe('brouillon');
     expect(controlerRemuneration(ECR, [decision({ objet: 'autre' })], FORMES).etat).toBe('brouillon');
   });
-
   it('montant-max-nul-pas-d-ecart', () => {
     const d = decision({ montantMaxCentimes: null });
     expect(controlerRemuneration({ date: '2026-06-15', montantCentimes: 99_999_999 }, [d], FORMES)).toEqual({
@@ -87,21 +81,18 @@ describe('controlerRemuneration', () => {
       decisionId: 'dec-1',
     });
   });
-
   it('plus-recente-par-debut', () => {
     const a = decision({ id: 'a', debut: '2026-01-01', montantMaxCentimes: 100 });
     const b = decision({ id: 'b', debut: '2026-03-01', montantMaxCentimes: null });
     expect(controlerRemuneration(ECR, [a, b], FORMES)).toEqual({ etat: 'proposable', decisionId: 'b' });
     expect(controlerRemuneration(ECR, [b, a], FORMES)).toEqual({ etat: 'proposable', decisionId: 'b' });
   });
-
   it('montant-nul-aucune-carte', () => {
     expect(controlerRemuneration({ date: '2026-06-15', montantCentimes: 0 }, [], FORMES)).toEqual({ etat: 'non_remunere' });
     expect(controlerRemuneration({ date: '2026-06-15', montantCentimes: -0 }, [decision()], FORMES)).toEqual({
       etat: 'non_remunere',
     });
   });
-
   it('refus-des-entrees-invalides', () => {
     for (const m of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(code(() => controlerRemuneration({ date: '2026-06-15', montantCentimes: m }, [], FORMES))).toBe(
@@ -122,7 +113,6 @@ describe('controlerRemuneration', () => {
       'montant_invalide',
     );
   });
-
   it('decisions-meme-debut-ambigues', () => {
     const a = decision({ id: 'a' });
     const b = decision({ id: 'b' });
@@ -133,7 +123,6 @@ describe('controlerRemuneration', () => {
       decisionId: 'a',
     });
   });
-
   it('ne-modifie-pas-ses-entrees', () => {
     const decisions = Object.freeze([Object.freeze(decision())]);
     expect(() => controlerRemuneration(ECR, decisions, Object.freeze([...FORMES]))).not.toThrow();
