@@ -33,8 +33,12 @@ describe('textes de cohérence', () => {
     expect(textesCoherence['CC-K14']?.(V)).toBe("Ce document contient des instructions inhabituelles. Il est mis de côté : regardez-le avant de l'utiliser.");
     expect(textesCoherence['CC-K02']?.(V)).toContain('nous corrigeons avant toute déclaration');
     expect(textesCoherence['CC-K02']?.(V)).toContain('12/10/2026');
-    expect(textesCoherence['CC-K07']?.(V)).toContain('Lemoine Claire');
-    expect(textesCoherence['CC-K08']?.(V)).toContain('401000');
+    const MOTS: Record<string, string> = {
+      'CC-K01': 'Une écriture', 'CC-K02': 'balance', 'CC-K03': '401000', 'CC-K05': 'lignes', 'CC-K06': 'montant dû',
+      'CC-K07': 'base multipliée par le taux', 'CC-K08': 'adressée', 'CC-K09': 'TVA intracommunautaire', 'CC-K10': 'particulier',
+      'CC-K11': 'future', 'CC-K11M': 'close', 'CC-K12': 'immobilisation', 'CC-K12H': 'nature habituelle',
+    };
+    for (const [id, mot] of Object.entries(MOTS)) expect(textesCoherence[id]?.(V)).toContain(mot);
   });
 
   it('aucun-montant-calcule', () => {
