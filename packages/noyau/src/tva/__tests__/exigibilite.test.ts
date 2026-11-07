@@ -145,17 +145,9 @@ describe('tvaExigible', () => {
   });
 
   it('refuse une TVA supérieure au TTC', () => {
-    expect(
-      code(() =>
-        tvaExigible({
-          ttc: c(1000),
-          tvaParTaux: [
-            { cle: 'T1', tva: c(600) },
-            { cle: 'T2', tva: c(401) },
-          ],
-          paiements: [],
-        }),
-      ),
-    ).toBe('tva_superieure_au_ttc');
+    const f = (t2: number) => () =>
+      tvaExigible({ ttc: c(1000), tvaParTaux: [{ cle: 'T1', tva: c(600) }, { cle: 'T2', tva: c(t2) }], paiements: [pay('a', '2026-01-01', 1000)] });
+    expect(code(f(401))).toBe('tva_superieure_au_ttc');
+    expect(f(400)()[0]?.parTaux).toEqual([{ cle: 'T1', tva: 600 }, { cle: 'T2', tva: 400 }]);
   });
 });
