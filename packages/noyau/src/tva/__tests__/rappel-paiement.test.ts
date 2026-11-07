@@ -79,72 +79,54 @@ describe('datesDeRappel', () => {
 });
 
 describe('carteTva', () => {
+  type Entree = Parameters<typeof carteTva>[0];
   const validee = (c: number) => ({ statut: 'validee' as const, aDecaisserCentimes: c });
+  const carte = (declaration: Entree['declaration'], piecesEnDoute = 0, paiement: Entree['paiement'] = null) =>
+    carteTva({ declaration, piecesEnDoute, paiement });
 
   it('d1-montant-345-678', () => {
-    expect(carteTva({ declaration: validee(345_678), piecesEnDoute: 0, paiement: null })).toEqual({
-      etat: 'montant',
-      centimes: 345_678,
-    });
+    expect(carte(validee(345_678))).toEqual({ etat: 'montant', centimes: 345_678 });
     // Crédit de TVA : montant négatif accepté.
-    expect(carteTva({ declaration: validee(-1200), piecesEnDoute: 0, paiement: null })).toEqual({
-      etat: 'montant',
-      centimes: -1200,
-    });
-    expect(carteTva({ declaration: validee(0), piecesEnDoute: 0, paiement: null })).toEqual({ etat: 'montant', centimes: 0 });
+    expect(carte(validee(-1200))).toEqual({ etat: 'montant', centimes: -1200 });
+    expect(carte(validee(0))).toEqual({ etat: 'montant', centimes: 0 });
   });
 
   it('d2-deux-pieces-en-doute-aucun-montant', () => {
-    const r = carteTva({ declaration: validee(345_678), piecesEnDoute: 2, paiement: null });
+    const r = carte(validee(345_678), 2);
     expect(r).toEqual({ etat: 'bloquee', pieces: 2 });
     expect(JSON.stringify(r)).not.toContain('345');
   });
 
   it('d2-apres-levee-montant', () => {
-    expect(carteTva({ declaration: validee(345_678), piecesEnDoute: 0, paiement: null }).etat).toBe('montant');
+    expect(carte(validee(345_678)).etat).toBe('montant');
   });
 
   it('non-validee-a-confirmer', () => {
     const preparee = { statut: 'preparee' as const, aDecaisserCentimes: 345_678 };
-    const r = carteTva({ declaration: preparee, piecesEnDoute: 0, paiement: null });
-    expect(r).toEqual({ etat: 'a_confirmer' });
-    expect(carteTva({ declaration: null, piecesEnDoute: 0, paiement: null })).toEqual({ etat: 'a_confirmer' });
+    expect(carte(preparee)).toEqual({ etat: 'a_confirmer' });
+    expect(carte(null)).toEqual({ etat: 'a_confirmer' });
   });
 
   it('doute-prioritaire-sur-validee', () => {
-    expect(carteTva({ declaration: validee(100), piecesEnDoute: 1, paiement: null })).toEqual({
-      etat: 'bloquee',
-      pieces: 1,
-    });
+    expect(carte(validee(100), 1)).toEqual({ etat: 'bloquee', pieces: 1 });
     // Le doute passe aussi avant un paiement.
-    expect(carteTva({ declaration: validee(100), piecesEnDoute: 1, paiement: PAIEMENT }).etat).toBe('bloquee');
+    expect(carte(validee(100), 1, PAIEMENT).etat).toBe('bloquee');
   });
 
   it('paiement-prioritaire-sur-statut', () => {
-    expect(carteTva({ declaration: null, piecesEnDoute: 0, paiement: PAIEMENT })).toEqual({
-      etat: 'payee',
-      par: 'Camille Exemple',
-      le: '2026-11-05',
-      origine: 'rapprochement',
-    });
-    expect(
-      carteTva({ declaration: validee(5), piecesEnDoute: 0, paiement: { ...PAIEMENT, origine: 'coche' } }),
-    ).toMatchObject({ etat: 'payee', origine: 'coche' });
+    expect(carte(null, 0, PAIEMENT)).toEqual({ etat: 'payee', par: 'Camille Exemple', le: '2026-11-05', origine: 'rapprochement' });
+    expect(carte(validee(5), 0, { ...PAIEMENT, origine: 'coche' })).toMatchObject({ etat: 'payee', origine: 'coche' });
   });
 
   it('refus-des-entrees-invalides', () => {
     for (const n of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
-      expect(code(() => carteTva({ declaration: null, piecesEnDoute: n, paiement: null }))).toBe('pieces_invalides');
+      expect(code(() => carte(null, n))).toBe('pieces_invalides');
     }
     for (const m of [1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
-      expect(code(() => carteTva({ declaration: validee(m), piecesEnDoute: 0, paiement: null }))).toBe('montant_invalide');
+      expect(code(() => carte(validee(m)))).toBe('montant_invalide');
     }
-    expect(code(() => carteTva({ declaration: null, piecesEnDoute: 0, paiement: { ...PAIEMENT, par: '' } }))).toBe(
-      'trace_invalide',
-    );
-    expect(code(() => carteTva({ declaration: null, piecesEnDoute: 0, paiement: { ...PAIEMENT, le: '5/11' } }))).toBe(
-      'date_invalide',
-    );
+    expect(code(() => carte(null, 0, { ...PAIEMENT, par: '' }))).toBe('trace_invalide');
+    expect(code(() => carte(null, 0, { ...PAIEMENT, le: '5/11' }))).toBe('date_invalide');
   });
 });
 
