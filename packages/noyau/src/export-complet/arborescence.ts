@@ -19,20 +19,39 @@ export function cheminPiece(p: { empreinte: string; recueLe: string; extension: 
   return `pieces/${p.recueLe.slice(0, 4)}/${p.recueLe.slice(5, 7)}/${p.empreinte}.${extension}`;
 }
 
+const comparer = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+// Un seul chemin par empreinte : celui de la première pièce (date, puis id).
+function cheminsParPiece(pieces: PieceArchive[]): Map<string, string> {
+  for (const p of pieces) cheminPiece(p);
+  const ordre = [...pieces].sort((x, y) => comparer(x.recueLe, y.recueLe) || comparer(x.id, y.id));
+  const parEmpreinte = new Map<string, string>();
+  const resultat = new Map<string, string>();
+  for (const p of ordre) {
+    if (!parEmpreinte.has(p.empreinte)) parEmpreinte.set(p.empreinte, cheminPiece(p));
+    resultat.set(p.id, parEmpreinte.get(p.empreinte) as string);
+  }
+  return resultat;
+}
+
 export function indexPieces(pieces: PieceArchive[]): LigneIndex[] {
+  const chemins = cheminsParPiece(pieces);
   return pieces
-    .map((p) => ({ chemin: cheminPiece(p), pieceId: p.id, ecritures: trier(p.ecritures).join(SEPARATEUR) }))
-    .sort((a, b) => (a.chemin < b.chemin ? -1 : a.chemin > b.chemin ? 1 : a.pieceId < b.pieceId ? -1 : a.pieceId > b.pieceId ? 1 : 0));
+    .map((p) => {
+      if (p.ecritures.some((e) => e.includes(SEPARATEUR))) throw new ErreurExploitation('chemin_invalide');
+      return { chemin: chemins.get(p.id) as string, pieceId: p.id, ecritures: trier(p.ecritures).join(SEPARATEUR) };
+    })
+    .sort((a, b) => comparer(a.chemin, b.chemin) || comparer(a.pieceId, b.pieceId));
 }
 
 function verifierNomFec(nom: string): void {
   const interdit =
     typeof nom !== 'string' ||
-    nom === '' ||
+    nom.replace(/[ .]/g, '') === '' ||
     nom.includes('/') ||
     nom.includes('\\') ||
     nom.includes('..') ||
-    [...nom].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127);
+    [...nom].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 || (c.charCodeAt(0) >= 128 && c.charCodeAt(0) < 160));
   if (interdit) throw new ErreurExploitation('chemin_invalide');
 }
 
@@ -43,7 +62,7 @@ export function arborescence(o: {
   avecParametrages: boolean;
 }): string[] {
   for (const e of o.exercices) verifierNomFec(e.fecNom);
-  const cheminsPieces = new Set(o.pieces.map(cheminPiece));
+  const cheminsPieces = new Set(cheminsParPiece(o.pieces).values());
   const chemins = [
     ...FIXES,
     ...o.exercices.map((e) => `fec/${e.fecNom}`),

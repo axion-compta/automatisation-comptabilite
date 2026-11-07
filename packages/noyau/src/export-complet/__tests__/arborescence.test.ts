@@ -49,6 +49,28 @@ describe('arborescence export complet', () => {
     expect(a.filter((c) => c.startsWith('pieces/') && c !== 'pieces/index.csv')).toHaveLength(1);
   });
 
+  it('meme-empreinte-dates-et-extensions-differentes', () => {
+    const pieces = [
+      piece('p3', H1, ['e3'], 'jpg', '2026-03-10'),
+      piece('p2', H1, ['e2'], 'pdf', '2026-04-01'),
+      piece('p1', H1, ['e1'], 'pdf', '2026-03-10'),
+      piece('p0', H1, ['e0'], 'pdf', '2026-03-10'),
+    ];
+    const chemin = `pieces/2026/03/${H1}.pdf`;
+    expect(indexPieces(pieces)).toEqual([
+      { chemin, pieceId: 'p0', ecritures: 'e0' },
+      { chemin, pieceId: 'p1', ecritures: 'e1' },
+      { chemin, pieceId: 'p2', ecritures: 'e2' },
+      { chemin, pieceId: 'p3', ecritures: 'e3' },
+    ]);
+    expect(arborescence({ ...base, pieces }).filter((c) => c.startsWith('pieces/') && c !== 'pieces/index.csv')).toEqual([chemin]);
+    const b = indexPieces([piece('b', H1, []), piece('a', H1, [])]);
+    expect(b.map((l) => l.pieceId)).toEqual(['a', 'b']);
+    expect(indexPieces([piece('x', H2, ['e1']), piece('y', H1, ['e1'])]).map((l) => l.pieceId)).toEqual(['y', 'x']);
+    expect(code(() => cheminPiece({ empreinte: H1, recueLe: '2026-03-10', extension: 5 as unknown as string }))).toBe('chemin_invalide');
+    expect(code(() => indexPieces([piece('p', H1, ['e1|e2'])]))).toBe('chemin_invalide');
+  });
+
   it('index-trie-et-ecritures-triees', () => {
     const lignes = indexPieces([piece('p1', H2, ['e9', 'e10', 'e1']), piece('p2', H1, ['e3'])]);
     expect(lignes).toEqual([
@@ -95,7 +117,7 @@ describe('arborescence export complet', () => {
   });
 
   it('fec-nom-dangereux-refuse', () => {
-    for (const n of ['../a.txt', 'a/b', 'a\\b', '', 'a..b', `a${String.fromCharCode(0)}b`, `a${String.fromCharCode(10)}b`]) {
+    for (const n of ['.', '  ', '..', 'ab', '../a.txt', 'a/b', 'a\\b', '', 'a..b', `a${String.fromCharCode(0)}b`, `a${String.fromCharCode(10)}b`]) {
       expect(code(() => arborescence({ ...base, exercices: [{ code: '2026', fecNom: n }] }))).toBe('chemin_invalide');
     }
     expect(code(() => arborescence({ ...base, exercices: [{ code: '2026', fecNom: 'fec.v2.txt' }] }))).toBeUndefined();
