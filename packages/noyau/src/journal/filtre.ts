@@ -13,8 +13,9 @@ const CLES_INTERDITES = new Set([
   'codesecours',
 ]);
 
-const FORME_JETON = /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
-const FORME_IBAN = /^[A-Za-z]{2}[0-9]{2}[A-Za-z0-9]{11,30}$/;
+const FORME_JETON = /(?:^|[^A-Za-z0-9_-])eyJ[A-Za-z0-9_-]+.[A-Za-z0-9_-]+.[A-Za-z0-9_-]+/;
+const FORME_IBAN =
+  /(?<![A-Za-z0-9])[A-Za-z]{2} ?[0-9]{2}(?:(?: [A-Za-z0-9]{4}){2,7}(?: [A-Za-z0-9]{1,4})?|[A-Za-z0-9]{11,30})(?![A-Za-z0-9])/;
 
 function normaliser(cle: string): string {
   return cle
@@ -25,7 +26,7 @@ function normaliser(cle: string): string {
 }
 
 function valeurInterdite(texte: string): boolean {
-  return FORME_JETON.test(texte) || FORME_IBAN.test(texte.replace(/ /g, ''));
+  return FORME_JETON.test(texte) || FORME_IBAN.test(texte);
 }
 
 function parcourir(valeur: unknown, chemin: string, profondeur: number, fautes: string[]): void {

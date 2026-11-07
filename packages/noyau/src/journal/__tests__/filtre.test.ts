@@ -35,8 +35,9 @@ describe('verifierSansSecret', () => {
     expect(verifierSansSecret({ note: jeton })).toEqual(['note']);
     expect(verifierSansSecret({ note: 'eyJ.abc' })).toEqual([]);
     expect(verifierSansSecret({ note: jeton.replace('eyJ', 'abc') })).toEqual([]);
-    expect(verifierSansSecret({ note: `${jeton} suite` })).toEqual([]);
-    expect(verifierSansSecret({ note: `a ${jeton}` })).toEqual([]);
+    expect(verifierSansSecret({ note: `${jeton} suite` })).toEqual(['note']);
+    expect(verifierSansSecret({ note: `a ${jeton}` })).toEqual(['note']);
+    expect(verifierSansSecret({ note: `Bearer ${jeton}` })).toEqual(['note']);
   });
 
   it('iban-en-clair-trouve', () => {
@@ -47,7 +48,9 @@ describe('verifierSansSecret', () => {
     expect(verifierSansSecret({ a: iban.replace('00', 'A0') })).toEqual([]);
     expect(verifierSansSecret({ a: iban.replace('00', '0A') })).toEqual([]);
     expect(verifierSansSecret({ a: iban.slice(1) })).toEqual([]);
-    expect(verifierSansSecret({ a: `${iban}${'1'.repeat(30)}` })).toEqual([]);
+    expect(verifierSansSecret({ a: `${iban.replace(/ /g, '')}${'1'.repeat(30)}` })).toEqual([]);
+    expect(verifierSansSecret({ a: `Virement ${iban} merci` })).toEqual(['a']);
+    expect(verifierSansSecret({ a: 'Dossier FR12 en cours de traitement' })).toEqual([]);
   });
 
   it('iban-masque-permis', () => {
