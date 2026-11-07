@@ -1,6 +1,6 @@
 // Bilan et compte de résultat à partir d'une affectation aux postes ; aucune valeur légale ici.
 import { type Centimes, ajouter, centimes, pourcentage, soustraire } from '../argent/index.js';
-import type { PosteAffecte, ResultatAffectation } from './postes.js';
+import type { PosteAffecte, PosteEtat, ResultatAffectation } from './postes.js';
 
 export type CodeErreurBilan = 'fraction_invalide' | 'montant_invalide' | 'poste_resultat_invalide';
 
@@ -36,11 +36,11 @@ function controle(id: 'ETAT-01' | 'ETAT-02', a: Centimes, b: Centimes): EtatsFin
 
 export function etatsFinanciers(
   affectation: ResultatAffectation,
-  options: { posteResultat: string; precedent?: EtatsFinanciers },
+  options: { posteResultat: string; table: readonly PosteEtat[]; precedent?: EtatsFinanciers },
 ): EtatsFinanciers {
-  const { posteResultat, precedent } = options;
+  const { posteResultat, table, precedent } = options;
   const existant = affectation.postes.filter((p) => p.poste === posteResultat);
-  if (posteResultat === '' || existant.some((p) => p.cote !== 'passif')) throw new ErreurBilan('poste_resultat_invalide');
+  if (!table.some((p) => p.poste === posteResultat && p.cote === 'passif') || existant.some((p) => p.cote !== 'passif')) throw new ErreurBilan('poste_resultat_invalide');
   const produits = total(affectation.postes, 'produits');
   const charges = total(affectation.postes, 'charges');
   const resultat = soustraire(produits, charges);
