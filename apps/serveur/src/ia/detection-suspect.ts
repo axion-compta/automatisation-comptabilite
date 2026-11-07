@@ -54,6 +54,8 @@ export async function detecterSuspectModele(p: ParametresDetection): Promise<Res
   } catch {
     return { suspect: true, raison: 'code' };
   }
+  // Un texte qui contient un délimiteur (ou le début d'un) peut fermer le bloc : suspect sans appel au modèle.
+  if (p.texte.includes('<<<') || p.texte.includes(DEBUT) || p.texte.includes(FIN)) return { suspect: true, raison: 'code' };
   if (p.texte.trim() === '') return { suspect: false, raison: 'aucune' };
   const r = await appelerModele({
     port: p.port,
