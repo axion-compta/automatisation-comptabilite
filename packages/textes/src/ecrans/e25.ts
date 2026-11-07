@@ -55,8 +55,9 @@ export const e25 = {
     confirmer: 'Confirmer',
     ouvrirEcran: 'Ouvrir l’écran',
     mentionAvant: 'Préparé par IA, à valider',
+    mentionApres: 'Préparé par IA, validé par {personne} le {date}',
   },
-  toast: { annuler: 'Annuler' },
+  toast: { annuler: 'Annuler', secondeRestante: '{n} seconde restante', secondesRestantes: '{n} secondes restantes' },
   etapes: { titre: 'Étapes en cours', enCours: 'En cours', faite: 'Faite', echec: 'Échec' },
   sources: { voirSource: 'Voir la source', inconnu: 'Je ne sais pas', lexique: 'Voir la définition' },
   affichageIndisponible: 'Affichage indisponible',
@@ -74,11 +75,3 @@ export const e25 = {
   voix: { dicter: 'Dicter', relire: 'Relire avant d’envoyer' },
   mobile: { titre: 'Chat', retour: 'Retour' },
 } as const;
-
-export const valideePar = (personne: string, date: string): string =>
-  `Préparé par IA, validé par ${personne} le ${date}`;
-
-export const secondesRestantes = (n: number): string => {
-  const s = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
-  return `${s} ${s > 1 ? 'secondes restantes' : 'seconde restante'}`;
-};

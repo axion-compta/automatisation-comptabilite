@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { CODES_ERREUR, ISSUES, MOTIFS_REFUS } from '../../../../noyau/src/chat/types.js';
-import { e25, secondesRestantes, valideePar } from '../e25.js';
+import { e25 } from '../e25.js';
+
+// Les fonctions de mise en forme vivent dans les composants ; le fichier de textes ne porte que des gabarits.
+const valideePar = (personne: string, date: string): string =>
+  e25.carte.mentionApres.replace('{personne}', personne).replace('{date}', date);
+const secondesRestantes = (n: number): string => {
+  const s = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  return (s > 1 ? e25.toast.secondesRestantes : e25.toast.secondeRestante).replace('{n}', String(s));
+};
 
 // Assemblés ici pour ne pas figurer en clair dans le dépôt.
 const INTERDITS = [['con', 'forme'], ['sans ', 'erreur'], ['garan', 'ti'], ['juri', 'ste'], ['P', 'DP']].map((p) => p.join(''));
