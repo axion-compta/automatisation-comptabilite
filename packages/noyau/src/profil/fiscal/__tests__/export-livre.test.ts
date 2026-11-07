@@ -28,11 +28,15 @@ const exporter = (l: LigneRecette[]): string => exporterLivreCsv(l, { separateur
 
 describe('export du livre en CSV', () => {
   it('en-tete-et-ordre', () => {
-    const csv = exporter([rec({ id: 'b', dateEncaissement: '2026-03-01' }), rec({ id: 'z' }), rec({ id: 'a' })]);
+    const csv = exporter([rec({ id: 'b', dateEncaissement: '2026-03-01' }), rec({ id: 'z', referenceFacture: 'RZ' }), rec({ id: 'a', referenceFacture: 'RA' })]);
     const l = lignesDe(csv);
     expect(l[0]).toBe('Date;Client;Montant;Mode;Reference');
     expect(l).toHaveLength(4);
-    expect(l.map((x) => x.slice(0, 10))).toEqual(['Date;Clien', '2026-02-10', '2026-02-10', '2026-03-01']);
+    expect(l.slice(1)).toEqual([
+      '2026-02-10;Atelier Fictif;1234,56;virement;RA',
+      '2026-02-10;Atelier Fictif;1234,56;virement;RZ',
+      '2026-03-01;Atelier Fictif;1234,56;virement;F-1',
+    ]);
     expect(csv.endsWith('\r\n')).toBe(false);
   });
 
