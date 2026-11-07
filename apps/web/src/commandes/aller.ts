@@ -11,16 +11,17 @@ export type Destination = {
 
 // Mots-clés au singulier, sans accent : la phrase subit le même traitement (voir `racine`).
 export const destinations: readonly Destination[] = [
-  { id: 'accueil', titre: 'Accueil', chemin: '/', motsCles: ['accueil', 'debut', 'tableau', 'bord', 'resume'] },
-  { id: 'ecritures', titre: 'Écritures', chemin: '/ecritures', motsCles: ['ecriture', 'journal', 'saisie', 'ligne'] },
-  { id: 'banque', titre: 'Banque', chemin: '/banque', motsCles: ['banque', 'bancaire', 'releve', 'rapprochement', 'compte'] },
-  { id: 'ventes', titre: 'Ventes', chemin: '/ventes', motsCles: ['vente', 'client', 'devis', 'facture'] },
-  { id: 'achats', titre: 'Achats', chemin: '/achats', motsCles: ['achat', 'fournisseur', 'depense', 'facture'] },
-  { id: 'tva', titre: 'TVA', chemin: '/tva', motsCles: ['tva', 'taxe', 'declaration', 'declarer', 'collectee', 'deductible'] },
-  { id: 'documents', titre: 'Documents', chemin: '/documents', motsCles: ['document', 'piece', 'justificatif'] },
-  { id: 'controles', titre: 'Contrôles', chemin: '/controles', motsCles: ['controle', 'controler', 'verification', 'verifier', 'doute', 'anomalie'] },
-  { id: 'parametres', titre: 'Paramètres', chemin: '/parametres', motsCles: ['parametre', 'reglage', 'option', 'profil'] },
-  { id: 'aide', titre: 'Aide', chemin: '/aide', motsCles: ['aide', 'assistance', 'guide', 'notice', 'support'] },
+  { id: 'activite', titre: 'Mon activité', chemin: '/activite', motsCles: ['activite', 'accueil', 'debut', 'tableau', 'bord', 'resume'] },
+  { id: 'mois', titre: 'Mon mois', chemin: '/mois', motsCles: ['mensuel', 'periode'] },
+  { id: 'banque', titre: 'Ma banque', chemin: '/banque', motsCles: ['banque', 'bancaire', 'releve', 'rapprochement'] },
+  { id: 'factures', titre: 'Mes factures', chemin: '/factures', motsCles: ['facture', 'vente', 'achat', 'depense'] },
+  { id: 'declarations', titre: 'Mes déclarations', chemin: '/declarations', motsCles: ['declaration', 'declarer'] },
+  { id: 'tva', titre: 'Ma TVA', chemin: '/declarations/tva', motsCles: ['tva', 'taxe', 'collectee', 'deductible'] },
+  { id: 'documents', titre: 'Mes documents', chemin: '/documents', motsCles: ['document', 'piece', 'justificatif'] },
+  { id: 'annees', titre: 'Mes années comptables', chemin: '/reglages/entreprise/annees', motsCles: ['annee', 'exercice', 'cloture'] },
+  { id: 'comptes', titre: 'Mes comptes comptables', chemin: '/reglages/entreprise/comptes', motsCles: ['compte', 'plan'] },
+  { id: 'tiers', titre: 'Mes clients et fournisseurs', chemin: '/reglages/entreprise/tiers', motsCles: ['client', 'fournisseur', 'tiers'] },
+  { id: 'aide', titre: 'Aide', chemin: '/reglages/aide', motsCles: ['aide', 'assistance', 'guide', 'notice', 'support'] },
 ];
 
 const MOTS_VIDES = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'd', 'l', 'au', 'aux', 'a', 'en', 'mon', 'ma', 'mes', 'je', 'j', 'ai', 'veux', 'voir', 'aller', 'va', 'ouvre', 'ouvrir', 'montre', 'montrer', 'afficher', 'affiche', 'sur', 'vers', 'page', 'ecran', 'svp', 'stp', 'moi', 'est', 'il', 'quelle', 'se']);
