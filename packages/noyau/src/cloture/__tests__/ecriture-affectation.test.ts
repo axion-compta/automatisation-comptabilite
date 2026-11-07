@@ -82,11 +82,20 @@ describe('écriture d affectation du résultat', () => {
       'affectation_incoherente',
     );
     expect(code(() => ecritureAffectation(aff(450000, 0, 0, 0), COMPTES, CTX))).toBe('aucune');
+    for (const a of [aff(450000, -100000, 0, 0), aff(450000, 0, -100000, 0), aff(450000, 0, 0, -100000)]) {
+      expect(code(() => ecritureAffectation(a, COMPTES, CTX))).toBe('affectation_incoherente');
+    }
+    for (const v of [4500.5, NaN, Infinity]) {
+      const a = { ...aff(450000), resultat: v as ReturnType<typeof centimes> };
+      expect(code(() => ecritureAffectation(a, COMPTES, CTX))).toBe('affectation_incoherente');
+    }
   });
 
   it('dividende-sur-perte-refuse', () => {
     expect(code(() => ecritureAffectation(aff(-200000, 0, 0, 1), COMPTES, CTX))).toBe('dividende_sur_perte');
     expect(code(() => ecritureAffectation(aff(0), COMPTES, CTX))).toBe('resultat_nul');
+    expect(code(() => ecritureAffectation(aff(-200000, 1, 0, 0), COMPTES, CTX))).toBe('affectation_incoherente');
+    expect(code(() => ecritureAffectation(aff(-200000, 0, 1, 0), COMPTES, CTX))).toBe('affectation_incoherente');
   });
 
   it('equilibre-verifie', () => {

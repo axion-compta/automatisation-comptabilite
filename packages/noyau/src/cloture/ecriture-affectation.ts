@@ -53,10 +53,14 @@ export function ecritureAffectation(
 ): Ecriture {
   if (!ctx.decisionApprobation) throw new ErreurAffectation('decision_approbation_absente');
   const { resultat, apurementPertes, reserve, dividende } = affectation;
+  if (![resultat, apurementPertes, reserve, dividende].every(Number.isSafeInteger)) {
+    throw new ErreurAffectation('affectation_incoherente');
+  }
   if (resultat === 0) throw new ErreurAffectation('resultat_nul');
   let lignes: LigneEcriture[];
   if (resultat < 0) {
     if (dividende !== 0) throw new ErreurAffectation('dividende_sur_perte');
+    if (apurementPertes !== 0 || reserve !== 0) throw new ErreurAffectation('affectation_incoherente');
     const perte = soustraire(ZERO, resultat);
     lignes = [
       ligne(comptes.reportDebiteur, 'Perte reportée', perte, ZERO),
