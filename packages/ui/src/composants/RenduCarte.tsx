@@ -46,7 +46,11 @@ function Liste({ elements, libelles }: { elements: { libelle: string }[]; libell
   );
 }
 
-type CorpsProps = Pick<RenduCarteProps, "libelles" | "onOuvrir"> & { carte: Carte };
+interface CorpsProps {
+  carte: Carte;
+  libelles: RenduCarteProps["libelles"];
+  onOuvrir: RenduCarteProps["onOuvrir"];
+}
 
 function Corps({ carte, libelles, onOuvrir }: CorpsProps) {
   switch (carte.type) {
