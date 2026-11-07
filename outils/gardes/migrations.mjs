@@ -20,7 +20,10 @@ function nettoyer(t) {
       const fin = t.indexOf(m[0], i + m[0].length);
       m = [t.slice(i, fin < 0 ? t.length : fin + m[0].length)];
       s += vide(m[0]);
-    } else m = [t[i]], (s += t[i]);
+    } else {
+      m = [t[i]];
+      s += t[i];
+    }
     i += m[0].length;
   }
   return s;
