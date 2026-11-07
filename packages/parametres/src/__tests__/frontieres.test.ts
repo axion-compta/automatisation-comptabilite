@@ -31,6 +31,8 @@ describe('frontières', () => {
   it('catalogue-sans-ecart', () => {
     const c = [l('a', '2025-01-01', '2026-01-01'), l('a', '2026-01-01', null), l('b', '2026-03-01', null)];
     expect(verifierFrontieres(c, 'FR')).toEqual([]);
+    const t = [l('c', '2024-01-01', '2025-01-01'), l('c', '2025-01-01', '2026-01-01'), l('c', '2026-01-01', null)];
+    expect(verifierFrontieres(t, 'FR')).toEqual([]);
     expect(verifierFrontieres([], 'FR')).toEqual([]);
     expect(verifierFrontieres(c, 'BE')).toEqual([]);
   });
@@ -39,6 +41,14 @@ describe('frontières', () => {
     const r = verifierFrontieres(c, 'FR');
     expect(r.length).toBeGreaterThan(0);
     expect(r).toContainEqual({ cle: 'a', effet_debut: '2026-01-01', date: '2026-01-01', attendu: '2026-01-01', obtenu: 'parametre_ambigu' });
+  });
+  it('lendemain-seul-detecte', () => {
+    const c = [l('a', '2026-01-01', null), l('a', '2026-01-02', null)];
+    expect(verifierFrontieres(c, 'FR')).toEqual([
+      { cle: 'a', effet_debut: '2026-01-01', date: '2026-01-02', attendu: '2026-01-01', obtenu: 'parametre_ambigu' },
+      { cle: 'a', effet_debut: '2026-01-02', date: '2026-01-02', attendu: '2026-01-02', obtenu: 'parametre_ambigu' },
+      { cle: 'a', effet_debut: '2026-01-02', date: '2026-01-03', attendu: '2026-01-02', obtenu: 'parametre_ambigu' },
+    ]);
   });
   it('trou-detecte', () => {
     const c = [l('a', '2025-01-01', '2026-05-31'), l('a', '2026-06-01', null)];
