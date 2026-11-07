@@ -83,7 +83,7 @@ export function verifierHorodatage(h: string): void {
 }
 
 export function verifierEntier(n: number, min: number): void {
-  if (typeof n !== 'number' || !Number.isSafeInteger(n) || n < min) {
+  if (typeof n !== 'number' || !Number.isSafeInteger(n) || !(n >= min)) {
     throw new ErreurAbonnement('entier_invalide');
   }
 }
