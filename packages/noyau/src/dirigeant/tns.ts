@@ -15,15 +15,8 @@ export class ErreurTns extends Error {
   }
 }
 
-export interface ComptesAppel {
-  cotisations: string;
-  organismes: string;
-}
-
-export interface ComptesPaiement {
-  organismes: string;
-  banque: string;
-}
+export interface ComptesAppel { cotisations: string; organismes: string }
+export interface ComptesPaiement { organismes: string; banque: string }
 
 interface Base {
   id: string;
@@ -36,13 +29,8 @@ export interface DemandeAppel extends Base {
   echeanceLue?: string;
 }
 
-export interface DemandePaiement extends Base {
-  montant: number;
-}
-
-export interface DemandeRegularisation extends Base {
-  difference: number;
-}
+export interface DemandePaiement extends Base { montant: number }
+export interface DemandeRegularisation extends Base { difference: number }
 
 export type Echeance = { date: string } | { aVerifier: true };
 
@@ -60,9 +48,7 @@ function verifierDate(s: string): void {
 }
 
 function verifierMontantPositif(montant: number): void {
-  if (!Number.isSafeInteger(montant) || montant <= 0) {
-    throw new ErreurTns('montant_invalide', 'Un montant doit être un entier de centimes strictement positif.');
-  }
+  if (!Number.isSafeInteger(montant) || montant <= 0) throw new ErreurTns('montant_invalide', 'Montant invalide.');
 }
 
 function ligne(compte: string, libelle: string, debit: number, credit: number): LigneEcriture {

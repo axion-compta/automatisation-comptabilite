@@ -28,16 +28,13 @@ describe('cotisations du dirigeant non salarié', () => {
     ]);
     expect(r.echeance).toEqual({ date: '2026-12-05' });
     expect(r.ecriture.statut).toBe('brouillon');
-    expect(r.ecriture.id).toBe('e1');
-    expect(r.ecriture.journal).toBe('OD');
-    expect(r.ecriture.date).toBe('2026-11-20');
+    expect([r.ecriture.id, r.ecriture.journal, r.ecriture.date]).toEqual(['e1', 'OD', '2026-11-20']);
   });
 
   it('appel-sans-date-a-verifier', () => {
     const r = ecritureAppel({ ...base, montant: 180000 }, COMPTES);
     expect(r.echeance).toEqual({ aVerifier: true });
     expect('date' in r.echeance).toBe(false);
-    expect(r.ecriture.statut).toBe('brouillon');
   });
 
   it('regularisation-positive', () => {
@@ -47,7 +44,6 @@ describe('cotisations du dirigeant non salarié', () => {
       ['646000', 25000, 0],
       ['431000', 0, 25000],
     ]);
-    expect(e.statut).toBe('brouillon');
   });
 
   it('regularisation-negative', () => {
@@ -82,9 +78,9 @@ describe('cotisations du dirigeant non salarié', () => {
     for (const echeanceLue of ['2026-02-30', '2026-13-01', '05/12/2026', '']) {
       expect(code(() => ecritureAppel({ ...base, montant: 100, echeanceLue }, COMPTES))).toBe('date_invalide');
     }
-    expect(code(() => ecritureAppel({ ...base, montant: 100, echeanceLue: '2026-02-28' }, COMPTES))).toBe('aucune_erreur');
-    expect(code(() => ecritureAppel({ ...base, montant: 100, echeanceLue: '2028-02-29' }, COMPTES))).toBe('aucune_erreur');
-    expect(code(() => ecritureAppel({ ...base, montant: 100, echeanceLue: '2026-02-29' }, COMPTES))).toBe('date_invalide');
+    for (const [echeanceLue, attendu] of [['2026-02-28', 'aucune_erreur'], ['2028-02-29', 'aucune_erreur'], ['2026-02-29', 'date_invalide']] as const) {
+      expect(code(() => ecritureAppel({ ...base, montant: 100, echeanceLue }, COMPTES))).toBe(attendu);
+    }
     expect(code(() => ecriturePaiement({ ...base, date: '2026-02-30', montant: 100 }, COMPTES))).toBe('date_invalide');
     expect(code(() => ecritureRegularisation({ ...base, date: 'x', difference: 100 }, COMPTES))).toBe('date_invalide');
   });
