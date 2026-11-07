@@ -1,18 +1,11 @@
 import { useState, type KeyboardEvent } from 'react';
-import { z } from 'zod';
+import { ReponseTiers } from '../../../../../packages/contrat/src/domaines/tiers.js';
 import { e44 } from '../../../../../packages/textes/src/ecrans/e44.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { useLecture } from '../../donnees/lecture.js';
 const LIMITE = 50;
 const MAX_RECHERCHE = 50;
-const Tiers = z.object({
-  code: z.string(),
-  nom: z.string(),
-  type: z.enum(['client', 'fournisseur']),
-  email: z.string(),
-});
-const Reponse = z.object({ body: z.array(Tiers), decalage: z.number(), total: z.number() });
 type Filtre = 'tous' | 'client' | 'fournisseur';
 const ONGLETS: { id: Filtre; texte: string }[] = [
   { id: 'tous', texte: e44.onglets.tous },
@@ -34,7 +27,7 @@ export function Ecran() {
   const [filtre, setFiltre] = useState<Filtre>('tous');
   const [recherche, setRecherche] = useState('');
   const [decalage, setDecalage] = useState(0);
-  const lecture = useLecture(cheminTiers(filtre, recherche, decalage), Reponse);
+  const lecture = useLecture(cheminTiers(filtre, recherche, decalage), ReponseTiers);
   const choisir = (id: Filtre) => (setFiltre(id), setDecalage(0));
   function auClavier(e: KeyboardEvent, index: number) {
     const pas = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;

@@ -1,4 +1,4 @@
-import { listerExercices, type Exercice } from '../../../../../packages/contrat/src/domaines/plan.js';
+import { ReponseExercices, type Exercice } from '../../../../../packages/contrat/src/domaines/plan.js';
 import { n03 } from '../../../../../packages/textes/src/ecrans/n03.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Pastille } from '../../../../../packages/ui/src/composants/Pastille.js';
@@ -10,7 +10,7 @@ import { useLecture } from '../../donnees/lecture.js';
 type Reponse = { body: Exercice[]; decalage: number; total: number };
 
 // Schéma de réponse de GET /exercices, pris tel quel dans le contrat (jamais redéfini ici).
-const schema = listerExercices['~orpc'].outputSchema as unknown as SchemaLecture<Reponse>;
+const schema: SchemaLecture<Reponse> = ReponseExercices;
 
 /** Message selon le code d'erreur de la lecture. */
 function messageErreur(e: ErreurLecture | undefined): string {

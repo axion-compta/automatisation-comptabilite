@@ -12,6 +12,8 @@ export type Tiers = z.infer<typeof Tiers>;
 const enveloppe = <T extends z.ZodType>(corps: T) =>
   z.object({ body: z.array(corps), decalage: z.number().int().min(0), total: z.number().int().min(0) });
 
+export const ReponseTiers = enveloppe(Tiers);
+
 /** Liste des clients et fournisseurs, triés par code. Un code n'est jamais réutilisé. */
 export const listerTiers = oc
   .route({ method: 'GET', path: '/tiers', inputStructure: 'detailed', operationId: 'listerTiers' })
@@ -27,6 +29,6 @@ export const listerTiers = oc
         .optional(),
     }),
   )
-  .output(enveloppe(Tiers));
+  .output(ReponseTiers);
 
 export const tiers = { listerTiers };

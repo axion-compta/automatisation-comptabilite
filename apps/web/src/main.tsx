@@ -1,3 +1,7 @@
+// Les jetons passent en premier : les feuilles suivantes lisent leurs variables.
+import '../../../packages/ui/src/jetons.css';
+import '../../../packages/ui/src/composants/composants.css';
+import '../../../packages/ui/src/composants/tableau.css';
 import { RouterProvider } from '@tanstack/react-router';
 import { createRoot } from 'react-dom/client';
 import { ecransDecouverts } from './socle/ecrans.js';

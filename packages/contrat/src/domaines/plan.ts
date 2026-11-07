@@ -21,11 +21,14 @@ export type CompteDuPlan = z.infer<typeof CompteDuPlan>;
 const enveloppe = <T extends z.ZodType>(corps: T) =>
   z.object({ body: z.array(corps), decalage: z.number().int().min(0), total: z.number().int().min(0) });
 
+export const ReponseExercices = enveloppe(Exercice);
+export const ReponsePlan = enveloppe(CompteDuPlan);
+
 /** Liste des exercices, du plus récent au plus ancien. */
 export const listerExercices = oc
   .route({ method: 'GET', path: '/exercices', inputStructure: 'detailed', operationId: 'listerExercices' })
   .input(z.object({}))
-  .output(enveloppe(Exercice));
+  .output(ReponseExercices);
 
 /** Plan comptable d'un exercice avec le solde de la balance (débits moins crédits des écritures validées). */
 export const listerPlan = oc
@@ -44,6 +47,6 @@ export const listerPlan = oc
         .optional(),
     }),
   )
-  .output(enveloppe(CompteDuPlan));
+  .output(ReponsePlan);
 
 export const plan = { listerExercices, listerPlan };

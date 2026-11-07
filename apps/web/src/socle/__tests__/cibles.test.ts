@@ -20,6 +20,7 @@ describe('cibles tactiles (coque)', () => {
     '.menu-bureau a', '.barre-mobile nav a', '.barre-mobile nav button', '.barre-discuter', '.barre-plus a',
     '.coque-principal li > a', '.coque-principal td a', '.coque-principal button',
     '.coque-principal select', '.coque-principal input',
+    '[role="dialog"] input', '[role="dialog"] li > button',
   ])
     it(`${sel} utilise var(--cible-min)`, () => expect(aCibleMin(css, sel)).toBe(true));
   it('le détecteur refuse règle absente, incomplète, vide ou à valeur fixe', () => {
