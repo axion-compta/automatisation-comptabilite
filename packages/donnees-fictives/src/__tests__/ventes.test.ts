@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { genererVentes, serialiserVentes, type JeuVentes, type PieceVenteFictive } from '../ventes.js';
 
-const EMPREINTE = '4a37e3421ee0e508660ee6e71d3bf0dd9f9229bc4d1da79cb7262f6b0dc21ae3';
+const EMPREINTE = 'eb2ebebd934b00f5bfadb550784e7af33e1c81c15a851aa356d18d977d98efee';
 const jeu = genererVentes();
 const pleine = jeu.societes.find((s) => s.profil === 'pleine');
 if (!pleine) throw new Error('profil pleine manquant');

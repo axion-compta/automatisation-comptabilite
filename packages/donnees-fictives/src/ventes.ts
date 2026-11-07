@@ -67,7 +67,7 @@ const CLIENTS: ClientVenteFictif[] = [
   { code: 'CLI001', nom: 'Immobilière Marceau', nature: 'professionnel', siren: '987654324', statutVies: 'non_verifie', codePostal: '69001', creeLe: '2026-01-02', habitude: 'virement à 30 jours' },
   { code: 'CLI002', nom: 'Paul Marceau', nature: 'particulier', statutVies: 'non_verifie', codePostal: '69003', creeLe: '2026-01-03' },
   { code: 'CLI003', nom: 'Delmas Bâtiment', nature: 'professionnel', siren: '123456782', statutVies: 'invalide', codePostal: '38000', creeLe: '2026-01-04' },
-  { code: 'CLI004', nom: 'Atelier Perrin', nature: 'professionnel', siren: '552100554', statutVies: 'verifie', codePostal: '42000', creeLe: '2026-01-05' },
+  { code: 'CLI004', nom: 'Atelier Perrin', nature: 'professionnel', siren: '987654324', statutVies: 'verifie', codePostal: '42000', creeLe: '2026-01-05' },
 ];
 
 function jourPlus(date: string, n: number): string {
