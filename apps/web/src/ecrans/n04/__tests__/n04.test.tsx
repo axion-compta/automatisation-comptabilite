@@ -172,6 +172,14 @@ describe('N04', () => {
       demonter();
     }
   });
+  it('message-aucune-annee-creee', async () => {
+    tout([], vide);
+    await monter();
+    await attendre(() => texte(n04.etats.aucuneAnnee));
+    const affiche = document.body.textContent ?? '';
+    expect(affiche).toContain('encore créée');
+    expect(affiche).not.toContain('ouverte');
+  });
   it('etats-d-erreur', async () => {
     const cas: Array<[() => Promise<Response>, string]> = [
       [() => json({}, 403), n04.etats.acces],
