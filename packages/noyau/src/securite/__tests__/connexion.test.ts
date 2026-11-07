@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { exigerNiveau } from '../connexion.js';
+import { exigerNiveau, type Revendications } from '../connexion.js';
 import { ErreurSecurite } from '../types.js';
 
 const NOW = 5000000;
 const REG = { reauthMaxMs: 600000, attenteApresRecuperationMs: 900000 };
 const secondes = (ms: number) => Math.trunc(ms * 0.001);
-const mfa = (authTime?: number) => ({ acr: 'mfa', authTime });
+const mfa = (authTime?: number): Revendications => (authTime === undefined ? { acr: 'mfa' } : { acr: 'mfa', authTime });
 const refus = (raison: string) => ({ ok: false, raison });
 const code = (f: () => unknown) => {
   try { f(); } catch (e) { return e instanceof ErreurSecurite ? e.code : 'autre'; }
@@ -20,7 +20,7 @@ describe('securite/connexion', () => {
     expect(exigerNiveau(null as never, 'exporter_fec', NOW, REG)).toEqual(refus('non_authentifie'));
     for (const acr of [undefined, '', 'MFA', 'mfa ', 'pwd']) {
       for (const op of ['ordinaire', 'exporter_fec'] as const) {
-        expect(exigerNiveau({ acr, authTime: recent }, op, NOW, REG)).toEqual(refus('mfa_requis'));
+        expect(exigerNiveau((acr === undefined ? { authTime: recent } : { acr, authTime: recent }), op, NOW, REG)).toEqual(refus('mfa_requis'));
       }
     }
   });
