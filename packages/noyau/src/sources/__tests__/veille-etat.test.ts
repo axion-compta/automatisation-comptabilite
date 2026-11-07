@@ -1,22 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { enPeriodeRapprochee, ErreurEtatVeille, etatVeille, ficheEnRetard, modeDegrade, type Calendrier } from '../veille-etat.js';
-
-// Calendrier de test : seule arithmétique de date du dépôt pour ces règles. Nombres INVENTÉS repris de la spec.
 const cal: Calendrier = {
-  ajouterJours(date, n) {
-    const d = new Date(`${date}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() + n);
-    return d.toISOString().slice(0, 10);
-  },
+  ajouterJours: (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10),
 };
 const PERIODE = { debutMoisJour: '12-15', finMoisJour: '01-15' };
 const NORMAL = 8;
 const RAPPROCHE = 2;
-
 function etat(dernierBalayage: string | null, maintenant: string, extra: Record<string, unknown> = {}) {
   return etatVeille({ dernierBalayage, maintenant, maxJoursNormal: NORMAL, maxJoursRapproche: RAPPROCHE, periode: PERIODE, ...extra } as never, cal);
 }
-
 function code(f: () => unknown): string | undefined {
   try {
     f();
@@ -26,30 +18,23 @@ function code(f: () => unknown): string | undefined {
   }
   return undefined;
 }
-
 describe('etatVeille', () => {
   it('balayage-recent-ok', () => {
     expect(etat('2026-06-10', '2026-06-10')).toBe('ok');
     expect(etat('2026-06-10', '2026-06-12')).toBe('ok');
-    // égalité exacte à la limite = ok
     expect(etat('2026-06-01', '2026-06-09')).toBe('ok');
   });
-
   it('huit-jours-plus-un-alerte', () => {
     expect(etat('2026-06-01', '2026-06-10')).toBe('alerte');
     expect(etat('2026-06-01', '2026-07-01')).toBe('alerte');
     expect(etat(null, '2026-06-10')).toBe('alerte');
   });
-
   it('periode-rapprochee-plus-stricte', () => {
-    // même écart de trois jours : ok hors période, alerte en période
     expect(etat('2026-06-17', '2026-06-20')).toBe('ok');
     expect(etat('2026-12-17', '2026-12-20')).toBe('alerte');
-    // égalité exacte à la limite en période = ok
     expect(etat('2026-12-17', '2026-12-19')).toBe('ok');
     expect(etat(null, '2026-12-20')).toBe('alerte');
   });
-
   it('refuse-les-entrees-invalides', () => {
     for (const mauvais of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, -1, 1.5, '8' as unknown as number]) {
       expect(code(() => etat('2026-06-01', '2026-06-02', { maxJoursNormal: mauvais }))).toBe('nombre_invalide');
@@ -65,13 +50,11 @@ describe('etatVeille', () => {
     expect(code(() => etat('2026-06-01', '2026-06-02', { periode: { debutMoisJour: '13-01', finMoisJour: '01-15' } }))).toBe('periode_invalide');
   });
 });
-
 describe('enPeriodeRapprochee', () => {
   it('periode-qui-passe-le-31-decembre', () => {
     for (const d of ['2026-12-15', '2026-12-31', '2027-01-01', '2027-01-15']) expect(enPeriodeRapprochee(d, PERIODE)).toBe(true);
     for (const d of ['2026-12-14', '2027-01-16', '2026-06-15', '2026-07-01']) expect(enPeriodeRapprochee(d, PERIODE)).toBe(false);
   });
-
   it('periode-dans-la-meme-annee', () => {
     const p = { debutMoisJour: '03-10', finMoisJour: '04-20' };
     expect(enPeriodeRapprochee('2026-03-10', p)).toBe(true);
@@ -82,7 +65,6 @@ describe('enPeriodeRapprochee', () => {
     expect(enPeriodeRapprochee('2026-12-31', p)).toBe(false);
     expect(enPeriodeRapprochee('2026-05-01', { debutMoisJour: '05-01', finMoisJour: '05-01' })).toBe(true);
   });
-
   it('refuse-les-periodes-et-dates-invalides', () => {
     const ko = (debutMoisJour: string, finMoisJour: string) => code(() => enPeriodeRapprochee('2026-06-01', { debutMoisJour, finMoisJour }));
     expect(ko('13-01', '01-15')).toBe('periode_invalide');
@@ -106,25 +88,21 @@ describe('enPeriodeRapprochee', () => {
     expect(code(() => enPeriodeRapprochee(undefined as unknown as string, PERIODE))).toBe('date_invalide');
   });
 });
-
 describe('ficheEnRetard', () => {
   const base = { detecteeLe: '2026-06-01', ficheCreeeLe: null as string | null, maintenant: '2026-06-05', maxJours: 7 };
   const f = (o: Record<string, unknown>) => ficheEnRetard({ ...base, ...o } as never, cal);
-
   it('fiche-creee-a-temps', () => {
     expect(f({ ficheCreeeLe: '2026-06-02' })).toBe(false);
-    expect(f({ ficheCreeeLe: '2026-06-08', maintenant: '2026-07-30' })).toBe(false); // égalité à la limite
-    expect(f({ ficheCreeeLe: null, maintenant: '2026-06-08' })).toBe(false); // pas encore en retard, égalité
+    expect(f({ ficheCreeeLe: '2026-06-08', maintenant: '2026-07-30' })).toBe(false);
+    expect(f({ ficheCreeeLe: null, maintenant: '2026-06-08' })).toBe(false);
     expect(f({ ficheCreeeLe: '2026-06-01', maxJours: 0 })).toBe(false);
   });
-
   it('fiche-en-retard', () => {
     expect(f({ ficheCreeeLe: null, maintenant: '2026-06-09' })).toBe(true);
     expect(f({ ficheCreeeLe: '2026-06-09', maintenant: '2026-06-09' })).toBe(true);
     expect(f({ ficheCreeeLe: '2026-06-09', maintenant: '2026-08-01' })).toBe(true);
     expect(f({ ficheCreeeLe: null, maintenant: '2026-06-02', maxJours: 0 })).toBe(true);
   });
-
   it('refuse-les-entrees-invalides', () => {
     for (const mauvais of [Number.NaN, Number.POSITIVE_INFINITY, -1, 2.5]) {
       expect(code(() => f({ maxJours: mauvais }))).toBe('nombre_invalide');
@@ -137,7 +115,6 @@ describe('ficheEnRetard', () => {
     expect(code(() => f({ maintenant: '' }))).toBe('date_invalide');
   });
 });
-
 describe('modeDegrade', () => {
   it('veille-en-alerte-bloque-le-depot-et-pose-le-bandeau', () => {
     expect(modeDegrade({ etat: 'alerte', parametresPerimes: 0 })).toEqual({ depotAutomatiqueAutorise: false, bandeau: 'regles_possiblement_perimees' });
@@ -145,7 +122,6 @@ describe('modeDegrade', () => {
     expect(modeDegrade({ etat: 'alerte', parametresPerimes: 1 })).toEqual({ depotAutomatiqueAutorise: false, bandeau: 'regles_possiblement_perimees' });
     expect(modeDegrade({ etat: 'ok', parametresPerimes: 0 })).toEqual({ depotAutomatiqueAutorise: true, bandeau: null });
   });
-
   it('refuse-les-nombres-invalides', () => {
     for (const mauvais of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, '0' as unknown as number]) {
       expect(code(() => modeDegrade({ etat: 'ok', parametresPerimes: mauvais }))).toBe('nombre_invalide');
