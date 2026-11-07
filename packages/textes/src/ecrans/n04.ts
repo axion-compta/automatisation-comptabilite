@@ -11,7 +11,7 @@ export const n04 = {
     chargement: 'Chargement en cours…',
     videTitre: 'Aucun compte à afficher.',
     videDetail: 'Modifiez la classe ou la recherche pour élargir la liste.',
-    aucuneAnnee: 'Aucune année comptable n’est encore ouverte.',
+    aucuneAnnee: 'Aucune année comptable n’est encore créée.',
     reseau: 'Connexion impossible. Vérifiez votre réseau.',
     acces: 'Vous n’avez pas accès à cette page.',
     introuvable: 'Cette année comptable n’existe pas.',
