@@ -9,6 +9,7 @@ import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
+import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
 type Service = ReturnType<typeof creerService>;
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
@@ -43,8 +44,9 @@ export function creerRouteur(service: Service = creerService(), options: { abonn
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; securite?: OptionsSecurite } = {}): FastifyInstance {
   const app = Fastify();
+  brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, options));
   app.addContentTypeParser('*', (_req, _payload, done) => done(null, undefined));
   app.all('/*', async (request, reply) => {
