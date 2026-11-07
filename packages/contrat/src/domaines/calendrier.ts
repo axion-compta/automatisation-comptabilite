@@ -1,2 +1,1 @@
-/** Domaine du calendrier : vide, rempli par les fiches suivantes du lot 15. */
-export const calendrier = {};
+export const calendrier = {}; // domaine « calendrier » : vide, rempli par les fiches du lot 15

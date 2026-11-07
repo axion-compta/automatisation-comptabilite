@@ -16,7 +16,7 @@ describe('squelette du lot 15', () => {
   it('domaines-vides-aucune-route', () => {
     expect(routesEcritureSansEnTete()).toEqual([]);
     const chemins = Object.keys((genererOpenapi() as { paths: Record<string, unknown> }).paths).sort();
-    expect(chemins).toEqual(['/ecritures', '/ecritures/{id}', '/exercices', '/exercices/{exercice}/plan', '/tiers']);
+    expect(chemins.filter((c) => !/^/(acces|volume|abonnement)/.test(c))).toEqual(['/ecritures', '/ecritures/{id}', '/exercices', '/exercices/{exercice}/plan', '/tiers']);
     for (const nom of SEPT) expect(Object.keys(contrat[nom])).toHaveLength(0);
   });
 

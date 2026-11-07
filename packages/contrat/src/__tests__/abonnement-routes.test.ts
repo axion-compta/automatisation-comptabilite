@@ -64,7 +64,7 @@ describe('contrat abonnement', () => {
 
   it('cles-existantes-inchangees', () => {
     expect(Object.keys(contrat.ecritures).sort()).toEqual(['creer', 'lister', 'modifier']);
-    expect(Object.keys(contrat).sort()).toEqual(['abonnement', 'ecritures', 'plan', 'tiers']);
+    expect(Object.keys(contrat).sort()).toEqual(['abonnement', 'alertes', 'calendrier', 'ecritures', 'exports', 'notifications', 'plan', 'preferences', 'recherche', 'tableauDeBord', 'tiers']);
     const volume = { palier: { code: 'P1', nom_affiche: 'P' }, compris: 10, utilise: 1, prevision_fin_de_mois: 2, seuils_bps: [8000], alertes_bps: [], depasse: false, proposer_choix: false, comportement: 'continuer', palier_superieur: null };
     const acces = { etat: 'ACTIF', banniere: null, reprise: { pieces_traitees: 3 } };
     const ok = (schema: z.ZodType, v: unknown) => schema.safeParse(v).success;

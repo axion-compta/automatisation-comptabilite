@@ -1,7 +1,3 @@
 import type { HttpHandler } from 'msw';
-
-/** Handlers du domaine « alertes » : aucun pour l'instant. */
-export function creerHandlersAlertes(base: string, attendre: () => Promise<void>, options?: object): HttpHandler[] {
-  void [base, attendre, options];
-  return [];
-}
+// Handlers du domaine « alertes » : aucun pour l’instant.
+export const creerHandlersAlertes = (_base: string, _attendre: () => Promise<void>, _options?: object): HttpHandler[] => [];

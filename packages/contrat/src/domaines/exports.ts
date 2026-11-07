@@ -1,2 +1,1 @@
-/** Domaine des exports : vide, rempli par les fiches suivantes du lot 15. */
-export const exports = {};
+export const exports = {}; // domaine « exports » : vide, rempli par les fiches du lot 15

@@ -1,2 +1,1 @@
-/** Domaine de la recherche : vide, rempli par les fiches suivantes du lot 15. */
-export const recherche = {};
+export const recherche = {}; // domaine « recherche » : vide, rempli par les fiches du lot 15

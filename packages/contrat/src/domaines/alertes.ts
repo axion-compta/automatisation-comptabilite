@@ -1,2 +1,1 @@
-/** Domaine des alertes : vide, rempli par les fiches suivantes du lot 15. */
-export const alertes = {};
+export const alertes = {}; // domaine « alertes » : vide, rempli par les fiches du lot 15
