@@ -4,68 +4,23 @@ import type { Centimes } from '../argent/index.js';
 
 export const TYPES_PIECE_VENTE = ['facture', 'avoir', 'facture_acompte'] as const;
 export type TypePieceVente = (typeof TYPES_PIECE_VENTE)[number];
-
 export const ORIGINES_VENTE = ['depot', 'email', 'import_fichier', 'plateforme_agreee'] as const;
 export type OrigineVente = (typeof ORIGINES_VENTE)[number];
-
 export const STATUTS_VENTE = ['lue', 'a_verifier', 'proposee', 'validee', 'doublon', 'rejetee'] as const;
 export type StatutVente = (typeof STATUTS_VENTE)[number];
-
 export const NATURES_LIGNE = ['bien', 'service', 'a_confirmer'] as const;
 export type NatureLigne = (typeof NATURES_LIGNE)[number];
-
-export const CODES_TVA_VENTE = [
-  'COLLECTEE',
-  'FRANCHISE',
-  'EXONEREE_A_VERIFIER',
-  'AUTOLIQUIDATION_CLIENT',
-  'A_VERIFIER',
-] as const;
+export const CODES_TVA_VENTE = ['COLLECTEE', 'FRANCHISE', 'EXONEREE_A_VERIFIER', 'AUTOLIQUIDATION_CLIENT', 'A_VERIFIER'] as const;
 export type CodeTvaVente = (typeof CODES_TVA_VENTE)[number];
-
 export const NATURES_CLIENT = ['professionnel', 'particulier', 'a_confirmer'] as const;
 export type NatureClient = (typeof NATURES_CLIENT)[number];
-
 export const STATUTS_VIES = ['verifie', 'non_verifie', 'invalide'] as const;
 export type StatutVies = (typeof STATUTS_VIES)[number];
-
 export const CAS_SCHEMA = ['A', 'B', 'C', 'D'] as const;
 export type CasSchema = (typeof CAS_SCHEMA)[number];
-
-export const ETATS_AFFICHES = [
-  'a_relire',
-  'proposee',
-  'a_encaisser',
-  'payee_en_partie',
-  'en_retard',
-  'payee',
-  'en_litige',
-  'doublon',
-] as const;
+export const ETATS_AFFICHES = ['a_relire', 'proposee', 'a_encaisser', 'payee_en_partie', 'en_retard', 'payee', 'en_litige', 'doublon'] as const;
 export type EtatAffiche = (typeof ETATS_AFFICHES)[number];
-
-export const ANOMALIES = [
-  'A1',
-  'A2',
-  'A3',
-  'A4',
-  'A5',
-  'A6',
-  'A7',
-  'A8',
-  'A9',
-  'A10',
-  'A11',
-  'A12',
-  'A13',
-  'A14',
-  'A15',
-  'A16',
-  'A17',
-  'A18',
-  'A19',
-  'A20',
-] as const;
+export const ANOMALIES = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', 'A11', 'A12', 'A13', 'A14', 'A15', 'A16', 'A17', 'A18', 'A19', 'A20'] as const;
 export type Anomalie = (typeof ANOMALIES)[number];
 
 export interface PieceVente {
@@ -175,8 +130,8 @@ export function ajouterJours(date: string, n: number): string {
   if (Number.isNaN(annee) || annee < 0 || annee > 9999) {
     throw new ErreurVente('decalage_invalide', 'Décalage en jours hors limites.');
   }
-  const deux = (x: number): string => String(x).padStart(2, '0');
-  return `${String(annee).padStart(4, '0')}-${deux(d.getUTCMonth() + 1)}-${deux(d.getUTCDate())}`;
+  const d2 = (x: number): string => String(x).padStart(2, '0');
+  return `${String(annee).padStart(4, '0')}-${d2(d.getUTCMonth() + 1)}-${d2(d.getUTCDate())}`;
 }
 
 export function comparerDates(a: string, b: string): -1 | 0 | 1 {
