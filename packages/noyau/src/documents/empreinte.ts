@@ -1,17 +1,14 @@
-import { createHash } from "node:crypto";
+import { createHash } from 'node:crypto';
 
 export type OctetsOuTexte = Uint8Array | string;
 
-export type CodeErreurDocument =
-  | "nom_invalide"
-  | "nom_en_double"
-  | "manifeste_illisible";
+export type CodeErreurDocument = 'nom_invalide' | 'nom_en_double' | 'manifeste_illisible';
 
 export class ErreurDocument extends Error {
   readonly code: CodeErreurDocument;
   constructor(code: CodeErreurDocument, message: string) {
     super(message);
-    this.name = "ErreurDocument";
+    this.name = 'ErreurDocument';
     this.code = code;
   }
 }
@@ -36,11 +33,11 @@ export interface ResultatVerification {
 const LIGNE = /^([0-9a-f]{64}) {2}(.+)$/;
 
 export function empreinteSha256(octets: OctetsOuTexte): string {
-  return createHash("sha256").update(octets).digest("hex");
+  return createHash('sha256').update(octets).digest('hex');
 }
 
 function nomValide(nom: string): boolean {
-  return nom !== "" && !/[/\\\n\r]/.test(nom);
+  return nom !== '' && !/[/\\\n\r]/.test(nom);
 }
 
 function comparer(a: string, b: string): number {
@@ -52,10 +49,8 @@ function lignesDe(fichiers: readonly FichierDocument[]): LigneManifeste[] {
   const vus = new Set<string>();
   const lignes: LigneManifeste[] = [];
   for (const f of fichiers) {
-    if (!nomValide(f.nom))
-      throw new ErreurDocument("nom_invalide", "Nom de fichier invalide.");
-    if (vus.has(f.nom))
-      throw new ErreurDocument("nom_en_double", "Nom de fichier en double.");
+    if (!nomValide(f.nom)) throw new ErreurDocument('nom_invalide', 'Nom de fichier invalide.');
+    if (vus.has(f.nom)) throw new ErreurDocument('nom_en_double', 'Nom de fichier en double.');
     vus.add(f.nom);
     lignes.push({ nom: f.nom, sha256: empreinteSha256(f.octets) });
   }
@@ -65,28 +60,20 @@ function lignesDe(fichiers: readonly FichierDocument[]): LigneManifeste[] {
 export function manifeste(fichiers: readonly FichierDocument[]): string {
   return lignesDe(fichiers)
     .map((l) => `${l.sha256}  ${l.nom}\n`)
-    .join("");
+    .join('');
 }
 
 export function lireManifeste(texte: string): LigneManifeste[] {
-  if (texte === "") return [];
-  const lignes = texte.split("\n");
-  if (lignes[lignes.length - 1] === "") lignes.pop();
+  if (texte === '') return [];
+  const lignes = texte.split('\n');
+  if (lignes[lignes.length - 1] === '') lignes.pop();
   const vus = new Set<string>();
   return lignes.map((ligne) => {
     const m = LIGNE.exec(ligne);
     const nom = m?.[2];
     const sha256 = m?.[1];
-    if (
-      nom === undefined ||
-      sha256 === undefined ||
-      !nomValide(nom) ||
-      vus.has(nom)
-    ) {
-      throw new ErreurDocument(
-        "manifeste_illisible",
-        "Ligne de manifeste illisible.",
-      );
+    if (nom === undefined || sha256 === undefined || !nomValide(nom) || vus.has(nom)) {
+      throw new ErreurDocument('manifeste_illisible', 'Ligne de manifeste illisible.');
     }
     vus.add(nom);
     return { nom, sha256 };
@@ -99,12 +86,8 @@ export function verifierManifeste(
 ): ResultatVerification {
   const attendu = new Map(lireManifeste(texte).map((l) => [l.nom, l.sha256]));
   const recalcule = new Map(lignesDe(fichiers).map((l) => [l.nom, l.sha256]));
-  const manquants = [...attendu.keys()]
-    .filter((n) => !recalcule.has(n))
-    .sort(comparer);
-  const enTrop = [...recalcule.keys()]
-    .filter((n) => !attendu.has(n))
-    .sort(comparer);
+  const manquants = [...attendu.keys()].filter((n) => !recalcule.has(n)).sort(comparer);
+  const enTrop = [...recalcule.keys()].filter((n) => !attendu.has(n)).sort(comparer);
   const modifies = [...recalcule.entries()]
     .filter(([n, h]) => attendu.has(n) && attendu.get(n) !== h)
     .map(([n]) => n)
