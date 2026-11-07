@@ -37,6 +37,10 @@ export function creerModelePasserelle(config: ConfigPasserelle, deps: Dependance
     throw new ErreurPiece('delai_invalide', 'Le délai maximal doit être un nombre positif.');
   }
 
+  if (!entierPositifOuNul(config.microCentimesParCaractere)) {
+    throw new ErreurPiece('cout_invalide', 'Le coût par caractère doit être un entier sûr positif ou nul.');
+  }
+
   async function appeler(route: string, entree: EntreeModele): Promise<{ sortie: string; coutMicroCentimes: number }> {
     const arret = new AbortController();
     const minuteur = setTimeout(() => arret.abort(), config.delaiMs);

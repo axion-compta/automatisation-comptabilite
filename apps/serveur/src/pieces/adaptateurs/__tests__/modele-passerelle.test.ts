@@ -86,6 +86,15 @@ describe('modele-passerelle', () => {
     expect(tout).not.toContain('Dupont');
     expect(tout).not.toContain(TEXTE);
     expect(tout).not.toContain(config.jeton);
+    for (const mot of (TEXTE + " " + entree.invite).split(/\s+/)) expect(tout).not.toContain(mot);
+    for (const l of lignes) expect(l).toMatch(/^passerelle: échec rang [12] \((Error|AbortError|inconnu)\)$/);
+  });
+
+  it('cout-par-caractere-valide', () => {
+    const faux = serveur({});
+    const cree = (v: number) => () => creerModelePasserelle({ ...config, microCentimesParCaractere: v }, { fetch: faux.fetchFaux, journal: () => {} });
+    expect(cree(0)).not.toThrow();
+    for (const v of [1.5, -1, Number.NaN, Number.POSITIVE_INFINITY]) expect(cree(v)).toThrow(ErreurPiece);
   });
 
   it('route-hors-liste-refusee', () => {
