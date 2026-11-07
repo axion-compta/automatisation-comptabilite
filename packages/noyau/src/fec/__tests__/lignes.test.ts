@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { centimes } from '../../argent/index.js';
 import type { Ecriture, StatutEcriture } from '../../ecritures/modele.js';
 import { ErreurFec, type OptionsFec } from '../format.js';
-import { type ColonneFec, type ContexteFec, lignesFec, nomFichierFec } from '../lignes.js';
+import { type ChampFec, type ColonneFec, type ContexteFec, lignesFec, nomFichierFec } from '../lignes.js';
 
 const options: OptionsFec = { separateur: '|', finDeLigne: '\n', longueurMaxLibelle: 40 };
 
@@ -265,5 +265,84 @@ describe('lignes du FEC', () => {
     expect(code(() => nomFichierFec({ ...base, dateCloture: '2026-02-30', travail: false }))).toBe(
       'date_invalide',
     );
+  });
+
+  describe('pièce, lettrage et tiers', () => {
+    const champs = (liste: ChampFec[]): ColonneFec[] => liste.map((champ) => ({ champ, entete: champ }));
+    const cols = champs(['compAuxLib', 'pieceRef', 'pieceDate', 'ecritureLet', 'dateLet']);
+    const avecTiers = (): Ecriture => {
+      const e = ecr('b', 'AC-1', 'AC', 'valide');
+      const [l1, l2] = e.lignes as [Ecriture['lignes'][number], Ecriture['lignes'][number]];
+      return { ...e, lignes: [l1, { ...l2, auxiliaire: 'F1' }] };
+    };
+
+    it('piece-ref-et-date-de-la-piece', () => {
+      const ctx: ContexteFec = { ...contexte, pieces: { b: { ref: 'FA-0042', date: '2026-01-10' } } };
+      const r = lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], ctx, cols, options);
+      expect(r.lignes[0]).toBe('|FA-0042|20260110||\n');
+      expect(r.lignes[1]).toBe('|FA-0042|20260110||\n');
+      const mauvaise = { ...contexte, pieces: { b: { ref: 'X', date: '2026-02-30' } } };
+      expect(code(() => lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], mauvaise, cols, options))).toBe(
+        'date_invalide',
+      );
+    });
+
+    it('sans-piece-repli-inchange', () => {
+      const e = ecr('b', 'AC-1', 'AC', 'valide');
+      const attendu = '|b|20260115||\n';
+      expect(lignesFec([e], contexte, cols, options).lignes[0]).toBe(attendu);
+      expect(lignesFec([e], { ...contexte, pieces: {} }, cols, options).lignes[0]).toBe(attendu);
+      const autre = { ...contexte, pieces: { zz: { ref: 'R', date: '2026-01-01' } } };
+      expect(lignesFec([e], autre, cols, options).lignes[0]).toBe(attendu);
+    });
+
+    it('lettrage-au-moment-de-la-production', () => {
+      const ctx: ContexteFec = { ...contexte, lettrages: { 'b#1': { code: 'AA', date: '2026-02-05' } } };
+      const r = lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], ctx, cols, options);
+      expect(r.lignes[1]).toBe('|b|20260115|AA|20260205\n');
+      // index hors bornes ou écriture brouillon : ignorés
+      const hors: ContexteFec = {
+        ...contexte,
+        lettrages: { 'b#2': { code: 'ZZ', date: '2026-02-05' }, 'b#-1': { code: 'ZZ', date: '2026-02-05' }, 'd#0': { code: 'ZZ', date: '2026-02-05' } },
+      };
+      const brouillon = ecr('d', 'AC-9', 'AC', 'brouillon');
+      const rh = lignesFec([ecr('b', 'AC-1', 'AC', 'valide'), brouillon], hors, cols, options);
+      expect(rh.lignes).toEqual(['|b|20260115||\n', '|b|20260115||\n']);
+      // date de lettrage mal formée ; code contenant le séparateur
+      const mal = { ...contexte, lettrages: { 'b#0': { code: 'AA', date: 'NaN' } } };
+      expect(code(() => lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], mal, cols, options))).toBe('date_invalide');
+      const sep = { ...contexte, lettrages: { 'b#0': { code: 'A|A', date: '2026-02-05' } } };
+      expect(code(() => lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], sep, cols, options))).toBe('valeur_invalide');
+    });
+
+    it('ligne-non-lettree-vide', () => {
+      const ctx: ContexteFec = { ...contexte, lettrages: { 'b#0': { code: 'AA', date: '2026-02-05' } } };
+      const r = lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], ctx, cols, options);
+      expect(r.lignes[0]).toBe('|b|20260115|AA|20260205\n');
+      expect(r.lignes[1]).toBe('|b|20260115||\n');
+    });
+
+    it('nom-du-tiers-prioritaire', () => {
+      const c = champs(['compAuxLib']);
+      const ctx: ContexteFec = {
+        ...contexte,
+        libellesComptes: { ...contexte.libellesComptes, F1: 'Compte repli' },
+        libellesTiers: { F1: 'Tiers fictif SARL' },
+      };
+      expect(lignesFec([avecTiers()], ctx, c, options).lignes[1]).toBe('Tiers fictif SARL\n');
+      const sansTiers = { ...ctx, libellesTiers: {} };
+      expect(lignesFec([avecTiers()], sansTiers, c, options).lignes[1]).toBe('Compte repli\n');
+      expect(lignesFec([avecTiers()], { ...sansTiers, libellesComptes: {} }, c, options).lignes[1]).toBe('F1\n');
+      expect(lignesFec([avecTiers()], ctx, c, options).lignes[0]).toBe('\n');
+    });
+
+    it('piece-ref-vide-refusee', () => {
+      for (const ref of ['', ' ', '   ']) {
+        const ctx: ContexteFec = { ...contexte, pieces: { b: { ref, date: '2026-01-10' } } };
+        expect(code(() => lignesFec([ecr('b', 'AC-1', 'AC', 'valide')], ctx, cols, options))).toBe(
+          'valeur_invalide',
+        );
+      }
+    });
   });
 });
