@@ -50,6 +50,9 @@ describe('cession d un bien meuble', () => {
     expect(proposerEcritureCession(entree({ parametre: param('valide', null) }))).toEqual({ etat: 'refuse', code: 'parametre_non_valide' });
     // le paramètre passe avant l'historique
     expect(proposerEcritureCession(entree({ parametre: param('a_verifier'), tvaAchatDeduite: null }))).toEqual({ etat: 'refuse', code: 'parametre_non_valide' });
+    // un taux valide mais nul ou négatif donne une écriture invalide : verifierEcriture la refuse
+    expect(() => proposerEcritureCession(entree({ parametre: param('valide', '0') }))).toThrowError(expect.objectContaining({ code: 'ligne_nulle' }));
+    expect(() => proposerEcritureCession(entree({ parametre: param('valide', '-2000') }))).toThrowError(expect.objectContaining({ code: 'montant_negatif' }));
   });
 
   it('historique-absent-question', () => {
