@@ -26,6 +26,7 @@ export type CodeErreurLettrage =
   | 'comptes_differents'
   | 'deja_lettree'
   | 'moins_de_deux_lignes'
+  | 'ligne_en_double'
   | 'code_invalide';
 
 export class ErreurLettrage extends Error {
@@ -41,11 +42,15 @@ const FORME_CODE = /^[A-Z]+$/;
 
 /** Lie des lignes d'un même compte (et même auxiliaire) sous un code ; ne modifie aucune ligne. */
 export function lettrer(lignes: readonly LigneALettrer[], code: string): ResultatLettrage {
-  if (lignes.length < 2) {
+  const identifiants = new Set(lignes.map((l) => l.id));
+  if (identifiants.size < 2) {
     throw new ErreurLettrage('moins_de_deux_lignes', 'Un lettrage demande au moins deux lignes.');
   }
   if (!FORME_CODE.test(code)) {
     throw new ErreurLettrage('code_invalide', 'Le code de lettrage est composé de lettres A à Z.');
+  }
+  if (identifiants.size !== lignes.length) {
+    throw new ErreurLettrage('ligne_en_double', 'La même ligne est donnée plusieurs fois.');
   }
   const premiere = lignes[0];
   if (premiere === undefined) {
