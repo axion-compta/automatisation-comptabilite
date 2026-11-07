@@ -25,6 +25,8 @@ describe('plan par étapes', () => {
     const plan = creerPlan(trois(), MAX);
     expect(plan.etapes.every((p) => p.etat === 'proposee' && p.cleApplication === undefined)).toBe(true);
     expect(etatDuPlan(plan)).toEqual({ appliquees: 0, annulees: 0, restantes: 3 });
+    const deja = appliquerPlan(plan, ctx()).plan.etapes[0] as Proposition;
+    expect(code(() => creerPlan([deja], MAX))).toBe('parametre_invalide');
   });
   it('trois-etapes-appliquees', () => {
     const r = appliquerPlan(creerPlan(trois(), MAX), ctx());
@@ -59,6 +61,9 @@ describe('plan par étapes', () => {
     expect(appliquerPlan(premier.plan, ctx({ cle: 'geste_b' })).arretee).toEqual({ rang: 1, code: 'parametre_invalide' });
     const sans2 = appliquerPlan(annulerEtape(premier.plan, 2), ctx());
     expect(sans2.appliquees).toEqual([]);
+    expect(sans2.arretee).toBeUndefined();
+    expect(sans2.plan.etapes.map((p) => p.etat)).toEqual(['appliquee', 'annulee', 'appliquee']);
+    expect(code(() => appliquerPlan(creerPlan(trois(), MAX), ctx({ cle: '' })))).toBe('parametre_invalide');
   });
   it('plan-vide-refuse', () => {
     expect(code(() => creerPlan([], MAX))).toBe('parametre_invalide');

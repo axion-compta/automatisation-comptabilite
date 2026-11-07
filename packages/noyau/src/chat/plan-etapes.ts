@@ -16,11 +16,13 @@ export function creerPlan(propositions: readonly Proposition[], maxEtapes: numbe
   if (!Number.isSafeInteger(maxEtapes) || maxEtapes < 1) throw invalide();
   if (propositions.length < 1 || propositions.length > maxEtapes) throw invalide();
   if (new Set(propositions.map((p) => p.id)).size !== propositions.length) throw invalide();
+  if (propositions.some((p) => p.etat !== 'proposee')) throw invalide();
   return { etapes: [...propositions] };
 }
 
 /** Rang à partir de 1. Les étapes annulées sont sautées ; la première erreur arrête la suite. */
 export function appliquerPlan(plan: Plan, c: ContexteApplication): ResultatPlan {
+  if (c.cle === '') throw invalide();
   const etapes = [...plan.etapes];
   const appliquees: string[] = [];
   for (const [i, p] of etapes.entries()) {
