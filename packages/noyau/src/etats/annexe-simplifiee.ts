@@ -35,6 +35,9 @@ export interface ResultatDispense {
   aVerifier: boolean;
 }
 
+/** Règle R10 : l'annexe est due quand au moins ce nombre de critères sont dépassés. */
+const CRITERES_POUR_ANNEXE = 2;
+
 function entierSurNonNegatif(valeur: number): void {
   if (!Number.isSafeInteger(valeur) || valeur < 0) {
     throw new ErreurAnnexe('entree_invalide', 'Valeur entière positive ou nulle attendue.');
@@ -57,7 +60,8 @@ export function dispenseAnnexe(societe: SocieteAnnexe, seuils: SeuilsAnnexe): Re
   if (societe.chiffreAffaires > seuils.chiffreAffaires) depasses.push('chiffre_affaires');
   if (societe.effectif > seuils.effectif) depasses.push('effectif');
   if (societe.totalBilan > seuils.totalBilan) depasses.push('total_bilan');
-  return { dispense: depasses.length < 2, depasses, aVerifier: seuils.statut !== 'valide' };
+  const dispense = depasses.length < CRITERES_POUR_ANNEXE;
+  return { dispense, depasses, aVerifier: seuils.statut !== 'valide' };
 }
 
 export interface MillesimeAnnexe {
