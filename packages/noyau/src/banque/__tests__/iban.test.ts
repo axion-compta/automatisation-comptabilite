@@ -23,7 +23,8 @@ describe('iban', () => {
   it('normalisation-espaces-et-casse', () => {
     expect(normaliserIban(' fr76-1234 5678\t')).toBe('FR761234' + '5678');
     expect(normaliserIban('')).toBe('');
-    for (const x of ['é1', 'AB 12', 'AB.12', 'AB_12']) expect(code(() => normaliserIban(x))).toBe('iban_invalide');
+    expect(normaliserIban('FR76\u00A01234\u202F5678')).toBe('FR7612345678');
+    for (const x of ['é1', 'AB:12', 'AB.12', 'AB_12']) expect(code(() => normaliserIban(x))).toBe('iban_invalide');
   });
   it('cle-juste-acceptee', () => {
     expect(cleIbanValide(bon)).toBe(true);

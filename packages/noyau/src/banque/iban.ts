@@ -8,7 +8,7 @@ export class ErreurIban extends Error {
 }
 
 export function normaliserIban(texte: string): string {
-  const s = texte.replace(/[ \t-]/g, '').toUpperCase();
+  const s = texte.replace(/[ \t\u00A0\u202F-]/g, '').toUpperCase();
   if (!/^[A-Z0-9]*$/.test(s)) throw new ErreurIban('iban_invalide');
   return s;
 }
