@@ -3,12 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { genererCompta } from '../compta.js';
 import { genererDeclarations, serialiserDeclarations, type JeuDeclarations } from '../declarations.js';
 
-const EMPREINTE = 'f66785be64a9434d6879e37df6b431f08b76e9e1bc104318127b26edb3a95b03';
+const EMPREINTE = 'd848f92b37d5764980ae4ed9f00ce1a5a4e8bf2899135d5663847777eb1663bb';
 const sha = (j: JeuDeclarations): string => createHash('sha256').update(serialiserDeclarations(j)).digest('hex');
 
 describe('déclarations fictives', () => {
   const jeu = genererDeclarations();
-
   it('meme-graine-meme-empreinte', () => {
     expect(sha(jeu)).toBe(EMPREINTE);
     expect(sha(genererDeclarations())).toBe(sha(jeu));
@@ -17,18 +16,32 @@ describe('déclarations fictives', () => {
       expect(sha(genererDeclarations(g))).toBe(sha(genererDeclarations(g)));
       expect(sha(genererDeclarations(g))).not.toBe(sha(jeu));
     }
-    const profond = JSON.parse(serialiserDeclarations(jeu)) as unknown;
-    expect(JSON.stringify(profond)).toBe(JSON.stringify(JSON.parse(serialiserDeclarations(jeu))));
-    const cles = Object.keys(JSON.parse(serialiserDeclarations(jeu)) as object);
-    expect(cles).toEqual([...cles].sort());
+    const triee = (v: unknown): boolean =>
+      Array.isArray(v) ? v.every(triee) : v !== null && typeof v === 'object' ? Object.keys(v).join() === Object.keys(v).sort().join() && Object.values(v).every(triee) : true;
+    expect(triee(JSON.parse(serialiserDeclarations(jeu)))).toBe(true);
+    const inverse = (o: object): object => Object.fromEntries(Object.entries(o).reverse());
+    const melange = { ...inverse(jeu), declarations: jeu.declarations.map((d) => ({ ...inverse(d), cases: d.cases.map(inverse) })) };
+    expect(serialiserDeclarations(melange as JeuDeclarations)).toBe(serialiserDeclarations(jeu));
   });
-
+  it('graine-non-entiere-refusee', () => {
+    for (const g of [NaN, Infinity, 1.5]) expect(() => genererDeclarations(g)).toThrow(RangeError);
+  });
   it('sources-existent-dans-le-jeu-compta', () => {
-    for (const g of [undefined, 0, -5]) {
+    for (const g of [undefined, 0, -5, 2]) {
       const d = g === undefined ? jeu : genererDeclarations(g);
       const compta = (g === undefined ? genererCompta() : genererCompta(g)).societes.find((s) => s.profil === 'pleine');
       const sources = d.declarations.flatMap((x) => x.cases.flatMap((c) => c.sources));
       expect(sources.length).toBeGreaterThan(0);
+      for (const x of d.declarations) {
+        const per = d.periodesTva.find((q) => q.id === x.periodeId);
+        for (const c of x.cases) {
+          expect(new Set(c.sources.map((s) => `${s.ecritureId}:${s.ligneIndex}`)).size).toBe(c.sources.length);
+          for (const s of c.sources) {
+            const date = compta?.ecritures.find((e) => e.id === s.ecritureId)?.date ?? '';
+            expect(date >= (per?.debut ?? '') && date <= (per?.fin ?? '')).toBe(true);
+          }
+        }
+      }
       for (const s of sources) {
         const e = compta?.ecritures.find((x) => x.id === s.ecritureId);
         expect(e).toBeDefined();
@@ -37,7 +50,6 @@ describe('déclarations fictives', () => {
       }
     }
   });
-
   it('montant-case-egal-somme-sources', () => {
     const compta = genererCompta().societes.find((s) => s.profil === 'pleine');
     expect(jeu.declarations.length).toBeGreaterThan(0);
@@ -53,7 +65,6 @@ describe('déclarations fictives', () => {
       }
     }
   });
-
   it('une-estimation-non-calculee-sans-montant', () => {
     const non = jeu.estimations.filter((e) => e.etat === 'non_calculee');
     expect(non).toHaveLength(1);
@@ -65,13 +76,11 @@ describe('déclarations fictives', () => {
     expect(jeu.periodesTva.map((p) => p.statut).sort()).toEqual(['deposee_par_client', 'ouverte', 'validee']);
     expect(jeu.fec.map((f) => f.statut)).toEqual(['travail', 'remplace', 'definitif']);
   });
-
   it('profil-vide-listes-vides', () => {
     const v = genererDeclarations(undefined, 'vide');
     expect(v).toEqual({ version: 1, periodesTva: [], declarations: [], estimations: [], fec: [], traces: [], echeances: [] });
     expect(genererDeclarations(0, 'vide')).toEqual(v);
   });
-
   it('aucun-mot-interdit', () => {
     const mots = [['con', 'forme'], ['sans ', 'erreur'], ['garan', 'ti'], ['juri', 'ste'], ['P', 'DP']].map((p) => p.join(''));
     const texte = serialiserDeclarations(jeu).toLowerCase();
@@ -79,7 +88,6 @@ describe('déclarations fictives', () => {
     expect(texte).not.toMatch(/[a-z]{2}\d{2}[ \d]{10,}/i);
     expect(texte).not.toMatch(/@(?!exemple\.fr)/);
   });
-
   it('noms-fec-fictifs', () => {
     expect(jeu.fec.length).toBeGreaterThan(0);
     for (const f of jeu.fec) {

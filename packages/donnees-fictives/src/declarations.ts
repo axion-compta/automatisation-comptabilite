@@ -95,25 +95,22 @@ const SIREN_FICTIF = '123456782';
 const VALIDEUR = 'Camille Fictif';
 const PREPARATEUR = 'Assistant fictif';
 const CODES_CASES = ['X01', 'X02', 'X03'];
-
 function hex64(alea: () => number): string {
   let s = '';
   while (s.length < 64) s += Math.floor(alea() * 16).toString(16);
   return s;
 }
-
 // Montant d'une ligne : débit + crédit (l'un des deux est nul dans le jeu comptable).
 function montantLigne(e: EcritureCompta, ligneIndex: number): number {
   const l = e.lignes[ligneIndex];
   return l ? l.debitCentimes + l.creditCentimes : 0;
 }
-
 function vide(): JeuDeclarations {
   return { version: 1, periodesTva: [], declarations: [], estimations: [], fec: [], traces: [], echeances: [] };
 }
-
 export function genererDeclarations(graine: number = GRAINE, profil: Profil = 'pleine'): JeuDeclarations {
   if (profil === 'vide') return vide();
+  if (!Number.isSafeInteger(graine)) throw new RangeError('graine entière attendue');
   const pleine = genererCompta(graine).societes.find((s) => s.profil === 'pleine');
   const validees = (pleine?.ecritures ?? []).filter((e) => e.statut === 'validee');
   const alea = creerAlea(graine);
@@ -127,12 +124,17 @@ export function genererDeclarations(graine: number = GRAINE, profil: Profil = 'p
     if (p.statut === 'ouverte') continue;
     const cases: CaseDeclaration[] = CODES_CASES.map((code, i) => {
       const sources: SourceCase[] = [];
-      for (let k = 0; k < 2; k++) {
-        const e = validees[Math.floor(alea() * validees.length)];
-        if (e) sources.push({ ecritureId: e.id, ligneIndex: Math.floor(alea() * e.lignes.length) });
+      const choix = [validees.filter((e) => e.date >= p.debut && e.date <= p.fin), validees.filter((e) => e.date.startsWith(p.fin.slice(0, 4)))].find((l) => l.length > 0) ?? validees;
+      for (let k = 0, essais = 0; k < 2 && essais < 50; essais++) {
+        const e = choix[Math.floor(alea() * choix.length)];
+        if (!e) break;
+        const ligneIndex = Math.floor(alea() * e.lignes.length);
+        if (sources.some((s) => s.ecritureId === e.id && s.ligneIndex === ligneIndex)) continue;
+        sources.push({ ecritureId: e.id, ligneIndex });
+        k++;
       }
       const montant = sources.reduce((t, s) => t + montantLigne(validees.find((e) => e.id === s.ecritureId) as EcritureCompta, s.ligneIndex), 0);
-      return { code, montantCentimes: montant, baseCentimes: i === 2 ? null : montant * 5, sources };
+      return { code, montantCentimes: montant, baseCentimes: i === 2 ? null : montant * 7 + 3, sources };
     });
     const validee = p.statut === 'validee';
     declarations.push({
@@ -175,7 +177,6 @@ export function genererDeclarations(graine: number = GRAINE, profil: Profil = 'p
   ];
   return { version: 1, periodesTva: periodes, declarations, estimations, fec, traces, echeances };
 }
-
 function trier(valeur: unknown): unknown {
   if (Array.isArray(valeur)) return valeur.map(trier);
   if (valeur !== null && typeof valeur === 'object') {
@@ -186,7 +187,6 @@ function trier(valeur: unknown): unknown {
   }
   return valeur;
 }
-
 // JSON stable : clés triées, deux espaces, fin de ligne.
 export function serialiserDeclarations(jeu: JeuDeclarations): string {
   return `${JSON.stringify(trier(jeu), null, 2)}\n`;
