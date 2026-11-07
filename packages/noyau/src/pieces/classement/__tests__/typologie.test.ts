@@ -17,6 +17,10 @@ describe('typologie', () => {
     expect(confirmerType('facture', ind('Facture F-0001', { ttc: 12000, ht: 10000 }))).toEqual({ type: 'facture' });
     expect(confirmerType('avoir', ind('Avoir A-1', { ttc: -100 }))).toEqual({ type: 'avoir' });
     expect(MOTS_CLES_TYPES.version).toBe(1);
+    for (const t of ['Facture F-1 N° de commande 123', 'Invoice 12 - please quote this number', 'Facture hôtel - booking ref 9', 'Facture abonnement contrat n° 4']) {
+      expect(typeParRegles(ind(t))).toBeNull();
+      expect(confirmerType('facture', ind(t))).toEqual({ type: 'facture' });
+    }
   });
   it('avoir-par-mot-cle', () => {
     expect(typeParRegles(ind('AVOIR n° 12'))).toBe('avoir');
@@ -43,7 +47,7 @@ describe('typologie', () => {
     expect(typeParRegles(ind('Bon de commande 77'))).toBe('non_piece');
     expect(typeParRegles(ind('Purchase order 77'))).toBe('non_piece');
     expect(confirmerType('non_piece', ind('Bon de commande 77'))).toEqual({ type: 'non_piece', motifNonPiece: 'commande' });
-    for (const [t, m] of [['Devis 5', 'devis'], ['Quotation', 'devis'], ['Contrat', 'contrat'], ['Reservation', 'reservation'], ['Rappel', 'rappel']] as const) {
+    for (const [t, m] of [['Devis 5', 'devis'], ['Quotation', 'devis'], ['Contrat de location', 'contrat'], ['Reservation', 'reservation'], ['Lettre de relance', 'rappel']] as const) {
       expect(confirmerType('non_piece', ind(t)).motifNonPiece).toBe(m);
     }
     expect(compteeParDefaut('non_piece', 'commande')).toEqual({ comptee: false, motif: 'commande' });
