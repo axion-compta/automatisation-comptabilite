@@ -9,15 +9,16 @@ const c = (n: number): Centimes => n as Centimes;
 const param = (statut: ParametreLu['statut']): ParametreLu => ({ cle: 'tva.acompte_verse_deductible', valeur: statut === 'absent' ? null : 'x', statut });
 const COMPTES = { avance: '409100', tvaDeductible: '445660', banque: '512001' };
 const COMPTES_IMP = { fournisseur: '401000', avance: '409100', tvaDeductible: '445660' };
+const ID = 'ac-1';
 const base = { date: '2026-04-10', journal: 'BQ' };
 const verse = (ttc: number, tva: number, factureAcompte: boolean, p = param('valide')) =>
-  ecrituresAcompteVerse({ ttc: c(ttc), tva: c(tva), factureAcompte, parametre: p, comptes: COMPTES, ...base });
+  ecrituresAcompteVerse({ id: ID, ttc: c(ttc), tva: c(tva), factureAcompte, parametre: p, comptes: COMPTES, ...base });
 const propose = (r: ReturnType<typeof verse>): Ecriture => {
   if (r.etat !== 'propose') throw new Error('attendu : propose');
   return r.ecriture;
 };
 const imputer = (ttc: number, tva: number, avecTva: boolean): Ecriture =>
-  imputationAcompte({ acompte: { ttc: c(ttc), tva: c(tva), avecTva }, comptes: COMPTES_IMP, ...base });
+  imputationAcompte({ id: ID, acompte: { ttc: c(ttc), tva: c(tva), avecTva }, comptes: COMPTES_IMP, ...base });
 const valide = (e: Ecriture): Ecriture => ({ ...e, statut: 'valide' });
 const solde = (es: Ecriture[], compte: string): number => balance(es).lignes.find((l) => l.compte === compte)?.solde ?? 0;
 const lignes = (e: Ecriture) => e.lignes.map((l) => [l.compte, l.debit, l.credit]);
@@ -82,6 +83,15 @@ describe('acompte verse a un fournisseur', () => {
       expect(() => verse(1000, mauvais, true)).toThrowError(ENTREE_INVALIDE);
       expect(() => imputer(1000, mauvais, true)).toThrowError(ENTREE_INVALIDE);
     }
+  });
+
+  it('id-fourni-et-distinct', () => {
+    const a = ecrituresAcompteVerse({ id: 'a1', ttc: c(100), tva: c(0), factureAcompte: false, parametre: param('valide'), comptes: COMPTES, ...base });
+    const b = ecrituresAcompteVerse({ id: 'a2', ttc: c(100), tva: c(0), factureAcompte: false, parametre: param('valide'), comptes: COMPTES, ...base });
+    expect([propose(a).id, propose(b).id]).toEqual(['a1', 'a2']);
+    expect(imputationAcompte({ id: 'i1', acompte: { ttc: c(100), tva: c(0), avecTva: false }, comptes: COMPTES_IMP, ...base }).id).toBe('i1');
+    expect(() => ecrituresAcompteVerse({ id: '', ttc: c(100), tva: c(0), factureAcompte: false, parametre: param('valide'), comptes: COMPTES, ...base })).toThrowError(ENTREE_INVALIDE);
+    expect(() => imputationAcompte({ id: '', acompte: { ttc: c(100), tva: c(0), avecTva: false }, comptes: COMPTES_IMP, ...base })).toThrowError(ENTREE_INVALIDE);
   });
 
   it('jamais-validee', () => {

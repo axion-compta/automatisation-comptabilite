@@ -6,6 +6,7 @@ import { ErreurControle, exigerCentimes, parametreUtilisable } from '../regles/c
 import type { ParametreLu } from '../regles/commun.js';
 
 export interface EntreeAcompteVerse {
+  id: string;
   ttc: Centimes;
   tva: Centimes;
   factureAcompte: boolean;
@@ -16,6 +17,7 @@ export interface EntreeAcompteVerse {
 }
 
 export interface EntreeImputation {
+  id: string;
   acompte: { ttc: Centimes; tva: Centimes; avecTva: boolean };
   comptes: { fournisseur: string; avance: string; tvaDeductible: string };
   date: string;
@@ -32,8 +34,9 @@ function verifierMontants(ttc: Centimes, tva: Centimes): void {
   if (exigerCentimes(ttc) <= 0 || exigerCentimes(tva) < 0 || tva > ttc) throw new ErreurControle('entree_invalide');
 }
 
-function proposer(id: string, e: { date: string; journal: string }, lignes: LigneEcriture[]): Ecriture {
-  const ecriture: Ecriture = { id: id + '-' + e.journal + '-' + e.date, journal: e.journal, date: e.date, statut: 'propose', lignes };
+function proposer(e: { id: string; date: string; journal: string }, lignes: LigneEcriture[]): Ecriture {
+  if (e.id === '') throw new ErreurControle('entree_invalide');
+  const ecriture: Ecriture = { id: e.id, journal: e.journal, date: e.date, statut: 'propose', lignes };
   verifierEcriture(ecriture);
   return ecriture;
 }
@@ -42,12 +45,12 @@ export function ecrituresAcompteVerse(e: EntreeAcompteVerse): ResultatAcompteVer
   verifierMontants(e.ttc, e.tva);
   const c = e.comptes;
   if (!e.factureAcompte) {
-    return { etat: 'propose', ecriture: proposer('acompte-verse', e, [debit(c.avance, e.ttc), credit(c.banque, e.ttc)]) };
+    return { etat: 'propose', ecriture: proposer(e, [debit(c.avance, e.ttc), credit(c.banque, e.ttc)]) };
   }
   if (!parametreUtilisable(e.parametre)) return { etat: 'refuse', code: 'parametre_non_valide' };
   const ht = soustraire(e.ttc, e.tva);
   const lignes = [debit(c.avance, ht), debit(c.tvaDeductible, e.tva), credit(c.banque, e.ttc)];
-  return { etat: 'propose', ecriture: proposer('acompte-verse', e, lignes) };
+  return { etat: 'propose', ecriture: proposer(e, lignes) };
 }
 
 /** Solde le compte d'avance à la facture finale ; la TVA déduite à l'acompte est reprise si elle existe. */
@@ -58,5 +61,5 @@ export function imputationAcompte(e: EntreeImputation): Ecriture {
   const lignes = avecTva
     ? [debit(c.fournisseur, ttc), credit(c.avance, soustraire(ttc, tva)), credit(c.tvaDeductible, tva)]
     : [debit(c.fournisseur, ttc), credit(c.avance, ttc)];
-  return proposer('imputation-acompte', e, lignes);
+  return proposer(e, lignes);
 }
