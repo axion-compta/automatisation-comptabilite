@@ -18,6 +18,14 @@ export const CompteDuPlan = z.object({
 });
 export type CompteDuPlan = z.infer<typeof CompteDuPlan>;
 
+/** Query de `listerPlan` : bornes partagées avec le faux serveur. */
+export const QueryPlan = z.object({
+  classe: z.coerce.number().int().min(1).max(7).optional(),
+  q: z.string().max(50).optional(),
+  limite: z.coerce.number().int().min(1).max(100).optional(),
+  decalage: z.coerce.number().int().min(0).optional(),
+});
+
 const enveloppe = <T extends z.ZodType>(corps: T) =>
   z.object({ body: z.array(corps), decalage: z.number().int().min(0), total: z.number().int().min(0) });
 
@@ -37,14 +45,7 @@ export const listerPlan = oc
   .input(
     z.object({
       params: z.object({ exercice: z.string().min(1) }),
-      query: z
-        .object({
-          classe: z.coerce.number().int().min(1).max(7).optional(),
-          q: z.string().max(50).optional(),
-          limite: z.coerce.number().int().min(1).max(100).optional(),
-          decalage: z.coerce.number().int().min(0).optional(),
-        })
-        .optional(),
+      query: QueryPlan.optional(),
     }),
   )
   .output(ReponsePlan);
