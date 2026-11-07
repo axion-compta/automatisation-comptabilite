@@ -38,6 +38,22 @@ describe('calculerAnnee (barème inventé)', () => {
     expect(r.cumuls).toEqual([{ personneId: 'p1', vehiculeId: 'v1', kmDixiemes: 800, sommeProvisoires: 0 }]);
   });
 
+  it('nf12-statut-non-valide-aucun-montant-meme-avec-bareme', () => {
+    for (const statut of ['a_verifier', 'rejete', '']) {
+      const r = calculerAnnee([t('a', 50), t('b', 30)], { statut, bareme: BAREME, majorationPourcent: 10 });
+      expect(r.montants.get('a')).toBeNull();
+      expect(r.montants.get('b')).toBeNull();
+      expect(r.cumuls).toEqual([{ personneId: 'p1', vehiculeId: 'v1', kmDixiemes: 800, sommeProvisoires: 0 }]);
+    }
+  });
+
+  it('km-invalides-refuses-en-a-verifier', () => {
+    for (const km of [Number.NaN, Number.POSITIVE_INFINITY, 12.5, 0, -10]) {
+      const trajet = { ...t('a', 5), kmRetenusDixiemes: km };
+      expect(code(() => calculerAnnee([trajet], A_VERIFIER))).toBe('entree_invalide');
+    }
+  });
+
   it('nf12-puis-valide-tout-calcule', () => {
     const liste = [t('a', 50), t('b', 30)];
     expect(calculerAnnee(liste, A_VERIFIER).montants.get('a')).toBeNull();
