@@ -1,9 +1,9 @@
 // Vues d'exemple du bloc banque, cohérentes avec le jeu de banque.ts (V3-DEM-004, V3-BAN-020, V3-TDB-002, V3-TDB-005).
 // Données d'exemple écrites à la main : ce ne sont pas des résultats calculés par le noyau.
-import { genererBanque } from "./banque.js";
-import type { JeuBanque } from "./banque.js";
+import { genererBanque } from './banque.js';
+import type { JeuBanque } from './banque.js';
 
-export type EtatMois = "couvert" | "manquant" | "partiel";
+export type EtatMois = 'couvert' | 'manquant' | 'partiel';
 export interface VuesBanque {
   couverture: { compteId: string; mois: { mois: string; etat: EtatMois }[] }[];
   trous: {
@@ -30,7 +30,7 @@ export interface VuesBanque {
     ligneA: string;
     ligneB: string;
     motif: string;
-    etat: "propose";
+    etat: 'propose';
   }[];
   flux: {
     id: string;
@@ -52,35 +52,23 @@ export interface VuesBanque {
   }[];
 }
 
-const DATE_VUE = "2026-11-04";
-const MOIS_FRISE = Array.from(
-  { length: 10 },
-  (_, k) => `2026-${String(k + 1).padStart(2, "0")}`,
-);
-const REPONSES = ["piece_jointe", "pas_de_piece", "a_ignorer"];
+const DATE_VUE = '2026-11-04';
+const MOIS_FRISE = Array.from({ length: 10 }, (_, k) => `2026-${String(k + 1).padStart(2, '0')}`);
+const REPONSES = ['piece_jointe', 'pas_de_piece', 'a_ignorer'];
 const FLUX: [string, string, number, string, string, string][] = [
-  [
-    "FX-001",
-    "2026-11-10",
-    -420000,
-    "fournisseurs",
-    "certain",
-    "FOURNISSEURS_ECHUS",
-  ],
-  ["FX-002", "2026-11-15", 600000, "clients", "probable", "CLIENTS_ATTENDUS"],
-  ["FX-003", "2026-11-05", -150000, "loyer", "certain", "LOYER_MENSUEL"],
-  ["FX-004", "2026-11-23", -230000, "tva", "estime", "TVA_ESTIMEE"],
+  ['FX-001', '2026-11-10', -420000, 'fournisseurs', 'certain', 'FOURNISSEURS_ECHUS'],
+  ['FX-002', '2026-11-15', 600000, 'clients', 'probable', 'CLIENTS_ATTENDUS'],
+  ['FX-003', '2026-11-05', -150000, 'loyer', 'certain', 'LOYER_MENSUEL'],
+  ['FX-004', '2026-11-23', -230000, 'tva', 'estime', 'TVA_ESTIMEE'],
 ];
 const DETTES: [string, string, string, number, string, boolean][] = [
-  ["P-DET-001", "T4", "2026-11-20", 120000, "FR76 •••• 0042", false],
-  ["P-DET-002", "T5", "2026-11-25", 83040, "FR76 •••• 0043", true],
-  ["P-DET-003", "T8", "2026-12-05", 200000, "FR76 •••• 0044", false],
+  ['P-DET-001', 'T4', '2026-11-20', 120000, 'FR76 •••• 0042', false],
+  ['P-DET-002', 'T5', '2026-11-25', 83040, 'FR76 •••• 0043', true],
+  ['P-DET-003', 'T8', '2026-12-05', 200000, 'FR76 •••• 0044', false],
 ];
 const SOLDE_DEPART = 1840000;
 
-export function genererVuesBanque(
-  jeu: JeuBanque = genererBanque(),
-): VuesBanque {
+export function genererVuesBanque(jeu: JeuBanque = genererBanque()): VuesBanque {
   const compteId = jeu.comptes[0]?.id;
   const couverture = jeu.comptes
     .filter((c) => jeu.releves.some((r) => r.compteId === c.id))
@@ -88,53 +76,42 @@ export function genererVuesBanque(
       compteId: c.id,
       mois: MOIS_FRISE.map((mois) => ({
         mois,
-        etat: (jeu.releves.some(
-          (r) => r.compteId === c.id && r.periodeDebut.startsWith(mois),
-        )
-          ? "couvert"
-          : "manquant") as EtatMois,
+        etat: (jeu.releves.some((r) => r.compteId === c.id && r.periodeDebut.startsWith(mois))
+          ? 'couvert'
+          : 'manquant') as EtatMois,
       })),
     }));
-  const manquantSept = couverture.find((c) =>
-    c.mois.some((m) => m.mois === "2026-09" && m.etat === "manquant"),
-  );
+  const manquantSept = couverture.find((c) => c.mois.some((m) => m.mois === '2026-09' && m.etat === 'manquant'));
   const trous = manquantSept
     ? [
         {
           id: `TROU-${manquantSept.compteId}-2026-09`,
           compteId: manquantSept.compteId,
-          debut: "2026-09-01",
-          fin: "2026-09-30",
-          preuve: "releve_absent",
+          debut: '2026-09-01',
+          fin: '2026-09-30',
+          preuve: 'releve_absent',
           ecart: 134567,
-          etat: "ouvert",
+          etat: 'ouvert',
         },
       ]
     : [];
-  const sansPiece = Object.entries(jeu.attendus).filter(
-    ([, a]) => "etat" in a && a.etat === "SANS_PIECE",
-  );
+  const sansPiece = Object.entries(jeu.attendus).filter(([, a]) => 'etat' in a && a.etat === 'SANS_PIECE');
   const groupes = new Map<string, string[]>();
   for (const [id] of sansPiece) {
-    const cle =
-      jeu.lignes.find((l) => l.id === id)?.contrepartieId ?? "SANS_TIERS";
+    const cle = jeu.lignes.find((l) => l.id === id)?.contrepartieId ?? 'SANS_TIERS';
     groupes.set(cle, [...(groupes.get(cle) ?? []), id]);
   }
   const demandes = [...groupes].map(([cle, ligneIds]) => ({
     id: `DEM-${cle}`,
     cle,
     ligneIds,
-    impact: ligneIds.reduce(
-      (s, id) =>
-        s + Math.abs(jeu.lignes.find((l) => l.id === id)?.montant ?? 0),
-      0,
-    ),
+    impact: ligneIds.reduce((s, id) => s + Math.abs(jeu.lignes.find((l) => l.id === id)?.montant ?? 0), 0),
     nombre: ligneIds.length,
-    type: "piece_manquante",
-    codeQuestion: "QUESTION_PIECE_MANQUANTE",
+    type: 'piece_manquante',
+    codeQuestion: 'QUESTION_PIECE_MANQUANTE',
     reponsesPretes: REPONSES,
   }));
-  const doublons: VuesBanque["doublons"] = [];
+  const doublons: VuesBanque['doublons'] = [];
   for (const l of jeu.lignes) {
     const a = jeu.lignes.find(
       (x) =>
@@ -149,8 +126,8 @@ export function genererVuesBanque(
         id: `DBL-${a.id}-${l.id}`,
         ligneA: a.id,
         ligneB: l.id,
-        motif: "meme_date_montant_libelle",
-        etat: "propose",
+        motif: 'meme_date_montant_libelle',
+        etat: 'propose',
       });
     }
   }
@@ -170,9 +147,7 @@ export function genererVuesBanque(
           libelleCode,
         }))
       : [],
-    soldesDepart: compteId
-      ? [{ compteId, solde: SOLDE_DEPART, date: DATE_VUE }]
-      : [],
+    soldesDepart: compteId ? [{ compteId, solde: SOLDE_DEPART, date: DATE_VUE }] : [],
     dettes: DETTES.filter(([, f]) => fournisseurs.has(f)).map(
       ([pieceId, fournisseurId, echeance, reste, ibanMasque, ibanChange]) => ({
         pieceId,
