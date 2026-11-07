@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { centimes } from '../../../argent/index.js';
+import { ErreurPiece } from '../../types.js';
 import { comparerPieces, numeroNormalise, pieceDeReference, type PieceComparee, texteNormalise } from '../doublons.js';
 
 const p = (o: Partial<PieceComparee> = {}): PieceComparee => ({ id: 'a', sha256: 'h1', electronique: false, qualite: 'texte_pdf', recueLe: '2026-03-01T10:00:00Z', ...o });
@@ -96,6 +97,20 @@ describe('comparerPieces', () => {
     expect(comparerPieces(p({ sha256: 'x' }), p({ sha256: 'y' }), opt)).toEqual(aucun);
     expect(comparerPieces(p({ sha256: 'x', electronique: true }), p({ sha256: 'y', electronique: true }), opt)).toEqual(aucun);
     expect(comparerPieces(p({ sha256: 'x', numero: 'F1' }), p({ sha256: 'y', numero: 'F1' }), opt)).toEqual(aucun);
-    expect(comparerPieces(p({ sha256: 'x', distanceImage: 0 }), p({ sha256: 'y' }), { distanceImageMax: Number.NaN })).toEqual(aucun);
+  });
+  it('reglage-distance-invalide', () => {
+    for (const max of [Number.NaN, Number.POSITIVE_INFINITY, -1, 1.5]) {
+      expect(() => comparerPieces(p({ sha256: 'x' }), p({ sha256: 'y' }), { distanceImageMax: max })).toThrow(ErreurPiece);
+    }
+    expect(() => comparerPieces(p({ sha256: 'x' }), p({ sha256: 'y' }), { distanceImageMax: 1 })).not.toThrow();
+  });
+  it('heures-differentes-image-proposee', () => {
+    const t = { sha256: 'x', fournisseurCle: 'f', date: '2026-03-01', ttc: centimes(850) };
+    expect(comparerPieces(p({ ...t, heure: '12:30', distanceImage: 0 }), p({ ...t, sha256: 'y', heure: '12:31' }), opt)).toEqual({ niveau: 5, decision: 'doublon_propose' });
+    expect(comparerPieces(p({ ...t, heure: '12:30', texteNormalise: 'abc' }), p({ ...t, sha256: 'y', heure: '12:31', texteNormalise: 'abc' }), opt)).toEqual({ niveau: 4, decision: 'doublon_propose' });
+  });
+  it('meme-numero-comptes-differents-pas-sur', () => {
+    const t = { sha256: 'x', numero: 'F1', fournisseurCle: 'f', date: '2026-03-01', ttc: centimes(850), heure: '12:30' };
+    expect(comparerPieces(p({ ...t, compteFacturation: 'c1' }), p({ ...t, sha256: 'y', compteFacturation: 'c2' }), opt)).toEqual(aucun);
   });
 });

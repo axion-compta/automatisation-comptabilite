@@ -1,5 +1,6 @@
 // Doublons de pièces en cascade : numéros différents = jamais doublon. Aucune suppression ici.
 import type { Centimes } from '../../argent/index.js';
+import { ErreurPiece } from '../types.js';
 
 export interface PieceComparee {
   id: string; sha256: string; electronique: boolean; sirenEmetteur?: string | undefined; fournisseurCle?: string | undefined;
@@ -30,6 +31,9 @@ const egal = (a: string | undefined, b: string | undefined): boolean => present(
 const nul = (niveau: null = null): ResultatDoublon => ({ niveau, decision: 'aucun' });
 
 export function comparerPieces(nouvelle: PieceComparee, existante: PieceComparee, options: { distanceImageMax: number }): ResultatDoublon {
+  if (!Number.isInteger(options.distanceImageMax) || options.distanceImageMax < 0) {
+    throw new ErreurPiece('reglage_invalide', 'La distance d\x27image maximale doit être un entier positif ou nul.');
+  }
   if (egal(nouvelle.sha256, existante.sha256)) return { niveau: 1, decision: 'fichier_identique' };
   const nn = present(nouvelle.numero) ? numeroNormalise(nouvelle.numero, nouvelle.prefixe) : '';
   const ne = present(existante.numero) ? numeroNormalise(existante.numero, existante.prefixe) : '';
@@ -44,10 +48,9 @@ export function comparerPieces(nouvelle: PieceComparee, existante: PieceComparee
     if (nouvelle.ttc !== undefined && existante.ttc !== undefined) return { niveau: 3, decision: 'collision_numeros' };
   }
   const ticket = !memeNumero && egal(nouvelle.fournisseurCle, existante.fournisseurCle) && egal(nouvelle.date, existante.date) && memeTtc;
-  if (ticket && present(nouvelle.heure) && present(existante.heure)) {
-    return nouvelle.heure === existante.heure ? { niveau: 3, decision: 'doublon_sur' } : nul();
-  }
-  if (egal(nouvelle.texteNormalise, existante.texteNormalise) || ticket) return { niveau: 4, decision: 'doublon_propose' };
+  const deuxHeures = present(nouvelle.heure) && present(existante.heure);
+  if (ticket && deuxHeures && nouvelle.heure === existante.heure) return { niveau: 3, decision: 'doublon_sur' };
+  if (egal(nouvelle.texteNormalise, existante.texteNormalise) || (ticket && !deuxHeures)) return { niveau: 4, decision: 'doublon_propose' };
   const d = nouvelle.distanceImage;
   if (d !== undefined && d >= 0 && d <= options.distanceImageMax) return { niveau: 5, decision: 'doublon_propose' };
   return nul();
