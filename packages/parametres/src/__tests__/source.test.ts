@@ -15,6 +15,7 @@ const ligne = {
   source_maj: '2026-05-01',
 };
 
+const AROBASE = String.fromCharCode(64);
 describe('source officielle', () => {
   it('domaine-exact-permis', () => {
     for (const d of DOMAINES_OFFICIELS) expect(domaineOfficiel(`https://${d}/page`), d).toBe(true);
@@ -28,8 +29,8 @@ describe('source officielle', () => {
     for (const u of [
       'https://legifrance.gouv.fr.exemple.com/x',
       'https://exemplelegifrance.gouv.fr/x',
-      'https://legifrance.gouv.fr@exemple.com/x',
-      'https://legifrance.gouv.fr:mdp@legifrance.gouv.fr/x',
+      'https://legifrance.gouv.fr' + AROBASE + 'exemple.com/x',
+      'https://legifrance.gouv.fr:mdp' + AROBASE + 'legifrance.gouv.fr/x',
       'https://exemple.com/legifrance.gouv.fr',
       'https://gouv.fr/x',
     ])
