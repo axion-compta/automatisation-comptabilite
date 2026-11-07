@@ -2,7 +2,6 @@
 import type { Centimes } from '../argent/index.js';
 import { ErreurFec, type OptionsFec, lireDateFec, lireLigne, lireMontantFec } from './format.js';
 import type { ChampFec, ColonneFec } from './lignes.js';
-
 export interface EcartFec {
   regleId: string;
   /** Numéro de ligne du fichier, l'en-tête étant la ligne 1. */
@@ -11,12 +10,10 @@ export interface EcartFec {
   valeur?: string;
   ecartCentimes?: Centimes;
 }
-
 export interface LigneFecLue {
   numero: number;
   valeurs: Record<ChampFec, string>;
 }
-
 export interface RegleFec {
   id: string;
   libelle: string;
@@ -24,7 +21,6 @@ export interface RegleFec {
   source: string;
   testId: string;
 }
-
 export const REGLES_STRUCTURE: readonly RegleFec[] = [
   { id: 'FEC-S01', libelle: "En-tête différent des colonnes attendues", gravite: 'B', source: 'a_sourcer', testId: 'entete-different-s01' },
   { id: 'FEC-S02', libelle: 'Nombre de colonnes différent de celui attendu', gravite: 'B', source: 'a_sourcer', testId: 'colonne-manquante-s02' },
@@ -36,7 +32,6 @@ export const REGLES_STRUCTURE: readonly RegleFec[] = [
   { id: 'FEC-S08', libelle: 'Débit et crédit tous deux non nuls', gravite: 'B', source: 'a_sourcer', testId: 'debit-et-credit-s08' },
   { id: 'FEC-S09', libelle: 'Encodage UTF-8 invalide', gravite: 'B', source: 'a_sourcer', testId: 'encodage-invalide-s09' },
 ];
-
 export interface ParametresLecture {
   colonnes: readonly ColonneFec[];
   options: OptionsFec;
@@ -44,7 +39,6 @@ export interface ParametresLecture {
   marqueOrdreAcceptee: boolean;
   obligatoires: readonly ChampFec[];
 }
-
 const DATES: readonly ChampFec[] = ['ecritureDate', 'pieceDate', 'validDate'];
 const MARQUE = [0xef, 0xbb, 0xbf];
 

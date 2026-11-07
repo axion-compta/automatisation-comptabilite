@@ -41,21 +41,18 @@ describe('contrôles de structure du FEC', () => {
     // sans fin de ligne finale : accepté aussi
     expect(lire(octets([entete, bonne].join(CRLF))).ecarts).toEqual([]);
   });
-
   it('entete-different-s01', () => {
     const r = lire(fichier(entete.replace('debit', 'Debit'), bonne));
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S01', ligne: 1 }]);
     expect(r.lignes).toHaveLength(1); // les lignes suivantes sont quand même lues
     expect(ids(lire(fichier('a|b', bonne)))).toEqual(['FEC-S01']);
   });
-
   it('colonne-manquante-s02', () => {
     const r = lire(fichier(entete, 'AC|AC-1|20260115||Achat fictif|10,00', bonne));
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S02', ligne: 2, valeur: '6' }]);
     expect(r.lignes.map((l) => l.numero)).toEqual([3]);
     expect(ids(lire(fichier(entete, bonne + '|x')))).toEqual(['FEC-S02']);
   });
-
   it('date-30-fevrier-s03', () => {
     const r = lire(fichier(entete, 'AC|AC-1|20260230||Achat|10,00|0,00', 'AC|AC-2|20260115|NaN|Achat|10,00|0,00'));
     expect(r.ecarts).toEqual([
@@ -65,7 +62,6 @@ describe('contrôles de structure du FEC', () => {
     expect(r.lignes).toEqual([]);
     expect(ids(lire(fichier(entete, 'AC|AC-1|2026-01-15||Achat|10,00|0,00')))).toEqual(['FEC-S03']);
   });
-
   it('montant-avec-point-s04', () => {
     const r = lire(fichier(entete, 'AC|AC-1|20260115||Achat|1234.56|0,00'));
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S04', ligne: 2, champ: 'debit', valeur: '1234.56' }]);
@@ -73,7 +69,6 @@ describe('contrôles de structure du FEC', () => {
       expect(ids(lire(fichier(entete, `AC|AC-1|20260115||Achat|0,00|${mauvais}`)))).toEqual(['FEC-S04']);
     }
   });
-
   it('obligatoire-vide-s05', () => {
     const r = lire(fichier(entete, 'AC||20260115||Achat|10,00|0,00', 'AC|AC-2|20260115|| |10,00|0,00'));
     expect(r.ecarts).toEqual([
@@ -82,7 +77,6 @@ describe('contrôles de structure du FEC', () => {
     ]);
     expect(ids(lire(fichier(entete, 'AC|AC-1||| Achat|10,00|0,00')))).toEqual(['FEC-S05']);
   });
-
   it('ligne-vide-s06', () => {
     const r = lire(fichier(entete, bonne, '', bonne));
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S06', ligne: 3 }]);
@@ -90,7 +84,6 @@ describe('contrôles de structure du FEC', () => {
     // deux fins de ligne finales : la seconde est une ligne vide
     expect(ids(lire(octets(entete + CRLF + bonne + CRLF + CRLF)))).toEqual(['FEC-S06']);
   });
-
   it('marque-ordre-refusee-s07', () => {
     const avec = new Uint8Array([0xef, 0xbb, 0xbf, ...fichier(entete, bonne)]);
     const refusee = lire(avec);
@@ -99,20 +92,17 @@ describe('contrôles de structure du FEC', () => {
     expect(lire(avec, { marqueOrdreAcceptee: true }).ecarts).toEqual([]);
     expect(lire(fichier(entete, bonne), { marqueOrdreAcceptee: true }).ecarts).toEqual([]);
   });
-
   it('debit-et-credit-s08', () => {
     const r = lire(fichier(entete, 'AC|AC-1|20260115||Achat|10,00|5,00', 'AC|AC-2|20260115||Achat|0,00|0,00'));
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S08', ligne: 2 }]);
     expect(r.lignes.map((l) => l.numero)).toEqual([3]);
   });
-
   it('encodage-invalide-s09', () => {
     const casse = new Uint8Array([...octets(entete + CRLF + 'AC|AC-1|20260115||'), 0xff, 0xfe, ...octets('|1,00|0,00' + CRLF)]);
     const r = lire(casse);
     expect(r.ecarts).toEqual([{ regleId: 'FEC-S09', ligne: 1 }]);
     expect(r.lignes).toEqual([]);
   });
-
   it('cas-limites-zero-octet-entete-seul-fin-de-ligne', () => {
     expect(lire(new Uint8Array(0))).toEqual({ lignes: [], ecarts: [{ regleId: 'FEC-S01', ligne: 1 }] });
     expect(lire(fichier(entete))).toEqual({ lignes: [], ecarts: [] });
@@ -124,7 +114,6 @@ describe('contrôles de structure du FEC', () => {
     // CR LF dans le fichier mais LF attendu : écart de structure, pas d'exception
     expect(lire(fichier(entete, bonne), { finDeLigne: LF }).ecarts.length).toBeGreaterThan(0);
   });
-
   it('mille-lignes-a-graine-fixe', () => {
     let graine = 12345;
     const lignes = [entete];
@@ -137,7 +126,6 @@ describe('contrôles de structure du FEC', () => {
     expect(r.ecarts).toEqual([]);
     expect(r.lignes).toHaveLength(1000);
   });
-
   it('regles-structure-completes', () => {
     expect(REGLES_STRUCTURE.map((r) => r.id)).toEqual(
       ['S01', 'S02', 'S03', 'S04', 'S05', 'S06', 'S07', 'S08', 'S09'].map((s) => `FEC-${s}`),
