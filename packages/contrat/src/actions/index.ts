@@ -10,7 +10,7 @@ export type Action = {
 export type Registre = {
   roles: { id: string; lecture_seule?: boolean }[];
   interrupteurs: Record<string, { actif_par_defaut: boolean }>;
-  outils: { id: string; niveau: 'L' | 'E' }[];
+  outils: { id: string; niveau: 'L' | 'B' | 'M' | 'I'; chat: 'ouvert' | 'ferme' }[];
   actions: Action[];
   matrice: Record<string, string[]>;
 };
@@ -37,4 +37,10 @@ export function peutAgir(
   if (!Object.hasOwn(r.interrupteurs, action.interrupteur)) return false;
   if (!actifs.has(action.interrupteur)) return false;
   return roleAutorise(r, role, action.outil);
+}
+
+/** Vrai si l'outil est utilisable par le chat : connu, `chat` ouvert et jamais de niveau I (V3-CHT-067). */
+export function outilOuvertAuChat(r: Registre, outil: string): boolean {
+  const o = r.outils.find((x) => x.id === outil);
+  return o !== undefined && o.chat === 'ouvert' && o.niveau !== 'I';
 }

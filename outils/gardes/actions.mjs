@@ -1,12 +1,17 @@
 // garde:actions : contrôle le registre d'actions (V3-CHT-052, V3-PRI-013).
 // Rouge si : doublon (rôles, outils, actions, outil dans une ligne de matrice), action sans id,
-// action sans outil ni exclusion (ou avec les deux), outil inconnu ou sans action, niveau d'outil invalide,
+// action sans outil ni exclusion (ou avec les deux), outil inconnu ou sans action, niveau hors L, B, M, I,
 // matrice mal formée (rôle ou outil inconnu, rôle sans ligne, ligne non-liste),
-// rôle en lecture seule avec un outil d'écriture (E).
+// rôle en lecture seule avec un outil autre que L, outil I ouvert au chat, champ chat absent,
+// exclusion écrite manquante (double facteur, mot de passe, administration d'Axion), ia.autoriser_hors_ue (Q5, D43).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 export const CHEMIN_REGISTRE = fileURLToPath(new URL('../../packages/contrat/src/actions/registre.json', import.meta.url));
+
+const NIVEAUX = ['L', 'B', 'M', 'I'];
+const EXCLUSIONS = ['double_facteur', 'mot_de_passe', 'administration_axion'];
+const INTERDIT_HORS_UE = 'ia.autoriser_hors_ue';
 
 export function analyserActions(r) {
   const pb = [];
@@ -18,7 +23,10 @@ export function analyserActions(r) {
   if (outils.size !== listeOutils.length) pb.push('doublon dans outils');
   const niveaux = new Map();
   for (const o of r.outils ?? []) {
-    if (o?.niveau !== 'L' && o?.niveau !== 'E') pb.push(`outil sans niveau L ou E : ${o?.id}`);
+    if (!NIVEAUX.includes(o?.niveau)) pb.push(`outil sans niveau L, B, M ou I : ${o?.id}`);
+    if (o?.chat !== 'ouvert' && o?.chat !== 'ferme') pb.push(`outil sans champ chat ouvert ou ferme : ${o?.id}`);
+    if (o?.niveau === 'I' && o?.chat === 'ouvert') pb.push(`outil de niveau I ouvert au chat : ${o?.id}`);
+    if (o?.id === INTERDIT_HORS_UE) pb.push(`outil interdit : ${INTERDIT_HORS_UE}`);
     niveaux.set(o?.id, o?.niveau);
   }
   const ids = new Set();
@@ -30,6 +38,7 @@ export function analyserActions(r) {
     }
     if (ids.has(a.id)) pb.push(`action en double : ${a.id}`);
     ids.add(a.id);
+    if (a.id === INTERDIT_HORS_UE) pb.push(`action interdite : ${INTERDIT_HORS_UE}`);
     const aOutil = Boolean(a.outil);
     const aExclusion = Boolean(a.exclusion);
     if (!aOutil && !aExclusion) pb.push(`action sans outil ni exclusion déclarée : ${a.id}`);
@@ -38,6 +47,10 @@ export function analyserActions(r) {
       utilises.add(a.outil);
       if (!outils.has(a.outil)) pb.push(`outil inconnu pour ${a.id} : ${a.outil}`);
     }
+  }
+  for (const e of EXCLUSIONS) {
+    const a = (r.actions ?? []).find((x) => x?.id === e);
+    if (!a?.exclusion || a.outil) pb.push(`exclusion écrite manquante : ${e}`);
   }
   for (const o of outils) if (!utilises.has(o)) pb.push(`outil sans action : ${o}`);
   const matrice = r.matrice ?? {};
@@ -55,7 +68,7 @@ export function analyserActions(r) {
   for (const x of r.roles ?? []) {
     if (!x?.lecture_seule || !Object.hasOwn(matrice, x.id) || !Array.isArray(matrice[x.id])) continue;
     for (const o of matrice[x.id]) {
-      if (niveaux.get(o) === 'E') pb.push(`rôle en lecture seule avec un outil d'écriture : ${x.id} / ${o}`);
+      if (niveaux.get(o) !== 'L') pb.push(`rôle en lecture seule avec un outil d'écriture : ${x.id} / ${o}`);
     }
   }
   // DEMANDE 5 non acceptée : le comptable reste en lecture seule, sans outil d'écriture (ROL-002).
@@ -63,7 +76,7 @@ export function analyserActions(r) {
   if (comptable && comptable.lecture_seule !== true) pb.push('rôle comptable sans lecture_seule (DEMANDE 5 non acceptée)');
   if (Array.isArray(matrice.comptable)) {
     for (const o of matrice.comptable) {
-      if (niveaux.get(o) === 'E') pb.push(`comptable avec un outil d'écriture (DEMANDE 5 non acceptée) : ${o}`);
+      if (niveaux.get(o) !== 'L') pb.push(`comptable avec un outil d'écriture (DEMANDE 5 non acceptée) : ${o}`);
     }
   }
   return pb;
