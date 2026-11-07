@@ -62,6 +62,18 @@ describe('pasAPas', () => {
     expect(code(() => pasAPas([cas('X01', -1)], ['X01']))).toBe('montant_invalide');
     expect(code(() => pasAPas([cas('X01', -1)], []))).toBe('montant_invalide');
   });
+  it('montant-non-entier-refuse', () => {
+    for (const m of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      const brut = { code: 'X01', montant: m, sources: [S1], aCalculer: false } as unknown as CaseDeclaration;
+      expect(code(() => pasAPas([brut], ['X01']))).toBe('montant_invalide');
+      const avecBase = { ...cas('X01', 1), base: m } as unknown as CaseDeclaration;
+      expect(code(() => pasAPas([avecBase], ['X01']))).toBe('montant_invalide');
+    }
+  });
+  it('case-en-double-refusee', () => {
+    expect(code(() => pasAPas([cas('X01', 500), cas('X01', 0)], ['X01']))).toBe('case_en_double');
+    expect(code(() => pasAPas([cas('X01', 0), cas('X01', 500)], ['X01']))).toBe('case_en_double');
+  });
   it('base-copiee-si-presente', () => {
     const avecBase = { ...cas('X01', 10), base: c(50) } as CaseDeclaration & { base: ReturnType<typeof c> };
     expect(pasAPas([avecBase], ['X01']).etapes[0]).toEqual({ rang: 1, code: 'X01', montant: 10, base: 50, sources: 1 });

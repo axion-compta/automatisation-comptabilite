@@ -2,7 +2,7 @@
 import type { Centimes } from '../argent/index.js';
 import type { CaseDeclaration } from './cases.js';
 
-export type CodeErreurPasAPas = 'ligne_absente' | 'case_hors_ordre' | 'ordre_en_double' | 'montant_invalide';
+export type CodeErreurPasAPas = 'ligne_absente' | 'case_hors_ordre' | 'ordre_en_double' | 'montant_invalide' | 'case_en_double';
 
 export class ErreurPasAPas extends Error {
   override name = 'ErreurPasAPas';
@@ -30,10 +30,15 @@ export function pasAPas(
   if (new Set(ordreDeSaisie).size !== ordreDeSaisie.length) {
     throw new ErreurPasAPas('ordre_en_double', "Un code est en double dans l'ordre de saisie.");
   }
+  const parCode = new Map<string, CaseAvecBase>();
   for (const x of cases) {
-    if (x.montant < 0) throw new ErreurPasAPas('montant_invalide', `La case « ${x.code} » est négative.`);
+    const invalide = (m: number): boolean => !Number.isSafeInteger(m) || m < 0;
+    if (invalide(x.montant) || (x.base !== undefined && invalide(x.base))) {
+      throw new ErreurPasAPas('montant_invalide', `La case « ${x.code} » n'est pas un entier positif ou nul.`);
+    }
+    if (parCode.has(x.code)) throw new ErreurPasAPas('case_en_double', `La case « ${x.code} » est en double.`);
+    parCode.set(x.code, x);
   }
-  const parCode = new Map(cases.map((x) => [x.code, x]));
   const etapes: EtapeSaisie[] = [];
   for (const code of ordreDeSaisie) {
     const x = parCode.get(code);
