@@ -175,6 +175,86 @@ describe('lignes du FEC', () => {
     expect(repli.lignes[0]?.startsWith('AC|')).toBe(true);
   });
 
+  it('date-de-validation-mal-formee-refusee', () => {
+    const avec = (date: string): ContexteFec => ({ ...contexte, datesValidation: { v: date } });
+    const mauvaises = [
+      '2026-3-1',
+      '20260331',
+      '2026-02-30',
+      '2026-02-29',
+      '2026-13-01',
+      '2026-00-10',
+      '2026-01-00',
+      '',
+      ' ',
+      'NaN',
+      'Infinity',
+      '-Infinity',
+      '2026-03-31 ',
+      ' 2026-03-31',
+      '2026-03-31\n',
+      '2026-03-31T00:00:00Z',
+      '2026-03-1.5',
+    ];
+    const sansLigne: Ecriture = { ...ecr('v', 'AC-1', 'AC', 'valide'), lignes: [] };
+    for (const date of mauvaises) {
+      expect(code(() => lignesFec([ecr('v', 'AC-1', 'AC', 'valide')], avec(date), colonnes, options))).toBe(
+        'date_invalide',
+      );
+      expect(code(() => lignesFec([sansLigne], avec(date), colonnes, options))).toBe('date_invalide');
+      const deux = [ecr('v', 'AC-1', 'AC', 'valide'), ecr('w', 'AC-2', 'AC', 'valide')];
+      const ctx = { ...contexte, datesValidation: { v: date, w: '2026-01-01' } };
+      expect(code(() => lignesFec(deux, ctx, colonnes, options))).toBe('date_invalide');
+      expect(code(() => lignesFec([...deux].reverse(), ctx, colonnes, options))).toBe('date_invalide');
+      const brouillon = ecr('v', 'AC-1', 'AC', 'brouillon');
+      expect(lignesFec([brouillon], avec(date), colonnes, options).lignes).toEqual([]);
+    }
+    for (const date of ['2026-02-28', '2028-02-29', '2026-12-31']) {
+      expect(lignesFec([ecr('v', 'AC-1', 'AC', 'valide')], avec(date), colonnes, options).lignes).toHaveLength(2);
+    }
+    expect(lignesFec([sansLigne], avec('2026-02-28'), colonnes, options).lignes).toEqual([]);
+  });
+
+  it('numero-absent-repli-vide', () => {
+    const sansNumero = (id: string, montant = 1000): Ecriture => {
+      const e = ecr(id, 'AC-0', 'AC', 'valide', 'Libellé fictif', montant);
+      delete e.numero;
+      return e;
+    };
+    const ctx: ContexteFec = {
+      ...contexte,
+      datesValidation: { x: '2026-06-01', y: '2026-06-01', m: '2026-06-01', t: '2026-06-02', u: '2026-05-01' },
+    };
+    const lire = (es: Ecriture[]) => lignesFec(es, ctx, colonnes, options);
+    // Colonne vide, numéro non remplacé par l'identifiant.
+    expect(lire([sansNumero('x')]).lignes).toEqual([
+      'AC||607|Libellé fictif|10,00|0,00\n',
+      'AC||401|Fournisseur|0,00|10,00\n',
+    ]);
+    // Deux écritures sans numéro, même date, même contenu : même fichier dans les deux ordres.
+    const memes = [sansNumero('x'), sansNumero('y')];
+    expect(lire([...memes].reverse()).lignes).toEqual(lire(memes).lignes);
+    expect(lire(memes).lignes).toHaveLength(4);
+    // Contenu différent : l'ordre d'entrée est conservé (tri stable).
+    expect(numeros(lire([sansNumero('x', 100), sansNumero('y', 200)]))).toEqual(['', '', '', '']);
+    expect(lire([sansNumero('x', 100), sansNumero('y', 200)]).lignes[0]).toContain('|1,00|');
+    expect(lire([sansNumero('y', 200), sansNumero('x', 100)]).lignes[0]).toContain('|2,00|');
+    // Même date : l'absent passe avant un numéro présent, quel que soit l'ordre d'entrée.
+    const present = ecr('m', 'AC-1', 'AC', 'valide');
+    const attendu = ['', '', 'AC-1', 'AC-1'];
+    expect(numeros(lire([sansNumero('x'), present]))).toEqual(attendu);
+    expect(numeros(lire([present, sansNumero('x')]))).toEqual(attendu);
+    // La date de validation prime sur le numéro absent.
+    expect(numeros(lire([sansNumero('t'), present]))).toEqual(['AC-1', 'AC-1', '', '']);
+    expect(numeros(lire([present, sansNumero('t')]))).toEqual(['AC-1', 'AC-1', '', '']);
+    expect(numeros(lire([sansNumero('u'), present]))).toEqual(['', '', 'AC-1', 'AC-1']);
+    // Le tri numérique s'applique aux numéros présents.
+    const dix = ecr('y', 'AC-10', 'AC', 'valide');
+    const neuf = ecr('x', 'AC-9', 'AC', 'valide');
+    expect(numeros(lire([dix, neuf]))).toEqual(['AC-9', 'AC-9', 'AC-10', 'AC-10']);
+    expect(numeros(lire([neuf, dix]))).toEqual(['AC-9', 'AC-9', 'AC-10', 'AC-10']);
+  });
+
   it('nom-travail-puis-final', () => {
     const base = { siren: '123456782', dateCloture: '2026-03-31' };
     expect(nomFichierFec({ ...base, travail: false })).toBe('123456782FEC20260331.txt');

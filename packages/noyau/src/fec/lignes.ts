@@ -61,7 +61,7 @@ function comparer(a: string, b: string): number {
 function dateValidation(e: Ecriture, contexte: ContexteFec): string {
   const date = contexte.datesValidation[e.id];
   if (date === undefined) throw new ErreurFec('date_invalide');
-  return date;
+  return formaterDateFec(date); // AAAAMMJJ : refuse une date mal formée avant tout tri
 }
 
 function ordonner(valides: readonly Ecriture[], contexte: ContexteFec): Ecriture[] {
@@ -92,7 +92,7 @@ export function lignesFec(
   const valides = ecritures.filter((e) => e.statut === 'valide');
   for (const e of ordonner(valides, contexte)) {
     const date = formaterDateFec(e.date);
-    const validation = formaterDateFec(dateValidation(e, contexte));
+    const validation = dateValidation(e, contexte);
     for (const l of e.lignes) {
       const libCompte = nettoyerLibelle(contexte.libellesComptes[l.compte] ?? '', l.compte, options);
       const valeurs: Record<ChampFec, string> = {
