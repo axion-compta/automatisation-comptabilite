@@ -16,7 +16,9 @@ export interface TexteSourcesProps {
 
 const MARQUEURS = /(⟦voir_source⟧|⟦lexique⟧)/;
 
-function formater(s: Extract<Segment, { sorte: "valeur" }>): string | null {
+type SegmentValeur = Extract<Segment, { sorte: "valeur" }>;
+
+function formater(s: SegmentValeur): string | null {
   const v = s.valeur;
   try {
     if (s.nature === "montant") return typeof v === "number" ? formaterMontantAffiche(centimes(v)) : null;
