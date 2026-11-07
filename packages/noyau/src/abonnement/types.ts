@@ -9,39 +9,16 @@ export const CLASSES_ACTION = ['lecture', 'export', 'ecriture', 'agent', 'compte
 export type ClasseAction = (typeof CLASSES_ACTION)[number];
 
 export type EtatVoulu = {
-  etat: 'actif' | 'pause' | 'arrete';
-  version: number;
-  arretEnvois: boolean;
-  droitsUsage?: readonly string[];
-  periodeEssaiFin?: string;
-  impayeSignale?: boolean;
-  dateFin?: string;
+  etat: 'actif' | 'pause' | 'arrete'; version: number; arretEnvois: boolean;
+  droitsUsage?: readonly string[]; periodeEssaiFin?: string; impayeSignale?: boolean; dateFin?: string;
 };
 
 export type CodeErreurAbonnement =
-  | 'date_invalide'
-  | 'horodatage_invalide'
-  | 'entier_invalide'
-  | 'etat_voulu_invalide'
-  | 'auteur_manquant'
-  | 'palier_invalide'
-  | 'champ_inconnu'
-  | 'nom_de_palier_interdit'
-  | 'accord_manquant'
-  | 'palier_identique'
-  | 'palier_inconnu'
-  | 'palier_non_superieur'
-  | 'motif_manquant'
-  | 'gel_deja_actif'
-  | 'gel_inactif'
-  | 'pas_de_remise'
-  | 'deja_accuse'
-  | 'empreinte_invalide'
-  | 'empreinte_differente'
-  | 'document_absent'
-  | 'version_perimee'
-  | 'depassement_entier'
-  | 'parametre_invalide';
+  | 'date_invalide' | 'horodatage_invalide' | 'entier_invalide' | 'etat_voulu_invalide' | 'auteur_manquant'
+  | 'palier_invalide' | 'champ_inconnu' | 'nom_de_palier_interdit' | 'accord_manquant' | 'palier_identique'
+  | 'palier_inconnu' | 'palier_non_superieur' | 'motif_manquant' | 'gel_deja_actif' | 'gel_inactif'
+  | 'pas_de_remise' | 'deja_accuse' | 'empreinte_invalide' | 'empreinte_differente' | 'document_absent'
+  | 'version_perimee' | 'depassement_entier' | 'parametre_invalide';
 
 export class ErreurAbonnement extends Error {
   readonly code: CodeErreurAbonnement;
@@ -53,42 +30,20 @@ export class ErreurAbonnement extends Error {
 }
 
 export type TypeEvenement =
-  | 'acces.etat_change'
-  | 'acces.version_ignoree'
-  | 'acces.reglage_local_ignore'
-  | 'abonnement.seuil_atteint'
-  | 'abonnement.palier_demande'
-  | 'fin_contrat.preavis'
-  | 'fin_contrat.export_remis'
-  | 'fin_contrat.accuse'
-  | 'fin_contrat.effacement_planifie'
-  | 'fin_contrat.relance'
-  | 'fin_contrat.transmis_a_axion'
-  | 'fin_contrat.gel_pose'
-  | 'fin_contrat.gel_leve'
-  | 'acceptation.enregistree';
+  | 'acces.etat_change' | 'acces.version_ignoree' | 'acces.reglage_local_ignore' | 'abonnement.seuil_atteint'
+  | 'abonnement.palier_demande' | 'fin_contrat.preavis' | 'fin_contrat.export_remis' | 'fin_contrat.accuse'
+  | 'fin_contrat.effacement_planifie' | 'fin_contrat.relance' | 'fin_contrat.transmis_a_axion'
+  | 'fin_contrat.gel_pose' | 'fin_contrat.gel_leve' | 'acceptation.enregistree';
 
 export type EvenementJournal = {
-  type: TypeEvenement;
-  horodatage: string;
-  donnees: Readonly<Record<string, string | number | boolean | null>>;
+  type: TypeEvenement; horodatage: string; donnees: Readonly<Record<string, string | number | boolean | null>>;
 };
 
-export type Gel = {
-  actif: boolean;
-  motif: string | null;
-  posePar: string | null;
-  poseLe: string | null;
-};
+export type Gel = { actif: boolean; motif: string | null; posePar: string | null; poseLe: string | null };
 
 export type FinContrat = {
-  dateFin: string | null;
-  remisLe: string | null;
-  manifesteEmpreinte: string | null;
-  accuseLe: string | null;
-  accusePar: string | null;
-  gelModule: Gel;
-  gelConsole: boolean;
+  dateFin: string | null; remisLe: string | null; manifesteEmpreinte: string | null;
+  accuseLe: string | null; accusePar: string | null; gelModule: Gel; gelConsole: boolean;
 };
 
 const FORME_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
