@@ -32,8 +32,8 @@ function connu(liste: readonly string[], valeur: string): void {
   if (!liste.includes(valeur)) throw new ErreurMention('valeur_inconnue', 'Valeur inconnue.');
 }
 
-function vide(texte: string | undefined): boolean {
-  return texte === undefined || texte.trim() === '';
+function rempli(texte?: string): texte is string {
+  return texte !== undefined && texte.trim() !== '';
 }
 
 export function natureAutorisee(demande: {
@@ -71,12 +71,7 @@ export function etatMention(entree: {
   connu(NATURES, entree.nature);
   let validation: { par: string; le: string } | undefined;
   if (entree.statut === 'valide') {
-    if (
-      entree.validePar === undefined ||
-      entree.valideLe === undefined ||
-      vide(entree.validePar) ||
-      vide(entree.valideLe)
-    ) {
+    if (!rempli(entree.validePar) || !rempli(entree.valideLe)) {
       throw new ErreurMention('validation_incomplete', 'Validateur et date obligatoires.');
     }
     validation = { par: entree.validePar, le: entree.valideLe };

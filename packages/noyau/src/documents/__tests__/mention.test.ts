@@ -1,199 +1,103 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ErreurMention,
-  etatMention,
-  natureAutorisee,
-  type ModeTravail,
-  type NatureDocument,
-} from '../mention.js';
+import { ErreurMention, etatMention, natureAutorisee } from '../mention.js';
 
-type Statut = 'brouillon' | 'a_valider' | 'valide';
-const MODES: ModeTravail[] = ['autonome', 'assiste', 'saisie_seule'];
-const EXERCICES = ['ouvert', 'en_cloture', 'cloture', 'rouvert'] as const;
-const TYPES = ['fec', 'etat', 'declaration', 'paquet'] as const;
-
-function code(f: () => unknown): string | undefined {
+const n = (mode: string, exerciceStatut: string, demande: string, type: string) =>
+  natureAutorisee({ mode, exerciceStatut, demande, type } as never);
+const m = (e: object) => etatMention(e as never);
+const code = (f: () => unknown): string | undefined => {
   try {
     f();
   } catch (e) {
-    expect(e).toBeInstanceOf(ErreurMention);
-    return (e as ErreurMention).code;
+    return e instanceof ErreurMention ? e.code : 'autre';
   }
   return undefined;
-}
+};
+const OK = { ok: true, nature: 'officiel' };
+const refus = (c: string) => ({ ok: false, code: c });
+const VAL = { par: 'Camille Fictif', le: '2026-03-01' };
+const V = { validePar: VAL.par, valideLe: VAL.le };
 
 describe('mention', () => {
   it('officiel-refuse-en-saisie-seule', () => {
-    expect(
-      natureAutorisee({
-        mode: 'saisie_seule',
-        exerciceStatut: 'cloture',
-        demande: 'officiel',
-        type: 'etat',
-      }),
-    ).toEqual({ ok: false, code: 'mode_saisie_seule' });
-    // Pas de refus de mode pour les autres types ni les autres modes.
-    for (const type of ['fec', 'declaration', 'paquet'] as const) {
-      expect(
-        natureAutorisee({
-          mode: 'saisie_seule',
-          exerciceStatut: 'cloture',
-          demande: 'officiel',
-          type,
-        }),
-      ).toEqual({ ok: true, nature: 'officiel' });
+    const cas: [string, string, string, unknown][] = [
+      ['saisie_seule', 'cloture', 'etat', refus('mode_saisie_seule')],
+      ['saisie_seule', 'cloture', 'fec', OK],
+      ['saisie_seule', 'cloture', 'declaration', OK],
+      ['saisie_seule', 'cloture', 'paquet', OK],
+      ['autonome', 'cloture', 'etat', OK],
+      ['assiste', 'cloture', 'etat', OK],
+      ['saisie_seule', 'ouvert', 'etat', refus('mode_saisie_seule')],
+    ];
+    for (const [mode, ex, type, attendu] of cas) {
+      expect(n(mode, ex, 'officiel', type)).toEqual(attendu);
     }
-    for (const mode of ['autonome', 'assiste'] as const) {
-      expect(
-        natureAutorisee({
-          mode,
-          exerciceStatut: 'cloture',
-          demande: 'officiel',
-          type: 'etat',
-        }),
-      ).toEqual({ ok: true, nature: 'officiel' });
-    }
-    // Le mode passe avant l'exercice.
-    expect(
-      natureAutorisee({
-        mode: 'saisie_seule',
-        exerciceStatut: 'ouvert',
-        demande: 'officiel',
-        type: 'etat',
-      }),
-    ).toEqual({ ok: false, code: 'mode_saisie_seule' });
   });
-
   it('officiel-refuse-exercice-ouvert', () => {
-    for (const exerciceStatut of ['ouvert', 'en_cloture', 'rouvert'] as const) {
-      for (const type of ['etat', 'fec'] as const) {
-        expect(
-          natureAutorisee({
-            mode: 'assiste',
-            exerciceStatut,
-            demande: 'officiel',
-            type,
-          }),
-        ).toEqual({ ok: false, code: 'exercice_non_cloture' });
+    for (const ex of ['ouvert', 'en_cloture', 'rouvert']) {
+      for (const type of ['etat', 'fec']) {
+        expect(n('assiste', ex, 'officiel', type)).toEqual(refus('exercice_non_cloture'));
       }
-      for (const type of ['declaration', 'paquet'] as const) {
-        expect(
-          natureAutorisee({
-            mode: 'assiste',
-            exerciceStatut,
-            demande: 'officiel',
-            type,
-          }).ok,
-        ).toBe(true);
+      for (const type of ['declaration', 'paquet']) {
+        expect(n('assiste', ex, 'officiel', type)).toEqual(OK);
       }
     }
-    expect(
-      natureAutorisee({
-        mode: 'autonome',
-        exerciceStatut: 'cloture',
-        demande: 'officiel',
-        type: 'fec',
-      }),
-    ).toEqual({ ok: true, nature: 'officiel' });
+    expect(n('autonome', 'cloture', 'officiel', 'fec')).toEqual(OK);
   });
-
   it('indicatif-toujours-permis', () => {
-    for (const mode of MODES) {
-      for (const exerciceStatut of EXERCICES) {
-        for (const type of TYPES) {
-          for (const demande of ['indicatif', 'travail'] as const) {
-            expect(natureAutorisee({ mode, exerciceStatut, demande, type })).toEqual({
-              ok: true,
-              nature: demande,
-            });
+    for (const mode of ['autonome', 'assiste', 'saisie_seule']) {
+      for (const ex of ['ouvert', 'en_cloture', 'cloture', 'rouvert']) {
+        for (const type of ['fec', 'etat', 'declaration', 'paquet']) {
+          for (const d of ['indicatif', 'travail']) {
+            expect(n(mode, ex, d, type)).toEqual({ ok: true, nature: d });
           }
         }
       }
     }
   });
-
   it('valeur-inconnue-refusee', () => {
-    const base = {
-      mode: 'assiste',
-      exerciceStatut: 'cloture',
-      demande: 'officiel',
-      type: 'etat',
-    } as const;
-    expect(code(() => natureAutorisee({ ...base, mode: 'x' as never }))).toBe('valeur_inconnue');
-    expect(code(() => natureAutorisee({ ...base, exerciceStatut: 'x' as never }))).toBe(
-      'valeur_inconnue',
-    );
-    expect(code(() => natureAutorisee({ ...base, demande: 'x' as never }))).toBe('valeur_inconnue');
-    expect(code(() => natureAutorisee({ ...base, type: 'x' as never }))).toBe('valeur_inconnue');
-    expect(code(() => etatMention({ statut: 'x' as never, nature: 'officiel' }))).toBe(
-      'valeur_inconnue',
-    );
-    expect(code(() => etatMention({ statut: 'brouillon', nature: 'x' as never }))).toBe(
-      'valeur_inconnue',
-    );
-  });
-
-  it('filigrane-tant-que-non-valide', () => {
-    for (const statut of ['brouillon', 'a_valider'] as const) {
-      expect(etatMention({ statut, nature: 'officiel' })).toEqual({
-        mention: 'prepare_par_ia',
-        filigrane: 'a_valider',
-      });
+    const args = ['assiste', 'cloture', 'officiel', 'etat'];
+    for (let i = 0; i < 4; i++) {
+      const a = args.map((v, j) => (j === i ? 'x' : v));
+      expect(code(() => n(a[0]!, a[1]!, a[2]!, a[3]!))).toBe('valeur_inconnue');
     }
-    // Vue de travail : toujours « non officiel ».
-    expect(etatMention({ statut: 'brouillon', nature: 'travail' })).toEqual({
-      mention: 'prepare_par_ia',
-      filigrane: 'non_officiel',
-    });
+    expect(code(() => m({ statut: 'x', nature: 'officiel' }))).toBe('valeur_inconnue');
+    expect(code(() => m({ statut: 'brouillon', nature: 'x' }))).toBe('valeur_inconnue');
   });
-
+  it('filigrane-tant-que-non-valide', () => {
+    const cas: [string, string, string][] = [
+      ['brouillon', 'officiel', 'a_valider'],
+      ['a_valider', 'officiel', 'a_valider'],
+      ['brouillon', 'travail', 'non_officiel'],
+      ['a_valider', 'travail', 'non_officiel'],
+    ];
+    for (const [statut, nature, filigrane] of cas) {
+      expect(m({ statut, nature })).toEqual({ mention: 'prepare_par_ia', filigrane });
+    }
+  });
   it('valide-sans-filigrane-avec-validateur', () => {
-    expect(
-      etatMention({
-        statut: 'valide',
-        nature: 'officiel',
-        validePar: 'Camille Fictif',
-        valideLe: '2026-03-01',
-      }),
-    ).toEqual({
+    expect(m({ statut: 'valide', nature: 'officiel', ...V })).toEqual({
       mention: 'prepare_par_ia',
-      validation: { par: 'Camille Fictif', le: '2026-03-01' },
+      validation: VAL,
       filigrane: 'aucun',
     });
   });
-
   it('indicatif-garde-son-filigrane', () => {
-    const v = { validePar: 'Camille Fictif', valideLe: '2026-03-01' };
-    for (const statut of ['brouillon', 'a_valider', 'valide'] as Statut[]) {
-      const nature: NatureDocument = 'indicatif';
-      expect(etatMention({ statut, nature, ...v }).filigrane).toBe('indicatif');
+    for (const statut of ['brouillon', 'a_valider', 'valide']) {
+      expect(m({ statut, nature: 'indicatif', ...V }).filigrane).toBe('indicatif');
     }
-    expect(etatMention({ statut: 'valide', nature: 'travail', ...v }).filigrane).toBe(
-      'non_officiel',
-    );
-    expect(etatMention({ statut: 'valide', nature: 'indicatif', ...v }).validation).toEqual({
-      par: 'Camille Fictif',
-      le: '2026-03-01',
-    });
+    expect(m({ statut: 'valide', nature: 'travail', ...V }).filigrane).toBe('non_officiel');
+    expect(m({ statut: 'valide', nature: 'indicatif', ...V }).validation).toEqual(VAL);
   });
-
   it('validation-incomplete-refusee', () => {
-    const base = { statut: 'valide', nature: 'officiel' } as const;
-    expect(code(() => etatMention(base))).toBe('validation_incomplete');
-    expect(code(() => etatMention({ ...base, validePar: 'Camille Fictif' }))).toBe(
-      'validation_incomplete',
-    );
-    expect(code(() => etatMention({ ...base, valideLe: '2026-03-01' }))).toBe(
-      'validation_incomplete',
-    );
-    expect(code(() => etatMention({ ...base, validePar: '   ', valideLe: '2026-03-01' }))).toBe(
-      'validation_incomplete',
-    );
-    expect(code(() => etatMention({ ...base, validePar: 'Camille Fictif', valideLe: ' ' }))).toBe(
-      'validation_incomplete',
-    );
-    expect(code(() => etatMention({ ...base, validePar: '', valideLe: '' }))).toBe(
-      'validation_incomplete',
-    );
+    const base = { statut: 'valide', nature: 'officiel' };
+    const cas = [
+      {},
+      { validePar: 'Camille Fictif' },
+      { valideLe: '2026-03-01' },
+      { validePar: '   ', valideLe: '2026-03-01' },
+      { validePar: 'Camille Fictif', valideLe: ' ' },
+      { validePar: '', valideLe: '' },
+    ];
+    for (const c of cas) expect(code(() => m({ ...base, ...c }))).toBe('validation_incomplete');
   });
 });
