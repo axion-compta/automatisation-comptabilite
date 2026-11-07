@@ -1,6 +1,8 @@
 // garde:perimetre : une PR ne touche que les fichiers_autorises de sa fiche (V3-QUA-027).
 // La fiche est lue sur la base (origin/main), jamais sur la branche. Rouge si :
 // fichier hors liste, taille > taille_max_lignes, dépendance ajoutée ou modifiée hors nouvelles_dependances.
+// Exception (L00-T38) : packages/contrat/openapi.json (chemin exact) est compté à part, plafond fixe, et seulement
+// si pnpm contrat:diff confirme que c'est le fichier généré et que la PR ne touche pas packages/contrat/scripts/.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -111,7 +113,10 @@ function dependances(jsonTexte, chemin) {
   return out;
 }
 
-// diff : { fichiers: [chemin], lignes: nombre }, paquets : [{ chemin, base, branche }] (textes package.json)
+export const OPENAPI = 'packages/contrat/openapi.json';
+export const PLAFOND_OPENAPI = 300;
+
+// diff : { fichiers: [chemin], lignes: nombre, lignesOpenapi?: nombre }, paquets : [{ chemin, base, branche }] (textes package.json)
 export function analyserPerimetre(fiche, diff, paquets = []) {
   const pb = [];
   if (!Array.isArray(fiche.fichiers_autorises)) return ['fiche : fichiers_autorises absent ou n’est pas un tableau'];
@@ -130,6 +135,9 @@ export function analyserPerimetre(fiche, diff, paquets = []) {
   }
   if (typeof fiche.taille_max_lignes === 'number' && diff.lignes > fiche.taille_max_lignes) {
     pb.push(`taille ${diff.lignes} lignes > ${fiche.taille_max_lignes}`);
+  }
+  if ((diff.lignesOpenapi ?? 0) > PLAFOND_OPENAPI) {
+    pb.push(`openapi.json : ${diff.lignesOpenapi} lignes > ${PLAFOND_OPENAPI} (plafond fixe, compté à part)`);
   }
   if (fiche.nouvelles_dependances !== undefined && !Array.isArray(fiche.nouvelles_dependances)) {
     return [...pb, 'fiche : nouvelles_dependances n’est pas un tableau'];
@@ -178,7 +186,8 @@ export function lireRaw(texte) {
 const decoupe = (t) => (t ?? '').split('\0').filter(Boolean);
 
 // git : (args) => sortie texte, ou null si échec. env : { GITHUB_HEAD_REF, CORPS_PR }.
-export function collecter(git, env = {}) {
+// outils : { estGenere: () => booléen } confirme que openapi.json est le fichier généré ; absent, faux ou en échec = pas d'exemption.
+export function collecter(git, env = {}, outils = {}) {
   const enPR = Boolean(env.GITHUB_HEAD_REF);
   const branche = env.GITHUB_HEAD_REF || git(['rev-parse', '--abbrev-ref', 'HEAD'])?.trim() || '';
   if (enPR) {
@@ -218,20 +227,34 @@ export function collecter(git, env = {}) {
   }
   // binaire côté branche (un octet NUL) = rouge ; --text compte quand même les lignes si seul l'ancien état était binaire
   for (const f of fichiers) if (git(['show', `HEAD:${f}`])?.includes('\0')) erreurs.push(`fichier binaire : ${f}`);
-  const lignes = decoupe(stat).reduce((n, l) => {
+  let autres = 0;
+  let lignesOpenapi = 0;
+  for (const l of decoupe(stat)) {
     const [a, d, ...reste] = l.split('\t');
     // « - - » : git ne sait pas compter (binaire) ; plutôt que 0 ligne, rouge explicite.
     if (a === '-' || d === '-') erreurs.push(`fichier binaire non comptable : ${reste.join('\t')}`);
-    return n + (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
-  }, 0);
+    const k = (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
+    if (reste.join('\t') === OPENAPI) lignesOpenapi += k;
+    else autres += k;
+  }
+  let exempte = false;
+  if (lignesOpenapi > 0 && !fichiers.some((f) => f.startsWith('packages/contrat/scripts/'))) {
+    try {
+      exempte = outils.estGenere?.() === true;
+    } catch {
+      exempte = false;
+    }
+  }
+  const lignes = exempte ? autres : autres + lignesOpenapi;
+  if (!exempte) lignesOpenapi = 0;
   const paquets = fichiers
     .filter((f) => f.endsWith('package.json') || f.endsWith('pnpm-workspace.yaml'))
     .map((f) => ({ chemin: f, base: git(['show', `${BASE}:${f}`]), branche: git(['show', `HEAD:${f}`]) }));
-  return { id, texteFiche, noms: fichiers, lignes, paquets, erreurs };
+  return { id, texteFiche, noms: fichiers, lignes, lignesOpenapi, paquets, erreurs };
 }
 
-export function evaluer(git, env = {}) {
-  const c = collecter(git, env);
+export function evaluer(git, env = {}, outils = {}) {
+  const c = collecter(git, env, outils);
   if (c.pilotage) return { pb: [], msg: `garde:perimetre vert (PR de pilotage, ${c.noms.length} fichier(s))` };
   if (c.ignore) return { pb: [], msg: 'garde:perimetre vert (pas de branche de fiche)' };
   const pb = [...c.erreurs];
@@ -244,13 +267,14 @@ export function evaluer(git, env = {}) {
     }
     if (fiche) {
       try {
-        pb.push(...analyserPerimetre(fiche, { fichiers: c.noms, lignes: c.lignes }, c.paquets));
+        pb.push(...analyserPerimetre(fiche, { fichiers: c.noms, lignes: c.lignes, lignesOpenapi: c.lignesOpenapi }, c.paquets));
       } catch (e) {
         pb.push(e.message); // ex. « package.json invalide : … »
       }
     }
   }
-  return { pb, msg: `garde:perimetre vert (${c.id}, ${c.noms?.length} fichier(s), ${c.lignes} ligne(s))` };
+  const oa = c.lignesOpenapi > 0 ? ` + ${c.lignesOpenapi} ligne(s) d'openapi.json` : '';
+  return { pb, msg: `garde:perimetre vert (${c.id}, ${c.noms?.length} fichier(s), ${c.lignes} ligne(s)${oa})` };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
@@ -258,7 +282,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const r = spawnSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
     return r.status === 0 ? r.stdout : null;
   };
-  const { pb, msg } = evaluer(git, process.env);
+  const estGenere = () =>
+    spawnSync(process.execPath, ['packages/contrat/scripts/diff.mjs'], { encoding: 'utf8', timeout: 120000 }).status === 0;
+  const { pb, msg } = evaluer(git, process.env, { estGenere });
   if (pb.length > 0) {
     console.error('garde:perimetre ROUGE\n' + pb.map((p) => ' - ' + p).join('\n'));
     process.exit(1);
