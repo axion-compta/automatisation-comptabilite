@@ -12,6 +12,18 @@ const code = (f: () => unknown): string | undefined => {
 };
 
 describe('recherche : extrait', () => {
+  it.each([Number.NaN, Infinity, -5, 0, 2.5])('longueur-invalide-%s', (l) => {
+    expect(code(() => extrait('alpha facture', ['facture'], false, l))).toBe('limite_invalide');
+  });
+
+  it('curseur-bits-de-bourrage-non-canonique', () => {
+    const c = Buffer.from(JSON.stringify({ d: 1 })).toString('base64url');
+    expect(paginer([1, 2, 3], { limite: 1, curseur: c }).elements).toEqual([2]);
+    const alt = `${c.slice(0, -1)}R`;
+    expect(Buffer.from(alt, 'base64url').toString()).toBe('{"d":1}');
+    expect(code(() => paginer([1, 2, 3], { limite: 1, curseur: alt }))).toBe('curseur_invalide');
+  });
+
   it('echapperHtml-cinq-caracteres', () => {
     expect(echapperHtml(`&<>"'`)).toBe('&amp;&lt;&gt;&quot;&#39;');
   });
@@ -49,6 +61,7 @@ describe('recherche : extrait', () => {
     expect(extrait('alpha beta gamma delta', ['zzz'], false, 11)).toBe('alpha beta');
     expect(extrait('alpha beta', [], false, 200)).toBe('alpha beta');
     expect(extrait('', ['a'], false, 20)).toBe('');
+    expect(extrait('a'.repeat(30), [], false, 10)).toBe('a'.repeat(10));
   });
 
   it('fenetre-autour-de-la-correspondance', () => {

@@ -44,6 +44,7 @@ function trouver(cps: string[], mots: string[], prefixe: boolean): [number, numb
 }
 
 export function extrait(texte: string, mots: string[], prefixe: boolean, longueur: number): string {
+  if (!Number.isSafeInteger(longueur) || longueur < 1) throw new ErreurExtrait('limite_invalide');
   const cps = [...texte];
   const trouves = trouver(cps, mots, prefixe);
   const premier = trouves[0];
@@ -54,6 +55,7 @@ export function extrait(texte: string, mots: string[], prefixe: boolean, longueu
   const plancher = premier?.[1] ?? 0;
   while (fin < cps.length && fin > plancher && estMot(cps[fin - 1]) && estMot(cps[fin])) fin -= 1;
   if (fin < plancher) fin = plancher;
+  if (fin <= debut) fin = Math.min(cps.length, debut + longueur);
   while (fin > plancher && /\s/u.test(cps[fin - 1] ?? '')) fin -= 1;
   let rendu = '';
   let pos = debut;
