@@ -1,0 +1,6 @@
+/* Champ lu et mot de confiance : uniquement des variables de jetons.css. */
+.axion-champ-lu__libelle { font-family: var(--police-texte); font-size: var(--taille-texte); font-weight: var(--graisse-forte); color: var(--couleur-texte-discret); }
+.axion-champ-lu__valeur { margin: 0 0 var(--espace-s); padding: var(--espace-xs) var(--espace-s); font-family: var(--police-texte); font-size: var(--taille-texte); font-weight: var(--graisse-normale); color: var(--couleur-texte); }
+.axion-champ-lu__valeur--evidence { background: var(--couleur-surface); border: 1px solid var(--couleur-alerte); border-left-width: var(--espace-xs); border-radius: var(--rayon-m); }
+.axion-champ-lu__valeur--douteux { border-color: var(--couleur-erreur); }
+.axion-champ-lu__explication { display: block; color: var(--couleur-texte-discret); font-size: var(--taille-texte); }
