@@ -72,11 +72,16 @@ export function verifierMotif(m: string): void {
 }
 
 function mots(cle: string): string[] {
-  return cle.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/);
+  return cle.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/);
+}
+
+function interdit(mot: string): boolean {
+  const sans = mot.replace(/[sx]$/, '');
+  return MOTS_INTERDITS.some((f) => mot.endsWith(f) || sans.endsWith(f));
 }
 
 export function donneesPermises(d: Readonly<Record<string, unknown>>): void {
   for (const cle of Object.keys(d)) {
-    if (mots(cle).some((mot) => MOTS_INTERDITS.includes(mot))) throw new ErreurRgpd('valeur_interdite');
+    if (mots(cle).some(interdit)) throw new ErreurRgpd('valeur_interdite');
   }
 }
