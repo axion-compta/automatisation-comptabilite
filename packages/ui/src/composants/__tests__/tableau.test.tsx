@@ -123,9 +123,7 @@ describe("tableau accessible", () => {
     const [p2, s2] = [...fin.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
     expect(p2?.disabled).toBe(false);
     expect(s2?.disabled).toBe(true);
-    await act(async () => {
-      p2?.click();
-    });
+    await act(async () => p2?.click());
     expect(surPage).toHaveBeenLastCalledWith(2);
     for (const total of [0, 2]) {
       const m = await monter(<Tableau {...props({ pagination: pagination({ total }) })} />);
@@ -141,9 +139,7 @@ describe("tableau accessible", () => {
       const m = await monter(<Tableau {...props({ pagination: pagination({ surPage: appels, ...cas }) })} />);
       const boutons = [...m.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
       expect(boutons.map((b) => b.disabled), JSON.stringify(cas)).toEqual([true, true]);
-      await act(async () => {
-        for (const b of boutons) b.click();
-      });
+      await act(async () => boutons.forEach((b) => b.click()));
       expect(m.querySelector('[aria-live="polite"]')?.textContent, JSON.stringify(cas)).toBe("0 à 0 sur 0");
     }
     expect(appels).not.toHaveBeenCalled();
@@ -152,9 +148,7 @@ describe("tableau accessible", () => {
     const bh = [...hors.querySelectorAll<HTMLButtonElement>(".axion-tableau__pagination button")];
     expect(bh.map((b) => b.disabled)).toEqual([false, true]);
     const bas = await monter(<Tableau {...props({ pagination: pagination({ decalage: 1, surPage }) })} />);
-    await act(async () => {
-      bas.querySelector<HTMLButtonElement>(".axion-tableau__pagination button")?.click();
-    });
+    await act(async () => bas.querySelector<HTMLButtonElement>(".axion-tableau__pagination button")?.click());
     expect(surPage).toHaveBeenLastCalledWith(0);
     const borne = await monter(<Tableau {...props({ pagination: pagination({ decalage: 4, total: 5 }) })} />);
     expect(borne.querySelector('[aria-live="polite"]')?.textContent).toBe("5 à 5 sur 5");
