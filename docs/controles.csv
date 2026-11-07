@@ -37,3 +37,5 @@ CC-PM04,V3-MOT-071,B,cloture,avant_cloture|demande,P5,CT-PM04,,oui
 CC-PM05,V3-MOT-071,B,cloture,avant_cloture|demande,P5,CT-PM05,capital.liberation_minimale,oui
 CC-PM06,V3-MOT-085,B,cloture,avant_cloture|demande,P5,CT-PM06,dividende.gerant_majoritaire.seuil,oui
 CC-PM07,V3-MOT-075,B,export_officiel|cloture,avant_export|nocturne|demande,P5,CT-PM07,,oui
+CC-PM02,V3-MOT-056,B,validation_mois|cloture,continu|avant_cloture,V1,CT-PM02,,oui
+CC-PM03,V3-MOT-081,B,export_officiel|cloture,avant_export|avant_cloture,V1,CT-PM03,,oui
