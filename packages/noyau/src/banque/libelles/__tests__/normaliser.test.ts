@@ -73,11 +73,11 @@ describe('normaliserLibelle', () => {
     let g = 12345;
     const alea = (m: number) => (g = (g * 1103515245 + 12345) % 2147483648) % m;
     const chiffres = (k: number) => Array.from({ length: k }, () => String(alea(10))).join('');
-    const mots = ['FICTIVA', 'PARIS', 'REF', 'CB', 'RUM', 'USD'];
+    const mots = ['FICTIVA', 'PARIS', 'REF', 'CB', 'RUM', 'USD', 'REF 4974123412341234', 'RUM 4974XXXXXXXX1234'];
     for (let i = 0; i < 200; i++) {
       const long = 12 + alea(14);
       const carte = alea(2) ? chiffres(long) : chiffres(6) + 'X'.repeat(long - 10) + chiffres(4);
-      const t = `${mots[alea(6)]} ${mots[alea(6)]} ${carte} ${alea(2) ? 'AB' : ''}${chiffres(20)} ${mots[alea(6)]}`;
+      const t = `${mots[alea(8)]} ${mots[alea(8)]} ${carte} ${alea(2) ? 'AB' : ''}${chiffres(20)} ${mots[alea(8)]}`;
       const r = n(t);
       expect(JSON.stringify(r)).not.toMatch(/\d{12}/);
       if (r.carteMasquee) expect(r.carteMasquee).toMatch(/^•••• \d{4}$/);
@@ -87,5 +87,22 @@ describe('normaliserLibelle', () => {
     expect(n('CB XXXXXXXXXXXX').normalise).toBe('');
     expect(n('CB 12345678901').normalise).toBe('');
     expect(n('CB 1234567890123456789').carteMasquee).toBe('•••• 6789');
+    const x = n('CB X 4974XXXXXXXX1234 4974XXXXXXXX5678');
+    expect(x).toMatchObject({ normalise: 'X', carteMasquee: '•••• 1234' });
+    expect(JSON.stringify(x)).not.toMatch(/5678|4974/);
+    expect(n('CB X REF 4974123412341234').reference).toBeUndefined();
+    expect(n('PRLV SEPA X RUM 4974123412341234').rum).toBeUndefined();
+    expect(n('CB X REF 4974123412341234').normalise).toBe('X');
+    expect(n('CB X 12341234123412341234').carteMasquee).toBeUndefined();
+  });
+  it('libelle-tronque-a-32-caracteres', () => {
+    const base = 'CB FICTIVA TELECOM 03/10 4974XXXXXXXX1234 REF FA-2026-0142';
+    for (const l of [base.slice(0, 32), 'CB FICTIVA 4974XXXXXXXX1234 REF'.slice(0, 32), 'PRLV SEPA X RUM FT-778 REF AB'.slice(0, 32), 'CB FICTIVA 4974XXXXXXXX123'.slice(0, 32)]) {
+      expect(l.length).toBeLessThanOrEqual(32);
+      expect(() => n(l)).not.toThrow();
+      expect(JSON.stringify(n(l))).not.toMatch(/\d{12}/);
+    }
+    expect(n('CB FICTIVA 4974XXXXXXXX1234 RE')).toMatchObject({ carteMasquee: '•••• 1234' });
+    expect(n('CB FICTIVA 4974XXXXXXXX1234 REF').reference).toBeUndefined();
   });
 });

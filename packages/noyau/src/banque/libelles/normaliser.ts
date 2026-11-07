@@ -27,7 +27,7 @@ const RE_REF = new RegExp(`(?:\\/RFB\\/|(?:^| )(?:EREF|REF)(?= |$) ?)${MOT_CLE}(
 const RE_RUM = new RegExp(`(?:^| )RUM(?= |$)(?: ${MOT_CLE}(\\S+))?`);
 const RE_ICS = new RegExp(`(?:^| )ICS(?= |$)(?: ${MOT_CLE}(\\S+))?`);
 const RE_DEVISE = /(?:^| )(USD|GBP|CHF|JPY|CAD|AUD|SEK|NOK|DKK) (\d{1,3}(?: \d{3})*(?:,\d+)?|\d+(?:,\d+)?)(?: TX (\d+,\d+))?(?= |$)/;
-const RE_CARTE = /[0-9X]{12,19}/;
+const RE_CARTE = /(?<![0-9X])[0-9X]{12,}(?![0-9X])/g;
 const RE_DATE = /(?:^| )(\d{2}\/\d{2})(?= |$)/;
 
 const echapper = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -55,6 +55,11 @@ export function normaliserLibelle(brut: string, villes: readonly string[]): Libe
       t = t.slice(c[0].length);
     }
   }
+  for (const k of t.match(RE_CARTE) ?? []) {
+    const fin = /\d{4}$/.exec(k);
+    if (fin && k.length <= 19 && r.carteMasquee === undefined) r.carteMasquee = `•••• ${fin[0]}`;
+  }
+  t = t.replace(RE_CARTE, ' ');
   t = t.replace(RE_REF, (_x, v: string) => {
     if (v !== '' && r.reference === undefined) r.reference = v;
     return ' ';
@@ -71,12 +76,6 @@ export function normaliserLibelle(brut: string, villes: readonly string[]): Libe
     const [, code, montantTexte, tauxTexte] = d;
     r.devise = { code: code!, montantTexte: montantTexte!, ...(tauxTexte ? { tauxTexte } : {}) };
     t = t.replace(RE_DEVISE, ' ');
-  }
-  const k = RE_CARTE.exec(t);
-  if (k) {
-    const fin = /\d{4}$/.exec(k[0]);
-    if (fin) r.carteMasquee = `•••• ${fin[0]}`;
-    t = t.replace(RE_CARTE, ' ');
   }
   if (r.moyen === 'carte') {
     const dc = RE_DATE.exec(t);
