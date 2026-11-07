@@ -55,10 +55,11 @@ export class ErreurLecture extends Error {
 }
 const CODES: Record<number, CodeLecture> = { 403: 'acces_refuse', 404: 'introuvable', 409: 'conflit', 423: 'verrouille' };
 /** Lit une route en GET et valide la réponse 2xx par le schéma (garde:appels : seul ce fichier appelle le réseau). */
-export async function lire<T>(chemin: string, schema: { safeParse(v: unknown): { success: boolean; data?: T } }, signal?: AbortSignal): Promise<T> {
+export type SchemaLecture<T> = { safeParse(v: unknown): { success: boolean; data?: T } };
+export async function lire<T>(chemin: string, schema: SchemaLecture<T>, signal?: AbortSignal): Promise<T> {
   let r: Response;
   try {
-    r = await fetch(new URL(chemin, location.origin).toString(), { method: 'GET', signal });
+    r = await fetch(new URL(chemin, location.origin).toString(), signal ? { method: 'GET', signal } : { method: 'GET' });
   } catch {
     throw new ErreurLecture(0, 'reseau');
   }
@@ -68,3 +69,6 @@ export async function lire<T>(chemin: string, schema: { safeParse(v: unknown): {
   if (!v.success) throw new ErreurLecture(r.status, 'reponse_invalide');
   return v.data as T;
 }
+export type EtatLecture<T> = { etat: 'chargement' | 'erreur' | 'vide' | 'pret'; donnees?: T; erreur?: ErreurLecture };
+/** Forme de useLecture (déclarée ici : la garde textes lit mal les génériques dans un .tsx). */
+export type UseLecture = <T>(chemin: string, schema: SchemaLecture<T>) => EtatLecture<T>;

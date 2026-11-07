@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
-import { ErreurLecture, lire } from '../api.js';
+import { ErreurLecture, lire, type EtatLecture, type UseLecture } from '../api.js';
 
-export type EtatLecture<T> = { etat: 'chargement' | 'erreur' | 'vide' | 'pret'; donnees?: T; erreur?: ErreurLecture };
+export type { EtatLecture };
 
 /** Pas de nouvelle tentative sur une erreur 4xx ; une seule sur les autres. */
 export function creerClient(): QueryClient {
@@ -22,13 +22,11 @@ export function FournisseurDonnees({ children, client }: { children: ReactNode; 
   return <QueryClientProvider client={c}>{children}</QueryClientProvider>;
 }
 
-type Schema<T> = { safeParse(v: unknown): { success: boolean; data?: T } };
-
 /** Lit une route ; `vide` si l'enveloppe a `total === 0`. */
-export function useLecture<T>(chemin: string, schema: Schema<T>): EtatLecture<T> {
-  const q = useQuery<T, ErreurLecture>({ queryKey: ['lecture', chemin], queryFn: ({ signal }) => lire(chemin, schema, signal) });
-  if (q.isError) return { etat: 'erreur', erreur: q.error };
+export const useLecture: UseLecture = (chemin, schema) => {
+  const q = useQuery({ queryKey: ['lecture', chemin], queryFn: ({ signal }) => lire(chemin, schema, signal) });
+  if (q.isError) return { etat: 'erreur', erreur: q.error as ErreurLecture };
   if (q.data === undefined) return { etat: 'chargement' };
   const total = (q.data as { total?: unknown }).total;
   return { etat: total === 0 ? 'vide' : 'pret', donnees: q.data };
-}
+};
