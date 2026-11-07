@@ -41,6 +41,8 @@ describe('couverture des relevés', () => {
     const l = [r('a', '2026-08-01', '2026-08-20', 1, 2), r('b', '2026-08-15', '2026-08-31', 9, 9)];
     expect(trousDeReleves(l, [])).toEqual([]);
     expect(chevauchements(l)).toEqual([{ a: 'a', b: 'b', du: '2026-08-15', au: '2026-08-20' }]);
+    const englobe = [r("a", "2026-08-01", "2026-08-31", 1, 2), r("b", "2026-08-05", "2026-08-10", 9, 9), r("c", "2026-09-01", "2026-09-30", 2, 3)];
+    expect(trousDeReleves(englobe, [])).toEqual([]);
     expect(chevauchements([aout, octobre])).toEqual([]);
     expect(chevauchements([r('a', '2026-08-01', '2026-08-15'), r('b', '2026-08-15', '2026-08-31')])).toHaveLength(1);
   });
@@ -50,10 +52,23 @@ describe('couverture des relevés', () => {
     ]);
     expect(trousDeReleves([r('a', '2026-08-01', '2026-08-31', 1), r('b', '2026-09-01', '2026-09-30', 1)], [])).toEqual([]);
   });
+  it('sans-soldes-impossible-ouverture-absente', () => {
+    const t = trousDeReleves([r('a', '2026-08-01', '2026-08-31', 0, 5), r('b', '2026-10-01', '2026-10-31', undefined, 0)], []);
+    expect(t).toEqual([{ compteId: 'c1', debut: '2026-09-01', fin: '2026-09-30', preuve: 'dates', soldes: 'IMPOSSIBLE' }]);
+    expect(t[0]).not.toHaveProperty('ecart');
+  });
   it('ordre-des-releves-sans-effet', () => {
     const tous = [aout, octobre, r('x', '2026-11-01', '2026-11-30', 0, 0)];
     expect(trousDeReleves([...tous].reverse(), [])).toEqual(trousDeReleves(tous, []));
     expect(trousDeReleves(tous, [])).toHaveLength(1);
+  });
+  it('tri-par-compte-et-par-id', () => {
+    const z2 = [r('z1', '2026-08-01', '2026-08-31', 0, 1, 'c2'), r('z2', '2026-10-01', '2026-10-31', 1, 0, 'c2')];
+    const un = [r('a1', '2026-08-01', '2026-08-31', 0, 1), r('a2', '2026-10-01', '2026-10-31', 1, 0)];
+    expect(trousDeReleves([...z2, ...un], []).map((t) => t.compteId)).toEqual(['c1', 'c2']);
+    const m = [r('m', '2026-08-01', '2026-08-31', 0, 5), r('n', '2026-08-01', '2026-08-31', 0, 7), r('p', '2026-09-01', '2026-09-30', 7, 0)];
+    expect(trousDeReleves(m, [])).toEqual([]);
+    expect(trousDeReleves([m[1], m[0], m[2]], [])).toEqual([]);
   });
   it('comptes-separes', () => {
     const autre = r('z', '2026-10-01', '2026-10-31', 1100000, 0, 'c2');
