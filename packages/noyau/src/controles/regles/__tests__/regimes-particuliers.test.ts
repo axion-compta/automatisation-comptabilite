@@ -100,6 +100,9 @@ describe('CC-T10, CC-T11 et CC-T15 régimes particuliers', () => {
     expect(t15.evaluer({ piece: piece([], 0, 0) })).toEqual({ resultat: 'ALERTE', valeur: 'taux_zero_sans_mention' });
     expect(t15.evaluer({ piece: piece(['Exonération de TVA'], 0, 0) })).toEqual({ resultat: 'OK' });
     expect(t15.evaluer({ piece: piece([], 0, 1) })).toEqual({ resultat: 'OK' });
+    for (const mention of ['Autoliquidation', 'TVA sur la marge']) {
+      expect(t15.evaluer({ piece: piece([mention], 0, 0) })).toEqual({ resultat: 'OK' });
+    }
     const mixte = piece([], 0);
     const deux = { ...mixte, lignes: [ligne(1, 0, 2000), ligne(1, 0, 0)] };
     expect(t15.evaluer({ piece: deux }).valeur).toBe('taux_zero_sans_mention');

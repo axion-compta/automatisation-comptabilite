@@ -94,9 +94,10 @@ export function regleCCT15(
     evaluer({ piece, clientUeNumeroValide }): SortieRegle {
       const tva = tvaFacturee(piece);
       const exoneree = contientMention(piece, m.exoneration);
+      const justifiee = exoneree || contientMention(piece, m.autoliquidation) || contientMention(piece, m.marge);
       let motif: MotifExoneration | undefined;
       if (exoneree && tva > 0) motif = 'exoneration_avec_tva';
-      else if (!exoneree && piece.lignes.some((l) => l.taux === 0)) motif = 'taux_zero_sans_mention';
+      else if (!justifiee && piece.lignes.some((l) => l.taux === 0)) motif = 'taux_zero_sans_mention';
       else if (piece.sens === 'vente' && clientUeNumeroValide === true && tva > 0) motif = 'tva_francaise_client_ue';
       return motif === undefined ? ok() : alerte(undefined, motif);
     },
