@@ -1,2 +1,2 @@
 export type ServiceNotifications = Record<string, never>; // état en mémoire du domaine « notifications » (vide)
-export const routesNotifications = (_service?: ServiceNotifications): Record<string, never> => ({}); // aucune route pour l’instant
+export const routesNotifications = (service?: ServiceNotifications): Record<string, never> => (void service, {}); // aucune route pour l’instant
