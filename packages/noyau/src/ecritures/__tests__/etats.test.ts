@@ -120,6 +120,35 @@ describe("états d'une écriture", () => {
     );
   });
 
+  it('maintenant-invalide-refuse', () => {
+    const e = ecriture('propose');
+    const d = demanderValidation(e, 0, DELAI);
+    for (const m of [Number.NaN, Number.POSITIVE_INFINITY, 1.5, -1, Number.MAX_SAFE_INTEGER + 1]) {
+      expect(code(() => demanderValidation(e, m, DELAI))).toBe('delai_invalide');
+      expect(code(() => annulerValidation(d, m))).toBe('delai_invalide');
+      expect(code(() => validationEchue(d, m))).toBe('delai_invalide');
+    }
+    expect(code(() => demanderValidation(e, Number.MAX_SAFE_INTEGER, DELAI))).toBe('delai_invalide');
+    expect(demanderValidation(e, 0, DELAI).echeance).toBe(10000);
+    for (const ech of [Number.NaN, Number.POSITIVE_INFINITY, 1.5, -1]) {
+      const mauvaise = { ecritureId: 'e1', echeance: ech };
+      expect(code(() => annulerValidation(mauvaise, 1e15))).toBe('delai_invalide');
+      expect(code(() => validationEchue(mauvaise, 1e15))).toBe('delai_invalide');
+    }
+    const zero = { ecritureId: 'e1', echeance: 0 };
+    expect(code(() => annulerValidation(zero, 0))).toBe('delai_depasse');
+    expect(validationEchue(zero, 0)).toBe(true);
+    expect(() => annulerValidation(d, Number.NaN)).toThrow('Un instant doit être un entier positif ou nul (millisecondes).');
+    expect(() => validationEchue({ ...d, echeance: Number.NaN }, 0)).toThrow('Un instant doit être un entier positif ou nul (millisecondes).');
+  });
+
+  it('valider-reverifie-l-ecriture', () => {
+    expect(code(() => valider(ecriture('propose', 999), 'N1', 'Alice', '2026-01-16'))).toBe(
+      'desequilibre',
+    );
+    expect(valider(ecriture('propose'), 'N1', 'Alice', '2026-01-16').statut).toBe('valide');
+  });
+
   it('proposer-desequilibree-refuse', () => {
     expect(code(() => proposer(ecriture('brouillon', 999)))).toBe('desequilibre');
     expect(code(() => proposer({ ...ecriture('brouillon'), lignes: [] }))).toBe('une_seule_ligne');

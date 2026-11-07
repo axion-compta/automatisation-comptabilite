@@ -23,6 +23,15 @@ export function proposer(e: Ecriture): Ecriture {
   return { ...e, statut: 'propose' };
 }
 
+function controlerInstant(valeur: number): void {
+  if (!Number.isSafeInteger(valeur) || valeur < 0) {
+    throw new ErreurEcriture(
+      'delai_invalide',
+      'Un instant doit être un entier positif ou nul (millisecondes).',
+    );
+  }
+}
+
 /** Crée la demande de validation : échéance = maintenant + délai. */
 export function demanderValidation(
   e: Ecriture,
@@ -35,11 +44,16 @@ export function demanderValidation(
   if (!Number.isInteger(delaiMs) || delaiMs <= 0) {
     throw new ErreurEcriture('delai_invalide', 'Le délai doit être un entier positif.');
   }
-  return { ecritureId: e.id, echeance: maintenant + delaiMs };
+  controlerInstant(maintenant);
+  const echeance = maintenant + delaiMs;
+  controlerInstant(echeance);
+  return { ecritureId: e.id, echeance };
 }
 
 /** Annulation permise strictement avant l'échéance. */
 export function annulerValidation(demande: DemandeValidation, maintenant: number): 'annulee' {
+  controlerInstant(maintenant);
+  controlerInstant(demande.echeance);
   if (maintenant >= demande.echeance) {
     throw new ErreurEcriture('delai_depasse', "Le délai d'annulation est dépassé.");
   }
@@ -47,6 +61,8 @@ export function annulerValidation(demande: DemandeValidation, maintenant: number
 }
 
 export function validationEchue(demande: DemandeValidation, maintenant: number): boolean {
+  controlerInstant(maintenant);
+  controlerInstant(demande.echeance);
   return maintenant >= demande.echeance;
 }
 
@@ -60,6 +76,7 @@ export function valider(
   if (e.statut !== 'propose') {
     throw new ErreurEcriture('transition_interdite', 'Seule une écriture proposée se valide.');
   }
+  verifierEcriture(e);
   return { ...e, statut: 'valide', numero, validePar, valideLe };
 }
 
