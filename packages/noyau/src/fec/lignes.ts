@@ -72,7 +72,7 @@ function ordonner(valides: readonly Ecriture[], contexte: ContexteFec): Ecriture
   ];
   return valides
     .map((e) => ({ e, k: cle(e) }))
-    .sort((x, y) => x.k[0] - y.k[0] || comparer(x.k[1], y.k[1]) || comparer(x.k[2], y.k[2]))
+    .sort((x, y) => x.k[0] - y.k[0] || comparer(x.k[1], y.k[1]) || x.k[2].localeCompare(y.k[2], 'fr', { numeric: true }))
     .map((x) => x.e);
 }
 
@@ -94,16 +94,19 @@ export function lignesFec(
     const date = formaterDateFec(e.date);
     const validation = formaterDateFec(dateValidation(e, contexte));
     for (const l of e.lignes) {
-      const libCompte = contexte.libellesComptes[l.compte] ?? l.compte;
+      const libCompte = nettoyerLibelle(contexte.libellesComptes[l.compte] ?? '', l.compte, options);
       const valeurs: Record<ChampFec, string> = {
         journalCode: e.journal,
-        journalLib: contexte.libellesJournaux[e.journal] ?? e.journal,
+        journalLib: nettoyerLibelle(contexte.libellesJournaux[e.journal] ?? '', e.journal, options),
         ecritureNum: e.numero ?? '',
         ecritureDate: date,
         compteNum: l.compte,
         compteLib: libCompte,
         compAuxNum: l.auxiliaire ?? '',
-        compAuxLib: l.auxiliaire === undefined ? '' : (contexte.libellesComptes[l.auxiliaire] ?? l.auxiliaire),
+        compAuxLib:
+          l.auxiliaire === undefined
+            ? ''
+            : nettoyerLibelle(contexte.libellesComptes[l.auxiliaire] ?? '', l.auxiliaire, options),
         pieceRef: e.id,
         pieceDate: date,
         ecritureLib: nettoyerLibelle(l.libelle, libCompte, options),

@@ -31,7 +31,12 @@ const contexte: ContexteFec = {
   journalANouveaux: 'AN',
   libellesComptes: { '607': 'Achats fictifs', '401': 'Fournisseurs fictifs' },
   libellesJournaux: { AC: 'Achats', AN: 'À-nouveaux' },
-  datesValidation: { a: '2026-02-02', b: '2026-02-01', c: '2026-03-01', n: '2026-04-01', z: '2026-02-01' },
+  datesValidation: { a: '2026-02-02', b: '2026-02-01', c: '2026-03-01', n: '2026-04-01', z: '2026-02-01',
+    p: '2026-05-02',
+    q: '2026-05-01',
+    r: '2026-03-01',
+    s: '2026-01-01',
+  },
 };
 const colonnes: ColonneFec[] = [
   { champ: 'journalCode', entete: 'JournalCode' },
@@ -85,8 +90,38 @@ describe('lignes du FEC', () => {
       'AC-5',
       'AC-5',
     ]);
+    const contradiction = [ecr('p', 'AC-1', 'AC', 'valide'), ecr('q', 'AC-2', 'AC', 'valide')];
+    expect(numeros(lignesFec(contradiction, contexte, colonnes, options))).toEqual([
+      'AC-2',
+      'AC-2',
+      'AC-1',
+      'AC-1',
+    ]);
+    const deuxANouveaux = [ecr('r', 'AN-1', 'AN', 'valide'), ecr('s', 'AN-2', 'AN', 'valide')];
+    expect(numeros(lignesFec(deuxANouveaux, contexte, colonnes, options))[0]).toBe('AN-2');
+    const longueur = [ecr('z', 'AC-10', 'AC', 'valide'), ecr('b', 'AC-9', 'AC', 'valide')];
+    expect(numeros(lignesFec(longueur, contexte, colonnes, options))[0]).toBe('AC-9');
     const sansDate = [ecr('inconnu', 'AC-7', 'AC', 'valide')];
     expect(code(() => lignesFec(sansDate, contexte, colonnes, options))).toBe('date_invalide');
+  });
+
+  it('libelles-de-comptes-nettoyes', () => {
+    const cols: ColonneFec[] = [
+      { champ: 'journalLib', entete: 'JournalLib' },
+      { champ: 'compteLib', entete: 'CompteLib' },
+      { champ: 'compAuxLib', entete: 'CompAuxLib' },
+    ];
+    const ctx: ContexteFec = {
+      ...contexte,
+      libellesComptes: { '607': 'Achats|fictifs', '401': 'Fourn\nisseur' },
+      libellesJournaux: { AC: 'Jour|nal' },
+    };
+    const e = ecr('b', 'AC-1', 'AC', 'valide');
+    const ligne = e.lignes[0];
+    if (ligne === undefined) throw new Error('jeu invalide');
+    ligne.auxiliaire = '401';
+    const r = lignesFec([e], ctx, cols, options);
+    expect(r.lignes[0]).toBe('Journal|Achatsfictifs|Fournisseur\n');
   });
 
   it('totaux-egaux', () => {
