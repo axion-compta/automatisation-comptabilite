@@ -3,12 +3,10 @@
 // (31/08 + 6 mois = 28/02 ou 29/02 ; 29/02 + 1 an = 28/02). L'année doit rester entre 1000 et 9999.
 // Aucune division ni objet `Date` : tables de jours par mois et boucles bornées par le nombre d'années.
 
-export type CodeErreurDate = 'date_invalide' | 'decalage_invalide';
-
 export class ErreurDate extends Error {
   override name = 'ErreurDate';
-  readonly code: CodeErreurDate;
-  constructor(code: CodeErreurDate) {
+  readonly code: 'date_invalide' | 'decalage_invalide';
+  constructor(code: 'date_invalide' | 'decalage_invalide') {
     super(code);
     this.code = code;
   }
@@ -57,15 +55,13 @@ function ecrire(annee: number, mois: number, jour: number): string {
   if (!Number.isSafeInteger(annee) || annee < ANNEE_MIN || annee > ANNEE_MAX) {
     throw new ErreurDate('date_invalide');
   }
-  const deux = (n: number): string => String(n).padStart(2, '0');
-  return `${String(annee)}-${deux(mois)}-${deux(jour)}`;
+  return `${String(annee)}-${String(mois).padStart(2, '0')}-${String(jour).padStart(2, '0')}`;
 }
 
 function exigerDecalage(n: number): void {
   if (typeof n !== 'number' || !Number.isSafeInteger(n)) throw new ErreurDate('decalage_invalide');
 }
 
-/** Nombre de jours écoulés depuis le 1000-01-01 (boucle par année, jamais par jour). */
 function numeroDeJour(d: Civile): number {
   let total = 0;
   for (let a = ANNEE_MIN; a < d.annee; a += 1) total += joursDansAnnee(a);
@@ -119,9 +115,6 @@ export function ajouterAnnees(date: string, n: number): string {
   const d = exiger(date);
   exigerDecalage(n);
   const annee = d.annee + n;
-  if (!Number.isSafeInteger(annee) || annee < ANNEE_MIN || annee > ANNEE_MAX) {
-    throw new ErreurDate('date_invalide');
-  }
   return ecrire(annee, d.mois, Math.min(d.jour, joursDansMois(annee, d.mois)));
 }
 
@@ -144,7 +137,6 @@ export function jourDeSemaine(date: string): number {
   return reste + 1;
 }
 
-/** `AAAA-MM` */
 export function moisCle(date: string): string {
   exiger(date);
   return date.slice(0, 7);
