@@ -1,0 +1,10 @@
+/* Carte d'alerte : uniquement des variables de jetons.css. */
+.axion-carte-alerte { display: flex; flex-direction: column; gap: var(--espace-s); padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-left-width: var(--espace-xs); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-carte-alerte--info { border-left-color: var(--couleur-etat-ok); }
+.axion-carte-alerte--a_faire { border-left-color: var(--couleur-etat-attente); }
+.axion-carte-alerte--urgent, .axion-carte-alerte--bloquant { border-left-color: var(--couleur-etat-bloque); }
+.axion-carte-alerte__entete { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-s); }
+.axion-carte-alerte__titre { margin: 0; font-size: var(--taille-texte); font-weight: var(--graisse-forte); }
+.axion-carte-alerte__echeance { margin: 0; color: var(--couleur-texte-discret); }
+.axion-carte-alerte__actions, .axion-carte-alerte__panneau { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-s); }
+.axion-carte-alerte__panneau input { min-width: var(--cible-min); min-height: var(--cible-min); padding: var(--espace-xs) var(--espace-s); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); font: inherit; color: inherit; }
