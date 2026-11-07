@@ -41,3 +41,30 @@ const MESSAGES: Record<number, string> = {
 /** Texte affiché ; réseau coupé ou erreur serveur (5xx, réponse non JSON) : « Erreur réseau. ». */
 export const message = (statut: number): string =>
   statut === 0 || statut >= 500 ? 'Erreur réseau.' : (MESSAGES[statut] ?? 'Erreur ' + statut + '.');
+
+export type CodeLecture = 'acces_refuse' | 'introuvable' | 'conflit' | 'verrouille' | 'serveur' | 'reseau' | 'reponse_invalide';
+/** Erreur d'une lecture ; statut 0 = pas de réponse ou réponse invalide sans statut d'erreur. */
+export class ErreurLecture extends Error {
+  constructor(
+    readonly statut: number,
+    readonly code: CodeLecture,
+  ) {
+    super('Lecture impossible : ' + code);
+    this.name = 'ErreurLecture';
+  }
+}
+const CODES: Record<number, CodeLecture> = { 403: 'acces_refuse', 404: 'introuvable', 409: 'conflit', 423: 'verrouille' };
+/** Lit une route en GET et valide la réponse 2xx par le schéma (garde:appels : seul ce fichier appelle le réseau). */
+export async function lire<T>(chemin: string, schema: { safeParse(v: unknown): { success: boolean; data?: T } }, signal?: AbortSignal): Promise<T> {
+  let r: Response;
+  try {
+    r = await fetch(new URL(chemin, location.origin).toString(), { method: 'GET', signal });
+  } catch {
+    throw new ErreurLecture(0, 'reseau');
+  }
+  if (!r.ok) throw new ErreurLecture(r.status, CODES[r.status] ?? (r.status >= 500 ? 'serveur' : 'reponse_invalide'));
+  const corps: unknown = await r.json().catch(() => undefined);
+  const v = schema.safeParse(corps);
+  if (!v.success) throw new ErreurLecture(r.status, 'reponse_invalide');
+  return v.data as T;
+}
