@@ -5,10 +5,38 @@ import { contrat } from '../../../packages/contrat/src/routes.js';
 import { ConflitVersion, creerService } from '../../../packages/contrat/src/service.js';
 import { routesPlan } from './domaines/plan.js';
 import { routesTiers } from './domaines/tiers.js';
+import { routesTableauDeBord, type ServiceTableauDeBord } from './domaines/tableau-de-bord.js';
+import { routesAlertes, type ServiceAlertes } from './domaines/alertes.js';
+import { routesPreferences, type ServicePreferences } from './domaines/preferences.js';
+import { routesRecherche, type ServiceRecherche } from './domaines/recherche.js';
+import { routesExports, type ServiceExports } from './domaines/exports.js';
+import { routesCalendrier, type ServiceCalendrier } from './domaines/calendrier.js';
+import { routesNotifications, type ServiceNotifications } from './domaines/notifications.js';
 
 type Service = ReturnType<typeof creerService>;
+
+/** Services en mémoire des domaines du lot 15, créés une fois par `creerRouteur` (vides pour l'instant). */
+export type Services = {
+  tableauDeBord: ServiceTableauDeBord;
+  alertes: ServiceAlertes;
+  preferences: ServicePreferences;
+  recherche: ServiceRecherche;
+  exports: ServiceExports;
+  calendrier: ServiceCalendrier;
+  notifications: ServiceNotifications;
+};
+
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService()) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}) {
+  const s: Services = {
+    tableauDeBord: services.tableauDeBord ?? {},
+    alertes: services.alertes ?? {},
+    preferences: services.preferences ?? {},
+    recherche: services.recherche ?? {},
+    exports: services.exports ?? {},
+    calendrier: services.calendrier ?? {},
+    notifications: services.notifications ?? {},
+  };
   const os = implement(contrat);
   return os.router({
     ecritures: {
@@ -30,6 +58,13 @@ export function creerRouteur(service: Service = creerService()) {
     },
     plan: routesPlan(),
     tiers: routesTiers(),
+    tableauDeBord: routesTableauDeBord(s.tableauDeBord),
+    alertes: routesAlertes(s.alertes),
+    preferences: routesPreferences(s.preferences),
+    recherche: routesRecherche(s.recherche),
+    exports: routesExports(s.exports),
+    calendrier: routesCalendrier(s.calendrier),
+    notifications: routesNotifications(s.notifications),
   });
 }
 

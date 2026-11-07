@@ -3,6 +3,13 @@ import { EnTeteEcriture, ModificationEcriture, NouvelleEcriture } from '../../co
 import { ConflitVersion, creerService } from '../../contrat/src/service.js';
 import { creerHandlersPlan } from './domaines/plan.js';
 import { creerHandlersTiers } from './domaines/tiers.js';
+import { creerHandlersTableauDeBord } from './domaines/tableau-de-bord.js';
+import { creerHandlersAlertes } from './domaines/alertes.js';
+import { creerHandlersPreferences } from './domaines/preferences.js';
+import { creerHandlersRecherche } from './domaines/recherche.js';
+import { creerHandlersExports } from './domaines/exports.js';
+import { creerHandlersCalendrier } from './domaines/calendrier.js';
+import { creerHandlersNotifications } from './domaines/notifications.js';
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -87,5 +94,12 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
 
     ...creerHandlersPlan(base, attendre),
     ...creerHandlersTiers(base, attendre),
+    ...creerHandlersTableauDeBord(base, attendre, options),
+    ...creerHandlersAlertes(base, attendre, options),
+    ...creerHandlersPreferences(base, attendre, options),
+    ...creerHandlersRecherche(base, attendre, options),
+    ...creerHandlersExports(base, attendre, options),
+    ...creerHandlersCalendrier(base, attendre, options),
+    ...creerHandlersNotifications(base, attendre, options),
   ];
 }
