@@ -13,12 +13,13 @@ export interface BandeauDocumentProps {
 /** Bandeau d'un document : mention (construite par l'appelant) et filigrane tant que non validé. */
 export function BandeauDocument({ mention, filigrane, texteFiligrane }: BandeauDocumentProps) {
   const avec = filigrane !== "aucun";
+  const classeFiligrane = `axion-filigrane axion-filigrane--${filigrane}`;
   return (
     <div className="axion-bandeau-document" data-filigrane={filigrane}>
       <p className="axion-bandeau-document__mention">{mention}</p>
       {avec ? <span className="axion-bandeau-document__lisible">{texteFiligrane}</span> : null}
       {avec ? (
-        <span className={`axion-filigrane axion-filigrane--${filigrane}`} aria-hidden="true">
+        <span className={classeFiligrane} aria-hidden="true">
           {texteFiligrane}
         </span>
       ) : null}
