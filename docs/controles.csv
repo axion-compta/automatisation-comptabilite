@@ -22,3 +22,52 @@ TVA-C09,V3-TVA-038,M,aucun,avant_tva,P7,CT-D01,tva.controle.seuil_ecart_ca,oui
 TVA-C10,V3-TVA-034,B,preparation_tva,avant_tva,P7,CT-D02,,oui
 TVA-C11,V3-TVA-033,B,preparation_tva,avant_tva,P7,CT-D03,,oui
 TVA-C13,V3-CTL-025,B,preparation_tva,avant_tva,P7,CT-D04,,oui
+CC-V01,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V01,,oui
+CC-V02,V3-VEN-021,M,aucun,arrivee|avant_tva|demande,P7,CT-V02,,oui
+CC-V03,V3-VEN-021,B,preparation_tva,arrivee|avant_tva|demande,P7,CT-V03,,oui
+CC-V04,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V04,,oui
+CC-V05,V3-VEN-021,M,validation_mois,arrivee|demande,P7,CT-V05,,oui
+CC-V06,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V06,,oui
+CC-V07,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V07,,oui
+CC-V08,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V08,,oui
+CC-V09,V3-VEN-021,M,aucun,arrivee|avant_tva|demande,P7,CT-V09,,oui
+CC-V10,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V10,,oui
+CC-V11,V3-VEN-021,M,aucun,arrivee|avant_tva|demande,P7,CT-V11,,oui
+CC-V12,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V12,,oui
+CC-V13,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V13,,oui
+CC-V14,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V14,,oui
+CC-V15,V3-VEN-021,m,aucun,arrivee|demande,P7,CT-V15,,oui
+CC-V16,V3-VEN-021,B,preparation_tva,arrivee|avant_tva|demande,P7,CT-V16,,oui
+CC-V17,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V17,,oui
+CC-V18,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V18,,oui
+CC-V19,V3-VEN-021,B,cloture,arrivee|demande,P7,CT-V19,,oui
+CC-V20,V3-VEN-021,M,aucun,arrivee|demande,P7,CT-V20,,oui
+CC-PM01,V3-MOT-055,B,validation_mois|cloture,continu|avant_export|avant_cloture,P5,CT-PM01,,oui
+CC-PM04,V3-MOT-071,B,cloture,avant_cloture|demande,P5,CT-PM04,,oui
+CC-PM05,V3-MOT-071,B,cloture,avant_cloture|demande,P5,CT-PM05,capital.liberation_minimale,oui
+CC-PM06,V3-MOT-085,B,cloture,avant_cloture|demande,P5,CT-PM06,dividende.gerant_majoritaire.seuil,oui
+CC-PM07,V3-MOT-075,B,export_officiel|cloture,avant_export|nocturne|demande,P5,CT-PM07,,oui
+CC-PM02,V3-MOT-056,B,validation_mois|cloture,continu|avant_cloture,V1,CT-PM02,,oui
+CC-PM03,V3-MOT-081,B,export_officiel|cloture,avant_export|avant_cloture,V1,CT-PM03,,oui
+CC-T01,V3-CTL-025,B,preparation_tva|export_officiel,continu|avant_tva|avant_export|demande,P6,CT-16,,oui
+CC-T02,V3-CTL-025,B,preparation_tva,arrivee|continu|nocturne|avant_tva|demande,P6,CT-18,,oui
+CC-T03,V3-TVA-011,M,aucun,continu|avant_tva|demande,P6,CT-20,,oui
+CC-T03A,V3-TVA-011,B,preparation_tva,continu|avant_tva|demande,P6,CT-20,,oui
+CC-T04,V3-CTL-025,B,preparation_tva,continu|avant_tva|demande,P6,CT-21,,oui
+CC-T05,V3-TVA-003,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-22,tva.mentions_obligatoires,oui
+CC-T06,V3-TVA-004,M,aucun,arrivee|continu|demande,P6,CT-23,,oui
+CC-T07,V3-TVA-022,M,aucun,arrivee|continu|demande,P6,CT-24,tva.repas_affaires|tva.hebergement_dirigeant|tva.transport_personnes,oui
+CC-T08,V3-TVA-025,M,aucun,arrivee|continu|demande,P6,CT-25,tva.carburant_tourisme_pct|tva.carburant_utilitaire_pct|tva.vehicule_tourisme_autres_pct,oui
+CC-T09,V3-TVA-026,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-26,ue.etats_membres,oui
+CC-T10,V3-TVA-031,M,aucun,arrivee|continu|demande,P6,CT-27,,oui
+CC-T11,V3-TVA-035,M,aucun,arrivee|continu|demande,P6,CT-28,,oui
+CC-T12,V3-TVA-045,B,preparation_tva,continu|nocturne|demande,P6,CT-29 seuils,tva.franchise.seuil.ventes|tva.franchise.seuil.services|tva.franchise.prorata_creation|controle.franchise.alerte_pdb,oui
+CC-T12M,V3-TVA-045,M,aucun,continu|nocturne|demande,P6,CT-29 seuils,,oui
+CC-T13,V3-TVA-046,M,aucun,arrivee|demande,P6,CT-29 mention,tva.franchise.mention,oui
+CC-T14,V3-CTL-024,M,aucun,arrivee|continu|avant_tva|demande,P6,CT-26,,oui
+CC-T15,V3-CTL-024,M,aucun,arrivee|continu|demande,P6,CT-27,,oui
+CC-T16,V3-CTL-024,m,aucun,arrivee|continu|demande,P6,CT-23,,oui
+CC-T17,V3-TVA-030,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-31 detection,tva.cession_bien_meuble,oui
+CC-T18,V3-TVA-030,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-32 detection,tva.exigibilite.acompte_bien|tva.acompte_verse_deductible,oui
+CC-T18M,V3-TVA-030,M,aucun,arrivee|continu|avant_tva|demande,P6,CT-32 detection,,oui
+CC-T19,V3-TVA-030,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-34,tva.creance_irrecouvrable,oui
