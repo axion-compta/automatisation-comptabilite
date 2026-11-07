@@ -84,25 +84,21 @@ export function decisionRapportGestion(profil: ProfilCloture, regle: RegleDispen
   if (profil.activite !== null && regle.activitesExclues.includes(profil.activite)) {
     return { statut: 'brouillon', motif: 'activite_exclue', questions: [] };
   }
+  const { bilanCentimes: bilan, chiffreAffairesCentimes: ca, effectif } = profil;
   const questions: QuestionRapport[] = [];
-  if (profil.bilanCentimes === null) questions.push('bilan');
-  if (profil.chiffreAffairesCentimes === null) questions.push('chiffre_affaires');
-  if (profil.effectif === null) questions.push('effectif');
+  if (bilan === null) questions.push('bilan');
+  if (ca === null) questions.push('chiffre_affaires');
+  if (effectif === null) questions.push('effectif');
   if (profil.activite === null) questions.push('activite');
-  if (
-    profil.bilanCentimes === null ||
-    profil.chiffreAffairesCentimes === null ||
-    profil.effectif === null ||
-    profil.activite === null
-  ) {
+  if (bilan === null || ca === null || effectif === null || questions.length > 0) {
     return { statut: 'brouillon', motif: 'donnee_manquante', questions };
   }
   const depasse = (valeur: number, limite: number): boolean =>
     regle.depassement === 'strict' ? valeur > limite : valeur >= limite;
   const nombre = [
-    depasse(profil.bilanCentimes, regle.seuils.bilanCentimes),
-    depasse(profil.chiffreAffairesCentimes, regle.seuils.chiffreAffairesCentimes),
-    depasse(profil.effectif, regle.seuils.effectif),
+    depasse(bilan, regle.seuils.bilanCentimes),
+    depasse(ca, regle.seuils.chiffreAffairesCentimes),
+    depasse(effectif, regle.seuils.effectif),
   ].filter(Boolean).length;
   if (nombre > regle.maxSeuilsDepasses) {
     return { statut: 'brouillon', motif: 'seuils_depasses', questions: [] };

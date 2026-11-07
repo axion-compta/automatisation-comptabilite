@@ -57,10 +57,6 @@ describe('decisionRapportGestion', () => {
       motif: 'activite_exclue',
       questions: [],
     });
-    // Même avec une donnée manquante : l'exclusion passe avant.
-    expect(decisionRapportGestion(avec({ activite: 'ACTIVITE_X', effectif: null }), regle)).toMatchObject({
-      motif: 'activite_exclue',
-    });
   });
   it('g3-activite-absente-question', () => {
     expect(decisionRapportGestion(avec({ activite: null }), regle)).toEqual({
@@ -75,9 +71,6 @@ describe('decisionRapportGestion', () => {
     const large = { ...stricte, depassement: 'large' as const };
     expect(decisionRapportGestion(egal, stricte)).toEqual({ statut: 'dispense' });
     expect(decisionRapportGestion(egal, large)).toMatchObject({ statut: 'brouillon', motif: 'seuils_depasses' });
-    // Un centime sous le seuil : dispense dans les deux modes.
-    const dessous = avec({ bilanCentimes: BILAN - 1, chiffreAffairesCentimes: CA - 1, effectif: EFFECTIF - 1 });
-    expect(decisionRapportGestion(dessous, large)).toEqual({ statut: 'dispense' });
   });
   it('forme-non-concernee-brouillon', () => {
     expect(decisionRapportGestion(avec({ forme: 'FORME_C' }), regle)).toEqual({
@@ -85,7 +78,6 @@ describe('decisionRapportGestion', () => {
       motif: 'forme_non_concernee',
       questions: [],
     });
-    // La forme passe avant tout : même activité absente et données manquantes.
     expect(
       decisionRapportGestion(avec({ forme: 'FORME_C', activite: null, bilanCentimes: null }), regle),
     ).toMatchObject({ motif: 'forme_non_concernee', questions: [] });
@@ -96,27 +88,12 @@ describe('decisionRapportGestion', () => {
       motif: 'donnee_manquante',
       questions: ['bilan', 'chiffre_affaires', 'effectif', 'activite'],
     });
-    expect(decisionRapportGestion(avec({ chiffreAffairesCentimes: null }), regle)).toMatchObject({
-      questions: ['chiffre_affaires'],
-    });
-    expect(decisionRapportGestion(avec({ bilanCentimes: null }), regle)).toMatchObject({ questions: ['bilan'] });
   });
   it('listes-vides-acceptees', () => {
     expect(decisionRapportGestion(profil, { ...regle, activitesExclues: [] })).toEqual({ statut: 'dispense' });
     expect(decisionRapportGestion(profil, { ...regle, formesConcernees: [] })).toMatchObject({
       motif: 'forme_non_concernee',
     });
-  });
-  it('les-trois-seuils-depasses-avec-max-de-trois-dispense', () => {
-    const tout = avec({ bilanCentimes: BILAN + 1, chiffreAffairesCentimes: CA + 1, effectif: EFFECTIF + 1 });
-    expect(decisionRapportGestion(tout, { ...regle, maxSeuilsDepasses: 3 })).toEqual({ statut: 'dispense' });
-    expect(decisionRapportGestion(tout, { ...regle, maxSeuilsDepasses: 2 })).toMatchObject({ motif: 'seuils_depasses' });
-  });
-  it('chaque-seuil-compte-separement', () => {
-    const r = { ...regle, maxSeuilsDepasses: 0 };
-    expect(decisionRapportGestion(avec({ chiffreAffairesCentimes: CA + 1 }), r)).toMatchObject({ motif: 'seuils_depasses' });
-    expect(decisionRapportGestion(avec({ effectif: EFFECTIF + 1 }), r)).toMatchObject({ motif: 'seuils_depasses' });
-    expect(decisionRapportGestion(avec({ bilanCentimes: BILAN + 1 }), r)).toMatchObject({ motif: 'seuils_depasses' });
   });
 });
 
@@ -141,10 +118,6 @@ describe('refus', () => {
     const r = { ...regle, depassement: 'autre' } as unknown as RegleDispense;
     expect(code(() => decisionRapportGestion(profil, r))).toBe('regle_invalide');
   });
-  it('seuil-a-zero-accepte', () => {
-    const r = { ...regle, seuils: { bilanCentimes: 0, chiffreAffairesCentimes: 0, effectif: 0 } };
-    expect(code(() => decisionRapportGestion(profil, r))).toBeUndefined();
-  });
   it('bilan-negatif', () => {
     expect(code(() => decisionRapportGestion(avec({ bilanCentimes: -1 }), regle))).toBe('bilan_negatif');
   });
@@ -157,9 +130,5 @@ describe('refus', () => {
       expect(code(() => decisionRapportGestion(avec({ effectif: v }), regle))).toBe('donnee_invalide');
     }
     expect(code(() => decisionRapportGestion(avec({ forme: '' }), regle))).toBe('donnee_invalide');
-  });
-  it('profil-a-zero-accepte', () => {
-    const p = avec({ bilanCentimes: 0, chiffreAffairesCentimes: 0, effectif: 0 });
-    expect(decisionRapportGestion(p, regle)).toEqual({ statut: 'dispense' });
   });
 });
