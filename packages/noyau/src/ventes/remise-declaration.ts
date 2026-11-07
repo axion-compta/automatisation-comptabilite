@@ -53,7 +53,7 @@ export function ventesDeLaPeriode(e: EntreeRemise): SortieRemise {
   let ignorees = 0;
   for (const l of e.lignesTva) {
     if (!Number.isSafeInteger(l.baseCentimes) || !Number.isSafeInteger(l.tvaCentimes)) throw new ErreurVente('montant_invalide', 'Montant de ligne invalide.');
-    if (l.tauxPdb !== null && !Number.isSafeInteger(l.tauxPdb)) throw new ErreurVente('taux_invalide', 'Taux invalide.');
+    if (l.tauxPdb !== null && (!Number.isSafeInteger(l.tauxPdb) || l.tauxPdb < 0)) throw new ErreurVente('taux_invalide', 'Taux invalide.');
     const date = l.dateExigibilite === null ? null : exigerDate(l.dateExigibilite, 'dateExigibilite');
     const retenue = l.statutEcriture === 'valide' && l.compte === e.compteCollectee && date !== null && comparerDates(date, e.debut) >= 0 && comparerDates(date, e.fin) <= 0;
     if (!retenue) ignorees += 1;

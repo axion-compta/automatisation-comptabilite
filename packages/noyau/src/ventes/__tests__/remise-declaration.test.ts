@@ -68,6 +68,7 @@ describe('remise à la déclaration de TVA', () => {
     expect(r.aVerifier).toEqual([{ tauxPdb: T6, base: -500, tva: -30, pieces: ['V1'] }, { tauxPdb: T19, base: 0, tva: -1, pieces: ['V3'] }]);
     const net = rem([ligne('V1', '2031-10-05', 1000, 60), ligne('V1', '2031-10-08', -400, -24)]);
     expect(net.ventes).toEqual([{ tauxPdb: T6, base: 600, tva: 36, pieces: ['V1'] }]);
+    expect(rem([ligne('V1', '2031-10-05', 1000, 60), ligne('V1', '2031-10-08', -1000, -60)]).ventes).toEqual([{ tauxPdb: T6, base: 0, tva: 0, pieces: ['V1'] }]);
     expect(rem([ligne('A', '2031-10-05', 100, 6, { sens: 'avoir' }), ligne('A', '2031-10-06', -300, -18, { sens: 'avoir' })]).avoirs).toEqual([]);
     expect(rem([ligne('N', '2031-10-05', 100, 6, { tauxPdb: null })]).aVerifier).toEqual([{ tauxPdb: null, base: 100, tva: 6, pieces: ['N'] }]);
   });
@@ -109,7 +110,7 @@ describe('remise à la déclaration de TVA', () => {
     expect(code(() => rem([], 'x', '2031-10-01'))).toBe('date_invalide');
     expect(code(() => rem([ligne('V', '2031-13-40', 1, 0)]))).toBe('date_invalide');
     expect(code(() => rem([ligne('V', '2031-10-05', 1, 0, { baseCentimes: Number.NaN as never })]))).toBe('montant_invalide');
-    expect(code(() => rem([ligne('V', '2031-10-05', 1, 0, { tauxPdb: 1.5 })]))).toBe('taux_invalide');
+    for (const t of [1.5, -600, Number.NaN, Infinity]) expect(code(() => rem([ligne('V', '2031-10-05', 1, 0, { tauxPdb: t })]))).toBe('taux_invalide');
     expect(code(() => rem([ligne('V', '2031-10-05', 1, 0, { tvaCentimes: Infinity as never })]))).toBe('montant_invalide');
   });
 });
