@@ -1,1 +1,4 @@
 id,exigence,gravite,bloque,declencheurs,phase,test_id,parametres,actif
+CC-K01,V3-CTL-020,B,validation_mois|preparation_tva|export_officiel|cloture,continu|avant_tva|avant_export|avant_cloture,P5,CT-01,,oui
+CC-K02,V3-CTL-020,B,validation_mois|preparation_tva|export_officiel|cloture,continu|avant_tva|avant_export|avant_cloture,P5,CT-02,,oui
+CC-K03,V3-CTL-020,B,export_officiel|cloture,avant_export|avant_cloture,P5,CT-03,,oui

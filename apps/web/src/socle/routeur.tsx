@@ -1,6 +1,7 @@
-import { createBrowserHistory, createRootRoute, createRoute, createRouter, Outlet, type RouterHistory } from '@tanstack/react-router';
+import { createBrowserHistory, createRootRoute, createRoute, createRouter, type RouterHistory } from '@tanstack/react-router';
 import { Ecran } from '../Ecran.js';
 import { Accueil } from './Accueil.js';
+import { Coque } from './Coque.js';
 import { PageEnPreparation } from './PageEnPreparation.js';
 import { verifierEcrans, type DefinitionEcran } from './ecrans.js';
 
@@ -12,7 +13,7 @@ export function creerRouteur(ecrans: readonly DefinitionEcran[], historique?: Ro
     { id: 'essai', chemin: '/essai', composant: Ecran, groupe: 'autre', titre: '' },
   ];
   verifierEcrans([...reserves, ...ecrans]);
-  const racine = createRootRoute({ component: Outlet, notFoundComponent: PageEnPreparation });
+  const racine = createRootRoute({ component: Coque, notFoundComponent: PageEnPreparation });
   const routes = [
     createRoute({ getParentRoute: () => racine, path: '/', component: () => <Accueil ecrans={ecrans} /> }),
     createRoute({ getParentRoute: () => racine, path: '/essai', component: Ecran }),

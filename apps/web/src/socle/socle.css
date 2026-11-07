@@ -1,0 +1,88 @@
+/* Coque : bureau au-dessus de 720 px (var(--rupture-mobile)), barre du bas en dessous. Une media query ne lit pas var(). */
+.coque {
+  display: flex;
+  min-height: 100vh;
+  background: var(--couleur-fond);
+  color: var(--couleur-texte);
+  font-family: var(--police-texte);
+  font-size: var(--taille-texte);
+}
+.coque a,
+.barre-mobile button {
+  color: inherit;
+  text-decoration: none;
+}
+.menu-bureau {
+  order: -1;
+  width: 220px;
+  padding: var(--espace-m);
+  border-right: 1px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+}
+.menu-bureau a {
+  display: block;
+  padding: var(--espace-s) var(--espace-m);
+  border-radius: var(--rayon-m);
+}
+.menu-bureau a[aria-current='page'],
+.barre-mobile a[aria-current='page'] {
+  background: var(--couleur-accent);
+  color: var(--couleur-accent-texte);
+  font-weight: var(--graisse-forte);
+}
+.coque-principal {
+  flex: 1;
+  padding: var(--espace-l);
+}
+.barre-mobile {
+  display: none;
+}
+@media (max-width: 719px) {
+  .menu-bureau {
+    display: none;
+  }
+  .coque-principal {
+    padding-bottom: calc(var(--espace-xl) * 3);
+  }
+  .barre-mobile {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--couleur-surface);
+    border-top: 1px solid var(--couleur-bordure);
+  }
+  .barre-mobile nav {
+    display: flex;
+    justify-content: space-around;
+  }
+  .barre-mobile nav a,
+  .barre-mobile nav button {
+    display: block;
+    padding: var(--espace-s);
+    border: 0;
+    background: transparent;
+    font: inherit;
+  }
+  .barre-discuter {
+    position: absolute;
+    right: var(--espace-m);
+    bottom: 100%;
+    margin-bottom: var(--espace-s);
+    padding: var(--espace-s) var(--espace-m);
+    border: 0;
+    border-radius: var(--rayon-l);
+    background: var(--couleur-accent);
+    color: var(--couleur-accent-texte);
+    font: inherit;
+  }
+  .barre-plus {
+    padding: var(--espace-s);
+    border-bottom: 1px solid var(--couleur-bordure);
+  }
+  .barre-plus a {
+    display: block;
+    padding: var(--espace-s);
+  }
+}
