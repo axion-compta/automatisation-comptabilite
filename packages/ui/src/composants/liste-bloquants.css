@@ -1,0 +1,7 @@
+/* Liste des bloquants : uniquement des variables de jetons.css. */
+.axion-liste-bloquants { display: flex; flex-direction: column; gap: var(--espace-s); padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-left-width: var(--espace-xs); border-left-color: var(--couleur-alerte); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-liste-bloquants__titre { margin: 0; font-size: var(--taille-texte); font-weight: var(--graisse-forte); }
+.axion-liste-bloquants__liste { display: flex; flex-direction: column; gap: var(--espace-s); margin: 0; padding: 0; list-style: none; }
+.axion-liste-bloquants__point { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-s); }
+.axion-liste-bloquants__phrase, .axion-liste-bloquants__vide { margin: 0; color: var(--couleur-texte-discret); }
+.axion-liste-bloquants__lien { display: inline-flex; align-items: center; min-width: var(--cible-min); min-height: var(--cible-min); font-weight: var(--graisse-forte); color: var(--couleur-accent); }

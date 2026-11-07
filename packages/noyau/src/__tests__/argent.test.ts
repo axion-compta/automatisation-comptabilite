@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  type Centimes,
   ErreurArgent,
   ajouter,
   appliquerFraction,
+  convertir,
   centimes,
   formater,
   multiplier,
@@ -205,5 +207,49 @@ describe('proportionPointsDeBase', () => {
     }
     expect(() => proportionPointsDeBase(1, -1, 'inferieur')).toThrow(ErreurArgent);
     expect(() => proportionPointsDeBase(NaN, 0, 'inferieur')).toThrow(ErreurArgent);
+  });
+});
+
+describe('conversion par un taux à 8 décimales', () => {
+  const demi = 50_000_000n;
+  it('convertir-t09-1', () => {
+    expect(convertir(c(100_000), 92_000_000n, 'demi-pair')).toBe(92_000);
+    expect(convertir(c(0), 92_000_000n, 'demi-pair')).toBe(0);
+    expect(Object.is(convertir(c(0), 1n, 'inferieur'), 0)).toBe(true);
+    expect(convertir(c(100_000_000), 1n, 'inferieur')).toBe(1);
+  });
+  it('convertir-arrondi-demi-pair', () => {
+    expect(convertir(c(1), demi, 'demi-pair')).toBe(0);
+    expect(convertir(c(3), demi, 'demi-pair')).toBe(2);
+    expect(convertir(c(5), demi, 'demi-pair')).toBe(2);
+    expect(convertir(c(1), demi, 'demi-superieur')).toBe(1);
+    expect(convertir(c(1), 50_000_001n, 'demi-pair')).toBe(1);
+  });
+  it('convertir-arrondi-superieur-et-inferieur', () => {
+    expect(convertir(c(1), 1n, 'superieur')).toBe(1);
+    expect(convertir(c(1), 1n, 'inferieur')).toBe(0);
+    expect(convertir(c(2), demi, 'superieur')).toBe(1);
+    expect(convertir(c(2), demi, 'inferieur')).toBe(1);
+  });
+  it('convertir-montant-negatif', () => {
+    expect(convertir(c(-1), demi, 'demi-superieur')).toBe(-1);
+    expect(convertir(c(-3), demi, 'demi-pair')).toBe(-2);
+    expect(convertir(c(-1), 1n, 'inferieur')).toBe(-1);
+    expect(convertir(c(-1), 1n, 'superieur')).toBe(0);
+    expect(Object.is(convertir(c(-1), 1n, 'superieur'), 0)).toBe(true);
+    expect(convertir(c(-100_000), 92_000_000n, 'demi-pair')).toBe(-92_000);
+  });
+  it('convertir-taux-nul-refuse', () => {
+    expect(() => convertir(c(100), 0n, 'inferieur')).toThrow(ErreurArgent);
+  });
+  it('convertir-taux-negatif-refuse', () => {
+    expect(() => convertir(c(100), -1n, 'inferieur')).toThrow(ErreurArgent);
+  });
+  it('convertir-hors-limites-refuse', () => {
+    expect(() => convertir(c(Number.MAX_SAFE_INTEGER), 200_000_000n, 'inferieur')).toThrow(ErreurArgent);
+    expect(convertir(c(Number.MAX_SAFE_INTEGER), 100_000_000n, 'inferieur')).toBe(Number.MAX_SAFE_INTEGER);
+    for (const m of [Number.NaN, 1.5, Number.POSITIVE_INFINITY]) {
+      expect(() => convertir(m as Centimes, 1n, 'inferieur')).toThrow(ErreurArgent);
+    }
   });
 });
