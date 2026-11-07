@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const ETATS = ['ESSAI', 'ACTIF', 'DELAI_DE_GRACE', 'LECTURE_SEULE', 'SUSPENDU', 'RESILIE'] as const;
 
-const DateJour = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const DateJour = z.iso.date();
 
 export const Acces = z.object({
   etat: z.enum(ETATS),
