@@ -11,6 +11,7 @@ export interface EntreeAffectation {
   reserveActuelle: Centimes;
   reportANouveau: Centimes;
   dividendeDemande: Centimes;
+  reservesDisponibles?: Centimes;
 }
 
 export interface ParametresAffectation {
@@ -20,7 +21,7 @@ export interface ParametresAffectation {
 }
 
 export type ResultatAffectation =
-  | { ok: true; reserveProposee: Centimes; distribuable: Centimes; dividende: Centimes }
+  | { ok: true; reserveProposee: Centimes; apurementPertes: Centimes; distribuable: Centimes; dividende: Centimes }
   | { ok: false; code: 'dividende_superieur_distribuable'; distribuable: Centimes }
   | { ok: false; code: 'perte_aucun_dividende' };
 
@@ -42,22 +43,30 @@ export function affecterResultat(
   verifierFraction('Le plafond de réserve', params.plafondReservePointsDeBase);
   if (entree.dividendeDemande < 0) throw new ErreurAffectation('Le dividende demandé ne peut pas être négatif.');
   if (entree.capital < 0) throw new ErreurAffectation('Le capital ne peut pas être négatif.');
+  if (entree.reservesDisponibles !== undefined && entree.reservesDisponibles < 0) {
+    throw new ErreurAffectation('Les réserves disponibles ne peuvent pas être négatives.');
+  }
   if (entree.reserveActuelle < 0) throw new ErreurAffectation('La réserve actuelle ne peut pas être négative.');
 
   const zero = centimes(0);
   if (entree.resultat <= 0) {
     if (entree.dividendeDemande > 0) return { ok: false, code: 'perte_aucun_dividende' };
-    return { ok: true, reserveProposee: zero, distribuable: zero, dividende: zero };
+    return { ok: true, reserveProposee: zero, apurementPertes: zero, distribuable: zero, dividende: zero };
   }
 
-  const dotation = pourcentage(entree.resultat, params.fractionDotationPointsDeBase, params.arrondi);
+  const pertes = entree.reportANouveau < 0 ? soustraire(zero, entree.reportANouveau) : zero;
+  const creditEnReport = entree.reportANouveau > 0 ? entree.reportANouveau : zero;
+  const base = positifOuNul(soustraire(entree.resultat, pertes), zero);
+  const dotation = pourcentage(base, params.fractionDotationPointsDeBase, params.arrondi);
   const plafond = pourcentage(entree.capital, params.plafondReservePointsDeBase, params.arrondi);
   const marge = positifOuNul(soustraire(plafond, entree.reserveActuelle), zero);
   const reserveProposee = dotation < marge ? dotation : marge;
-  const brut = ajouter(soustraire(entree.resultat, reserveProposee), entree.reportANouveau);
+  const apurementPertes = pertes < entree.resultat ? pertes : entree.resultat;
+  const apres = soustraire(soustraire(entree.resultat, pertes), reserveProposee);
+  const brut = ajouter(ajouter(apres, creditEnReport), entree.reservesDisponibles ?? zero);
   const distribuable = positifOuNul(brut, zero);
   if (entree.dividendeDemande > distribuable) {
     return { ok: false, code: 'dividende_superieur_distribuable', distribuable };
   }
-  return { ok: true, reserveProposee, distribuable, dividende: entree.dividendeDemande };
+  return { ok: true, reserveProposee, apurementPertes, distribuable, dividende: entree.dividendeDemande };
 }
