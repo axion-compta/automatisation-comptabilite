@@ -90,5 +90,9 @@ describe('volumes du chat', () => {
     expect(code(() => verifierLimites([], D, Number.NaN, L))).toBe('parametre_invalide');
     expect(code(() => verifierLimites([], D, NOW, { ...L, fenetreObjetsMs: 0 }))).toBe('parametre_invalide');
     expect(code(() => verifierLimites([], { ...D, objets: 1.5 }, NOW, L))).toBe('parametre_invalide');
+    for (const mauvais of [Number.NaN, Number.POSITIVE_INFINITY, -1, 2.5]) {
+      expect(code(() => verifierLimites([ev(NOW - 1, { objets: 500 }), ev(NOW - 2, { objets: mauvais })], { ...D, objets: 24 }, NOW, L))).toBe('parametre_invalide');
+      expect(code(() => verifierLimites([ev(mauvais)], D, NOW, L))).toBe('parametre_invalide');
+    }
   });
 });

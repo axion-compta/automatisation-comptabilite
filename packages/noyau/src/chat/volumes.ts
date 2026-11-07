@@ -26,6 +26,7 @@ export function verifierLimites(historique: readonly Evenement[], d: Demande, ma
   const nombres = [maintenantMs, d.objets, l.fenetrePropositionsMs, l.maxPropositions, l.fenetreObjetsMs, l.maxObjets];
   if (!nombres.every(entierPositif) || l.fenetrePropositionsMs < 1 || l.fenetreObjetsMs < 1) throw invalide();
   const miens = historique.filter((e) => e.personne === d.personne && e.societe === d.societe);
+  if (!miens.every((e) => entierPositif(e.horodatageMs) && entierPositif(e.objets))) throw invalide();
   const dans = (e: Evenement, fenetre: number) => e.horodatageMs > maintenantMs - fenetre && e.horodatageMs <= maintenantMs;
   const propositions = miens.filter((e) => dans(e, l.fenetrePropositionsMs)).length;
   if (propositions + 1 > l.maxPropositions) return { permis: false, code: 'trop_de_demandes' };
