@@ -54,6 +54,16 @@ describe('dividende du gérant majoritaire', () => {
     const b = controleDividendeGerant(cas({ parts: 6000, ccConjoint: 200000, dividende: 90000, dividendeConjoint: 6001 }), SEUIL);
     expect(b).toMatchObject({ statut: 'bloquant', dividendeGroupe: 96001, excedent: 1 });
   });
+  it('arrondis-vers-le-bas-base-et-seuil', () => {
+    // 1 part sur 3 : 1 000 000 / 3 = 333 333,33 vers le bas ; seuil 39 999,96 vers le bas.
+    expect(controleDividendeGerant(cas({ parts: 1, total: 3 }), SEUIL)).toMatchObject({ base: 333333, seuil: 39999 });
+    // Base 1 000 001 : seuil 120 000,12 vers le bas.
+    expect(controleDividendeGerant(cas({ cc: 1 }), SEUIL)).toMatchObject({ base: 1000001, seuil: 120000 });
+  });
+  it('compte-courant-debiteur-hors-base', () => {
+    const r = controleDividendeGerant(cas({ cc: -500000, ccConjoint: -200000 }), SEUIL);
+    expect(r).toMatchObject({ base: 1000000, seuil: 120000 });
+  });
   it('non-majoritaire-non-applicable', () => {
     for (const role of ['gerant_egalitaire', 'gerant_minoritaire']) {
       const r = controleDividendeGerant(cas({ parts: 5000, dividende: 999999 }, role), SEUIL);
