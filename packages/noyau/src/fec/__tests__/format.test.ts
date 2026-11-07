@@ -141,4 +141,8 @@ describe('lignes', () => {
     for (const l of ['a|b\r\nc|d', 'a|b\nc', 'a|b\rc']) expect(code(() => lireLigne(l, barre))).toBe('ligne_invalide');
     expect(new ErreurFec('ligne_vide')).toMatchObject({ code: 'ligne_vide', name: 'ErreurFec' });
   });
+
+  it('porte le code siren_invalide', () => {
+    expect(new ErreurFec('siren_invalide').code).toBe('siren_invalide');
+  });
 });

@@ -9,7 +9,8 @@ export type CodeErreurFec =
   | 'date_invalide'
   | 'ligne_vide'
   | 'valeur_invalide'
-  | 'ligne_invalide';
+  | 'ligne_invalide'
+  | 'siren_invalide';
 
 export class ErreurFec extends Error {
   override name = 'ErreurFec';
