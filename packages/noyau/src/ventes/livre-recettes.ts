@@ -27,8 +27,8 @@ export interface ResultatSeuil {
   parametreAbsent: boolean;
 }
 
-function exigerEntierPositif(n: unknown, champ: string, zeroPermis: boolean): number {
-  if (typeof n !== 'number' || !Number.isSafeInteger(n) || n < (zeroPermis ? 0 : 1)) {
+function exigerEntierPositif(n: number, champ: string, zeroPermis: boolean): number {
+  if (!Number.isSafeInteger(n) || n < (zeroPermis ? 0 : 1)) {
     throw new ErreurVente('montant_invalide', `Montant invalide : ${champ}.`);
   }
   return n;
@@ -40,16 +40,14 @@ function exigerTexte(t: unknown, champ: string): string {
   return v;
 }
 
-function exigerAnnee(annee: unknown): number {
-  if (typeof annee !== 'number' || !Number.isSafeInteger(annee)) {
-    throw new ErreurVente('annee_invalide', 'Année invalide.');
-  }
+function exigerAnnee(annee: number): number {
+  if (!Number.isSafeInteger(annee)) throw new ErreurVente('annee_invalide', 'Année invalide.');
   return annee;
 }
 
 export function ligneLivreRecettes(entree: LigneLivreRecettes): LigneLivreRecettes {
   const date = entree.dateEncaissement;
-  if (typeof date !== 'string' || !estDateValide(date)) {
+  if (!estDateValide(date)) {
     throw new ErreurVente('date_invalide', "Date d'encaissement invalide.");
   }
   exigerEntierPositif(entree.montant, 'montant', false);
@@ -70,11 +68,7 @@ export function livreDesRecettes(lignes: readonly LigneLivreRecettes[], annee: n
   const a = exigerAnnee(annee);
   return lignes
     .filter((l) => anneeDe(l) === a)
-    .sort((x, y) => {
-      if (x.dateEncaissement !== y.dateEncaissement) return x.dateEncaissement < y.dateEncaissement ? -1 : 1;
-      if (x.numeroFacture === y.numeroFacture) return 0;
-      return x.numeroFacture < y.numeroFacture ? -1 : 1;
-    });
+    .sort((x, y) => x.dateEncaissement.localeCompare(y.dateEncaissement, 'fr') || x.numeroFacture.localeCompare(y.numeroFacture, 'fr'));
 }
 
 export function caEncaisseAnnee(lignes: readonly LigneLivreRecettes[], annee: number): Centimes {

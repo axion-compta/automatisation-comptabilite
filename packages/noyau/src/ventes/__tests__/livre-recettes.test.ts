@@ -69,28 +69,39 @@ describe('livre des recettes', () => {
   });
 
   it('entrees-invalides', () => {
-    for (const montant of [0, -5, Number.NaN, Infinity, 1.5]) expect(() => ligne({ montant })).toThrow();
-    expect(() => ligne({ mode: 'bitcoin' })).toThrow();
-    expect(() => ligne({ mode: undefined })).toThrow();
-    for (const client of ['', '   ']) expect(() => ligne({ client })).toThrow();
-    for (const numeroFacture of ['', '  ']) expect(() => ligne({ numeroFacture })).toThrow();
-    for (const dateEncaissement of ['2026-02-30', '10/11/2026', '', undefined]) expect(() => ligne({ dateEncaissement })).toThrow();
+    const code = (c2: string, m: string) => expect.objectContaining({ code: c2, message: expect.stringContaining(m) });
+    for (const montant of [0, -5, Number.NaN, Infinity, 1.5, '5']) expect(() => ligne({ montant })).toThrow(code('montant_invalide', 'montant'));
+    for (const mode of ['bitcoin', undefined]) expect(() => ligne({ mode })).toThrow(code('mode_inconnu', 'Mode'));
+    for (const client of ['', '   ', 5, undefined]) expect(() => ligne({ client })).toThrow(code('texte_vide', 'client'));
+    for (const numeroFacture of ['', '  ', 5]) expect(() => ligne({ numeroFacture })).toThrow(code('texte_vide', 'numéro de facture'));
+    for (const dateEncaissement of ['2026-02-30', '10/11/2026', '', undefined, 20261110]) expect(() => ligne({ dateEncaissement })).toThrow(code('date_invalide', 'Date'));
     const l = [ligne()];
-    for (const annee of [2026.5, Number.NaN, Infinity]) {
-      expect(() => livreDesRecettes(l, annee)).toThrow();
-      expect(() => caEncaisseAnnee(l, annee)).toThrow();
+    for (const annee of [2026.5, Number.NaN, Infinity, '2026' as never]) {
+      expect(() => livreDesRecettes(l, annee)).toThrow(code('annee_invalide', 'Année'));
+      expect(() => caEncaisseAnnee(l, annee)).toThrow(code('annee_invalide', 'Année'));
     }
     const mauvais = [
-      { caAvant: c(0), montant: c(0) },
-      { caAvant: c(-1), montant: c(1) },
-      { caAvant: Number.NaN as Centimes, montant: c(1) },
-      { caAvant: c(0), montant: Infinity as Centimes },
-      { caAvant: c(0), montant: 1.5 as Centimes },
-    ];
-    for (const m of mauvais) expect(() => depassementSeuil({ ...m, seuil: valide })).toThrow();
+      [{ caAvant: c(0), montant: c(0) }, 'montant'],
+      [{ caAvant: c(-1), montant: c(1) }, 'chiffre avant'],
+      [{ caAvant: Number.NaN as Centimes, montant: c(1) }, 'chiffre avant'],
+      [{ caAvant: c(0), montant: Infinity as Centimes }, 'montant'],
+      [{ caAvant: c(0), montant: 1.5 as Centimes }, 'montant'],
+    ] as const;
+    for (const [m, champ] of mauvais) expect(() => depassementSeuil({ ...m, seuil: valide })).toThrow(code('montant_invalide', champ));
     for (const valeur of [Number.NaN, 0, -1, 1.5]) {
-      expect(() => depassementSeuil({ caAvant: c(0), montant: c(1), seuil: { valeur: valeur as Centimes, statut: 'valide' } })).toThrow();
+      const seuil = { valeur: valeur as Centimes, statut: 'valide' } as const;
+      expect(() => depassementSeuil({ caAvant: c(0), montant: c(1), seuil })).toThrow(code('montant_invalide', 'seuil'));
     }
-    expect(() => depassementSeuil({ caAvant: c(0), montant: c(1), seuil: { valeur: SEUIL, statut: 'x' as never } })).toThrow();
+    expect(() => depassementSeuil({ caAvant: c(0), montant: c(1), seuil: { valeur: SEUIL, statut: 'x' as never } })).toThrow(code('statut_invalide', 'Statut'));
+  });
+
+  it('tri-meme-date-meme-numero-et-numeros-croissants', () => {
+    const a = ligne({ numeroFacture: 'F-1', montant: c(1) });
+    const b = ligne({ numeroFacture: 'F-1', montant: c(2) });
+    expect(livreDesRecettes([a, b], 2026)).toEqual([a, b]);
+    expect(livreDesRecettes([b, a], 2026)).toEqual([b, a]);
+    const x = ligne({ dateEncaissement: '2026-05-01', numeroFacture: 'Z' });
+    const y = ligne({ dateEncaissement: '2026-05-02', numeroFacture: 'A' });
+    expect(livreDesRecettes([y, x], 2026)).toEqual([x, y]);
   });
 });
