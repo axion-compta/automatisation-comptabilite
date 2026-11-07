@@ -278,6 +278,143 @@
         }
       }
     },
+    "/preferences": {
+      "get": {
+        "operationId": "lirePreferences",
+        "parameters": [
+          {
+            "name": "appareil",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bureau",
+                "mobile"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/preferences/{cle}": {
+      "put": {
+        "operationId": "ecrirePreference",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "cle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "valeur": {},
+                  "appareil": {
+                    "type": "string",
+                    "enum": [
+                      "bureau",
+                      "mobile",
+                      "tous"
+                    ]
+                  },
+                  "modifieLeClient": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "valeur",
+                  "appareil"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/usage": {
+      "post": {
+        "operationId": "mesurerUsage",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "evenements": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {}
+                  }
+                },
+                "required": [
+                  "evenements"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/acces": {
       "get": {
         "operationId": "lireAcces",
