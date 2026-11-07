@@ -81,22 +81,37 @@ describe('lignes du FEC', () => {
   });
 
   it('ordre-de-validation', () => {
-    const r = lignesFec(jeu(), contexte, colonnes, options);
-    expect(numeros(r)).toEqual(['AN-1', 'AN-1', 'AC-1', 'AC-1', 'AC-2', 'AC-2']);
-    const egal = [ecr('z', 'AC-5', 'AC', 'valide'), ecr('b', 'AC-1', 'AC', 'valide')];
-    expect(numeros(lignesFec(egal, contexte, colonnes, options))).toEqual([
-      'AC-1',
-      'AC-1',
-      'AC-5',
-      'AC-5',
-    ]);
-    const contradiction = [ecr('p', 'AC-1', 'AC', 'valide'), ecr('q', 'AC-2', 'AC', 'valide')];
-    const obtenu = numeros(lignesFec(contradiction, contexte, colonnes, options));
-    expect(obtenu).toEqual(['AC-2', 'AC-2', 'AC-1', 'AC-1']);
-    const deuxANouveaux = [ecr('r', 'AN-1', 'AN', 'valide'), ecr('s', 'AN-2', 'AN', 'valide')];
-    expect(numeros(lignesFec(deuxANouveaux, contexte, colonnes, options))[0]).toBe('AN-2');
-    const longueur = [ecr('z', 'AC-10', 'AC', 'valide'), ecr('b', 'AC-9', 'AC', 'valide')];
-    expect(numeros(lignesFec(longueur, contexte, colonnes, options))[0]).toBe('AC-9');
+    const dansLesDeuxOrdres = (entrees: Ecriture[], attendu: string[]): void => {
+      expect(numeros(lignesFec(entrees, contexte, colonnes, options))).toEqual(attendu);
+      expect(numeros(lignesFec([...entrees].reverse(), contexte, colonnes, options))).toEqual(attendu);
+    };
+    dansLesDeuxOrdres(jeu(), ['AN-1', 'AN-1', 'AC-1', 'AC-1', 'AC-2', 'AC-2']);
+    dansLesDeuxOrdres(
+      [ecr('z', 'AC-5', 'AC', 'valide'), ecr('b', 'AC-1', 'AC', 'valide')],
+      ['AC-1', 'AC-1', 'AC-5', 'AC-5'],
+    );
+    dansLesDeuxOrdres(
+      [ecr('p', 'AC-1', 'AC', 'valide'), ecr('q', 'AC-2', 'AC', 'valide')],
+      ['AC-2', 'AC-2', 'AC-1', 'AC-1'],
+    );
+    dansLesDeuxOrdres(
+      [ecr('r', 'AN-1', 'AN', 'valide'), ecr('s', 'AN-2', 'AN', 'valide')],
+      ['AN-2', 'AN-2', 'AN-1', 'AN-1'],
+    );
+    dansLesDeuxOrdres(
+      [ecr('z', 'AC-10', 'AC', 'valide'), ecr('b', 'AC-9', 'AC', 'valide')],
+      ['AC-9', 'AC-9', 'AC-10', 'AC-10'],
+    );
+    const melange = [
+      ecr('c', 'AC-1', 'AC', 'valide'),
+      ecr('b', 'AC-3', 'AC', 'valide'),
+      ecr('a', 'AC-2', 'AC', 'valide'),
+    ];
+    const attenduMelange = ['AC-3', 'AC-3', 'AC-2', 'AC-2', 'AC-1', 'AC-1'];
+    for (const [i, j, k] of [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]] as const) {
+      const entrees = [melange[i], melange[j], melange[k]] as Ecriture[];
+      expect(numeros(lignesFec(entrees, contexte, colonnes, options))).toEqual(attenduMelange);
+    }
     const sansDate = [ecr('inconnu', 'AC-7', 'AC', 'valide')];
     expect(code(() => lignesFec(sansDate, contexte, colonnes, options))).toBe('date_invalide');
   });
@@ -125,6 +140,16 @@ describe('lignes du FEC', () => {
     expect(r.totalDebit).toBe(3500);
     expect(r.totalCredit).toBe(3500);
     expect(lignesFec([], contexte, colonnes, options).totalDebit).toBe(0);
+    const desequilibre: Ecriture = {
+      ...ecr('b', 'AC-1', 'AC', 'valide'),
+      lignes: [
+        { compte: '607', libelle: 'Débit', debit: centimes(1000), credit: centimes(0) },
+        { compte: '401', libelle: 'Crédit', debit: centimes(0), credit: centimes(700) },
+      ],
+    };
+    const d = lignesFec([desequilibre], contexte, colonnes, options);
+    expect(d.totalDebit).toBe(1000);
+    expect(d.totalCredit).toBe(700);
   });
 
   it('colonnes-dans-l-ordre-donne', () => {
