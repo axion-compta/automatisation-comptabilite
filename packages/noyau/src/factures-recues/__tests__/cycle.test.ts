@@ -47,7 +47,9 @@ describe('factures reçues', () => {
     expect(code(() => recevoir(vide, arrivee({ numero: '' }), SOCIETE))).toBe('numero_invalide');
     expect(code(() => recevoir(vide, arrivee({ sirenEmetteur: '12345' }), SOCIETE))).toBe('siren_invalide');
     expect(code(() => recevoir(vide, arrivee({ sirenDestinataire: 'abcdefghi' }), SOCIETE))).toBe('siren_invalide');
-    expect(code(() => recevoir(vide, arrivee({ date: '2026-02-30x' }), SOCIETE))).toBe('date_invalide');
+    expect(code(() => recevoir(vide, arrivee({ date: '2026-02-30' }), SOCIETE))).toBe('date_invalide');
+    expect(code(() => recevoir(vide, arrivee({ date: '2026-04-31' }), SOCIETE))).toBe('date_invalide');
+    expect(code(() => recevoir(vide, arrivee(), '12345'))).toBe('siren_invalide');
     expect(code(() => recevoir(vide, arrivee({ ttc: -100 as never }), SOCIETE))).toBe('montant_invalide');
     for (const m of [NaN, Infinity, 1.5]) {
       expect(code(() => recevoir(vide, arrivee({ ttc: m as never }), SOCIETE))).toBe('montant_invalide');

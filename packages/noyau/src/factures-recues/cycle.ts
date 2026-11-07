@@ -60,6 +60,8 @@ export function cleDedoublonnage(f: { sirenEmetteur: string; numero: string; dat
   const numero = f.numero.replace(/\s+/g, '').toUpperCase();
   if (numero === '') throw new ErreurFactureRecue('numero_invalide');
   if (!DATE.test(f.date)) throw new ErreurFactureRecue('date_invalide');
+  const d = new Date(`${f.date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== f.date) throw new ErreurFactureRecue('date_invalide');
   verifierMontant(f.ttc);
   return `${f.sirenEmetteur}|${numero}|${f.date}|${String(f.ttc)}`;
 }
