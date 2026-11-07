@@ -4,6 +4,7 @@ import { creerApp } from '../../../../apps/serveur/src/app.js';
 import { creerHandlers } from '../handlers.js';
 import { suiteContrat, type Appeler, type Cible } from './suite-contrat.js';
 import { suitePlan } from './suite-plan.js';
+import { suiteTiers } from './suite-tiers.js';
 
 const H = 'http://exemple.fr';
 const json = { 'content-type': 'application/json' };
@@ -42,5 +43,7 @@ const cibleFaux: Cible = async () => {
 
 suiteContrat('vrai serveur (Fastify + oRPC)', cibleVrai);
 suitePlan('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteTiers('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteContrat('faux serveur (MSW)', cibleFaux);
 suitePlan('faux serveur (MSW)', cibleFaux);
+suiteTiers('faux serveur (MSW)', cibleFaux);
