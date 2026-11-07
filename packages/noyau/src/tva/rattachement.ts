@@ -78,17 +78,10 @@ export function deplacerPiece(
   for (const periode of [actuel.mois, demande.nouveauMois]) {
     if (periodesDeposees.includes(periode)) throw new ErreurRattachement('periode_deposee', periode);
   }
+  const { pieceId, nouveauMois, par, le } = demande;
   return {
-    rattachements: rattachements.map((r) =>
-      r.pieceId === demande.pieceId ? { pieceId: r.pieceId, mois: demande.nouveauMois } : { ...r },
-    ),
-    journal: {
-      pieceId: demande.pieceId,
-      ancienMois: actuel.mois,
-      nouveauMois: demande.nouveauMois,
-      par: demande.par,
-      le: demande.le,
-    },
-    periodesARecalculer: [actuel.mois, demande.nouveauMois],
+    rattachements: rattachements.map((r) => (r.pieceId === pieceId ? { pieceId, mois: nouveauMois } : { ...r })),
+    journal: { pieceId, ancienMois: actuel.mois, nouveauMois, par, le },
+    periodesARecalculer: [actuel.mois, nouveauMois],
   };
 }

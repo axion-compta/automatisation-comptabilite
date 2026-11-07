@@ -28,10 +28,7 @@ describe('deplacerPiece', () => {
       par: 'Camille Exemple',
       le: '2026-11-03',
     });
-    expect(r.rattachements).toEqual([
-      { pieceId: 'p-1', mois: '2026-11' },
-      { pieceId: 'p-2', mois: '2026-10' },
-    ]);
+    expect(r.rattachements).toEqual([{ pieceId: 'p-1', mois: '2026-11' }, { pieceId: 'p-2', mois: '2026-10' }]);
   });
 
   it('d4-deux-periodes-a-recalculer', () => {
@@ -42,10 +39,7 @@ describe('deplacerPiece', () => {
 
   it('entree-non-modifiee', () => {
     const r = deplacerPiece(ENTREE, DEMANDE, []);
-    expect(ENTREE).toEqual([
-      { pieceId: 'p-1', mois: '2026-10' },
-      { pieceId: 'p-2', mois: '2026-10' },
-    ]);
+    expect(ENTREE).toEqual([{ pieceId: 'p-1', mois: '2026-10' }, { pieceId: 'p-2', mois: '2026-10' }]);
     expect(r.rattachements).not.toBe(ENTREE);
   });
 
