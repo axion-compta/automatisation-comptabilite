@@ -75,6 +75,9 @@ describe('relevé PDF texte lu par les règles d’un profil', () => {
     expect(refus(COLONNES)).toBeUndefined();
     expect(refus({ ...REGLES, ligne: '(a+)+$' })).toBe('regles_invalides');
     expect(refus({ ...REGLES, ligne: String.raw`^(?<date>\d+)\s(?<libelle>(a+)+)\s(?<montant>\d)$` })).toBe('regles_invalides');
+    for (const dangereux of ['(?<libelle>((a|b)+)+)', '(?<libelle>(a{1,})+)', '(?<libelle>(a|aa)+)']) {
+      expect(refus({ ...REGLES, ligne: String.raw`^(?<date>\d+)\s${dangereux}\s(?<montant>\d)$` })).toBe('regles_invalides');
+    }
     expect(refus({ ...REGLES, ligne: '(?<date>' })).toBe('regles_invalides');
     expect(refus({ ...REGLES, ligne: String.raw`^(?<date>\d+)\s(?<libelle>.+)$` })).toBe('regles_invalides');
     expect(refus({ ...REGLES, ligne: String.raw`^(?<date>\d+)\s(?<libelle>.+)\s(?<debit>\d+)$` })).toBe('regles_invalides');

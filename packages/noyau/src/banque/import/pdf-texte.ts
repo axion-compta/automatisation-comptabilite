@@ -9,7 +9,36 @@ import type { FormatMontant } from './montants.js';
 
 export const LONGUEUR_MAX_SOURCE = 300;
 const DRAPEAUX = 'iu';
-const MOTIF_DANGEREUX = /\([^()]*[+*][^()]*\)[+*{]/;
+const NON_BORNE = /^\{\d+,\}/;
+
+// Garde anti-retour-arrière : pile de parenthèses, tous niveaux. Refuse un groupe quantifié sans borne
+// qui contient (même plus bas) un quantificateur sans borne ou une alternance.
+const dangereuse = (source: string): boolean => {
+  const pile: { nonBorne: boolean; alternance: boolean }[] = [{ nonBorne: false, alternance: false }];
+  let classe = false;
+  for (let i = 0; i < source.length; i++) {
+    const c = source.charAt(i);
+    const haut = pile[pile.length - 1];
+    if (c === '\\') { i++; continue; }
+    if (classe) { if (c === ']') classe = false; continue; }
+    if (c === '[') classe = true;
+    else if (c === '(') pile.push({ nonBorne: false, alternance: false });
+    else if (c === '|' && haut) haut.alternance = true;
+    else if ((c === '+' || c === '*' || (c === '{' && NON_BORNE.test(source.slice(i)))) && haut) haut.nonBorne = true;
+    else if (c === ')' && pile.length > 1) {
+      const g = pile.pop();
+      const parent = pile[pile.length - 1];
+      const suite = source.charAt(i + 1);
+      const quantifie = suite === '+' || suite === '*' || (suite === '{' && NON_BORNE.test(source.slice(i + 1)));
+      if (g && quantifie && (g.nonBorne || g.alternance)) return true;
+      if (g && parent) {
+        parent.nonBorne ||= g.nonBorne || quantifie;
+        parent.alternance ||= g.alternance;
+      }
+    }
+  }
+  return false;
+};
 
 export class ErreurReglesPdf extends Error {
   override name = 'ErreurReglesPdf';
@@ -27,7 +56,7 @@ export type PagePdf = { numero: number; lignes: string[] };
 
 const groupe = (source: string, nom: string): boolean => source.includes(`(?<${nom}>`);
 const compiler = (source: string, obligatoires: string[][]): RegExp => {
-  if (typeof source !== 'string' || source.length > LONGUEUR_MAX_SOURCE || MOTIF_DANGEREUX.test(source)) throw new ErreurReglesPdf();
+  if (typeof source !== 'string' || source.length > LONGUEUR_MAX_SOURCE || dangereuse(source)) throw new ErreurReglesPdf();
   if (!obligatoires.some((ensemble) => ensemble.every((nom) => groupe(source, nom)))) throw new ErreurReglesPdf();
   try {
     return new RegExp(source, DRAPEAUX);
