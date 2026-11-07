@@ -44,7 +44,11 @@ describe('nom', () => {
     expect(nomNormalise(BASE, 50)).toBe(nomNormalise(BASE, 180));
     expect(nomNormalise(BASE, 49)).not.toBe(nomNormalise(BASE, 180));
     expect(nomNormalise({ ...BASE, fournisseur: 'ABCDEFGHIJKLMNOP' }, 40)).toBe('2026-10-14_ABCDEFGHI_F-0101_1200.00(EUR)');
-    expect(nomNormalise({ ...BASE, numero: 'N'.repeat(60) }, 40)).toBe(`2026-10-14__${'N'.repeat(60)}_1200.00(EUR)`);
+    for (const [numero, max] of [['N'.repeat(60), 40], ['N'.repeat(170), 180], ['N'.repeat(300), 180], ['N'.repeat(200), 40]] as [string, number][]) {
+      const nom = nomNormalise({ ...BASE, numero }, max);
+      expect(nom.length).toBeLessThanOrEqual(max);
+      expect(nom).toMatch(/^2026-10-14_[A-Z]+_N+_1200\.00\(EUR\)$/);
+    }
     for (const m of [39, 39.5, Number.NaN, Number.POSITIVE_INFINITY, -1]) expect(erreur(() => nomNormalise(BASE, m))).toBe('reglage_invalide');
     expect(erreur(() => nomNormalise(BASE, 40))).toBeUndefined();
   });

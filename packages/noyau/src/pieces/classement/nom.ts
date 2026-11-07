@@ -33,9 +33,13 @@ const ou = (texte: string | undefined, defaut: string): string => segment(texte 
 export function nomNormalise(champs: ChampsNom, longueurMax: number): string {
   if (!Number.isInteger(longueurMax) || longueurMax < MIN_LONGUEUR) throw new ErreurPiece('reglage_invalide', "longueurMax doit être un entier d'au moins 40");
   const date = ou(champs.datePiece, 'SANS-DATE');
-  const numero = ou(champs.numero, 'SANS-NUMERO');
   const montant = champs.ttc === undefined ? 'SANS-MONTANT' : montantPourNom(champs.ttc);
-  const fin = `_${numero}_${montant}(${ou(champs.devise, 'XXX')})`;
+  const coupe = (t: string, max: number): string => t.slice(0, Math.max(max, 1)).replace(/-$/, '') || t.slice(0, 1);
+  let devise = ou(champs.devise, 'XXX');
+  const fixe = date.length + montant.length + 5;
+  const numero = coupe(ou(champs.numero, 'SANS-NUMERO'), longueurMax - fixe - devise.length - 1);
+  if (fixe + devise.length + numero.length + 1 > longueurMax) devise = coupe(devise, longueurMax - fixe - numero.length - 1);
+  const fin = `_${numero}_${montant}(${devise})`;
   const place = Math.max(longueurMax - date.length - fin.length - 1, 0);
   const fournisseur = ou(champs.fournisseur, 'SANS-FOURNISSEUR').slice(0, place).replace(/-$/, '');
   return `${date}_${fournisseur}${fin}`;
