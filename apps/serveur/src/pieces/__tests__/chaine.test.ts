@@ -73,8 +73,7 @@ describe('chaîne lecture et classement', () => {
   it('facture-simple-prete-une-proposition', async () => {
     const m = monde(new Map([[lignes('1'), reponse('1')]]));
     const r = await m.suite(await m.deposer(lignes('1')));
-    expect(r.lecture?.etat).toBe('lue');
-    expect(r.classement?.piece.etat).toBe('prete');
+    expect([r.lecture?.etat, r.classement?.piece.etat]).toEqual(['lue', 'prete']);
     expect(m.propositions.size).toBe(1);
     const e = [...m.propositions.values()][0]!;
     expect([e.statut, e.lignes.map((l) => [l.compte, l.debit, l.credit])]).toEqual(['brouillon', [['606000', 10000, 0], ['445660', 1234, 0], ['401000', 0, 11234]]]);
@@ -83,8 +82,7 @@ describe('chaîne lecture et classement', () => {
   it('desaccord-ttc-seul-champ-douteux-aucune-proposition', async () => {
     const m = monde(new Map([[lignes('2'), reponse('2', '112,35')]]));
     const r = await m.suite(await m.deposer(lignes('2')));
-    expect(r.lecture?.etat).toBe('a_verifier');
-    expect(r.lecture?.motifs).toEqual(['champ_douteux']);
+    expect([r.lecture?.etat, r.lecture?.motifs]).toEqual(['a_verifier', ['champ_douteux']]);
     expect(r.lecture?.champs.filter((c) => c.mot !== 'sur').map((c) => [c.nom, c.mot])).toEqual([['ttc', 'douteux']]);
     expect(m.propositions.size).toBe(0);
   });
@@ -99,8 +97,7 @@ describe('chaîne lecture et classement', () => {
     const m = monde(new Map([[lignes('4'), reponse('4')]]));
     const [premiere, seconde] = [await m.suite(await m.deposer(lignes('4'))), await m.suite(await m.deposer(lignes('4'), 'v2'))];
     expect(premiere.classement?.comptee).toBe(true);
-    expect(seconde.classement).toMatchObject({ comptee: false, motifNonComptee: 'doublon' });
-    expect(seconde.classement?.piece.etat).toBe('a_verifier');
+    expect(seconde.classement).toMatchObject({ comptee: false, motifNonComptee: 'doublon', piece: { etat: 'a_verifier' } });
     expect(m.propositions.size).toBe(1);
   });
   it('ecart-arithmetique-a-verifier', async () => {
@@ -115,13 +112,11 @@ describe('chaîne lecture et classement', () => {
     const texte = `${lignes('6')}\n${lignes('7')}`;
     const m = monde(new Map([[texte, reponse('6')]]));
     const r = await m.suite(await m.deposer(texte));
-    expect(r.classement).toMatchObject({ type: 'plusieurs_factures', comptee: false, propositionCreee: false });
-    expect(r.classement?.piece.etat).toBe('a_verifier');
+    expect(r.classement).toMatchObject({ type: 'plusieurs_factures', comptee: false, propositionCreee: false, piece: { etat: 'a_verifier' } });
     expect(m.propositions.size).toBe(0);
   });
   it('chaos-100-pieces-coupure-a-la-37e', async () => {
-    const NB = 100;
-    const COUPURE = 37;
+    const [NB, COUPURE] = [100, 37];
     const textes = Array.from({ length: NB }, (_, i) => lignes(String(i + 1)));
     const m = monde(new Map(textes.map((t, i) => [t, reponse(String(i + 1))])), { numero: COUPURE });
     const ids: string[] = [];
@@ -131,11 +126,8 @@ describe('chaîne lecture et classement', () => {
     await expect(passe()).rejects.toThrow('coupure injectée');
     expect(m.stats.appelsModele).toBe(COUPURE - 1);
     await passe();
-    expect(ids).toHaveLength(NB);
-    expect(new Set(ids).size).toBe(NB);
-    expect(m.stats.appelsModele).toBe(NB);
-    expect(m.journal.size).toBe(NB);
-    expect(m.propositions.size).toBe(NB);
+    expect([ids.length, new Set(ids).size]).toEqual([NB, NB]);
+    expect([m.stats.appelsModele, m.journal.size, m.propositions.size]).toEqual([NB, NB, NB]);
     expect((await Promise.all(ids.map((id) => m.depot.parId(id)))).every((p) => p?.etat === 'prete')).toBe(true);
   });
   it('relance-ne-cree-pas-de-seconde-ecriture', async () => {
@@ -144,9 +136,14 @@ describe('chaîne lecture et classement', () => {
     const premiere = await m.suite(id);
     expect(premiere.classement?.propositionCreee).toBe(true);
     const relance = await etapeClassement({ ...(await m.depot.parId(id))!, etat: 'lue' }, premiere.lecture!, m.classement);
-    expect(relance.propositionCreee).toBe(false);
-    expect(relance.cleIdempotence).toBe(premiere.classement?.cleIdempotence);
-    expect(m.propositions.size).toBe(1);
-    expect(m.stats.appelsModele).toBe(1);
+    expect([relance.propositionCreee, relance.cleIdempotence, m.propositions.size, m.stats.appelsModele]).toEqual([false, premiere.classement?.cleIdempotence, 1, 1]);
+  });
+  it('classement-refuse-une-lecture-a-verifier', async () => {
+    const m = monde(new Map([[lignes('9'), reponse('9')]]));
+    const id = await m.deposer(lignes('9'));
+    const douteuse = { ...(await m.suite(id)).lecture!, etat: 'a_verifier' as const, motifs: ['champ_douteux'] };
+    const neuf = { ...m.classement, propositions: { creerSiAbsente: async (): Promise<'creee'> => 'creee' } };
+    const r = await etapeClassement({ ...(await m.depot.parId(id))!, etat: 'a_verifier' }, douteuse, neuf);
+    expect([r.propositionCreee, r.cleIdempotence]).toEqual([false, undefined]);
   });
 });

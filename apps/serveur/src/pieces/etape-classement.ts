@@ -18,7 +18,7 @@ export interface ResultatClassement {
 export async function etapeClassement(piece: PieceEnregistree, lecture: ResultatLecture, ctx: ContexteClassement): Promise<ResultatClassement> {
   const { reglage } = ctx;
   const confirme = confirmerType(lecture.typePropose ?? 'inconnu', { texte: lecture.texte, ...(lecture.ttc === undefined ? {} : { ttc: lecture.ttc }), nombreDeNumerosDeFacture: lecture.nombreDeNumeros });
-  const motifs = new Set<string>(confirme.aVerifier === undefined ? [] : [confirme.aVerifier]);
+  const motifs = new Set<string>([...lecture.motifs, ...(confirme.aVerifier === undefined ? [] : [confirme.aVerifier])]);
   let comptee = compteeParDefaut(confirme.type, confirme.motifNonPiece);
   const courante: PieceComparee = {
     id: piece.id, sha256: piece.sha256, electronique: false, qualite: piece.typeReel === 'pdf' ? 'texte_pdf' : 'photo', recueLe: ctx.horloge.maintenant(),
@@ -33,7 +33,7 @@ export async function etapeClassement(piece: PieceEnregistree, lecture: Resultat
   await ctx.doublons.enregistrer(piece.societeId, courante);
   let cleIdempotence: string | undefined;
   let propositionCreee = false;
-  if (comptee.comptee && motifs.size === 0 && lecture.date !== undefined && lecture.ttc !== undefined) {
+  if (lecture.etat === 'lue' && (piece.etat === 'lue' || piece.etat === 'prete') && comptee.comptee && motifs.size === 0 && lecture.date !== undefined && lecture.ttc !== undefined) {
     const proposition = proposerEcriture({
       id: piece.id, sha256: piece.sha256, type: confirme.type, comptee: true, sensible: lecture.sensible,
       classementAutomatiquePermis: classementAutomatiquePermis(lecture.champs), aVerifier: [...motifs] as MotifAVerifier[],
