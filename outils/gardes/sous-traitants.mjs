@@ -55,11 +55,10 @@ export function analyserListe(texte) {
     if (c.length !== COLS.length) return ajoute('valeur_invalide');
     const v = Object.fromEntries(COLS.map((nom, i) => [nom, c[i]]));
     const actif = v.actif === 'oui';
-    const ouiNonOk = (x) => OUI_NON.includes(x) || (x === '' && v.actif === 'non');
     const dates = [v.contrat_archive_le, v.annonce_le, v.active_le];
     const invalide =
       !OUI_NON.includes(v.actif) ||
-      ![v.traitement_dans_ue, v.societe_mere_ue, v.conservation_chez_fournisseur].every(ouiNonOk) ||
+      ![v.traitement_dans_ue, v.societe_mere_ue, v.conservation_chez_fournisseur].every((x) => OUI_NON.includes(x)) ||
       !dates.every((d) => d === '' || dateReelle(d));
     if (invalide) return ajoute('valeur_invalide');
     if (!ROLE.test(v.role)) ajoute('role_invalide');

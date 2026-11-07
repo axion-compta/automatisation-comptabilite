@@ -30,11 +30,14 @@ test('hors-ue-rouge', () => {
   assert.deepEqual(codes(ligne({ ue: 'non' })), ['hors_ue']);
   assert.deepEqual(codes(ligne({ ue: 'non', actif: 'non' })), []);
   assert.deepEqual(codes(ligne({ ue: '' })), ['valeur_invalide']);
+  assert.deepEqual(codes(ligne({ ue: '', actif: 'non' })), ['valeur_invalide']);
+  assert.deepEqual(codes(ligne({ mere: '', actif: 'non' })), ['valeur_invalide']);
 });
 
 test('ia-avec-conservation-rouge', () => {
   assert.deepEqual(codes(ligne({ ref: 'IA-1', cons: 'oui' })), ['ia_avec_conservation']);
   assert.deepEqual(codes(ligne({ ref: 'IA-1', cons: '' })), ['valeur_invalide']);
+  assert.deepEqual(codes(ligne({ ref: 'IA-1', cons: '', actif: 'non' })), ['valeur_invalide']);
   assert.deepEqual(codes(ligne({ ref: 'IA-1', cons: 'non' })), []);
   assert.deepEqual(codes(ligne({ ref: 'IA-1', cons: 'oui', actif: 'non' })), []);
   assert.deepEqual(codes(ligne({ ref: 'HEB-2', cons: 'oui' })), []);
