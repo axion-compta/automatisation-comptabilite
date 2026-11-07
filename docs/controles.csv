@@ -22,3 +22,8 @@ TVA-C09,V3-TVA-038,M,aucun,avant_tva,P7,CT-D01,tva.controle.seuil_ecart_ca,oui
 TVA-C10,V3-TVA-034,B,preparation_tva,avant_tva,P7,CT-D02,,oui
 TVA-C11,V3-TVA-033,B,preparation_tva,avant_tva,P7,CT-D03,,oui
 TVA-C13,V3-CTL-025,B,preparation_tva,avant_tva,P7,CT-D04,,oui
+CC-PM01,V3-MOT-055,B,validation_mois|cloture,continu|avant_export|avant_cloture,P5,CT-PM01,,oui
+CC-PM04,V3-MOT-071,B,cloture,avant_cloture|demande,P5,CT-PM04,,oui
+CC-PM05,V3-MOT-071,B,cloture,avant_cloture|demande,P5,CT-PM05,capital.liberation_minimale,oui
+CC-PM06,V3-MOT-085,B,cloture,avant_cloture|demande,P5,CT-PM06,dividende.gerant_majoritaire.seuil,oui
+CC-PM07,V3-MOT-075,B,export_officiel|cloture,avant_export|nocturne|demande,P5,CT-PM07,,oui
