@@ -9,7 +9,7 @@ const code = (f: () => unknown): string | undefined => { try { f(); } catch (x) 
 
 describe('archive', () => {
   it('zip-slip-refuse', () => {
-    for (const nom of ['../../x.pdf', '/etc/x', 'C:\\x', 'a/../../b', 'a/../b', 'a\\..\\b', 'x\0.pdf']) {
+    for (const nom of ['../../x.pdf', '/etc/x', 'C:\\x', 'a/../../b', 'a/../b', 'a\\..\\b', 'x\0.pdf', '', '.', './.']) {
       expect(cheminSur(nom)).toBeNull();
       expect(controlerArchive([e('ok.pdf'), e(nom)], R)).toEqual(refus('zip_slip'));
     }

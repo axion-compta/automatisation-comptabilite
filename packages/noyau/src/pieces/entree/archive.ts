@@ -16,7 +16,8 @@ export function cheminSur(nom: string): string | null {
   if (n.startsWith('/') || /^[A-Za-z]:/.test(n)) return null;
   const segments = n.split('/');
   if (segments.includes('..')) return null;
-  return segments.filter((s) => s !== '' && s !== '.').join('/');
+  const chemin = segments.filter((s) => s !== '' && s !== '.').join('/');
+  return chemin === '' ? null : chemin;
 }
 
 export function controlerArchive(entrees: EntreeZip[], reglage: ReglageArchive): ResultatArchive {
