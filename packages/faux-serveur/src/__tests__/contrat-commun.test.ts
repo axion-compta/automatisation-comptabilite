@@ -2,12 +2,13 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 import { setupServer } from 'msw/node';
 import { creerApp } from '../../../../apps/serveur/src/app.js';
 import { creerHandlers } from '../handlers.js';
-import { suiteContrat, type Appeler } from './suite-contrat.js';
+import { suiteContrat, type Appeler, type Cible } from './suite-contrat.js';
+import { suitePlan } from './suite-plan.js';
 
 const H = 'http://exemple.fr';
 const json = { 'content-type': 'application/json' };
 
-suiteContrat('vrai serveur (Fastify + oRPC)', async () => {
+const cibleVrai: Cible = async () => {
   const app = creerApp();
   const appeler: Appeler = async (methode, chemin, entetes, corps) => {
     const r = await app.inject({
@@ -19,14 +20,14 @@ suiteContrat('vrai serveur (Fastify + oRPC)', async () => {
     return { status: r.statusCode, json: r.json() };
   };
   return { appeler, fermer: () => app.close() };
-});
+};
 
 const serveur = setupServer();
 beforeAll(() => serveur.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => serveur.resetHandlers());
 afterAll(() => serveur.close());
 
-suiteContrat('faux serveur (MSW)', async () => {
+const cibleFaux: Cible = async () => {
   serveur.use(...creerHandlers({ base: H }));
   const appeler: Appeler = async (methode, chemin, entetes, corps) => {
     const r = await fetch(H + chemin, {
@@ -37,4 +38,9 @@ suiteContrat('faux serveur (MSW)', async () => {
     return { status: r.status, json: await r.json() };
   };
   return { appeler, fermer: async () => serveur.resetHandlers() };
-});
+};
+
+suiteContrat('vrai serveur (Fastify + oRPC)', cibleVrai);
+suitePlan('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteContrat('faux serveur (MSW)', cibleFaux);
+suitePlan('faux serveur (MSW)', cibleFaux);

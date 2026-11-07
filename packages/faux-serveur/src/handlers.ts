@@ -1,6 +1,7 @@
 import { delay, http, HttpResponse, type HttpHandler } from 'msw';
 import { EnTeteEcriture, ModificationEcriture, NouvelleEcriture } from '../../contrat/src/schemas.js';
 import { ConflitVersion, creerService } from '../../contrat/src/service.js';
+import { creerHandlersPlan } from './domaines/plan.js';
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -82,5 +83,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
         return erreur('NOT_FOUND', 404);
       }
     }),
+
+    ...creerHandlersPlan(base, attendre),
   ];
 }
