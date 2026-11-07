@@ -39,16 +39,18 @@ describe('blocs du tableau de bord', () => {
   });
 
   it('tva-en-doute-aucun-montant', () => {
-    let appels = 0;
-    const b = blocTva(P, 3, () => {
-      appels += 1;
-      return { montant: 99 };
-    });
-    expect(appels).toBe(0);
-    expect(b).toMatchObject({ code: 'tva_impots', etat: 'impossible', mot: 'pieces_a_regarder' });
-    expect(b.donnees).toEqual({ piecesEnDoute: 3 });
-    expect(JSON.stringify(b)).not.toContain('montant');
-    expect(JSON.stringify(b)).not.toContain('estim');
+    for (const n of [1, 3]) {
+      let appels = 0;
+      const b = blocTva(P, n, () => {
+        appels += 1;
+        return { montant: 99 };
+      });
+      expect(appels).toBe(0);
+      expect(b).toMatchObject({ code: 'tva_impots', etat: 'impossible', mot: 'pieces_a_regarder' });
+      expect(b.donnees).toEqual({ piecesEnDoute: n });
+      expect(JSON.stringify(b)).not.toContain('montant');
+      expect(JSON.stringify(b)).not.toContain('estim');
+    }
   });
 
   it('tva-sans-doute-calculee', () => {
@@ -69,11 +71,9 @@ describe('blocs du tableau de bord', () => {
       ).toThrow(ErreurBloc);
       expect(appels).toBe(0);
     }
-    try {
-      blocTva(P, -1, () => 1);
-    } catch (e) {
-      expect((e as ErreurBloc).code).toBe('pieces_en_doute_invalides');
-    }
+    expect(() => blocTva(P, -1, () => 1)).toThrow(
+      expect.objectContaining({ code: 'pieces_en_doute_invalides' }),
+    );
   });
 
   it('huit-blocs-dans-l-ordre', () => {
