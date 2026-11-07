@@ -6,13 +6,15 @@ interface Def {
   method: string;
   path: string;
   operationId: string;
+  tags?: string[];
+  successStatus?: number;
   inputSchema: Sch;
   errors: Record<string, { status: number }>;
 }
 
 function definitions(): Def[] {
   return Object.values(contrat).flatMap((domaine) => Object.values(domaine)).map((r) => {
-    const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
+    const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string; tags?: string[]; successStatus?: number }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
     return { ...d.route, inputSchema: d.inputSchema, errors: d.errorMap ?? {} };
   });
 }
@@ -53,10 +55,11 @@ export function genererOpenapi(): object {
     }
     for (const m of d.path.matchAll(/\{(\w+)\}/g)) parametres.push({ name: m[1], in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
     const chemin = d.path;
-    const reponses: Record<string, unknown> = { '200': { description: 'OK' } };
-    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: e.status === 409 ? 'Conflit de version' : 'Introuvable' };
+    const reponses: Record<string, unknown> = { [String(d.successStatus ?? 200)]: { description: d.successStatus === 201 ? 'Créé' : 'OK' } };
+    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: e.status === 409 ? 'Conflit de version' : e.status === 422 ? 'Refusé' : 'Introuvable' };
     (paths[chemin] ??= {})[d.method.toLowerCase()] = {
       operationId: d.operationId,
+      ...(d.tags ? { tags: d.tags } : {}),
       parameters: parametres,
       ...(s['body'] ? { requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(s['body']) } } } } : {}),
       responses: reponses,
