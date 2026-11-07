@@ -84,6 +84,38 @@ export function pourcentage(a: Centimes, pointsDeBase: number, mode: Arrondi): C
 }
 
 /**
+ * Multiplie par une fraction `numerateur / denominateur` (entiers sûrs, numérateur ≥ 0,
+ * dénominateur > 0) en bigint, puis arrondit selon le mode explicite.
+ */
+export function appliquerFraction(a: Centimes, numerateur: number, denominateur: number, mode: Arrondi): Centimes {
+  if (!Number.isSafeInteger(numerateur) || numerateur < 0) {
+    throw new ErreurArgent('Le numérateur doit être un entier sûr positif ou nul : ' + String(numerateur));
+  }
+  if (!Number.isSafeInteger(denominateur) || denominateur <= 0) {
+    throw new ErreurArgent('Le dénominateur doit être un entier sûr strictement positif : ' + String(denominateur));
+  }
+  const brut = BigInt(a) * BigInt(numerateur);
+  return verifier(Number(diviser(brut, BigInt(denominateur), mode)));
+}
+
+/**
+ * Proportion `partie / total` en points de base (10000 = 100 %), arrondie selon le mode.
+ * Un total nul n'a pas de proportion : `null` (jamais 0 ni Infinity).
+ */
+export function proportionPointsDeBase(partie: number, total: number, mode: Arrondi): number | null {
+  if (!Number.isSafeInteger(partie)) {
+    throw new ErreurArgent('La partie doit être un entier sûr : ' + String(partie));
+  }
+  if (!Number.isSafeInteger(total) || total < 0) {
+    throw new ErreurArgent('Le total doit être un entier sûr positif ou nul : ' + String(total));
+  }
+  if (total === 0) return null;
+  const q = Number(diviser(BigInt(partie) * 10000n, BigInt(total), mode));
+  if (!Number.isSafeInteger(q)) throw new ErreurArgent('Proportion hors des entiers sûrs');
+  return q;
+}
+
+/**
  * Répartit un montant selon des poids entiers positifs ; la somme des parts est exacte.
  * Méthode du plus grand reste ; à reste égal, l'indice le plus petit passe d'abord.
  * Un total négatif donne l'opposé de la répartition du total positif.
