@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { peutAgir, registre, roleAutorise } from '../index.js';
+import { outilOuvertAuChat, peutAgir, registre, roleAutorise } from '../index.js';
 
 const tous = new Set(Object.keys(registre.interrupteurs));
 const ecritures = ['proposer', 'valider', 'annuler'];
@@ -50,5 +50,21 @@ describe('défauts L00-T26', () => {
   it('interrupteur non déclaré dans le registre : refus même si actif', () => {
     const r = { ...registre, actions: [{ id: 'x', interrupteur: 'fantome', outil: 'outil_lire' }] };
     expect(peutAgir(r, 'administrateur', 'x', new Set(['fantome']))).toBe(false);
+  });
+});
+
+describe('niveaux et chat (L05-T01)', () => {
+  it('quatre-niveaux-seulement', () => {
+    for (const o of registre.outils) expect(['L', 'B', 'M', 'I']).toContain(o.niveau);
+    expect(registre.outils.find((o) => o.id === 'outil_valider')?.niveau).toBe('M');
+  });
+  it('niveau-i-ferme-au-chat', () => {
+    const r = { ...registre, outils: [{ id: 'x', niveau: 'I' as const, chat: 'ouvert' as const }] };
+    expect(outilOuvertAuChat(r, 'x')).toBe(false);
+    expect(outilOuvertAuChat(registre, 'outil_lire')).toBe(true);
+    expect(outilOuvertAuChat(registre, 'outil_valider')).toBe(false);
+  });
+  it('outil-inconnu-ferme-au-chat', () => {
+    for (const id of ['', 'inconnu', '__proto__', 'OUTIL_LIRE']) expect(outilOuvertAuChat(registre, id)).toBe(false);
   });
 });
