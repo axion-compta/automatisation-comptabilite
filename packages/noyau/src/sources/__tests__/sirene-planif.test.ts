@@ -39,7 +39,6 @@ describe('sirene-planif', () => {
     for (const t of instants) {
       expect(instants.filter((x) => x > t - o.fenetreMs && x <= t).length).toBeLessThanOrEqual(30);
     }
-    // Contrôle du contrôleur : 31 envois dans la même fenêtre sont refusés.
     expect(respecteLeQuota(Array.from({ length: 31 }, (_v, k) => k * 1000), o)).toBe(false);
     expect(respecteLeQuota(Array.from({ length: 30 }, (_v, k) => k * 1000), o)).toBe(true);
   });
@@ -58,7 +57,6 @@ describe('sirene-planif', () => {
     const aplat = plan.flatMap((p) => p.lot);
     expect(aplat).toEqual(d);
     expect(new Set(aplat).size).toBe(57);
-    // Les doublons reçus sont gardés tels quels (rien n'est perdu).
     expect(planifier(['a', 'a', 'b'], 0, o).flatMap((p) => p.lot)).toEqual(['a', 'a', 'b']);
   });
 
@@ -73,9 +71,7 @@ describe('sirene-planif', () => {
     const plan = planifier(sirens(45), 0, { ...o, tailleLot: 20 });
     expect(plan.map((p) => p.lot.length)).toEqual([20, 20, 5]);
     expect(plan.map((p) => p.a)).toEqual([0, 2500, 5000]);
-    // tailleLot plus grand que la file : un seul lot.
     expect(planifier(sirens(3), 0, { ...o, tailleLot: 20 }).map((p) => p.lot.length)).toEqual([3]);
-    // un seul SIREN
     expect(planifier(sirens(1), 7, o)).toEqual([{ lot: sirens(1), a: 7 }]);
   });
 
@@ -87,21 +83,15 @@ describe('sirene-planif', () => {
 
   it('peut-envoyer-a-la-limite-exacte', () => {
     const p = { quotaParFenetre: 2, fenetreMs: 100, intervalleMinMs: 10, tailleLot: 1 };
-    // Envois à 0 et 50 : à 99 la fenêtre ]-1, 99] contient les deux.
     expect(peutEnvoyer([0, 50], 99, p)).toBe(false);
-    // À 100 l'envoi à 0 sort de la fenêtre ]0, 100].
     expect(peutEnvoyer([0, 50], 100, p)).toBe(true);
-    // Intervalle : 59 trop tôt, 60 permis (dernier envoi à 50).
     expect(peutEnvoyer([50], 59, { ...p, quotaParFenetre: 5 })).toBe(false);
     expect(peutEnvoyer([50], 60, { ...p, quotaParFenetre: 5 })).toBe(true);
-    // Quota exact : 1 envoi dans la fenêtre avec quota 2 passe, 2 avec quota 2 ne passe pas.
     expect(peutEnvoyer([20], 40, p)).toBe(true);
     expect(peutEnvoyer([10, 20], 40, p)).toBe(false);
-    // Non trié : même résultat.
     expect(peutEnvoyer([50, 0], 99, p)).toBe(false);
     expect(peutEnvoyer([50, 0], 100, p)).toBe(true);
     expect(peutEnvoyer([50, 0], 60, { ...p, quotaParFenetre: 5 })).toBe(true);
-    // Le planificateur respecte la fenêtre pile : 3e envoi à 100.
     const plan = planifier(['a', 'b', 'c'], 0, { ...p, intervalleMinMs: 50 });
     expect(plan.map((x) => x.a)).toEqual([0, 50, 100]);
   });
