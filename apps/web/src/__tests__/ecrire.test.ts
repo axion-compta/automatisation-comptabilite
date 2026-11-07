@@ -9,7 +9,7 @@ const schema = z.object({ id: z.string(), version: z.number() });
 const CLE = 'cle-fictive-12345';
 
 function stub(reponse: () => Promise<Response>) {
-  const f = vi.fn((_url: string, _init?: RequestInit) => reponse());
+  const f = vi.fn<typeof fetch>(() => reponse());
   vi.stubGlobal('fetch', f);
   return f;
 }
