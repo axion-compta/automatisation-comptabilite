@@ -19,7 +19,7 @@ export function Ecran() {
   }
 
   return (
-    <main>
+    <section>
       <h1>Écran de test</h1>
       <label>
         Panne simulée{' '}
@@ -35,6 +35,6 @@ export function Ecran() {
       <button onClick={() => setCle('cle-' + crypto.randomUUID())}>Nouvelle clé</button>
       <p data-testid="resultat">{resultat}</p>
       <p data-testid="total">{total === null ? '' : total + ' écriture(s)'}</p>
-    </main>
+    </section>
   );
 }
