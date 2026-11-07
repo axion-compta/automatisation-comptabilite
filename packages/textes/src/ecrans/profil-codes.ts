@@ -37,10 +37,10 @@ const base = {
   origines: {
     document: 'Lu dans un document',
     sirene: "Annuaire des entreprises",
-    vies: 'Registre européen de la TVA',
     saisie_personne: 'Saisi par vous',
     proposition_ia: 'Préparé par IA, à valider',
-    import_fichier: 'Importé depuis un fichier',
+    declaration: 'Lu dans une déclaration',
+    fec_reprise: 'Repris du fichier des écritures',
   },
 } as const;
 

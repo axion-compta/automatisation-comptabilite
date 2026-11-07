@@ -8,7 +8,7 @@ const CODES = {
   identifiants: ['siren_invalide', 'tva_cle_fausse', 'vies_non_verifie', 'sirene_saisie_manuelle'],
   statuts: ['confirme', 'a_confirmer', 'vide', 'je_ne_sais_pas', 'a_verifier'],
   confiances: ['sur', 'a_verifier', 'douteux'],
-  origines: ['document', 'sirene', 'vies', 'saisie_personne', 'proposition_ia', 'import_fichier'],
+  origines: ['document', 'sirene', 'declaration', 'fec_reprise', 'saisie_personne', 'proposition_ia'],
 } as const;
 type Famille = keyof typeof CODES;
 const familles = Object.keys(CODES) as Famille[];
