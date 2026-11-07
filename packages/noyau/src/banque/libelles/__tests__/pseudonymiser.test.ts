@@ -12,10 +12,13 @@ describe('pseudonymiser', () => {
     expect(r.textes).toEqual(['VIR [IBAN_1] LOYER', 'VIR [IBAN_1] LOYER', 'VIR [IBAN_2] X']);
     expect(r.table.size).toBe(2);
     expect(p(['REF FA-2026-0142 PRLV LOYER']).textes).toEqual(['REF FA-2026-0142 PRLV LOYER']);
+    expect(p(['VIR FR00\u00a01234\u00a05678\u00a09012\u00a03456\u00a07890\u00a0123 X', 'VIR FR00\u202f1234\u202f5678\u202f9012\u202f3456\u202f7890\u202f123 X']).textes).toEqual(['VIR [IBAN_1] X', 'VIR [IBAN_1] X']);
     expect(p(['FR00 1234 LOYER PARIS']).textes).toEqual(['FR00 1234 LOYER PARIS']);
   });
   it('carte-remplacee', () => {
     expect(p(['CB 4974XXXXXXXX1234 X', 'A 123456789012 B 12345678901 C']).textes).toEqual(['CB [CARTE_1] X', 'A [CARTE_2] B 12345678901 C']);
+    expect(p(['CB 4974 1234 5678 1234 X', 'CB 4974\u00a0XXXX\u00a0XXXX\u00a01234', 'CB 4974 1234 5678 123 X']).textes).toEqual(['CB [CARTE_1] X', 'CB [CARTE_2]', 'CB [CARTE_3] X']);
+    expect(p(['REF 1234 5678 LOYER 12 34']).textes).toEqual(['REF 1234 5678 LOYER 12 34']);
     expect(p(['1234567890123456789012']).textes).toEqual(['[CARTE_1]']);
   });
   it('personne-dans-les-deux-ordres', () => {

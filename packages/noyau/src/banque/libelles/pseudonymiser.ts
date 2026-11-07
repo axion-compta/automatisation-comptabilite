@@ -11,7 +11,7 @@ const mots = (s: string): string[] => plier(s).split(/\s+/).filter((m) => m !== 
 const echapper = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const RE_JETON = /(\\*)(\[(?:IBAN|CARTE|PERSONNE)_\d+\])/g;
 const IBAN_COMPACT = '(?<![a-z0-9])[a-z]{2}\\d{2}[a-z0-9]{11,30}';
-const IBAN_ESPACES = '(?<![a-z0-9])[a-z]{2}\\d{2} [a-z0-9]{4}(?: (?=[a-z0-9]*\\d)[a-z0-9]{4}){2,6}(?: \\d{1,3})?(?![a-z0-9])';
+const IBAN_ESPACES = '(?<![a-z0-9])[a-z]{2}\\d{2}\\s[a-z0-9]{4}(?:\\s(?=[a-z0-9]*\\d)[a-z0-9]{4}){2,6}(?:\\s\\d{1,3})?(?![a-z0-9])';
 const BORNE = (s: string) => `(?<![\\p{L}\\p{N}])(?:${s})(?![\\p{L}\\p{N}])`;
 
 function canon(genre: string, original: string): string {
@@ -42,7 +42,7 @@ export function pseudonymiser(
   }
   const pers = [...alternatives].sort((a, b) => b.length - a.length).join('|');
   const re = new RegExp(
-    `(?<IBAN>${IBAN_COMPACT}|${IBAN_ESPACES})|(?<CARTE>[0-9x]{12,})` + (pers ? `|(?<PERSONNE>${BORNE(pers)})` : ''),
+    `(?<IBAN>${IBAN_COMPACT}|${IBAN_ESPACES})|(?<CARTE>[0-9x]{12,}|(?<![0-9x])[0-9x]{4}(?:\\s[0-9x]{4}){2,3}(?:\\s[0-9]{1,3})?(?![0-9x]))` + (pers ? `|(?<PERSONNE>${BORNE(pers)})` : ''),
     'gu',
   );
   const jetonDe = (genre: Genre, original: string): string => {
