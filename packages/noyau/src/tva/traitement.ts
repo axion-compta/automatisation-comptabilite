@@ -104,6 +104,8 @@ export function effetTraitement(entree: EntreeTraitement): EffetTraitement {
       const taux = entree.tauxAutoliquidationPointsDeBase;
       if (taux === undefined) throw new ErreurTraitementTva('taux_manquant', "Le taux d'autoliquidation est requis.");
       if (!montantValide(taux)) throw new ErreurTraitementTva('montant_invalide', "Le taux d'autoliquidation est invalide.");
+      // TVA affichée alors que le code est l'autoliquidation : doute, blocage (D4, TVA-039).
+      if (tvaLue > 0) return effet({ aVerifier: true });
       const tva = pourcentage(base, taux, 'demi-superieur');
       return franchise ? effet({ collectee: tva, perdue: tva }) : effet({ collectee: tva, deductible: tva });
     }

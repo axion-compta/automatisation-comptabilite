@@ -16,6 +16,9 @@ function code(fn: () => unknown): string | undefined {
   return undefined;
 }
 
+// Taux inventé (12,5 %), sans lien avec un taux réel.
+const TAUX_INVENTE = 1250;
+
 const base = { sens: 'achat' as const, base: c(10000), tvaLue: c(1700), franchise: false };
 
 describe('effetTraitement', () => {
@@ -38,12 +41,12 @@ describe('effetTraitement', () => {
 
   it('autoliquidation-net-nul', () => {
     for (const cd of ['AUTOLIQUIDATION', 'AUTOLIQUIDATION_FR'] as const) {
-      const e = effetTraitement({ ...base, code: cd, tvaLue: c(0), tauxAutoliquidationPointsDeBase: 2000 });
-      expect(e).toEqual({ ...ZERO, collectee: 2000, deductible: 2000 });
+      const e = effetTraitement({ ...base, code: cd, tvaLue: c(0), tauxAutoliquidationPointsDeBase: TAUX_INVENTE });
+      expect(e).toEqual({ ...ZERO, collectee: 1250, deductible: 1250 });
       expect(e.collectee - e.deductible).toBe(0);
     }
     // Arrondi demi supérieur sur la base.
-    expect(effetTraitement({ ...base, code: 'AUTOLIQUIDATION', base: c(1025), tvaLue: c(0), tauxAutoliquidationPointsDeBase: 1000 }).collectee).toBe(103);
+    expect(effetTraitement({ ...base, code: 'AUTOLIQUIDATION', base: c(1020), tvaLue: c(0), tauxAutoliquidationPointsDeBase: TAUX_INVENTE }).collectee).toBe(128);
     expect(code(() => effetTraitement({ ...base, code: 'AUTOLIQUIDATION', tvaLue: c(0) }))).toBe('taux_manquant');
     expect(code(() => effetTraitement({ ...base, code: 'AUTOLIQUIDATION_FR', tvaLue: c(0) }))).toBe('taux_manquant');
     expect(code(() => effetTraitement({ ...base, code: 'AUTOLIQUIDATION', tauxAutoliquidationPointsDeBase: Number.NaN }))).toBe('montant_invalide');
@@ -51,8 +54,14 @@ describe('effetTraitement', () => {
   });
 
   it('autoliquidation-en-franchise-due-non-deduite', () => {
-    const e = effetTraitement({ ...base, code: 'AUTOLIQUIDATION', franchise: true, tauxAutoliquidationPointsDeBase: 2000 });
-    expect(e).toEqual({ ...ZERO, collectee: 2000, perdue: 2000 });
+    const e = effetTraitement({ ...base, code: 'AUTOLIQUIDATION', franchise: true, tvaLue: c(0), tauxAutoliquidationPointsDeBase: TAUX_INVENTE });
+    expect(e).toEqual({ ...ZERO, collectee: 1250, perdue: 1250 });
+  });
+
+  it('autoliquidation avec TVA lue : à vérifier', () => {
+    for (const cd of ['AUTOLIQUIDATION', 'AUTOLIQUIDATION_FR'] as const) {
+      expect(effetTraitement({ ...base, code: cd, tauxAutoliquidationPointsDeBase: TAUX_INVENTE })).toEqual({ ...ZERO, aVerifier: true });
+    }
   });
 
   it('sous-reserve-jamais-deductible', () => {
@@ -73,7 +82,7 @@ describe('effetTraitement', () => {
     }
     // Un code d'achat utilisé sur une vente est un doute : blocage.
     for (const cd of ['AUTOLIQUIDATION', 'SOUS_RESERVE', 'NON_DEDUCTIBLE_NOM'] as const) {
-      expect(effetTraitement({ ...base, sens: 'vente', code: cd, tauxAutoliquidationPointsDeBase: 2000 })).toEqual({ ...ZERO, aVerifier: true });
+      expect(effetTraitement({ ...base, sens: 'vente', code: cd, tauxAutoliquidationPointsDeBase: TAUX_INVENTE })).toEqual({ ...ZERO, aVerifier: true });
     }
   });
 
@@ -99,6 +108,7 @@ describe('effetTraitement', () => {
       graine = (Math.imul(graine, 1664525) + 1013904223) >>> 0;
       return graine % max;
     };
+    // AUTOLIQUIDATION* exclus : leur TVA est calculée sur la base, non lue.
     const codes: CodeTraitement[] = [
       'DEDUCTIBLE',
       'SOUS_RESERVE',
@@ -111,7 +121,7 @@ describe('effetTraitement', () => {
     ];
     for (let i = 0; i < 1000; i++) {
       const cd = codes[alea(codes.length)] as CodeTraitement;
-      const tvaLue = cd === 'SANS_TVA' || cd === 'A_VERIFIER' || cd === 'MARGE' ? 0 : alea(100000);
+      const tvaLue = cd === 'SANS_TVA' ? 0 : alea(100000);
       const e = effetTraitement({
         code: cd,
         sens: 'achat',
@@ -120,7 +130,8 @@ describe('effetTraitement', () => {
         partPointsDeBase: alea(10001),
         franchise: alea(2) === 0,
       });
-      expect(e.deductible + e.sousReserve + e.perdue).toBe(tvaLue);
+      if (cd === 'A_VERIFIER' || cd === 'MARGE') expect(e.aVerifier).toBe(true);
+      else expect(e.deductible + e.sousReserve + e.perdue).toBe(tvaLue);
       expect(e.collectee).toBe(0);
       expect(Math.min(e.deductible, e.sousReserve, e.perdue)).toBeGreaterThanOrEqual(0);
       if (cd !== 'DEDUCTIBLE') expect(e.deductible).toBe(0);
