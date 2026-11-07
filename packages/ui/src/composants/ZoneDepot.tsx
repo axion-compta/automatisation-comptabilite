@@ -3,6 +3,9 @@ import type { ChangeEvent, DragEvent } from "react";
 import { Bouton } from "./Bouton.js";
 
 export type CanalDepot = "glisser" | "selecteur";
+type Liste = ArrayLike<File> | null | undefined;
+type EvtZone = DragEvent<HTMLDivElement>;
+type EvtEntree = ChangeEvent<HTMLInputElement>;
 
 export interface ZoneDepotProps {
   surFichiers: (fichiers: File[], canal: CanalDepot) => void;
@@ -15,26 +18,26 @@ export function ZoneDepot({ surFichiers, libelles, desactive = false }: ZoneDepo
   const entree = useRef<HTMLInputElement>(null);
   const [survol, setSurvol] = useState(false);
 
-  function rendre(liste: ArrayLike<File> | null | undefined, canal: CanalDepot): void {
+  function rendre(liste: Liste, canal: CanalDepot) {
     const fichiers = liste ? Array.from(liste) : [];
     if (fichiers.length === 0) return;
     surFichiers(fichiers, canal);
   }
 
-  function survoler(e: DragEvent<HTMLDivElement>): void {
+  function survoler(e: EvtZone) {
     if (desactive) return;
     e.preventDefault();
     setSurvol(true);
   }
 
-  function deposer(e: DragEvent<HTMLDivElement>): void {
+  function deposer(e: EvtZone) {
     if (desactive) return;
     e.preventDefault();
     setSurvol(false);
     rendre(e.dataTransfer?.files, "glisser");
   }
 
-  function choisir(e: ChangeEvent<HTMLInputElement>): void {
+  function choisir(e: EvtEntree) {
     if (desactive) return;
     rendre(e.target.files, "selecteur");
     e.target.value = "";
