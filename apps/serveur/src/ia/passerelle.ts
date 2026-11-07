@@ -12,7 +12,8 @@ export type AppelFournisseur = (
   question: string,
 ) => Promise<string>;
 export type Evenement =
-  | ({ type: "ia.route_refusee" } & DemandeRoute)
+  | ({ type: "ia.route_refusee"; client: string } & DemandeRoute)
+  | { type: "ia.client_absent" }
   | { type: "ia.indisponible"; client: string };
 export type ReponsePasserelle =
   | { issue: "ok"; texte: string }
@@ -41,9 +42,13 @@ export function creerPasserelle(deps: {
   const cache = new Map<string, string>();
 
   async function demander(d: DemandePasserelle): Promise<ReponsePasserelle> {
+    if (d.client.trim() === "") {
+      deps.journaliser({ type: "ia.client_absent" });
+      return { issue: "refusee" };
+    }
     const verdict = routeAutorisee(deps.liste, d.route);
     if (!verdict.autorisee) {
-      deps.journaliser(verdict.evenement);
+      deps.journaliser({ ...verdict.evenement, client: d.client });
       return { issue: "refusee" };
     }
     const cle = JSON.stringify([

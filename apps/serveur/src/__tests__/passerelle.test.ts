@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { validerListeRoutes } from "../../../../packages/noyau/src/securite/routes-ia.js";
 import {
   creerPasserelle,
@@ -35,11 +35,8 @@ function monter(appel: AppelFournisseur) {
 
 describe("passerelle", () => {
   it("route-hors-liste-refusee-journalisee", async () => {
-    let appels = 0;
-    const { passerelle, evenements } = monter(async () => {
-      appels += 1;
-      return "x";
-    });
+    const appel = vi.fn(async () => "x");
+    const { passerelle, evenements } = monter(appel);
     for (const mauvaise of [
       { ...route, region: "region-autre" },
       { ...route, fournisseur: "" },
@@ -52,10 +49,24 @@ describe("passerelle", () => {
       });
       expect(r).toEqual({ issue: "refusee" });
     }
-    expect(appels).toBe(0);
+    expect(appel).not.toHaveBeenCalled();
     expect(evenements).toHaveLength(3);
     expect(evenements.every((e) => e.type === "ia.route_refusee")).toBe(true);
     expect(JSON.stringify(evenements)).not.toContain("secret");
+    expect(
+      evenements.every((e) => "client" in e && e.client === "client-a"),
+    ).toBe(true);
+  });
+
+  it("client-vide-refuse-sans-appel-ni-cache", async () => {
+    const appel = vi.fn(async () => "x");
+    const { passerelle, evenements } = monter(appel);
+    for (const client of ["", "  ", ""]) {
+      const r = await passerelle.demander({ client, route, question: "q" });
+      expect(r).toEqual({ issue: "refusee" });
+    }
+    expect(appel).not.toHaveBeenCalled();
+    expect(evenements).toHaveLength(3);
   });
 
   it("meme-question-deux-clients-aucun-cache-commun", async () => {
@@ -64,21 +75,11 @@ describe("passerelle", () => {
       vus.push(client);
       return "réponse pour " + client;
     });
-    const a1 = await passerelle.demander({
-      client: "client-a",
-      route,
-      question: "même question",
-    });
-    const b = await passerelle.demander({
-      client: "client-b",
-      route,
-      question: "même question",
-    });
-    const a2 = await passerelle.demander({
-      client: "client-a",
-      route,
-      question: "même question",
-    });
+    const q = (client: string) =>
+      passerelle.demander({ client, route, question: "même question" });
+    const a1 = await q("client-a");
+    const b = await q("client-b");
+    const a2 = await q("client-a");
     expect(a1).toEqual({ issue: "ok", texte: "réponse pour client-a" });
     expect(b).toEqual({ issue: "ok", texte: "réponse pour client-b" });
     expect(a2).toEqual(a1);
