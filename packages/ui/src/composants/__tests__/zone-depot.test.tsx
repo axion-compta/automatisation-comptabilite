@@ -54,7 +54,6 @@ describe("ZoneDepot", () => {
     });
     expect(clic).toHaveBeenCalledTimes(1);
   });
-
   it("selection-rend-les-fichiers-canal-selecteur", async () => {
     const sur = vi.fn();
     const c = await monter(<ZoneDepot surFichiers={sur} libelles={libelles} />);
@@ -64,7 +63,6 @@ describe("ZoneDepot", () => {
     expect(sur).toHaveBeenCalledTimes(1);
     expect(sur).toHaveBeenCalledWith([a, b], "selecteur");
   });
-
   it("depot-rend-les-fichiers-canal-glisser", async () => {
     const sur = vi.fn();
     const c = await monter(<ZoneDepot surFichiers={sur} libelles={libelles} />);
@@ -75,7 +73,6 @@ describe("ZoneDepot", () => {
     expect(sur).toHaveBeenCalledTimes(1);
     expect(sur).toHaveBeenCalledWith([a], "glisser");
   });
-
   it("liste-vide-ignoree", async () => {
     const sur = vi.fn();
     const c = await monter(<ZoneDepot surFichiers={sur} libelles={libelles} />);
@@ -83,7 +80,6 @@ describe("ZoneDepot", () => {
     await evenement(c.querySelector(".axion-zone-depot") as Element, "drop", []);
     expect(sur).not.toHaveBeenCalled();
   });
-
   it("survol-visible", async () => {
     const c = await monter(<ZoneDepot surFichiers={() => {}} libelles={libelles} />);
     const zone = c.querySelector(".axion-zone-depot") as Element;
@@ -97,7 +93,6 @@ describe("ZoneDepot", () => {
     expect(zone.classList.contains("axion-zone-depot--survol")).toBe(false);
     expect(c.textContent).not.toContain(libelles.survol);
   });
-
   it("desactive-bloque-les-deux-voies", async () => {
     const sur = vi.fn();
     const c = await monter(<ZoneDepot surFichiers={sur} libelles={libelles} desactive />);
@@ -111,7 +106,6 @@ describe("ZoneDepot", () => {
     await evenement(zone, "drop", [fichier("b.pdf")]);
     expect(sur).not.toHaveBeenCalled();
   });
-
   it("bouton-nomme-par-son-libelle", async () => {
     const c = await monter(<ZoneDepot surFichiers={() => {}} libelles={libelles} />);
     const bouton = c.querySelector("button") as HTMLButtonElement;
