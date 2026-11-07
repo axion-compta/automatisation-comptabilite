@@ -11,7 +11,10 @@ export interface EntreeArithmetique {
   qualificationMontantDu?: QualificationMontantDu;
   lignes?: { tauxPdb: number; ht: Centimes }[];
 }
-export interface EcartArithmetique { regle: 1 | 2 | 3; tauxPdb?: number; ecart: Centimes; }
+type RegleArith = 1 | 2 | 3;
+const REGLE_PIECE: RegleArith = 2;
+const REGLE_LIGNES: RegleArith = 3;
+export interface EcartArithmetique { regle: RegleArith; tauxPdb?: number; ecart: Centimes; }
 export interface ResultatArithmetique { motifs: MotifAVerifier[]; ecarts: EcartArithmetique[]; }
 
 const entierPositif = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
@@ -38,7 +41,7 @@ export function controlerArithmetique(entree: EntreeArithmetique, reglage: Regla
   const motifs = new Set<MotifAVerifier>();
   const ecarts: EcartArithmetique[] = [];
   const { parTaux, ttc } = entree;
-  const signaler = (regle: 1 | 2 | 3, ecart: Centimes, tolerance: number, tauxPdb?: number): void => {
+  const signaler = (regle: RegleArith, ecart: Centimes, tolerance: number, tauxPdb?: number): void => {
     if (ecart <= tolerance) return;
     motifs.add('ecart_arithmetique');
     ecarts.push(tauxPdb === undefined ? { regle, ecart } : { regle, tauxPdb, ecart });
@@ -53,7 +56,7 @@ export function controlerArithmetique(entree: EntreeArithmetique, reglage: Regla
     if (ttc !== 0) motifs.add('aucun_montant');
   } else {
     const tolerance = Math.min(reglage.toleranceParTaux * parTaux.length, reglage.tolerancePieceMax);
-    signaler(2, absolu(soustraire(ajouter(somme(parTaux.map((l) => l.ht)), somme(parTaux.map((l) => l.tva))), ttc)), tolerance);
+    signaler(REGLE_PIECE, absolu(soustraire(ajouter(somme(parTaux.map((l) => l.ht)), somme(parTaux.map((l) => l.tva))), ttc)), tolerance);
   }
   if (ttc === 0 && parTaux.some((l) => l.ht !== 0)) motifs.add('ttc_nul_ht_non_nul');
 
@@ -62,7 +65,7 @@ export function controlerArithmetique(entree: EntreeArithmetique, reglage: Regla
     const duTaux = lignes.filter((l) => l.tauxPdb === taux);
     const tolerance = Math.min(reglage.toleranceParLigne * duTaux.length, reglage.toleranceLignesMax);
     const attendu = somme(parTaux.filter((l) => l.tauxPdb === taux).map((l) => l.ht));
-    signaler(3, absolu(soustraire(somme(duTaux.map((l) => l.ht)), attendu)), tolerance, taux);
+    signaler(REGLE_LIGNES, absolu(soustraire(somme(duTaux.map((l) => l.ht)), attendu)), tolerance, taux);
   }
 
   if (entree.montantDu !== undefined && entree.montantDu !== ttc && entree.qualificationMontantDu === undefined) motifs.add('montant_du_non_qualifie');
