@@ -4,10 +4,7 @@ import { ErreurLecture, lire, type EtatLecture, type SchemaLecture } from '../ap
 /** Réglage d'interface : tableau de bord relu toutes les 30 secondes (TB-R9). */
 export const INTERVALLE_TABLEAU_DE_BORD_MS = 30_000;
 
-/**
- * Comme `useLecture` (même clé, même lecture), mais relue à intervalle régulier ;
- * pas d'interrogation tant que l'onglet est caché.
- */
+/** Comme `useLecture` (même clé), relue à intervalle régulier ; rien tant que l'onglet est caché. */
 export function useLectureInterrogee<T>(
   chemin: string,
   schema: SchemaLecture<T>,
