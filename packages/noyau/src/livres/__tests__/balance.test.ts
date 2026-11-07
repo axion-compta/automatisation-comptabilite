@@ -105,3 +105,86 @@ describe('balance et grand livre', () => {
     expect(journal(liste, 'VT')).toEqual([]);
   });
 });
+
+function sansNumero(id: string, date: string): Ecriture {
+  return {
+    id,
+    date,
+    journal: 'AC',
+    statut: 'valide',
+    lignes: [ligne('607', 10000, 0), ligne('4456', 2000, 0), ligne('401', 0, 12000)],
+  };
+}
+
+describe('numéro absent et copies rendues', () => {
+  it('numero-vide-sans-numero', () => {
+    const gl = grandLivre([sansNumero('id-9', '2026-01-10')], '607');
+    expect(gl).toHaveLength(1);
+    expect(gl[0]?.numero).toBe('');
+    expect(gl[0]?.ecritureId).toBe('id-9');
+  });
+
+  it('melange-avec-et-sans-numero', () => {
+    const liste = [achat('a', 'AC-1', '2026-01-10'), sansNumero('z', '2026-01-11')];
+    const gl = grandLivre(liste, '607');
+    expect(gl.map((x) => x.numero)).toEqual(['AC-1', '']);
+    expect(gl.map((x) => x.ecritureId)).toEqual(['a', 'z']);
+    expect(gl.map((x) => x.cumul)).toEqual([10000, 20000]);
+  });
+
+  it('meme-date-ordre-stable-et-entree-inversee', () => {
+    const liste = [
+      achat('b', 'AC-2', '2026-01-10'),
+      achat('a', 'AC-1', '2026-01-10'),
+      sansNumero('m', '2026-01-10'),
+    ];
+    const attendu = grandLivre(liste, '607').map((x) => x.ecritureId);
+    expect(attendu).toEqual(['a', 'b', 'm']);
+    expect(grandLivre([...liste].reverse(), '607').map((x) => x.ecritureId)).toEqual(attendu);
+    expect(journal([...liste].reverse(), 'AC').map((e) => e.id)).toEqual(journal(liste, 'AC').map((e) => e.id));
+    // Deux écritures sans numéro et de même date : le repli sur l'identifiant tranche.
+    const deux = [sansNumero('q', '2026-01-10'), sansNumero('p', '2026-01-10')];
+    expect(grandLivre(deux, '607').map((x) => x.ecritureId)).toEqual(['p', 'q']);
+    expect(grandLivre([...deux].reverse(), '607').map((x) => x.ecritureId)).toEqual(['p', 'q']);
+  });
+
+  it('journal-rend-des-copies', () => {
+    const e: Ecriture = Object.freeze({
+      ...achat('a', 'AC-1', '2026-01-10'),
+      lignes: Object.freeze([Object.freeze(ligne('607', 10000, 0)), Object.freeze(ligne('401', 0, 10000))]),
+    });
+    const entree = [e];
+    const sortie = journal(entree, 'AC');
+    expect(sortie).toEqual(entree);
+    expect(sortie[0]).not.toBe(e);
+    expect(sortie[0]?.lignes).not.toBe(e.lignes);
+    expect(sortie[0]?.lignes[0]).not.toBe(e.lignes[0]);
+    const copie = sortie[0];
+    if (!copie) throw new Error('copie attendue');
+    copie.numero = 'MODIFIE';
+    const premiere = copie.lignes[0];
+    if (premiere) premiere.debit = centimes(1);
+    expect(e.numero).toBe('AC-1');
+    expect(e.lignes).toHaveLength(2);
+    expect(e.lignes[0]?.debit).toBe(10000);
+  });
+
+  it('entree-vide-compte-absent-et-statuts', () => {
+    expect(grandLivre([], '607')).toEqual([]);
+    expect(journal([], 'AC')).toEqual([]);
+    expect(balance([])).toEqual({ lignes: [], totaux: { debit: 0, credit: 0 } });
+    const liste = [achat('a', 'AC-1', '2026-01-10'), achat('b', 'AC-2', '2026-01-11', 'brouillon')];
+    expect(grandLivre(liste, '999')).toEqual([]);
+    expect(grandLivre([achat('c', 'AC-3', '2026-01-10', 'propose')], '607')).toEqual([]);
+    expect(journal([achat('c', 'AC-3', '2026-01-10', 'propose')], 'AC')).toEqual([]);
+  });
+
+  it('montants-entiers-et-refus-des-non-entiers', () => {
+    const gl = grandLivre([achat('a', 'AC-1', '2026-01-10')], '4456');
+    expect(gl[0]?.debit).toBe(2000);
+    expect(Number.isInteger(gl[0]?.cumul)).toBe(true);
+    for (const v of [Number.NaN, Number.POSITIVE_INFINITY, 1.5, 0.1]) {
+      expect(() => centimes(v)).toThrow();
+    }
+  });
+});
