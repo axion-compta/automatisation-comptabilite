@@ -81,6 +81,55 @@ describe('lettrage', () => {
     expect(prochainCode([...lettres.slice(0, 25)])).toBe('Z');
   });
 
+  it('meme-ligne-deux-fois-refusee', () => {
+    const l1 = ligne('l1', 100, 0);
+    expect(code(() => lettrer([l1, l1], 'A'))).toBe('moins_de_deux_lignes');
+    expect(code(() => lettrer([l1, ligne('l1', 0, 50)], 'A'))).toBe('moins_de_deux_lignes');
+    expect(code(() => lettrer([l1, l1], ''))).toBe('moins_de_deux_lignes');
+    const l2 = ligne('l2', 0, 100);
+    expect(code(() => lettrer([l1, l2, l1], 'A'))).toBe('ligne_en_double');
+    expect(code(() => lettrer([l1, l1, l2], 'A'))).toBe('ligne_en_double');
+    expect(code(() => lettrer([l2, l1, l2], 'A'))).toBe('ligne_en_double');
+    expect(code(() => lettrer([l1, l2, ligne('l1', 0, 40)], 'A'))).toBe('ligne_en_double');
+    expect(code(() => lettrer([l1, l2, l1], 'a'))).toBe('code_invalide');
+    expect(code(() => lettrer([l1, l2, ligne('l3', 0, 5)], 'A'))).toBeUndefined();
+  });
+
+  it('entrees-limites', () => {
+    expect(() => centimes(Number.NaN)).toThrow();
+    expect(() => centimes(Number.POSITIVE_INFINITY)).toThrow();
+    expect(() => centimes(10.5)).toThrow();
+    expect(code(() => lettrer([], 'A'))).toBe('moins_de_deux_lignes');
+    for (const c of ['', 'a', 'A1']) {
+      expect(code(() => lettrer([ligne('l1', 100, 0), ligne('l2', 0, 100)], c))).toBe('code_invalide');
+    }
+    expect(code(() => lettrer([ligne('l1', 100, 0, { lettre: 'A' }), ligne('l1', 0, 100, { lettre: 'A' })], 'B'))).toBe(
+      'moins_de_deux_lignes',
+    );
+    expect(code(() => lettrer([ligne('l1', 100, 0, { lettre: 'A' }), ligne('l2', 0, 100)], 'B'))).toBe('deja_lettree');
+  });
+
+  it('ordre-inverse-memes-liens-et-reste', () => {
+    const lignes = [ligne('l1', 12000, 0), ligne('l2', 0, 7000), ligne('l3', 0, 3000)];
+    const direct = lettrer(lignes, 'A');
+    const inverse = lettrer([...lignes].reverse(), 'A');
+    const tri = (r: typeof direct) => [...r.liens].sort((a, b) => a.ligneId.localeCompare(b.ligneId));
+    expect(tri(inverse)).toEqual(tri(direct));
+    expect(inverse.reste).toBe(2000);
+    expect(inverse.reste).toBe(direct.reste);
+    expect(inverse.partiel).toBe(true);
+    const total = lettrer([ligne('l9', 0, 500), ligne('l8', 500, 0)], 'A');
+    expect(total.reste).toBe(0);
+    expect(total.partiel).toBe(false);
+  });
+
+  it('entree-gelee-jamais-modifiee', () => {
+    const lignes = Object.freeze([Object.freeze(ligne('l1', 100, 0)), Object.freeze(ligne('l2', 0, 40))]);
+    expect(lettrer(lignes, 'A').reste).toBe(60);
+    const doublons = Object.freeze([lignes[0]!, lignes[0]!]);
+    expect(code(() => lettrer(doublons, 'A'))).toBe('moins_de_deux_lignes');
+  });
+
   it('lignes-intactes', () => {
     const lignes = [ligne('l1', 12000, 0), ligne('l2', 0, 12000)];
     const avant = JSON.stringify(lignes);
