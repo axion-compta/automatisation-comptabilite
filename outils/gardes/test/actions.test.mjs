@@ -49,7 +49,7 @@ test('rouge : doublon dans roles et dans outils', () => {
   rouge(r, 'doublon dans outils');
 });
 
-test('rouge : outil sans niveau L ou E', () => {
+test('rouge : outil sans niveau', () => {
   const r = reel();
   delete r.outils[0].niveau;
   rouge(r, 'sans niveau');
@@ -102,4 +102,65 @@ test("rouge : comptable avec un outil d'écriture", () => {
   const r = reel();
   r.matrice.comptable.push('outil_proposer');
   rouge(r, "comptable avec un outil d'écriture");
+});
+
+test('quatre-niveaux-seulement', () => {
+  const r = reel();
+  assert.deepEqual([...new Set(r.outils.map((o) => o.niveau))].sort(), ['B', 'L', 'M']);
+  r.outils[0].niveau = 'E';
+  rouge(r, 'sans niveau L, B, M ou I');
+});
+
+test('lecture-seule-niveau-l', () => {
+  for (const niveau of ['B', 'M', 'I']) {
+    const r = reel();
+    r.outils.find((o) => o.id === 'outil_lister').niveau = niveau;
+    rouge(r, "lecture seule avec un outil d'écriture");
+  }
+});
+
+test('niveau-i-ferme-au-chat', () => {
+  const r = reel();
+  const o = r.outils.find((x) => x.id === 'outil_valider');
+  o.niveau = 'I';
+  assert.deepEqual(analyserActions(r), []);
+  o.chat = 'ouvert';
+  rouge(r, 'niveau I ouvert au chat');
+});
+
+test('chat-absent-rouge', () => {
+  for (const v of [undefined, '', 'Ouvert', null]) {
+    const r = reel();
+    r.outils[0].chat = v;
+    rouge(r, 'sans champ chat');
+  }
+});
+
+test('trois-exclusions-ecrites', () => {
+  for (const id of ['double_facteur', 'mot_de_passe', 'administration_axion']) {
+    const r = reel();
+    assert.ok(r.actions.find((a) => a.id === id)?.exclusion);
+    r.actions = r.actions.filter((a) => a.id !== id);
+    rouge(r, `exclusion écrite manquante : ${id}`);
+    const r2 = reel();
+    delete r2.actions.find((a) => a.id === id).exclusion;
+    rouge(r2, `exclusion écrite manquante : ${id}`);
+  }
+});
+
+test('hors-ue-interdit', () => {
+  const r = reel();
+  r.actions.push({ id: 'ia.autoriser_hors_ue', interrupteur: 'ecriture', exclusion: 'x' });
+  rouge(r, 'action interdite : ia.autoriser_hors_ue');
+  const r2 = reel();
+  r2.outils.push({ id: 'ia.autoriser_hors_ue', niveau: 'L', chat: 'ferme' });
+  rouge(r2, 'outil interdit : ia.autoriser_hors_ue');
+});
+
+test('niveau-vide-ou-minuscule-rouge', () => {
+  for (const v of ['', 'b', null]) {
+    const r = reel();
+    r.outils[0].niveau = v;
+    rouge(r, 'sans niveau L, B, M ou I');
+  }
 });
