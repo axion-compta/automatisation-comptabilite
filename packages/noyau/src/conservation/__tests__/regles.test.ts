@@ -55,7 +55,7 @@ describe('conservation', () => {
     expect(purgePossible(dateBb, gel)).toEqual({ ok: false, code: 'gel_actif' });
     expect(purgePossible(attendu('duree_vide') as ResultatConservation, gel)).toEqual({ ok: false, code: 'gel_actif' });
     expect(purgePossible(dateBb, { gels: [{ pose_le: '2035-01-01' }], aujourdhui: '2035-01-01' }).ok).toBe(false);
-    expect(purgePossible(dateBb, { gels: [{ pose_le: '2040-01-01' }], aujourdhui: '2035-01-01' }).ok).toBe(true);
+    expect(purgePossible(dateBb, { gels: [{ pose_le: '2040-01-01' }], aujourdhui: '2035-01-01' })).toEqual({ ok: false, code: 'gel_actif' });
   });
   it('purge-trop-tot-refusee', () => {
     const ctx = (aujourdhui: string) => ({ gels: [], aujourdhui });

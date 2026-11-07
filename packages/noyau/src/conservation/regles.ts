@@ -80,9 +80,9 @@ export function purgePossible(
   for (const gel of contexte.gels) {
     exigerDate(gel.pose_le);
     if (gel.leve_le !== undefined) exigerDate(gel.leve_le);
+    if (gel.leve_le === undefined) return { ok: false, code: 'gel_actif' };
     const pose = comparerDates(gel.pose_le, contexte.aujourdhui) <= 0;
-    const leve = gel.leve_le !== undefined && comparerDates(gel.leve_le, contexte.aujourdhui) <= 0;
-    if (pose && !leve) return { ok: false, code: 'gel_actif' };
+    if (pose && comparerDates(gel.leve_le, contexte.aujourdhui) > 0) return { ok: false, code: 'gel_actif' };
   }
   if (resultat.etat === 'a_confirmer') return { ok: false, code: 'a_confirmer' };
   return comparerDates(resultat.date, contexte.aujourdhui) < 0 ? { ok: true } : { ok: false, code: 'trop_tot' };
