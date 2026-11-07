@@ -70,13 +70,16 @@ export function alr03(
   parametres: { jourDuMois: number; joursAvantTva: number },
 ): Constat[] {
   if (!entier(parametres.jourDuMois, 1) || !entier(parametres.joursAvantTva, 0)) throw new ErreurRegle();
-  if (Number(jour.slice(8, 10)) < parametres.jourDuMois) return [];
-  const finMoisEcoule = ajouterJours(jour.slice(0, 8) + '01', -1);
+  const avantJour = Number(jour.slice(8, 10)) < parametres.jourDuMois;
+  const debutMoisEcoule = ajouterJours(jour.slice(0, 8) + '01', -1).slice(0, 8) + '01';
+  // Avant le jour du mois : seul un retard plus ancien (fin du mois M-2) compte, sur un compte déjà importé.
+  const finMoisEcoule = avantJour ? ajouterJours(debutMoisEcoule, -1) : ajouterJours(jour.slice(0, 8) + '01', -1);
   const paliers: Escalade = [{ type: 'avant_echeance', jours: parametres.joursAvantTva, vers: 'urgent' }];
   const gravite = graviteCourante('a_faire', paliers, { jour, ouverteLe: jour, ...(prochaineEcheanceTva ? { echeanceLe: prochaineEcheanceTva } : {}) }, 'argent');
   const constats: Constat[] = [];
   for (const c of comptes) {
     if (!c.actif) continue;
+    if (avantJour && c.dernierReleveCouvreJusquAu === undefined) continue;
     if (c.dernierReleveCouvreJusquAu !== undefined && joursEntre(c.dernierReleveCouvreJusquAu, finMoisEcoule) <= 0) continue;
     constats.push({ regle: 'ALR-03', objetType: 'compte', objetId: c.id, periode: finMoisEcoule.slice(0, 7), gravite });
   }

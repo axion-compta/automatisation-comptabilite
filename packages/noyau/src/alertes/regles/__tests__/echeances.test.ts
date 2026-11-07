@@ -68,6 +68,14 @@ describe('alertes échéances', () => {
     expect(gravites(alr03([C('c1', '2026-02-27')], '2026-03-05', '2026-03-12', { jourDuMois: 5, joursAvantTva: 0 }))).toEqual(['a_faire']);
   });
 
+  it('alr03-veille-retard-ancien', () => {
+    expect(alr03([C('c1', '2026-01-15')], '2026-04-04', undefined, R)).toEqual([
+      { regle: 'ALR-03', objetType: 'compte', objetId: 'c1', periode: '2026-02', gravite: 'a_faire' },
+    ]);
+    expect(alr03([C('c1', '2025-12-31')], '2026-03-03', undefined, R)).toHaveLength(1);
+    expect(alr03([C('c1', '2026-02-28')], '2026-04-04', undefined, R)).toEqual([]);
+  });
+
   it('alr03-parametres-invalides-refuses', () => {
     for (const v of INVALIDES) {
       expect(() => alr03([], '2026-03-05', undefined, { jourDuMois: v, joursAvantTva: 7 })).toThrow(ErreurRegle);
