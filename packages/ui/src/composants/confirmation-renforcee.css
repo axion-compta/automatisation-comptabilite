@@ -1,0 +1,8 @@
+/* Confirmation renforcée : uniquement des variables de jetons.css. */
+.axion-confirmation { display: flex; flex-direction: column; gap: var(--espace-s); padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-confirmation__titre { margin: 0; font-size: var(--taille-texte); font-weight: var(--graisse-forte); }
+.axion-confirmation__recap { display: flex; gap: var(--espace-s); margin: 0; font-weight: var(--graisse-forte); }
+.axion-confirmation__comptes { margin: 0; padding-left: var(--espace-m); color: var(--couleur-texte-discret); }
+.axion-confirmation__case { display: flex; align-items: center; gap: var(--espace-s); min-height: var(--cible-min); }
+.axion-confirmation__case input { min-width: var(--cible-min); min-height: var(--cible-min); margin: 0; }
+.axion-confirmation__actions { display: flex; flex-wrap: wrap; gap: var(--espace-s); }
