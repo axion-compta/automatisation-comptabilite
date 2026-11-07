@@ -7,7 +7,7 @@ import { ErreurFrais } from '../types.js';
 const c = centimes;
 const entete = { id: 'g1', journal: 'OD', date: '2026-03-31' };
 
-function ecr(id: string, date: string, montant: number, statut: StatutEcriture = 'propose', charge = 'C-REPAS', tiers = 'C-PERS'): Ecriture {
+function ecr(id: string, date: string, montant: number, statut: StatutEcriture = 'propose', charge = 'C-REPAS', tiers = 'C-PERS', aux?: string): Ecriture {
   return {
     id,
     journal: 'OD',
@@ -15,7 +15,7 @@ function ecr(id: string, date: string, montant: number, statut: StatutEcriture =
     statut,
     lignes: [
       { compte: charge, libelle: 'Frais ' + id, debit: c(montant), credit: c(0) },
-      { compte: tiers, libelle: 'Frais ' + id, debit: c(0), credit: c(montant) },
+      { compte: tiers, libelle: 'Frais ' + id, debit: c(0), credit: c(montant), ...(aux === undefined ? {} : { auxiliaire: aux }) },
     ],
   };
 }
@@ -91,5 +91,16 @@ describe('grouperParMois', () => {
     const b = frais('f2', ecr('e2', '2026-03-19', 2000, 'propose', 'C-PEAGE'), 'p1', 'pc-2');
     const d = frais('f3', ecr('e3', '2026-03-20', 70), 'p1');
     expect(grouperParMois([d, b, a], entete)).toEqual(grouperParMois([a, b, d], entete));
+  });
+
+  it('auxiliaire-identique-repris', () => {
+    const r = grouperParMois([frais('f1', ecr('e1', '2026-03-04', 100, 'propose', 'C-REPAS', 'C-PERS', 'aux-1')), frais('f2', ecr('e2', '2026-03-05', 200, 'propose', 'C-REPAS', 'C-PERS', 'aux-1'))], entete);
+    expect(r.ecriture.lignes.map((l) => l.auxiliaire)).toEqual([undefined, 'aux-1']);
+  });
+
+  it('auxiliaires-differents-refuses', () => {
+    const a = frais('f1', ecr('e1', '2026-03-04', 100, 'propose', 'C-REPAS', 'C-PERS', 'aux-1'));
+    expect(code(() => grouperParMois([a, frais('f2', ecr('e2', '2026-03-05', 100, 'propose', 'C-REPAS', 'C-PERS', 'aux-2'))], entete))).toBe('entree_invalide');
+    expect(code(() => grouperParMois([a, frais('f3', ecr('e3', '2026-03-05', 100))], entete))).toBe('entree_invalide');
   });
 });

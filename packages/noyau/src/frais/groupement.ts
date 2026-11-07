@@ -49,7 +49,7 @@ interface Cumul {
   debit: boolean;
   montant: Centimes;
   libelle: string;
-  auxiliaires: Set<string | undefined>;
+  auxiliaire: string | undefined;
 }
 
 function cumuler(entrees: readonly EcritureDeFrais[]): Cumul[] {
@@ -60,10 +60,10 @@ function cumuler(entrees: readonly EcritureDeFrais[]): Cumul[] {
     const montant = debit ? l.debit : l.credit;
     const existant = cumuls.get(cle);
     if (existant === undefined) {
-      cumuls.set(cle, { compte: l.compte, debit, montant, libelle: l.libelle, auxiliaires: new Set([l.auxiliaire]) });
+      cumuls.set(cle, { compte: l.compte, debit, montant, libelle: l.libelle, auxiliaire: l.auxiliaire });
     } else {
       existant.montant = ajouter(existant.montant, montant);
-      existant.auxiliaires.add(l.auxiliaire);
+      if (existant.auxiliaire !== l.auxiliaire) throw invalide('Auxiliaires différents sur le compte ' + l.compte + '.');
       if (comparer(l.libelle, existant.libelle) < 0) existant.libelle = l.libelle;
     }
   }
@@ -72,9 +72,8 @@ function cumuler(entrees: readonly EcritureDeFrais[]): Cumul[] {
 
 function enLigne(k: Cumul): LigneEcriture {
   const zero = centimes(0);
-  const [aux] = k.auxiliaires.size === 1 ? k.auxiliaires : [undefined];
   const base = { compte: k.compte, libelle: k.libelle, debit: k.debit ? k.montant : zero, credit: k.debit ? zero : k.montant };
-  return aux === undefined ? base : { ...base, auxiliaire: aux };
+  return k.auxiliaire === undefined ? base : { ...base, auxiliaire: k.auxiliaire };
 }
 
 /** Débits puis crédits, par numéro de compte : l'ordre d'entrée n'a aucun effet. */
