@@ -83,6 +83,30 @@ export function pourcentage(a: Centimes, pointsDeBase: number, mode: Arrondi): C
   return verifier(Number(diviser(brut, 10000n, mode)));
 }
 
+function enBigint(valeur: number | bigint, nom: string): bigint {
+  if (typeof valeur === 'bigint') return valeur;
+  if (!Number.isSafeInteger(valeur)) {
+    throw new ErreurArgent('Argument entier requis (' + nom + ') : ' + String(valeur));
+  }
+  return BigInt(valeur);
+}
+
+/**
+ * Calcule `a × numerateur ÷ denominateur` avec un seul arrondi explicite (produit en bigint).
+ * Le dénominateur doit être strictement positif ; un résultat hors entier sûr est refusé.
+ */
+export function fraction(
+  a: Centimes | bigint,
+  numerateur: number | bigint,
+  denominateur: number | bigint,
+  mode: Arrondi,
+): Centimes {
+  const produit = enBigint(a, 'montant') * enBigint(numerateur, 'numérateur');
+  const bas = enBigint(denominateur, 'dénominateur');
+  if (bas <= 0n) throw new ErreurArgent('Le dénominateur doit être strictement positif');
+  return verifier(Number(diviser(produit, bas, mode)));
+}
+
 /**
  * Répartit un montant selon des poids entiers positifs ; la somme des parts est exacte.
  * Méthode du plus grand reste ; à reste égal, l'indice le plus petit passe d'abord.
