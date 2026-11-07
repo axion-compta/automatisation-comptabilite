@@ -1,0 +1,14 @@
+/* Provenance et bandeau de document : uniquement des variables de jetons.css. */
+.axion-provenance { display: flex; flex-direction: column; gap: var(--espace-s); font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-provenance__bouton { min-width: var(--cible-min); min-height: var(--cible-min); padding: 0 var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font: inherit; font-weight: var(--graisse-forte); cursor: pointer; }
+.axion-provenance__liste { display: flex; flex-direction: column; gap: var(--espace-s); margin: 0; padding: 0; list-style: none; }
+.axion-provenance__source { display: flex; justify-content: space-between; gap: var(--espace-m); min-width: 0; }
+.axion-provenance__libelle { min-width: 0; overflow-wrap: anywhere; word-break: break-word; color: var(--couleur-texte); }
+.axion-provenance__vide { margin: 0; color: var(--couleur-texte-discret); }
+.axion-bandeau-document { position: relative; overflow: hidden; padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-bandeau-document__mention { margin: 0; font-weight: var(--graisse-forte); }
+.axion-bandeau-document__lisible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.axion-filigrane { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; color: var(--couleur-texte-discret); opacity: 0.35; font-weight: var(--graisse-forte); text-transform: uppercase; }
+.axion-filigrane--a_valider { color: var(--couleur-etat-attente); }
+.axion-filigrane--indicatif { color: var(--couleur-texte-discret); }
+.axion-filigrane--non_officiel { color: var(--couleur-etat-bloque); }
