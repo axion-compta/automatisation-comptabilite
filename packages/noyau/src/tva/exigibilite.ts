@@ -12,34 +12,28 @@ export class ErreurExigibilite extends Error {
     this.code = code;
   }
 }
-
 export interface PaiementFacture {
   id: string;
   date: string;
   montant: Centimes;
 }
-
 export interface TvaDuTaux {
   cle: string;
   tva: Centimes;
 }
-
 export interface EntreeExigibilite {
   ttc: Centimes;
   tvaParTaux: readonly TvaDuTaux[];
   paiements: readonly PaiementFacture[];
 }
-
 export interface TvaExigiblePaiement {
   paiementId: string;
   date: string;
   parTaux: { cle: string; tva: Centimes }[];
 }
-
 function entierPositifOuNul(valeur: number): boolean {
   return Number.isSafeInteger(valeur) && valeur >= 0;
 }
-
 function comparer(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
