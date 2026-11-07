@@ -1,5 +1,7 @@
+import { RouterProvider } from '@tanstack/react-router';
 import { createRoot } from 'react-dom/client';
-import { Ecran } from './Ecran.js';
+import { ecransDecouverts } from './socle/ecrans.js';
+import { creerRouteur } from './socle/routeur.js';
 
 async function demarrer() {
   // Écran de test : développement seulement.
@@ -8,6 +10,6 @@ async function demarrer() {
     const { demarrerNavigateur } = await import('../../../packages/faux-serveur/src/navigateur.js');
     await demarrerNavigateur();
   }
-  createRoot(document.getElementById('racine')!).render(<Ecran />);
+  createRoot(document.getElementById('racine')!).render(<RouterProvider router={creerRouteur(ecransDecouverts())} />);
 }
 void demarrer();
