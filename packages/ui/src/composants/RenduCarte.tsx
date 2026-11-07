@@ -46,7 +46,9 @@ function Liste({ elements, libelles }: { elements: { libelle: string }[]; libell
   );
 }
 
-function Corps({ carte, libelles, onOuvrir }: { carte: Carte } & Omit<RenduCarteProps, "brut">) {
+type CorpsProps = Pick<RenduCarteProps, "libelles" | "onOuvrir"> & { carte: Carte };
+
+function Corps({ carte, libelles, onOuvrir }: CorpsProps) {
   switch (carte.type) {
     case "liste":
       return <Liste elements={carte.elements} libelles={libelles} />;

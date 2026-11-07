@@ -93,7 +93,8 @@ describe('rendu carte', () => {
   });
 
   it('champ-manquant-indisponible', async () => {
-    const { devise: _d, ...sans } = avecMontant;
+    const sans: Record<string, unknown> = { ...avecMontant };
+    delete sans.devise;
     expect(indispo(await monter(carte('ecriture', sans)))).toBe(true);
     expect(indispo(await monter(carte('ecriture', { ...avecMontant, montant_centimes: Number.NaN })))).toBe(true);
     expect(indispo(await monter(carte('ecriture', { ...avecMontant, extra: 'x' })))).toBe(true);
