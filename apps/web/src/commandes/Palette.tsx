@@ -3,12 +3,24 @@ import { fr } from '../../../../packages/textes/src/fr.js';
 import { executerCommande } from './aller.js';
 import { installerRaccourci, proposer } from './raccourci.js';
 
+export const EVENEMENT_OUVRIR = 'palette:ouvrir';
+
+/** Ouvre la palette depuis un bouton (ex. « Discuter ») : émet l'événement écouté par la palette. */
+export function ouvrirPalette(): void {
+  document.dispatchEvent(new Event(EVENEMENT_OUVRIR));
+}
+
 /** Palette Ctrl+K / Cmd+K : champ, liste des destinations, Entrée pour y aller, Échap pour fermer. Aucun modèle. */
 export function Palette({ onAller }: { onAller: (chemin: string) => void }) {
   const [ouverte, setOuverte] = useState(false);
   const [requete, setRequete] = useState('');
 
   useEffect(() => installerRaccourci(document, () => setOuverte(true)), []);
+  useEffect(() => {
+    const ouvrir = (): void => setOuverte(true);
+    document.addEventListener(EVENEMENT_OUVRIR, ouvrir);
+    return () => document.removeEventListener(EVENEMENT_OUVRIR, ouvrir);
+  }, []);
 
   if (!ouverte) return null;
   const fermer = (): void => {
