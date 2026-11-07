@@ -55,7 +55,7 @@ function verifierMois(mois: string): void {
 /** Premier mois du trimestre civil : « 2026-05 » donne « 2026-04 ». */
 function debutTrimestre(mois: string): string {
   const numero = Number(mois.slice(5));
-  const premier = Math.floor((numero - 1) / 3) * 3 + 1;
+  const premier = numero <= 3 ? 1 : numero <= 6 ? 4 : numero <= 9 ? 7 : 10;
   return mois.slice(0, 5) + String(premier).padStart(2, '0');
 }
 
