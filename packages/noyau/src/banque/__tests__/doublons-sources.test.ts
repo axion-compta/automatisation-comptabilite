@@ -92,6 +92,15 @@ describe('doublons-sources', () => {
     expect(erreur(() => confirmerDoublon(lignes, { conserveeId: 'a', doublonId: 'b', decidePar: 'A', motif: '' }))).toBe('decision_incomplete');
   });
 
+  it('t10-6b-refus-ligne-deja-ignoree', () => {
+    const d = { decidePar: 'Alice', motif: 'm' };
+    const r1 = confirmerDoublon([ligne('a'), ligne('b')], { conserveeId: 'a', doublonId: 'b', ...d });
+    expect(erreur(() => confirmerDoublon(r1, { conserveeId: 'b', doublonId: 'a', ...d }))).toBe('ligne_deja_ignoree');
+    expect(erreur(() => confirmerDoublon(r1, { conserveeId: 'a', doublonId: 'b', ...d }))).toBe('ligne_deja_ignoree');
+    const r2 = confirmerDoublon([ligne('a'), ligne('b'), ligne('c')], { conserveeId: 'a', doublonId: 'b', ...d });
+    expect(erreur(() => confirmerDoublon(r2, { conserveeId: 'b', doublonId: 'c', ...d }))).toBe('ligne_deja_ignoree');
+  });
+
   it('en-attente-puis-completee-ecart-trace', () => {
     const attente = ligne('a', { etatTechnique: 'en_attente', montant: centimes(-2000) });
     const fin = nouvelle('n', { montant: centimes(-2300) });

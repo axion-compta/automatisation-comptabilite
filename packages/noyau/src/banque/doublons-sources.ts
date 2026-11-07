@@ -5,7 +5,7 @@ import { atteint } from './libelles/similarite.js';
 import type { EtatRapprochement, EtatTechnique } from './types.js';
 
 export class ErreurDoublonsSources extends Error {
-  constructor(readonly code: 'tolerance_invalide' | 'ids_identiques' | 'ligne_inconnue' | 'decision_incomplete' | 'pas_en_attente' | 'pas_completee') {
+  constructor(readonly code: 'tolerance_invalide' | 'ids_identiques' | 'ligne_inconnue' | 'decision_incomplete' | 'pas_en_attente' | 'pas_completee' | 'ligne_deja_ignoree') {
     super(code);
     this.name = 'ErreurDoublonsSources';
   }
@@ -75,6 +75,7 @@ export function confirmerDoublon(
   if (d.conserveeId === d.doublonId) throw new ErreurDoublonsSources('ids_identiques');
   if (d.decidePar === '' || d.motif === '') throw new ErreurDoublonsSources('decision_incomplete');
   if (!lignes.some((l) => l.id === d.conserveeId) || !lignes.some((l) => l.id === d.doublonId)) throw new ErreurDoublonsSources('ligne_inconnue');
+  if (lignes.some((l) => (l.id === d.conserveeId || l.id === d.doublonId) && l.etatRapprochement === 'IGNOREE')) throw new ErreurDoublonsSources('ligne_deja_ignoree');
   return lignes.map((l) => (l.id === d.doublonId ? { ...l, etatRapprochement: 'IGNOREE', doublonDe: d.conserveeId, decidePar: d.decidePar, motifDoublon: d.motif } : l));
 }
 
