@@ -52,6 +52,7 @@ export function montantVersCentimes(texte: string, options: { separateurDecimal:
     } else if (c === options.separateurDecimal) {
       if (apresSeparateur || chiffresEntiers === 0) return null;
       apresSeparateur = true;
+    // Règle : les espaces ne sont admis qu’avant le séparateur ; après (y compris en fin de cellule), le montant est refusé.
     } else if (!ESPACES.has(c) || apresSeparateur) return null;
   }
   if (chiffresEntiers === 0 || (apresSeparateur && decimales === 0)) return null;
@@ -97,7 +98,7 @@ export function lignesVersPieces(
     if (ht + tva !== ttc) return rejeter('totaux_incoherents');
     const cle = cleDedoublonnage({ sirenVendeur: options.sirenSociete, numero, dateFacture, ttc });
     pieces.push({
-      id: `${options.sirenSociete}:${numero}`,
+      id: cle ?? `${options.sirenSociete}:${numero}:ligne-${String(ligne)}`,
       type: 'facture',
       origine: 'import_fichier',
       numero,

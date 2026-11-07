@@ -7,7 +7,7 @@ const NBSP = String.fromCharCode(160);
 const NNBSP = String.fromCharCode(8239);
 const opt = { sirenSociete: '123456782', separateurDecimal: ',', formatDate: 'JJ/MM/AAAA' } as const;
 const ligne = (o: Record<string, string> = {}): Record<string, string> => ({
-  numero: 'F-1', date: '10/02/2026', client: 'Client Fictif', ht: '100,00', tva: '20,00', ttc: '120,00', ...o,
+  numero: 'F-1', date: '10/02/2026', client: 'Client Fictif', ht: '100,00', tva: '19,00', ttc: '119,00', ...o,
 });
 
 describe('import des pièces de vente', () => {
@@ -36,7 +36,7 @@ describe('import des pièces de vente', () => {
   });
 
   it('montant-invalide', () => {
-    for (const t of ['12,345', '1,2,3', 'abc', '', ' ', 'NaN', 'Infinity', '1e3', '12,', ',5', '1,2e', '+5', '9'.repeat(20)]) {
+    for (const t of ['12,345', '1,2,3', 'abc', '', ' ', 'NaN', 'Infinity', '1e3', '12,', ',5', '1,2e', '12,5 0', '12,50 ', '+5', '9'.repeat(20)]) {
       expect(montantVersCentimes(t, VIRG)).toBeNull();
     }
     expect(montantVersCentimes(undefined as unknown as string, VIRG)).toBeNull();
@@ -60,8 +60,8 @@ describe('import des pièces de vente', () => {
     expect(r.rejets).toEqual([]);
     expect(r.pieces).toHaveLength(1);
     expect(r.pieces[0]).toMatchObject({
-      numero: 'F-1', dateFacture: '2026-02-10', htCentimes: 10000, tvaCentimes: 2000, ttcCentimes: 12000,
-      origine: 'import_fichier', statut: 'lue', type: 'facture', ligneSource: 1, cle: '123456782|F-1|2026-02-10|12000',
+      numero: 'F-1', dateFacture: '2026-02-10', htCentimes: 10000, tvaCentimes: 1900, ttcCentimes: 11900,
+      origine: 'import_fichier', statut: 'lue', type: 'facture', ligneSource: 1, cle: '123456782|F-1|2026-02-10|11900',
     });
     expect(lignesVersPieces([], opt)).toEqual({ pieces: [], rejets: [] });
   });
@@ -83,11 +83,11 @@ describe('import des pièces de vente', () => {
   });
 
   it('totaux-incoherents-rejetes', () => {
-    const r = lignesVersPieces([ligne({ ttc: '120,01' }), ligne({ numero: 'F-2' })], opt);
+    const r = lignesVersPieces([ligne({ ttc: '119,01' }), ligne({ numero: 'F-2' })], opt);
     expect(r.rejets).toEqual([{ ligne: 1, raison: 'totaux_incoherents' }]);
     expect(r.pieces.map((p) => p.numero)).toEqual(['F-2']);
-    const avoir = lignesVersPieces([ligne({ ht: '-100,00', tva: '-20,00', ttc: '-120,00' })], opt);
-    expect(avoir.pieces[0]?.ttcCentimes).toBe(-12000);
+    const avoir = lignesVersPieces([ligne({ ht: '-100,00', tva: '-19,00', ttc: '-119,00' })], opt);
+    expect(avoir.pieces[0]?.ttcCentimes).toBe(-11900);
   });
 
   it('v22-cinq-mille-dont-dix-sans-numero', () => {
@@ -107,6 +107,11 @@ describe('import des pièces de vente', () => {
     const second = importer(cles, objets, opt);
     expect(second.creees).toEqual([]);
     expect(second.dejaPresentes).toBe(2);
+  });
+
+  it('id-uniques-meme-numero-dates-differentes', () => {
+    const r = lignesVersPieces([ligne(), ligne({ date: '10/02/2027' }), ligne({ numero: ' ' })], opt);
+    expect(new Set(r.pieces.map((p) => p.id)).size).toBe(2);
   });
 
   it('doublon-dans-le-meme-fichier-une-seule-piece', () => {
