@@ -1,7 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { implement, ORPCError } from '@orpc/server';
 import { OpenAPIHandler } from '@orpc/openapi/fastify';
-import { contrat } from '../../../packages/contrat/src/routes.js';
+import { contrat, contratChat } from '../../../packages/contrat/src/routes.js';
 import { ConflitVersion, creerService } from '../../../packages/contrat/src/service.js';
 import { routesPlan } from './domaines/plan.js';
 import { routesTiers } from './domaines/tiers.js';
@@ -15,6 +15,7 @@ import { routesNotifications, type ServiceNotifications } from './domaines/notif
 import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
+import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
@@ -32,7 +33,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -43,7 +44,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     notifications: services.notifications ?? {},
   };
   const os = implement(contrat);
-  return os.router({
+  const routeur = os.router({
     ecritures: {
       lister: os.ecritures.lister.handler(({ input }) => {
         return service.page({ limite: input.query?.limite, decalage: input.query?.decalage });
@@ -76,10 +77,12 @@ export function creerRouteur(service: Service = creerService(), services: Partia
       ...implementerPalier(os, options.abonnement ?? {}),
     },
   });
+  const osChat = implement(contratChat);
+  return { ...routeur, ...osChat.router({ chat: implementerChat(osChat, options.chat ?? creerServiceChat()) }) };
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; securite?: OptionsSecurite } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; securite?: OptionsSecurite } = {}): FastifyInstance {
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
