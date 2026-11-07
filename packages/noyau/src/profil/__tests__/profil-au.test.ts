@@ -53,6 +53,8 @@ describe('profil à une date', () => {
     const q = profilAu({ champs, imposition }, S, '2021-03-01');
     expect(Object.keys(q.champs)).toEqual(['forme', 'nom']);
     expect('tard' in q.champs).toBe(false);
+    const ordre = historique(val('zone', 'z', '2020-01-01'), val('forme', 'SARL', '2020-01-01'), val('nom', 'n', '2020-01-01'));
+    expect(Object.keys(profilAu({ champs: ordre, imposition }, S, '2021-01-01').champs)).toEqual(['forme', 'nom', 'zone']);
     expect(Object.values(q.champs).every((c) => c !== undefined)).toBe(true);
     expect(q.champs['nom']).toMatchObject({ valeur: 'Atelier Fictif', statut: 'a_confirmer', origine: 'document', confiance: 'sur', effetDebut: '2021-03-01' });
   });
