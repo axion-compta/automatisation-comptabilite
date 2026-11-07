@@ -42,6 +42,7 @@ describe('CC-BQ02 paiement sans justificatif', () => {
   it('bq02-sans-decision-alerte-et-somme', () => {
     expect(regleBQ02.evaluer(o([paiement('L1', 1200, 'absent'), paiement('L2', 800, 'absent'), paiement('L3', 500, 'present'), paiement('L4', 900, 'absent', decision)])))
       .toEqual({ resultat: 'ALERTE', ecartCentimes: 2000 });
+    expect(regleBQ02.evaluer(o([paiement('L1', -1200, 'absent'), paiement('L2', -800, 'absent')]))).toEqual({ resultat: 'ALERTE', ecartCentimes: 2000 });
     expect(regleBQ02).toMatchObject({ id: 'CC-BQ02', gravite: 'B', bloque: ['export'], declencheurs: ['avant_export', 'continu'], actif: true });
   });
   it('bq02-decision-tracee-ok', () => {
@@ -66,10 +67,16 @@ describe('CC-BQ03 sommes affectées', () => {
     const r = regleBQ03.evaluer(o([{ id: 'P1', montant: 1000 }], [{ id: 'L1', montant: -2000 }, { id: 'L2', montant: -2000 }], [lien('L1', 'P1', 600), lien('L2', 'P1', 600)]));
     expect(r).toMatchObject({ resultat: 'ALERTE' });
     expect(regleBQ03).toMatchObject({ id: 'CC-BQ03', gravite: 'B', bloque: ['validation'], actif: true });
+    const piece = (a: number, b: number) => regleBQ03.evaluer(o([{ id: 'P1', montant: 1000 }], [{ id: 'L1', montant: -5000 }, { id: 'L2', montant: -5000 }], [lien('L1', 'P1', a), lien('L2', 'P1', b)]));
+    expect(piece(600, 401)).toEqual({ resultat: 'ALERTE' });
+    expect(piece(600, 400)).toEqual({ resultat: 'OK' });
   });
   it('bq03-depassement-ligne-alerte', () => {
     const r = regleBQ03.evaluer(o([{ id: 'P1', montant: 5000 }, { id: 'P2', montant: 5000 }], [{ id: 'L1', montant: -1000 }], [lien('L1', 'P1', 600), lien('L1', 'P2', 600)]));
     expect(r).toMatchObject({ resultat: 'ALERTE' });
+    const ligne = (b: number) => regleBQ03.evaluer(o([{ id: 'P1', montant: 5000 }, { id: 'P2', montant: 5000 }], [{ id: 'L1', montant: -1000 }], [lien('L1', 'P1', 600), lien('L1', 'P2', b)]));
+    expect(ligne(401)).toEqual({ resultat: 'ALERTE' });
+    expect(ligne(400)).toEqual({ resultat: 'OK' });
   });
   it('bq03-sommes-justes-ok', () => {
     const pieces = [{ id: 'P1', montant: 1000 }];
