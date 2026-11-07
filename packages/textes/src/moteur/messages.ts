@@ -1,7 +1,7 @@
 // Messages du moteur : écart de change, dividende, modèle, libération, classement. Vouvoiement.
 // Aucun flottant, aucune dépendance au noyau : les montants sont des centimes entiers, les taux des entiers à 8 décimales.
-const ESPACE_FINE = ' ';
-const ESPACE_INSECABLE = ' ';
+const ESPACE_FINE = '\u202f';
+const ESPACE_INSECABLE = '\u00a0';
 const MOINS = '−';
 const FORME_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const JOURS_PAR_MOIS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];

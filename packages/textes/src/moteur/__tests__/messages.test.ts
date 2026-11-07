@@ -15,8 +15,8 @@ import {
 
 const PIECE = { tauxE8: 92000000, source: 'taux de test, source fictive', date: '2026-10-07' };
 const PAIEMENT = { tauxE8: 95000000, source: 'taux de test, source fictive', date: '2026-11-20' };
-const NBSP = ' ';
-const FINE = ' ';
+const NBSP = '\u00a0';
+const FINE = '\u202f';
 
 // Mots interdits assemblés par morceaux, comme outils/gardes/textes.mjs.
 const INTERDITS = [['con', 'forme'], ['sans ', 'erreur'], ['garan', 'ti'], ['juri', 'ste'], ['P', 'DP']].map((p) =>
