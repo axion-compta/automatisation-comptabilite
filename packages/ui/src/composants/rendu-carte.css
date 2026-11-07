@@ -1,0 +1,5 @@
+/* Rendu des cartes du chat : variables de jetons.css seulement. */
+.axion-rendu-carte { display: flex; flex-direction: column; gap: var(--espace-s); padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); background: var(--couleur-fond); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); }
+.axion-rendu-carte__titre { margin: 0; font-size: var(--taille-texte); }
+.axion-rendu-carte__ligne { display: flex; justify-content: space-between; gap: var(--espace-m); margin: 0; }
+.axion-rendu-carte__liste { margin: 0; padding-left: var(--espace-l); }
