@@ -58,6 +58,17 @@ describe('chiffres sensibles', () => {
     expect(d).toEqual([{ motif: 'nir', debut: 4, fin: 4 + sep.length }]);
     expect(masquer(texte, d)).toBe('NIR * ** ** ** *** *** **.');
     expect(detecterChiffres(`NIR ${nir}`)).toEqual([{ motif: 'nir', debut: 4, fin: 19 }]);
+    // NIR valide dont une fenêtre de 13 à 15 chiffres passe Luhn : reste un NIR, masqué en entier.
+    let trouve = '';
+    for (let i = 0; i < 1000 && !trouve; i++) {
+      const cand = completerNir('1100110000' + String(i).padStart(3, '0'));
+      const fenetre = [13, 14].some((l) => [0, 1, 2].some((a) => a + l <= 15 && luhnOk(cand.slice(a, a + l))));
+      if (fenetre || luhnOk(cand)) trouve = cand;
+    }
+    expect(trouve).not.toBe('');
+    expect(cleNirValide(trouve)).toBe(true);
+    expect(detecterChiffres(`NIR ${trouve} fin`)).toEqual([{ motif: 'nir', debut: 4, fin: 19 }]);
+    expect(masquer(`NIR ${trouve} fin`, detecterChiffres(`NIR ${trouve} fin`))).toBe('NIR *************** fin');
   });
   it('nir-corse-2a', () => {
     for (const dep of ['2A', '2B']) {
@@ -83,6 +94,10 @@ describe('chiffres sensibles', () => {
     expect(ibanValide(iban)).toBe(true);
     expect(ibanValide(groupes(iban).toLowerCase())).toBe(true);
     expect(ibanValide(iban.slice(0, -1) + 'Z')).toBe(false);
+    for (const decalage of [1, 2, 97 - 1, 97 - 2]) {
+      const cle = String((Number(iban.slice(2, 4)) + decalage) % 97).padStart(2, '0');
+      expect(ibanValide(iban.slice(0, 2) + cle + iban.slice(4))).toBe(false);
+    }
     for (const v of ['', 'FR76', 'FR' + iban.slice(2, 8), '12' + iban.slice(2)]) expect(ibanValide(v)).toBe(false);
     const texte = `Virement ${groupes(iban)} merci`;
     const d = detecterChiffres(texte);

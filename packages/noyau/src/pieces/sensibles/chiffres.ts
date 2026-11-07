@@ -66,8 +66,10 @@ export function detecterChiffres(texte: string): Detection[] {
   for (const m of texte.matchAll(RE_NIR)) {
     if (cleNirValide(m[0].replace(new RegExp(SEP, 'g'), ''))) nirs.push({ motif: 'nir', debut: m.index, fin: m.index + m[0].length });
   }
+  // Une fenêtre « carte » contenue dans un NIR valide est le NIR lui-même : le NIR l'emporte.
+  const cartesDistinctes = cartes.filter((c) => !nirs.some((n) => c.debut >= n.debut && c.fin <= n.fin));
   const retenues: Detection[] = [];
-  for (const c of [...ibans, ...cartes, ...nirs]) {
+  for (const c of [...ibans, ...cartesDistinctes, ...nirs]) {
     if (retenues.every((r) => c.fin <= r.debut || c.debut >= r.fin)) retenues.push(c);
   }
   return retenues.sort((a, b) => a.debut - b.debut);
