@@ -12,6 +12,7 @@ import { tiers } from './domaines/tiers.js';
 import { lireAcces } from './domaines/acces.js';
 import { lireVolume } from './domaines/volume.js';
 import { demanderPalier } from './domaines/palier.js';
+import { chat } from './domaines/chat.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -40,4 +41,6 @@ export const modifier = oc
   .output(z.object({ body: Ecriture }));
 
 export const contrat = { ecritures: { lister, creer, modifier }, plan, tiers, abonnement: { lireAcces, lireVolume, demanderPalier } };
+/** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
+export const contratChat = { chat };
 export type Contrat = typeof contrat;
