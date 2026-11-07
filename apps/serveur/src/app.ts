@@ -3,6 +3,7 @@ import { implement, ORPCError } from '@orpc/server';
 import { OpenAPIHandler } from '@orpc/openapi/fastify';
 import { contrat } from '../../../packages/contrat/src/routes.js';
 import { ConflitVersion, creerService } from '../../../packages/contrat/src/service.js';
+import { routesPlan } from './domaines/plan.js';
 
 type Service = ReturnType<typeof creerService>;
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
@@ -26,6 +27,7 @@ export function creerRouteur(service: Service = creerService()) {
         }
       }),
     },
+    plan: routesPlan(),
   });
 }
 

@@ -11,7 +11,7 @@ interface Def {
 }
 
 function definitions(): Def[] {
-  return Object.values(contrat.ecritures).map((r) => {
+  return Object.values(contrat).flatMap((domaine) => Object.values(domaine)).map((r) => {
     const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
     return { ...d.route, inputSchema: d.inputSchema, errors: d.errorMap ?? {} };
   });
@@ -51,10 +51,10 @@ export function genererOpenapi(): object {
     if (d.method === 'GET') {
       parametres.push(...parametresRequete(s['query']));
     }
-    if (d.path.includes('{id}')) parametres.push({ name: 'id', in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
+    for (const m of d.path.matchAll(/\{(\w+)\}/g)) parametres.push({ name: m[1], in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
     const chemin = d.path;
     const reponses: Record<string, unknown> = { '200': { description: 'OK' } };
-    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: 'Conflit de version' };
+    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: e.status === 409 ? 'Conflit de version' : 'Introuvable' };
     (paths[chemin] ??= {})[d.method.toLowerCase()] = {
       operationId: d.operationId,
       parameters: parametres,
