@@ -18,6 +18,11 @@ const base: ObjetNature = {
   naturesHorsActivite: ['voyage'],
 };
 const avec = (p: Partial<ObjetNature>): ObjetNature => ({ ...base, ...p });
+const sansSeuil = (p: Partial<ObjetNature>): ObjetNature => {
+  const o: Partial<ObjetNature> = { ...base, ...p };
+  delete o.seuilImmobilisation;
+  return o as ObjetNature;
+};
 
 describe('CC-K12 nature douteuse', () => {
   it('CT-13', () => {
@@ -48,7 +53,7 @@ describe('CC-K12 nature douteuse', () => {
   });
 
   it('nature-non-durable-sans-motif', () => {
-    const o = avec({ ligne: ligne(900000), seuilImmobilisation: undefined });
+    const o = sansSeuil({ ligne: ligne(900000) });
     expect(motifsNature(o)).toEqual([]);
     expect(regleCCK12.evaluer(o)).toEqual({ resultat: 'OK' });
     expect(motifsNature(avec({ prefixesCharge: [], prefixesImmobilisation: [], comptesDepot: [], naturesHorsActivite: [] }))).toEqual([]);
@@ -82,7 +87,7 @@ describe('CC-K12 nature douteuse', () => {
   });
 
   it('seuil-absent-impossible', () => {
-    const o = avec({ natureDurable: true, seuilImmobilisation: undefined });
+    const o = sansSeuil({ natureDurable: true });
     expect(() => motifsNature(o)).toThrow('parametre_absent');
     const traces = executerControles([regleCCK12], [{ type: 'ligne', id: 'L1', donnee: o }], 'arrivee', 'h');
     expect(traces[0]?.resultat).toBe('IMPOSSIBLE');
