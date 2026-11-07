@@ -1,0 +1,21 @@
+{
+  "versionCatalogue": "banc-L12-T28",
+  "versionsRegles": {
+    "CC-K01": 1,
+    "CC-K02": 1,
+    "CC-K03": 1,
+    "CC-K04": 1,
+    "CC-K05": 1,
+    "CC-K06": 1,
+    "CC-K08": 1,
+    "CC-K11": 1,
+    "CC-K11M": 1,
+    "CC-K12": 1,
+    "CC-T02": 1,
+    "CC-T06": 1
+  },
+  "detectees": 20,
+  "attendues": 20,
+  "faussesAlertes": 0,
+  "propres": 200
+}
