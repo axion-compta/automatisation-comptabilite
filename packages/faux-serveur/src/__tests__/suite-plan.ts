@@ -69,7 +69,7 @@ export function suitePlan(nom: string, cible: Cible): void {
 
     it('400 : classe hors bornes, limite hors bornes, décalage négatif, q trop long', () =>
       avec(async (a) => {
-        for (const q of ['classe=0', 'classe=8', 'classe=1.5', 'limite=0', 'limite=101', 'decalage=-1', 'q=' + 'x'.repeat(51)]) {
+        for (const q of ['classe=0', 'classe=8', 'classe=1.5', 'limite=0', 'limite=101', 'decalage=-1', 'q=' + 'x'.repeat(51), 'classe=1&classe=2', 'q=a&q=b', 'limite=1&limite=1', 'decalage=0&decalage=1']) {
           const r = await a('GET', '/exercices/EX2026/plan?' + q);
           expect([q, r.status]).toEqual([q, 400]);
           expect(r.json).toMatchObject({ code: 'BAD_REQUEST', status: 400 });
