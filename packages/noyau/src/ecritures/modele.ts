@@ -32,7 +32,8 @@ export type CodeErreurEcriture =
   | 'desequilibre'
   | 'transition_interdite'
   | 'delai_invalide'
-  | 'delai_depasse';
+  | 'delai_depasse'
+  | 'rang_trop_grand';
 
 export class ErreurEcriture extends Error {
   override name = 'ErreurEcriture';

@@ -71,6 +71,12 @@ describe('modèle d\'écriture', () => {
     expect(code(() => verifierEcriture(e))).toBe('montant_negatif');
   });
 
+  it('code-rang-trop-grand-porte', () => {
+    const e = new ErreurEcriture('rang_trop_grand', 'Rang fictif trop grand.');
+    expect(e.code).toBe('rang_trop_grand');
+    expect(e.name).toBe('ErreurEcriture');
+  });
+
   it('ordre-des-lignes-sans-effet', () => {
     const l = [ligne('607', 10000, 0), ligne('4456', 1250, 0), ligne('401', 0, 11250)];
     const a = verifierEquilibre(ecriture(l));
