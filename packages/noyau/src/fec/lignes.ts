@@ -44,6 +44,12 @@ export interface ContexteFec {
   libellesJournaux: Readonly<Record<string, string>>;
   /** Date de validation (AAAA-MM-JJ) de chaque écriture, par identifiant. */
   datesValidation: Readonly<Record<string, string>>;
+  /** Pièce de chaque écriture (clé = id de l'écriture) ; absente : référence = id, date = date de l'écriture. */
+  pieces?: Readonly<Record<string, { ref: string; date: string }>>;
+  /** Lettrage au moment de la production (clé = `<idEcriture>#<indexDeLigne>`, index dès 0) ; hors bornes : ignoré. */
+  lettrages?: Readonly<Record<string, { code: string; date: string }>>;
+  /** Nom du tiers (clé = code du tiers), prioritaire sur `libellesComptes`. */
+  libellesTiers?: Readonly<Record<string, string>>;
 }
 
 export interface ResultatLignesFec {
@@ -93,7 +99,12 @@ export function lignesFec(
   for (const e of ordonner(valides, contexte)) {
     const date = formaterDateFec(e.date);
     const validation = dateValidation(e, contexte);
-    for (const l of e.lignes) {
+    const piece = contexte.pieces?.[e.id];
+    if (piece !== undefined && piece.ref.trim() === '') throw new ErreurFec('valeur_invalide');
+    const pieceRef = piece === undefined ? e.id : piece.ref;
+    const pieceDate = piece === undefined ? date : formaterDateFec(piece.date);
+    for (const [index, l] of e.lignes.entries()) {
+      const lettrage = contexte.lettrages?.[`${e.id}#${String(index)}`];
       const libCompte = nettoyerLibelle(contexte.libellesComptes[l.compte] ?? '', l.compte, options);
       const valeurs: Record<ChampFec, string> = {
         journalCode: e.journal,
@@ -106,14 +117,18 @@ export function lignesFec(
         compAuxLib:
           l.auxiliaire === undefined
             ? ''
-            : nettoyerLibelle(contexte.libellesComptes[l.auxiliaire] ?? '', l.auxiliaire, options),
-        pieceRef: e.id,
-        pieceDate: date,
+            : nettoyerLibelle(
+                contexte.libellesTiers?.[l.auxiliaire] ?? contexte.libellesComptes[l.auxiliaire] ?? '',
+                l.auxiliaire,
+                options,
+              ),
+        pieceRef,
+        pieceDate,
         ecritureLib: nettoyerLibelle(l.libelle, libCompte, options),
         debit: formaterMontantFec(l.debit),
         credit: formaterMontantFec(l.credit),
-        ecritureLet: '',
-        dateLet: '',
+        ecritureLet: lettrage === undefined ? '' : lettrage.code,
+        dateLet: lettrage === undefined ? '' : formaterDateFec(lettrage.date),
         validDate: validation,
         montantDevise: '',
         idevise: '',
