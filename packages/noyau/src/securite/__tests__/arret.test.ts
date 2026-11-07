@@ -54,6 +54,9 @@ describe('securite/arret', () => {
     const deux = poserArret(un.drapeaux, { societeId: 'A' }, 'q', T1);
     expect(deux.evenement).toBeUndefined();
     expect(deux.drapeaux).toBe(un.drapeaux);
+    const ts = poserArret(vide, { societeId: 'toString' }, 'p', T0);
+    expect(ts.evenement).toMatchObject({ type: 'securite.arret_urgence', cible: { societeId: 'toString' } });
+    expect(estCoupe(ts.drapeaux, 'toString', 'api')).toBe(true);
     const g = poserArret(vide, 'global', 'p', T0);
     const g2 = poserArret(g.drapeaux, 'global', 'q', T1);
     expect([g2.evenement, g2.drapeaux]).toEqual([undefined, g.drapeaux]);

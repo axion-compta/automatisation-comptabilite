@@ -18,7 +18,7 @@ const instant = (v: unknown): string =>
 const societeDe = (c: Cible): string | undefined => (c === 'global' ? undefined : texte(c?.societeId, 'societeId'));
 const marque = (d: Drapeaux, c: Cible): Marque | undefined => {
   const id = societeDe(c);
-  return id === undefined ? d.global : d.societes[id];
+  return id === undefined ? d.global : Object.hasOwn(d.societes, id) ? d.societes[id] : undefined;
 };
 const avec = (d: Drapeaux, c: Cible, m: Marque | undefined): Drapeaux => {
   const id = societeDe(c);
