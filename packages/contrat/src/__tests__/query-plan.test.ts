@@ -27,6 +27,8 @@ describe('QueryPlan : bornes', () => {
     expect(ok({ limite: 'abc' })).toBe(false);
     expect(ok({ classe: 'NaN' })).toBe(false);
     expect(ok({ classe: '1.5' })).toBe(false);
+    expect(ok({ limite: '1.5' })).toBe(false);
+    expect(ok({ decalage: '1.5' })).toBe(false);
     expect(ok({ classe: '' })).toBe(false);
     expect(ok({ limite: '' })).toBe(false);
   });
