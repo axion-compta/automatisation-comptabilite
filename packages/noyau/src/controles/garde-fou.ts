@@ -22,7 +22,8 @@ export interface VerdictGardeFou {
 /**
  * Autorise l'action si aucun contrôle de gravité B, bloquant pour cette action,
  * n'est ouvert. Pour chaque couple règle × objet, la trace la plus récente fait foi.
- * ALERTE et IMPOSSIBLE comptent comme ouverts.
+ * ALERTE et IMPOSSIBLE comptent comme ouverts, ECARTE sur une règle non écartable aussi.
+ * Précondition : horodatages au même format ISO UTC (suffixe Z), comparés comme chaînes.
  */
 export function verifierAvantAction<T>(
   traces: readonly TraceControle[],
@@ -43,7 +44,8 @@ export function verifierAvantAction<T>(
   for (const t of dernieres.values()) {
     const regle = graves.get(t.regleId);
     if (regle === undefined || regle.gravite !== 'B' || !regle.bloque.includes(action)) continue;
-    if (t.resultat === 'ALERTE' || t.resultat === 'IMPOSSIBLE') {
+    const ouvert = t.resultat === 'ALERTE' || t.resultat === 'IMPOSSIBLE';
+    if (ouvert || (t.resultat === 'ECARTE' && NON_ECARTABLES.includes(t.regleId))) {
       bloquants.push({ regleId: t.regleId, objetId: t.objetId });
     }
   }
@@ -68,6 +70,8 @@ export interface OptionsEcart {
 export type RefusEcart =
   | 'non_ecartable'
   | 'motif_obligatoire'
+  | 'auteur_obligatoire'
+  | 'horodatage_anterieur'
   | 'permission_manquante'
   | 'reauthentification_requise';
 
@@ -82,6 +86,8 @@ export function ecarter(trace: TraceControle, options: OptionsEcart): ResultatEc
   if (!options.reauthentifie) return { ok: false, code: 'reauthentification_requise' };
   const motif = options.motif.trim();
   if (motif === '') return { ok: false, code: 'motif_obligatoire' };
+  if (options.par.trim() === '') return { ok: false, code: 'auteur_obligatoire' };
+  if (options.horodatage < trace.horodatage) return { ok: false, code: 'horodatage_anterieur' };
   return {
     ok: true,
     trace: { ...trace, horodatage: options.horodatage, resultat: 'ECARTE', motif, par: options.par },
