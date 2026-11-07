@@ -101,4 +101,20 @@ describe('CC-T01 TVA des pièces et déclaration', () => {
     const p = totaux({ bs: 3 });
     expect(ev(p, totaux(), j)).toEqual(ev(p, totaux(), [...j].reverse()));
   });
+
+  it('justification-invalide-refusee', () => {
+    const ok = jus('deductible_bs', 1);
+    const p = totaux({ bs: 1 });
+    expect(ev(p, totaux(), [ok]).resultat).toBe('OK');
+    const mauvaises: EcartJustifie[] = [
+      { ...ok, motif: 'autre' as never },
+      { ...ok, date: '' },
+      { ...ok, date: '2026-02-30' },
+      { ...ok, poste: '' },
+    ];
+    for (const m of mauvaises) {
+      expect(ev(p, totaux(), [m]).resultat).toBe('IMPOSSIBLE');
+      expect(() => comparerPiecesDeclaration(p, totaux(), [m])).toThrowError(expect.objectContaining({ code: 'entree_invalide' }));
+    }
+  });
 });

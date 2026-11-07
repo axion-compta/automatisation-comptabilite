@@ -1,6 +1,7 @@
 // CC-T01 : TVA des pièces contre TVA de la déclaration préparée, par taux, écart toléré nul.
 // Aucun texte affiché ici : seulement des codes. Taux en points de base (entiers sûrs).
 import { ajouter, centimes, soustraire, type Centimes } from '../../argent/index.js';
+import { estDateValide } from '../../dates/civiles.js';
 import type { RegleControle, SortieRegle } from '../moteur.js';
 import { ErreurControle } from './commun.js';
 
@@ -31,6 +32,12 @@ function montant(n: number): Centimes {
   } catch {
     throw new ErreurControle('entree_invalide');
   }
+}
+
+function verifierJustification(j: EcartJustifie): void {
+  if (j.motif !== 'credit_reporte' && j.motif !== 'regularisation') throw new ErreurControle('entree_invalide');
+  if (!estDateValide(j.date)) throw new ErreurControle('entree_invalide');
+  if (typeof j.poste !== 'string' || j.poste === '') throw new ErreurControle('entree_invalide');
 }
 
 function collectee(t: TotauxTva): Map<number, Centimes> {
@@ -64,6 +71,7 @@ export function comparerPiecesDeclaration(
   postes.set('deductible_immo', soustraire(montant(pieces.deductibleImmobilisations), montant(declaration.deductibleImmobilisations)));
   postes.set('autoliquidation', ecartAutoliquidation(pieces, declaration));
   for (const j of justifies) {
+    verifierJustification(j);
     const reste = postes.get(j.poste) ?? centimes(0);
     postes.set(j.poste, soustraire(reste, montant(j.montant)));
   }
