@@ -1,0 +1,8 @@
+/* Pourquoi : uniquement des variables de jetons.css. */
+.axion-pourquoi { font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-pourquoi__bouton, .axion-pourquoi__source { min-width: var(--cible-min); min-height: var(--cible-min); padding: var(--espace-s) var(--espace-m); border: 1px solid var(--couleur-accent); border-radius: var(--rayon-m); background: transparent; color: var(--couleur-accent); font: inherit; font-weight: var(--graisse-forte); cursor: pointer; }
+.axion-pourquoi__panneau { margin: var(--espace-s) 0 0; padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-m); background: var(--couleur-surface); }
+.axion-pourquoi__ligne { margin-bottom: var(--espace-s); }
+.axion-pourquoi__intitule { font-weight: var(--graisse-forte); color: var(--couleur-texte-discret); }
+.axion-pourquoi__valeur { margin: 0; }
+.axion-pourquoi__sources { display: flex; flex-wrap: wrap; gap: var(--espace-s); margin: 0; padding: 0; list-style: none; }
