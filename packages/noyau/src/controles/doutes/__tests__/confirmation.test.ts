@@ -67,6 +67,9 @@ describe('confirmation C5', () => {
     for (const vu of vus) {
       expect(peutAppliquer('renforcee', { renforceeCochee: true, recapitulatifVu: vu }, r)).toBe(false);
     }
+    const deux = { ...r, comptes: ['606000', '626000'] };
+    const un = { ...r, comptes: ['606000'] };
+    expect(peutAppliquer('renforcee', { renforceeCochee: true, recapitulatifVu: un }, deux)).toBe(false);
   });
 
   it('montants-negatifs-additionnes', () => {
