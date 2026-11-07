@@ -1,0 +1,7 @@
+/* Jauge accessible : uniquement des variables de jetons.css. */
+.axion-jauge { display: flex; flex-direction: column; gap: var(--espace-xs); font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-jauge__piste { height: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-s); background: var(--couleur-surface); overflow: hidden; }
+.axion-jauge__barre { height: 100%; background: var(--couleur-accent); }
+.axion-jauge__meter[data-depasse="oui"] .axion-jauge__barre { background: repeating-linear-gradient(45deg, var(--couleur-accent) 0, var(--couleur-accent) 6px, var(--couleur-surface) 6px, var(--couleur-surface) 9px); }
+.axion-jauge__meter[data-depasse="oui"] .axion-jauge__piste { border-style: dashed; border-color: var(--couleur-accent); }
+.axion-jauge__estimation { color: var(--couleur-texte-discret); font-style: italic; }
