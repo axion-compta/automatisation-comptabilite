@@ -9,6 +9,9 @@ import {
 } from './schemas.js';
 import { plan } from './domaines/plan.js';
 import { tiers } from './domaines/tiers.js';
+import { lireAcces } from './domaines/acces.js';
+import { lireVolume } from './domaines/volume.js';
+import { demanderPalier } from './domaines/palier.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -36,5 +39,5 @@ export const modifier = oc
   .input(z.object({ params: z.object({ id: z.string().min(1) }), headers: EnTeteEcriture, body: ModificationEcriture }))
   .output(z.object({ body: Ecriture }));
 
-export const contrat = { ecritures: { lister, creer, modifier }, plan, tiers };
+export const contrat = { ecritures: { lister, creer, modifier }, plan, tiers, abonnement: { lireAcces, lireVolume, demanderPalier } };
 export type Contrat = typeof contrat;
