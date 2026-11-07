@@ -21,6 +21,9 @@ export const ECRANS_EXEMPTES = ['apps/web/src/Ecran.tsx'];
 export const DOSSIER_TEXTES = 'packages/textes/src/';
 // Assemblés ici pour ne pas figurer en clair dans le dépôt.
 export const MOTS_INTERDITS = [['con', 'forme'], ['sans ', 'erreur'], ['garan', 'ti'], ['juri', 'ste'], ['P', 'DP']].map((p) => p.join(''));
+// Mots interdits en mot entier (V3-IMP-044) : « rejeter » et « projeter » restent permis.
+export const MOTS_INTERDITS_ENTIERS = [['je', 'ter'], ['je', 'tez'], ['je', 'té'], ['je', 'tée'], ['je', 'tés'], ['je', 'tées']].map((p) => p.join(''));
+const ENTIERS = MOTS_INTERDITS_ENTIERS.map((mot) => [mot, new RegExp(`(?<!\\p{L})${mot}(?!\\p{L})`, 'iu')]);
 
 export function estExclu(chemin, texte = '') {
   if (!CONCERNES.test(chemin) || TESTS.test(chemin) || ECRANS_EXEMPTES.includes(chemin)) return true;
@@ -54,6 +57,9 @@ export function analyserMotsInterdits(texte, nom) {
   texte.split(/\r?\n/).forEach((l, i) => {
     for (const mot of MOTS_INTERDITS) {
       if (l.toLowerCase().includes(mot.toLowerCase())) pb.push(`${nom}:${i + 1} mot interdit « ${mot} »`);
+    }
+    for (const [mot, re] of ENTIERS) {
+      if (re.test(l)) pb.push(`${nom}:${i + 1} mot interdit « ${mot} »`);
     }
   });
   return pb;
