@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { z } from 'zod';
 import { e44 } from '../../../../../packages/textes/src/ecrans/e44.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
@@ -39,13 +39,9 @@ export function Ecran() {
   const [filtre, setFiltre] = useState<Filtre>('tous');
   const [recherche, setRecherche] = useState('');
   const [decalage, setDecalage] = useState(0);
-  const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
   const lecture = useLecture(cheminTiers(filtre, recherche, decalage), Reponse);
 
-  function choisir(id: Filtre) {
-    setFiltre(id);
-    setDecalage(0);
-  }
+  const choisir = (id: Filtre) => (setFiltre(id), setDecalage(0));
   function auClavier(e: KeyboardEvent, index: number) {
     const pas = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
     if (pas === 0) return;
@@ -53,22 +49,17 @@ export function Ecran() {
     const cible = ONGLETS[(index + pas + ONGLETS.length) % ONGLETS.length];
     if (!cible) return;
     choisir(cible.id);
-    boutons.current[cible.id]?.focus();
+    document.getElementById('e44-onglet-' + cible.id)?.focus();
   }
 
   let contenu = null;
   if (lecture.etat === 'chargement') {
     contenu = <EtatChargement libelle={e44.etats.chargement} />;
   } else if (lecture.etat === 'erreur') {
-    const refuse = lecture.erreur?.code === 'acces_refuse';
-    contenu = <EtatErreur message={refuse ? e44.etats.acces : e44.etats.erreur} />;
+    contenu = <EtatErreur message={lecture.erreur?.code === 'acces_refuse' ? e44.etats.acces : e44.etats.erreur} />;
   } else if (lecture.etat === 'vide') {
-    const cherche = recherche.trim() !== '';
-    contenu = cherche ? (
-      <EtatVide titre={e44.etats.videRecherche} detail={e44.etats.videRechercheDetail} />
-    ) : (
-      <EtatVide titre={e44.etats.vide} />
-    );
+    contenu =
+      recherche.trim() !== '' ? <EtatVide titre={e44.etats.videRecherche} detail={e44.etats.videRechercheDetail} /> : <EtatVide titre={e44.etats.vide} />;
   } else if (lecture.donnees) {
     const d = lecture.donnees;
     contenu = (
@@ -103,9 +94,6 @@ export function Ecran() {
         {ONGLETS.map((o, i) => (
           <button
             key={o.id}
-            ref={(el) => {
-              boutons.current[o.id] = el;
-            }}
             type="button"
             role="tab"
             id={'e44-onglet-' + o.id}
@@ -124,10 +112,7 @@ export function Ecran() {
         aria-label={e44.recherche.nom}
         maxLength={MAX_RECHERCHE}
         value={recherche}
-        onChange={(e) => {
-          setRecherche(e.target.value);
-          setDecalage(0);
-        }}
+        onChange={(e) => (setRecherche(e.target.value), setDecalage(0))}
       />
       <div role="tabpanel" id="e44-panneau" aria-labelledby={'e44-onglet-' + filtre}>
         {contenu}

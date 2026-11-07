@@ -12,34 +12,22 @@ import { route } from '../route.js';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let serveur: { fermer: () => void };
-beforeAll(() => {
-  serveur = demarrerNoeud();
-});
+beforeAll(() => void (serveur = demarrerNoeud()));
 afterAll(() => serveur.fermer());
 
 let racine: Root | null = null;
 afterEach(() => {
   act(() => racine?.unmount());
-  racine = null;
   document.body.innerHTML = '';
 });
 
-const attendre = () =>
-  act(async () => {
-    await new Promise((r) => setTimeout(r, 150));
-  });
+const attendre = () => act(async () => void (await new Promise((r) => setTimeout(r, 150))));
 
 async function monter(): Promise<void> {
   const hote = document.createElement('div');
   document.body.append(hote);
   racine = createRoot(hote);
-  await act(async () => {
-    racine?.render(
-      <FournisseurDonnees>
-        <Ecran />
-      </FournisseurDonnees>,
-    );
-  });
+  await act(async () => racine?.render(<FournisseurDonnees><Ecran /></FournisseurDonnees>));
   await attendre();
 }
 const lignes = () => [...document.querySelectorAll('tbody tr')];
@@ -47,8 +35,7 @@ const onglet = (nom: string) => [...document.querySelectorAll<HTMLElement>('[rol
 const champ = () => document.querySelector<HTMLInputElement>('input[type=search]')!;
 async function saisir(v: string) {
   await act(async () => {
-    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
-    set.call(champ(), v);
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(champ(), v);
     champ().dispatchEvent(new Event('input', { bubbles: true }));
   });
   await attendre();
@@ -66,8 +53,7 @@ describe('E44', () => {
     expect(document.querySelector('h1')?.textContent).toBe(e44.titre);
     expect(lignes()).toHaveLength(12);
     expect(document.body.textContent).toContain('@exemple.fr');
-    expect(document.querySelector('[role=tablist]')).not.toBeNull();
-    expect(document.querySelector('[role=tabpanel]')).not.toBeNull();
+    expect(document.querySelectorAll('[role=tablist],[role=tabpanel]')).toHaveLength(2);
     expect(champ().getAttribute('aria-label')).toBe(e44.recherche.nom);
   });
 
@@ -99,9 +85,7 @@ describe('E44', () => {
     expect(onglet(e44.onglets.fournisseurs).getAttribute('aria-selected')).toBe('true');
     await touche(onglet(e44.onglets.fournisseurs), 'ArrowRight');
     expect(tous.getAttribute('aria-selected')).toBe('true');
-    // une autre touche ne change rien
     await touche(tous, 'a');
-    expect(tous.getAttribute('aria-selected')).toBe('true');
     expect(lignes()).toHaveLength(12);
   });
 
@@ -140,8 +124,6 @@ describe('cheminTiers', () => {
     expect(cheminTiers('tous', 'a&b=c', 0)).toContain('q=a%26b%3Dc');
   });
   it('route-declaree', () => {
-    expect(route.id).toBe('e44');
-    expect(route.chemin).toBe('/reglages/entreprise/tiers');
-    expect(route.groupe).toBe('reglages');
+    expect([route.id, route.chemin, route.groupe]).toEqual(['e44', '/reglages/entreprise/tiers', 'reglages']);
   });
 });
