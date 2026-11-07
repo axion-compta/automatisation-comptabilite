@@ -1,0 +1,5 @@
+/* Paramètre affiché : uniquement des variables de jetons.css. */
+.axion-parametre { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-s); font-family: var(--police-texte); font-size: var(--taille-texte); color: var(--couleur-texte); }
+.axion-parametre__valeur { font-weight: var(--graisse-forte); }
+.axion-parametre__source, .axion-parametre__date { font-weight: var(--graisse-normale); color: var(--couleur-texte-discret); }
+.axion-parametre a { color: var(--couleur-texte); text-decoration: underline; }
