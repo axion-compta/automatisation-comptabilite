@@ -37,25 +37,28 @@ const sans = (v: Verification) => {
 };
 const eval1 = (l: LigneDeductible, p: ParametreLu = MENTIONS) =>
   regleCCT05.evaluer({ ligne: l, mentionsExigees: p });
+const etat = (l: LigneDeductible, p: ParametreLu = MENTIONS) =>
+  etatDeductibilite(l, p);
+const lancer = (id: string, l: LigneDeductible) =>
+  executerControles(
+    [regleCCT05],
+    [{ type: "ligne", id, donnee: { ligne: l, mentionsExigees: MENTIONS } }],
+    "avant_tva",
+    "2026-01-15T10:00:00Z",
+  );
 
 describe("controle CC-T05 deductibilite", () => {
   // Facture sans numero de TVA du fournisseur : verification absente, IMPOSSIBLE.
   it("CT-22", () => {
     const l = ligne({ verifications: sans("mentions") });
-    expect(etatDeductibilite(l, MENTIONS)).toBe("impossible");
+    expect(etat(l)).toBe("impossible");
     expect(eval1(l)).toEqual({ resultat: "IMPOSSIBLE" });
   });
 
   it("cinq-ok", () => {
-    expect(VERIFICATIONS).toEqual([
-      "nom_societe",
-      "mentions",
-      "nature",
-      "date_deduction",
-      "paiement",
-    ]);
+    expect([...VERIFICATIONS]).toEqual(Object.keys(TOUT));
     expect(Object.isFrozen(VERIFICATIONS)).toBe(true);
-    expect(etatDeductibilite(ligne(), MENTIONS)).toBe("ok");
+    expect(etat(ligne())).toBe("ok");
     expect(eval1(ligne())).toEqual({ resultat: "OK" });
     expect(regleCCT05.id).toBe("CC-T05");
     expect(regleCCT05.version).toBe(1);
@@ -71,16 +74,11 @@ describe("controle CC-T05 deductibilite", () => {
 
   it("tva-nulle-sans-trace-ok", () => {
     const l = ligne({ tvaDeductible: centimes(0), verifications: {} });
-    expect(etatDeductibilite(l, MENTIONS)).toBe("ok");
-    expect(
-      etatDeductibilite(
-        ligne({ tvaDeductible: centimes(1), verifications: {} }),
-        MENTIONS,
-      ),
-    ).toBe("impossible");
-    expect(
-      etatDeductibilite(l, { ...MENTIONS, statut: "absent", valeur: null }),
-    ).toBe("ok");
+    expect(etat(l)).toBe("ok");
+    expect(etat(ligne({ tvaDeductible: centimes(1), verifications: {} }))).toBe(
+      "impossible",
+    );
+    expect(etat(l, { ...MENTIONS, statut: "absent", valeur: null })).toBe("ok");
     for (const v of [Number.NaN, Number.POSITIVE_INFINITY, 1.5, -1]) {
       expect(() => eval1(ligne({ tvaDeductible: v as never }))).toThrow();
     }
@@ -91,33 +89,28 @@ describe("controle CC-T05 deductibilite", () => {
       fournisseurSurEncaissements: false,
       verifications: sans("paiement"),
     });
-    expect(etatDeductibilite(l, MENTIONS)).toBe("ok");
+    expect(etat(l)).toBe("ok");
     expect(
-      etatDeductibilite(
-        { ...l, verifications: { ...sans("paiement"), paiement: "echec" } },
-        MENTIONS,
-      ),
+      etat({ ...l, verifications: { ...sans("paiement"), paiement: "echec" } }),
     ).toBe("ok");
   });
 
   it("paiement-absent-sur-encaissements-impossible", () => {
     const l = ligne({ verifications: sans("paiement") });
-    expect(etatDeductibilite(l, MENTIONS)).toBe("impossible");
+    expect(etat(l)).toBe("impossible");
     for (const v of VERIFICATIONS) {
-      expect(
-        etatDeductibilite(ligne({ verifications: sans(v) }), MENTIONS),
-      ).toBe("impossible");
+      expect(etat(ligne({ verifications: sans(v) }))).toBe("impossible");
     }
     const meleeAbsentEchec = ligne({
       verifications: { ...sans("paiement"), nature: "echec" },
     });
-    expect(etatDeductibilite(meleeAbsentEchec, MENTIONS)).toBe("impossible");
+    expect(etat(meleeAbsentEchec)).toBe("impossible");
   });
 
   it("echec-nomme-la-verification", () => {
     for (const v of VERIFICATIONS) {
       const l = ligne({ verifications: { ...TOUT, [v]: "echec" } });
-      expect(etatDeductibilite(l, MENTIONS)).toBe("echec");
+      expect(etat(l)).toBe("echec");
       expect(eval1(l)).toEqual({ resultat: "ALERTE", valeur: v });
     }
     const deux = ligne({
@@ -133,22 +126,16 @@ describe("controle CC-T05 deductibilite", () => {
         nom_societe: "ok",
       },
     });
-    expect(etatDeductibilite(inverse, MENTIONS)).toBe("echec");
+    expect(etat(inverse)).toBe("echec");
     expect(eval1(inverse)).toEqual({ resultat: "ALERTE", valeur: "nature" });
-    expect(etatDeductibilite(ligne({ verifications: {} }), MENTIONS)).toBe(
-      "impossible",
-    );
+    expect(etat(ligne({ verifications: {} }))).toBe("impossible");
   });
 
   it("parametre-mentions-a-verifier-impossible", () => {
     for (const statut of ["a_verifier", "non_verifie", "absent"] as const) {
-      expect(etatDeductibilite(ligne(), { ...MENTIONS, statut })).toBe(
-        "impossible",
-      );
+      expect(etat(ligne(), { ...MENTIONS, statut })).toBe("impossible");
     }
-    expect(etatDeductibilite(ligne(), { ...MENTIONS, valeur: null })).toBe(
-      "impossible",
-    );
+    expect(etat(ligne(), { ...MENTIONS, valeur: null })).toBe("impossible");
     expect(eval1(ligne(), { ...MENTIONS, statut: "a_verifier" })).toEqual({
       resultat: "IMPOSSIBLE",
     });
@@ -156,18 +143,7 @@ describe("controle CC-T05 deductibilite", () => {
 
   it("impossible-bloque-le-garde-fou", () => {
     const l = ligne({ verifications: sans("mentions") });
-    const traces = executerControles(
-      [regleCCT05],
-      [
-        {
-          type: "ligne",
-          id: "l1",
-          donnee: { ligne: l, mentionsExigees: MENTIONS },
-        },
-      ],
-      "avant_tva",
-      "2026-01-15T10:00:00Z",
-    );
+    const traces = lancer("l1", l);
     expect(traces[0]?.resultat).toBe("IMPOSSIBLE");
     const verdict = verifierAvantAction(traces, [regleCCT05], "tva");
     expect(verdict.autorise).toBe(false);
@@ -175,21 +151,8 @@ describe("controle CC-T05 deductibilite", () => {
     expect(verifierAvantAction(traces, [regleCCT05], "export").autorise).toBe(
       true,
     );
-    const montantNaN = executerControles(
-      [regleCCT05],
-      [
-        {
-          type: "ligne",
-          id: "l2",
-          donnee: {
-            ligne: ligne({ tvaDeductible: Number.NaN as never }),
-            mentionsExigees: MENTIONS,
-          },
-        },
-      ],
-      "avant_tva",
-      "2026-01-15T10:00:00Z",
-    );
+    const nan = Number.NaN as never;
+    const montantNaN = lancer("l2", ligne({ tvaDeductible: nan }));
     expect(montantNaN[0]?.resultat).toBe("IMPOSSIBLE");
   });
 });
