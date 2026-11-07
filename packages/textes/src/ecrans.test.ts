@@ -1,5 +1,5 @@
 import { readdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const DOSSIER = fileURLToPath(new URL('./ecrans/', import.meta.url));
@@ -8,7 +8,7 @@ const fichiers = readdirSync(DOSSIER).filter((f) => f.endsWith('.ts') && !f.ends
 type Module = Record<string, unknown>;
 const modules: Record<string, Module> = {};
 for (const f of fichiers) {
-  modules[f] = (await import(`./ecrans/${f.slice(0, -3)}.js`)) as Module;
+  modules[f] = (await import(/* @vite-ignore */ pathToFileURL(`${DOSSIER}${f}`).href)) as Module;
 }
 
 function feuilles(o: unknown, chemin: string): Array<[string, unknown]> {
