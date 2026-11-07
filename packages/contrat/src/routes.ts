@@ -16,6 +16,9 @@ import { recherche } from './domaines/recherche.js';
 import { exports } from './domaines/exports.js';
 import { calendrier } from './domaines/calendrier.js';
 import { notifications } from './domaines/notifications.js';
+import { lireAcces } from './domaines/acces.js';
+import { lireVolume } from './domaines/volume.js';
+import { demanderPalier } from './domaines/palier.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -54,5 +57,6 @@ export const contrat = {
   exports,
   calendrier,
   notifications,
+  abonnement: { lireAcces, lireVolume, demanderPalier },
 };
 export type Contrat = typeof contrat;

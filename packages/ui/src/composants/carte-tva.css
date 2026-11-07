@@ -1,0 +1,40 @@
+/* Carte TVA à payer : uniquement des variables de jetons.css. */
+.axion-carte-tva {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-s);
+  font-family: var(--police-texte);
+  font-size: var(--taille-texte);
+  color: var(--couleur-texte);
+}
+.axion-carte-tva__montant {
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: var(--taille-titre);
+  font-weight: var(--graisse-forte);
+}
+.axion-carte-tva__statut {
+  margin: 0;
+}
+.axion-carte-tva[data-etat='a_confirmer'] .axion-carte-tva__statut {
+  color: var(--couleur-etat-attente);
+}
+.axion-carte-tva[data-etat='bloquee'] .axion-carte-tva__statut {
+  color: var(--couleur-etat-bloque);
+}
+.axion-carte-tva[data-etat='payee'] .axion-carte-tva__statut {
+  color: var(--couleur-etat-ok);
+}
+.axion-carte-tva__lien {
+  color: var(--couleur-accent);
+  display: inline-block;
+  min-height: var(--cible-min);
+}
+.axion-carte-tva__lien:focus-visible {
+  outline: 2px solid var(--couleur-accent);
+  outline-offset: 2px;
+}
+.axion-carte-tva__echeance {
+  margin: 0;
+  color: var(--couleur-texte-discret);
+}

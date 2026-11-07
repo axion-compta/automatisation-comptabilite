@@ -1,0 +1,2 @@
+/* Bandeau de consultation du support : uniquement des variables de jetons. */
+.axion-bandeau-support { display: block; padding: var(--espace-s) var(--espace-m); border: 1px solid var(--couleur-bordure); border-left-width: var(--espace-xs); border-left-color: var(--couleur-alerte); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); font-weight: var(--graisse-forte); overflow-wrap: anywhere; }

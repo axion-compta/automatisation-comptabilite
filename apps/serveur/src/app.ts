@@ -12,6 +12,11 @@ import { routesRecherche, type ServiceRecherche } from './domaines/recherche.js'
 import { routesExports, type ServiceExports } from './domaines/exports.js';
 import { routesCalendrier, type ServiceCalendrier } from './domaines/calendrier.js';
 import { routesNotifications, type ServiceNotifications } from './domaines/notifications.js';
+import { implementerAcces } from './domaines/acces.js';
+import { implementerVolume } from './domaines/volume.js';
+import { implementerPalier } from './domaines/palier.js';
+import type { OptionsAbonnement } from './domaines/options-abonnement.js';
+import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
 type Service = ReturnType<typeof creerService>;
 
@@ -27,7 +32,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -65,13 +70,19 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     exports: routesExports(s.exports),
     calendrier: routesCalendrier(s.calendrier),
     notifications: routesNotifications(s.notifications),
+    abonnement: {
+      ...implementerAcces(os, options.abonnement ?? {}),
+      ...implementerVolume(os, options.abonnement ?? {}),
+      ...implementerPalier(os, options.abonnement ?? {}),
+    },
   });
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; securite?: OptionsSecurite } = {}): FastifyInstance {
   const app = Fastify();
-  const handler = new OpenAPIHandler(creerRouteur(service));
+  brancherSecurite(app, options.securite ?? {});
+  const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
   app.addContentTypeParser('*', (_req, _payload, done) => done(null, undefined));
   app.all('/*', async (request, reply) => {
     const { matched } = await handler.handle(request, reply, { prefix: '/', context: {} });
