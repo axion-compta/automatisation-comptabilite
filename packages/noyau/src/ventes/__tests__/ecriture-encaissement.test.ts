@@ -34,6 +34,8 @@ describe('ecriture-encaissement', () => {
     expect(r.lettrage.liens.map((l) => l.ligneId)).toEqual(['f1-1', 'e1-1']);
     expect(r.resteDu).toBe(0);
     expect(r.cartes).toEqual([]);
+    const e = entree(320000, 'B', { ttc: c(320000), ligneClient: ligneClient(320000), parTaux: [taux(20000, 200000), taux(0, 100000, 0, 600)] }, 320000);
+    expect(resume(e)).toEqual([['BQ', 320000, 0], ['CLI', 0, 320000], ['ATT', 20000, 0], ['COL', 0, 20000]]);
   });
   it('v04-encaissement-partiel-lettrage-partiel', () => {
     const r = ecritureEncaissement(entree(110000));
@@ -46,6 +48,10 @@ describe('ecriture-encaissement', () => {
     expect(second.lettrage.partiel).toBe(false);
     expect(second.lignesTva[0]).toMatchObject({ tvaCentimes: 10000 });
     expect(ecritureEncaissement({ ...entree(110000), codesLettrageExistants: ['A', 'B'] }).lettrage.code).toBe('C');
+    const suite = ecritureEncaissement({ ...entree(110000, 'B', { dejaEncaisse: c(110000), parTaux: [taux(20000, 200000, 10000)], ligneClient: ligneClient(220000, { lettre: 'A' }) }), codesLettrageExistants: ['A'] });
+    expect(suite.lettrage).toMatchObject({ code: 'A', partiel: false, reste: 0 });
+    expect(suite.lettrage.liens).toEqual([{ ligneId: 'e1-1', code: 'A' }]);
+    expect(r.lettrage.liens).toHaveLength(2);
   });
   it('cas-a-sans-ligne-de-tva', () => {
     const r = ecritureEncaissement(entree(220000, 'A'));
@@ -54,7 +60,7 @@ describe('ecriture-encaissement', () => {
     expect(r.resteDu).toBe(0);
   });
   it('franchise-sans-ligne-de-tva', () => {
-    const r = ecritureEncaissement(entree(50000, 'C', { parTaux: [] }));
+    const r = ecritureEncaissement(entree(50000, 'C', { parTaux: [taux(20000, 200000)] }));
     expect(r.ecriture.lignes).toHaveLength(2);
     expect(r.lignesTva).toEqual([]);
     expect(r.resteDu).toBe(170000);
@@ -67,7 +73,7 @@ describe('ecriture-encaissement', () => {
     expect(r.cartes).toEqual(['A18']);
     expect(r.ecriture.lignes.some((l) => l.compte.startsWith('7'))).toBe(false);
     expect(r.resteDu).toBe(0);
-    expect(r.lettrage.partiel).toBe(false);
+    expect(r.lettrage).toMatchObject({ partiel: false, reste: 0 });
     const b = ecritureEncaissement(entree(230000));
     expect(b.cartes).toEqual(['A18']);
     expect(b.lignesTva[0]).toMatchObject({ tvaCentimes: 20000 });
@@ -83,7 +89,7 @@ describe('ecriture-encaissement', () => {
   it('auxiliaire-different-refuse', () => {
     expect(code(() => ecritureEncaissement(entree(220000, 'B', { ligneClient: ligneClient(220000, { auxiliaire: 'AUTRE' }) })))).toBe('comptes_differents');
     expect(code(() => ecritureEncaissement(entree(220000, 'B', { ligneClient: ligneClient(220000, { compte: 'XXX' }) })))).toBe('comptes_differents');
-    expect(code(() => ecritureEncaissement(entree(220000, 'B', { ligneClient: ligneClient(220000, { lettre: 'A' }) })))).toBe('deja_lettree');
+    expect(code(() => ecritureEncaissement(entree(220000, 'B', { ligneClient: ligneClient(220000, { lettre: 'A', auxiliaire: 'AUTRE' }) })))).toBe('comptes_differents');
     expect(code(() => ecritureEncaissement(entree(220000, 'B', { auxiliaire: 'AUTRE' })))).toBe('comptes_differents');
   });
   it('montant-invalide-refuse', () => {

@@ -61,7 +61,10 @@ export function ecritureEncaissement(entree: EntreeEcritureEncaissement): Result
 
   const resteDu = Math.max(0, facture.ttc - facture.dejaEncaisse - montant) as Centimes;
   const lignePaiement: LigneALettrer = { id: `${entree.id}-1`, compte: comptes.client, auxiliaire: facture.auxiliaire, debit: zero, credit: montant };
-  const lettre = lettrer([facture.ligneClient, lignePaiement], prochainCode(entree.codesLettrageExistants));
+  // Ajout seul : une ligne client déjà lettrée garde son code, seule la ligne de paiement s'y relie.
+  const { lettre: existant, ...clientSansLettre } = facture.ligneClient;
+  const lettre = lettrer([clientSansLettre, lignePaiement], existant ?? prochainCode(entree.codesLettrageExistants));
+  const liens = existant === undefined ? lettre.liens : lettre.liens.filter((l) => l.ligneId === lignePaiement.id);
   const cartes: Anomalie[] = part.tropPercu > 0 ? ['A18'] : [];
-  return { ecriture, lignesTva, lettrage: { ...lettre, partiel: resteDu > 0 }, resteDu, cartes };
+  return { ecriture, lignesTva, lettrage: { code: lettre.code, partiel: resteDu > 0, reste: resteDu, liens }, resteDu, cartes };
 }
