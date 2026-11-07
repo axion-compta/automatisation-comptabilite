@@ -278,6 +278,119 @@
         }
       }
     },
+    "/exercices/{exercice}/tableau-de-bord": {
+      "get": {
+        "operationId": "lireTableauDeBord",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "vue",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mois",
+                "exercice",
+                "depuis_debut"
+              ]
+            }
+          },
+          {
+            "name": "profil",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pleine",
+                "vide"
+              ]
+            }
+          },
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/exercices/{exercice}/tableau-de-bord/{bloc}": {
+      "get": {
+        "operationId": "lireBloc",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "vue",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mois",
+                "exercice",
+                "depuis_debut"
+              ]
+            }
+          },
+          {
+            "name": "profil",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pleine",
+                "vide"
+              ]
+            }
+          },
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "bloc",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/preferences": {
       "get": {
         "operationId": "lirePreferences",
