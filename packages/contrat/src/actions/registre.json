@@ -13,11 +13,11 @@
     "export": { "actif_par_defaut": false }
   },
   "outils": [
-    { "id": "outil_lire", "niveau": "L" },
-    { "id": "outil_lister", "niveau": "L" },
-    { "id": "outil_proposer", "niveau": "E" },
-    { "id": "outil_valider", "niveau": "E" },
-    { "id": "outil_annuler", "niveau": "E" }
+    { "id": "outil_lire", "niveau": "L", "chat": "ouvert" },
+    { "id": "outil_lister", "niveau": "L", "chat": "ouvert" },
+    { "id": "outil_proposer", "niveau": "B", "chat": "ouvert" },
+    { "id": "outil_valider", "niveau": "M", "chat": "ferme" },
+    { "id": "outil_annuler", "niveau": "B", "chat": "ouvert" }
   ],
   "actions": [
     { "id": "lire", "interrupteur": "lecture", "outil": "outil_lire" },
@@ -25,6 +25,9 @@
     { "id": "proposer", "interrupteur": "ecriture", "outil": "outil_proposer" },
     { "id": "valider", "interrupteur": "validation", "outil": "outil_valider" },
     { "id": "annuler", "interrupteur": "ecriture", "outil": "outil_annuler" },
+    { "id": "double_facteur", "interrupteur": "ecriture", "exclusion": "Exclu du chat : le double facteur ne se gère jamais par l'assistant." },
+    { "id": "mot_de_passe", "interrupteur": "ecriture", "exclusion": "Exclu du chat : le mot de passe ne se gère jamais par l'assistant." },
+    { "id": "administration_axion", "interrupteur": "ecriture", "exclusion": "Exclu du chat : l'administration d'Axion n'est pas accessible par l'assistant." },
     { "id": "exporter", "interrupteur": "export", "exclusion": "Pas d'outil à ce stade : export réservé à une fiche ultérieure." }
   ],
   "matrice": {
