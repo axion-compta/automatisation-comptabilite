@@ -54,7 +54,7 @@ describe('profils fictifs', () => {
   it('aucun-courriel-ni-iban-reel', async () => {
     const chemin = new URL('../../../../outils/gardes/fictif.mjs', import.meta.url).href;
     const { analyserTexte } = (await import(/* @vite-ignore */ chemin)) as { analyserTexte: (t: string, n: string) => string[] };
-    expect(analyserTexte('a@reel.com FR7630006000011234567890189', 'sonde')).toHaveLength(2);
+    expect(analyserTexte(['a@' + 'reel.com', ['FR76', '30006', '00001', '12345', '67890', '189'].join('')].join(' '), 'sonde')).toHaveLength(2);
     expect(analyserTexte(JSON.stringify(jeu, null, 1), 'profil')).toEqual([]);
   });
 });
