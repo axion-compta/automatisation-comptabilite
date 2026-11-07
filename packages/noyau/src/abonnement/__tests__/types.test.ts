@@ -69,22 +69,23 @@ describe('types abonnement', () => {
     expect(ajouterJours('2026-03-01', -1)).toBe('2026-02-28');
     expect(ajouterJours('2027-01-01', -1)).toBe('2026-12-31');
     expect(ajouterJours('2026-01-01', 365)).toBe('2027-01-01');
-    expect(code(() => ajouterJours('2026-02-30', 1))).toBe('date_invalide');
+    expect(ajouterJours('2026-02-28', 1)).toBe('2026-03-01');
+    expect(ajouterJours('2026-05-10', 0)).toBe('2026-05-10');
     expect(ajouterJours('0099-12-31', 1)).toBe('0100-01-01');
     expect(ajouterJours('2026-10-09', 1)).toBe('2026-10-10');
-    expect(code(() => ajouterJours('9999-12-31', 1))).toBe('date_invalide');
+    for (const [d, n] of [['2026-02-30', 1], ['9999-12-31', 1], ['2026-01-01', Number.MAX_SAFE_INTEGER], ['0000-01-01', -1]] as const) expect(code(() => ajouterJours(d, n))).toBe('date_invalide');
     for (const n of [Number.NaN, Infinity, 1.5]) expect(code(() => ajouterJours('2026-02-01', n))).toBe('entier_invalide');
   });
 
   it('ecart-jours-ordre-inverse-negatif', () => {
     expect(ecartJours('2026-01-01', '2026-01-31')).toBe(30);
     expect(ecartJours('2026-01-31', '2026-01-01')).toBe(-30);
+    expect(ecartJours('2026-05-05', '2026-05-05')).toBe(0);
     expect(ecartJours('2026-12-31', '2027-01-01')).toBe(1);
     expect(ecartJours('2027-01-01', '2026-01-01')).toBe(-365);
     expect(ecartJours('2028-01-01', '2029-01-01')).toBe(366);
     expect(ecartJours('0001-01-01', '9999-12-31')).toBe(3652058);
-    expect(code(() => ecartJours('2026-02-30', '2026-03-01'))).toBe('date_invalide');
-    expect(code(() => ecartJours('2026-03-01', 'x'))).toBe('date_invalide');
+    for (const [a, b] of [['2026-02-30', '2026-03-01'], ['2026-03-01', 'x']] as const) expect(code(() => ecartJours(a, b))).toBe('date_invalide');
   });
 
   it('empreinte-majuscules-ou-courte-refusee', () => {
