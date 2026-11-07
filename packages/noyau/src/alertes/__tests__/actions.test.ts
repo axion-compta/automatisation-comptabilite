@@ -8,7 +8,8 @@ const alerte = (p: Partial<Alerte> = {}): Alerte => ({
 });
 const optR = (p: Record<string, unknown> = {}) => ({ jours: 3, versionAttendue: 3, permissions: VALIDER, jour: '2026-10-01', joursPermis: [1, 3, 7], ...p }) as Parameters<typeof reporter>[1];
 const optI = (p: Record<string, unknown> = {}) => ({ motif: 'doublon', versionAttendue: 3, permissions: VALIDER, motifMin: 5, le: '2026-10-01T08:00:00Z', ...p }) as Parameters<typeof ignorer>[1];
-const echec = (f: () => unknown, code: string, statut: number): void => {
+type Appel = () => unknown;
+const echec = (f: Appel, code: string, statut: number) => {
   try {
     f();
   } catch (e) {
