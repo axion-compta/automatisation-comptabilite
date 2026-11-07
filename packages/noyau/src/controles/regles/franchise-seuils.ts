@@ -21,7 +21,7 @@ export interface ObjetFranchise {
 export type PositionFranchise = 'sous' | 'alerte' | 'depasse_majore' | 'a_verifier';
 
 const PDB_PLEIN = 10 ** 4;
-const RANG: Record<PositionFranchise, number> = { sous: 0, alerte: 1, a_verifier: 2, depasse_majore: 3 };
+const ORDRE: readonly PositionFranchise[] = ['sous', 'alerte', 'a_verifier', 'depasse_majore'];
 
 function exigerEntree(ok: boolean): void {
   if (!ok) throw new ErreurControle('entree_invalide');
@@ -57,7 +57,7 @@ export function positionFranchise(o: ObjetFranchise): PositionFranchise {
     positionNature(o.caVentes, o.seuilVentes, o.majoreVentes, o),
     positionNature(o.caServices, o.seuilServices, o.majoreServices, o),
   ];
-  return positions.reduce((pire, p) => (RANG[p] > RANG[pire] ? p : pire));
+  return positions.reduce((pire, p) => (ORDRE.indexOf(p) > ORDRE.indexOf(pire) ? p : pire));
 }
 
 const DECLENCHEURS: Declencheur[] = ['continu', 'nocturne', 'a_la_demande'];
