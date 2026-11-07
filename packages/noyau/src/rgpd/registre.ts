@@ -8,7 +8,7 @@ export const COLONNES_REGISTRE = [
 export type ColonneRegistre = (typeof COLONNES_REGISTRE)[number];
 export type LigneRegistre = Record<ColonneRegistre, string> & { approuvee?: boolean };
 
-const DUREE = /^parametre:[a-z0-9_]+$/;
+const FORME_PARAMETRE = /^parametre:[a-z\d_]+$/;
 const TRANSFERT = /^(non|oui:.*\S.*)$/;
 const A_VERIFIER = ' (à vérifier)';
 const SOURCE = 'spec 08 fichier 06';
@@ -18,7 +18,7 @@ export function validerLigne(ligne: LigneRegistre): { ok: true } | { ok: false; 
   const vide = (c: ColonneRegistre): boolean => typeof ligne[c] !== 'string' || ligne[c].trim() === '';
   for (const c of COLONNES_REGISTRE) if (c !== 'controle_croise' && vide(c)) codes.add('colonne_manquante');
   if (ligne.approuvee === true && vide('controle_croise')) codes.add('colonne_manquante');
-  if (!vide('duree') && !DUREE.test(ligne.duree)) codes.add('valeur_interdite');
+  if (!vide('duree') && !FORME_PARAMETRE.test(ligne.duree)) codes.add('valeur_interdite');
   if (!vide('transfert_hors_ue') && !TRANSFERT.test(ligne.transfert_hors_ue)) codes.add('valeur_interdite');
   if (!vide('date_releve')) {
     try {
