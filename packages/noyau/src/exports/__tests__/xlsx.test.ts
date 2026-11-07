@@ -49,7 +49,7 @@ describe('écrivain xlsx', () => {
     expect(x).toContain('<c r="A3" s="1"><v>-0.05</v></c>');
     expect(x).toContain('<c r="A4" s="1"><v>0.00</v></c>');
     expect(x).toContain('<c r="A5" s="1"><v>1.00</v></c>');
-    expect(feuille([M], [{ mt: 5 }], { total: { etiquette: 'Total', colonne: 'mt', valeurCentimes: centimes(250) } })).toContain('<c r="A3" s="1"><v>2.50</v></c>');
+    expect(feuille([M], [{ mt: 5 }], { total: { etiquette: 'Total', colonne: 'mt', valeurCentimes: centimes(250) } })).toContain('<c r="B3" s="1"><v>2.50</v></c>');
     expect(() => feuille([M], [], { total: { etiquette: 'T', colonne: 'zz', valeurCentimes: centimes(1) } })).toThrow(ErreurXlsx);
   });
 
@@ -73,5 +73,61 @@ describe('écrivain xlsx', () => {
     expect(x.match(/<row /g)).toHaveLength(1);
     expect(x).toContain('<c r="B1" t="inlineStr">');
     expect(x).toContain('Montant');
+  });
+
+  it('total-sans-colonne-de-libelle-references-uniques', () => {
+    const x = feuille([M], [{ mt: 5 }], { total: { etiquette: 'Total', colonne: 'mt', valeurCentimes: centimes(250) } });
+    const refs = [...x.matchAll(/<c r="([A-Z]+d+)"/g)].map((m) => m[1]);
+    expect(new Set(refs).size).toBe(refs.length);
+    expect(x).toContain('<c r="A3" t="inlineStr"><is><t xml:space="preserve">Total</t></is></c><c r="B3" s="1"><v>2.50</v></c>');
+  });
+
+  it('valeurs-invalides-en-texte-sans-style', () => {
+    for (const v of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      const x = feuille([M], [{ mt: v }]);
+      expect(x).toContain('<c r="A2" t="inlineStr">');
+      expect(x).not.toContain('s="1"');
+    }
+    const d = feuille([D], [{ le: '2026-02-30' }]);
+    expect(d).toContain('<c r="A2" t="inlineStr">');
+    expect(d).not.toContain('s="2"');
+  });
+
+  it('parties-exactes', () => {
+    const p = partiesXlsx({ nomFeuille: 'A&B', colonnes: [T], lignes: [] });
+    const en = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + String.fromCharCode(10);
+    const ns = 'http://schemas.openxmlformats.org/';
+    const doc = ns + 'officeDocument/2006/relationships';
+    const ct = 'application/vnd.openxmlformats-officedocument.spreadsheetml.';
+    expect(p['[Content_Types].xml']).toBe(en + '<Types xmlns="' + ns + 'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="' + ct + 'sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="' + ct + 'worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="' + ct + 'styles+xml"/></Types>');
+    expect(p['_rels/.rels']).toBe(en + '<Relationships xmlns="' + ns + 'package/2006/relationships"><Relationship Id="rId1" Type="' + doc + '/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+    expect(p['xl/workbook.xml']).toBe(en + '<workbook xmlns="' + ns + 'spreadsheetml/2006/main" xmlns:r="' + doc + '"><sheets><sheet name="A&amp;B" sheetId="1" r:id="rId1"/></sheets></workbook>');
+    expect(p['xl/_rels/workbook.xml.rels']).toBe(en + '<Relationships xmlns="' + ns + 'package/2006/relationships"><Relationship Id="rId1" Type="' + doc + '/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="' + doc + '/styles" Target="styles.xml"/></Relationships>');
+    expect(p['xl/styles.xml']).toBe(en + '<styleSheet xmlns="' + ns + 'spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts><cellXfs count="3"><xf/><xf numFmtId="164" applyNumberFormat="1"/><xf numFmtId="14" applyNumberFormat="1"/></cellXfs></styleSheet>');
+    expect(p['xl/worksheets/sheet1.xml']).toBe(en + '<worksheet xmlns="' + ns + 'spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t xml:space="preserve">Libellé</t></is></c></row></sheetData></worksheet>');
+    expect(() => partiesXlsx({ nomFeuille: 'E', colonnes: [T], lignes: [], total: { etiquette: 'T', colonne: 'zz', valeurCentimes: centimes(1) } })).toThrow(expect.objectContaining({ name: 'ErreurXlsx', code: 'colonne_total_inconnue' }));
+  });
+
+  it('rangees-filtres-vides-et-types', () => {
+    const E: ColonneXlsx = { code: 'n', type: 'entier', entete: 'N' };
+    const t = (r: string, v: string): string => '<c r="' + r + '" t="inlineStr"><is><t xml:space="preserve">' + v + '</t></is></c>';
+    const x = feuille([T, E], [{ lib: '', n: 7 }], { filtresRappeles: ['f1', 'f2'] });
+    expect(x).toContain('<sheetData><row r="1">' + t('A1', 'f1') + '</row><row r="2">' + t('A2', 'f2') + '</row><row r="3">' + t('A3', 'Libellé') + t('B3', 'N') + '</row><row r="4"><c r="B4"><v>7</v></c></row></sheetData>');
+  });
+
+  it('total-avec-colonne-de-libelle', () => {
+    const total = { etiquette: 'Total', colonne: 'mt', valeurCentimes: centimes(250) };
+    const t = '<c r="A3" t="inlineStr"><is><t xml:space="preserve">Total</t></is></c>';
+    expect(feuille([T, M], [{ lib: 'a', mt: 5 }], { total })).toContain('<row r="3">' + t + '<c r="B3" s="1"><v>2.50</v></c></row>');
+    expect(feuille([M, T], [], { total })).toContain('<row r="2"><c r="A2" s="1"><v>2.50</v></c>' + t.replace('A3', 'B2') + '</row>');
+    expect(feuille([T, M, D], [], { total })).toContain('<row r="2">' + t.replace('A3', 'A2') + '<c r="B2" s="1"><v>2.50</v></c></row>');
+  });
+
+  it('noms-de-colonnes-au-dela-de-z', () => {
+    const colonnes: ColonneXlsx[] = Array.from({ length: 60 }, (_, i) => ({ code: 'c' + String(i), type: 'texte', entete: 'h' + String(i) }));
+    const refs = [...feuille(colonnes, []).matchAll(/<c r="([A-Z]+)1"/g)].map((m) => m[1]);
+    expect(refs.slice(24, 29)).toEqual(['Y', 'Z', 'AA', 'AB', 'AC']);
+    expect(refs.slice(50, 55)).toEqual(['AY', 'AZ', 'BA', 'BB', 'BC']);
+    expect(refs[59]).toBe('BH');
   });
 });

@@ -103,8 +103,9 @@ export function partiesXlsx(e: EntreeXlsx): Record<string, string> {
   for (const l of lignes) ajouter(colonnes.map((c, i) => valeurXlsx(noms[i]! + String(rangees.length + 1), l[c.code], c.type)));
   if (total !== undefined) {
     const libelle = colonnes.find((c) => c.code !== total.colonne)?.code;
+    const decalage = libelle === undefined ? 1 : 0;
     const cellules = colonnes.map((c, i) => {
-      const ref = noms[i]! + String(rangees.length + 1);
+      const ref = noms[i + decalage]! + String(rangees.length + 1);
       if (c.code === total.colonne) return nombreXml(ref, montant(total.valeurCentimes), STYLE_MONETAIRE);
       return c.code === libelle ? texteXml(ref, cellule(total.etiquette, 'texte').valeur) : '';
     });
