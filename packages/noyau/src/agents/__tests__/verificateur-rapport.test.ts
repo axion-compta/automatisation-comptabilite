@@ -26,6 +26,10 @@ describe('verificateur-rapport', () => {
     expect(bruts('1 250 €')).toEqual([1250]);
     expect(bruts('1 250,00')).toEqual([125000]);
     expect(bruts('3 puis 4')).toEqual([3, 4]);
+    expect(bruts('1 2345')).toEqual([1, 2345]);
+    expect(bruts('12 0001')).toEqual([12, 1]);
+    expect(bruts('X1500 ref2026')).toEqual([1500, 2026]);
+    expect(verifierRapport(rapport(p1 + 'm 1 2345'), reg, MARQ).valide).toBe(false);
   });
   it('negatif', () => {
     expect(bruts('-1 250,00')).toEqual([-125000]);

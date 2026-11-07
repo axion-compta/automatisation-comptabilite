@@ -6,7 +6,7 @@ export type Registre = { nombres: readonly number[]; dates: readonly string[] };
 export type ResultatRapport = { valide: boolean; inconnus: string[]; marqueursManquants: string[] };
 
 const DATE = /(\d{4})-(\d{2})-(\d{2})|(\d{2})\/(\d{2})\/(\d{4})/gu;
-const NOMBRE = /(?<![\p{L}\d])-?(?:\d{1,3}(?:[ \u00A0\u202F]\d{3})+|\d+)(?:,\d+)?/gu;
+const NOMBRE = /(?<!\d)-?(?:\d{1,3}(?:[ \u00A0\u202F]\d{3}(?!\d))+|\d+)(?:,\d+)?/gu;
 const MAX = BigInt(Number.MAX_SAFE_INTEGER);
 
 function lire(brut: string): number | null {
