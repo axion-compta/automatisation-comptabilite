@@ -18,7 +18,7 @@ export interface PeriodeMensuelle {
   cle: string;
 }
 
-export type MotifRefusExercice = 'fin_avant_debut' | 'duree_hors_bornes';
+export type MotifRefusExercice = 'fin_avant_debut' | 'duree_hors_bornes' | 'date_invalide' | 'bornes_invalides';
 
 export interface ResultatCreationExercice {
   resultat: 'accepte' | 'refuse' | 'a_verifier';
@@ -56,7 +56,14 @@ function deux(n: number): string {
 }
 
 function dateDe(a: number, m: number, j: number): string {
-  return `${String(a).padStart(4, '0')}-${deux(m)}-${deux(j)}`;
+  return `${a}-${deux(m)}-${deux(j)}`;
+}
+
+/** Vrai si la chaîne est une vraie date AAAA-MM-JJ (quatre chiffres d'année, mois 1 à 12, jour existant). */
+function dateValide(s: string): boolean {
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(s)) return false;
+  const { a, m, j } = decouper(s);
+  return m >= 1 && m <= 12 && j >= 1 && j <= joursDuMois(a, m);
 }
 
 /** Nombre de mois civils couverts, et vrai si debut est un premier du mois et fin un dernier jour du mois. */
@@ -72,6 +79,13 @@ export function creerExercice(
   demande: Exercice,
   bornes: BornesDuree,
 ): ResultatCreationExercice {
+  const entier = (n: number): boolean => Number.isInteger(n) && n > 0;
+  if (!entier(bornes.minMois) || !entier(bornes.maxMois) || bornes.minMois > bornes.maxMois) {
+    return { resultat: 'refuse', motif: 'bornes_invalides' };
+  }
+  if (!dateValide(demande.debut) || !dateValide(demande.fin)) {
+    return { resultat: 'refuse', motif: 'date_invalide' };
+  }
   if (demande.fin < demande.debut) return { resultat: 'refuse', motif: 'fin_avant_debut' };
   const { mois, aligne } = dureeEnMois(demande.debut, demande.fin);
   if (mois < bornes.minMois || mois > bornes.maxMois) {
@@ -91,7 +105,7 @@ export function periodesMensuelles(exercice: Exercice): PeriodeMensuelle[] {
     liste.push({
       debut: dateDe(a, m, 1),
       fin: dateDe(a, m, joursDuMois(a, m)),
-      cle: `${String(a).padStart(4, '0')}-${deux(m)}`,
+      cle: `${a}-${deux(m)}`,
     });
     m += 1;
     if (m > 12) {
@@ -104,10 +118,13 @@ export function periodesMensuelles(exercice: Exercice): PeriodeMensuelle[] {
 
 /** Clé AAAA-MM de la période contenant la date, ou undefined hors exercice. */
 export function periodeDe(date: string, exercice: Exercice): string | undefined {
+  if (!dateValide(date) || !dateValide(exercice.debut) || !dateValide(exercice.fin)) return undefined;
   if (date < exercice.debut || date > exercice.fin) return undefined;
   return date.slice(0, 7);
 }
 
 export function estVerrouillee(date: string, etat: EtatVerrou): boolean {
+  // Date invalide : on refuse l'écriture par prudence (règle 6).
+  if (!dateValide(date)) return true;
   return etat.exerciceCloture || etat.periodesVerrouillees.includes(date.slice(0, 7));
 }

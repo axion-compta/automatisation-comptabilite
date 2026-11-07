@@ -40,8 +40,7 @@ describe('exercices', () => {
 
   it('dates-non-alignees-a-verifier', () => {
     const r = creerExercice({ id: 'a', debut: '2026-01-15', fin: '2026-12-31' }, bornes);
-    expect(r.resultat).toBe('a_verifier');
-    expect(r.exercice).toBeUndefined();
+    expect(r).toEqual({ resultat: 'a_verifier', motif: 'dates_non_alignees' });
     expect(creerExercice({ id: 'b', debut: '2026-01-01', fin: '2026-12-30' }, bornes).resultat).toBe('a_verifier');
     expect(dureeEnMois('2026-01-15', '2026-12-31').aligne).toBe(false);
     expect(dureeEnMois('2026-01-01', '2026-12-30').aligne).toBe(false);
@@ -88,5 +87,41 @@ describe('exercices', () => {
     expect(estVerrouillee('2026-06-01', etat)).toBe(false);
     expect(estVerrouillee('2026-06-01', { periodesVerrouillees: [], exerciceCloture: true })).toBe(true);
     expect(estVerrouillee('2026-06-01', { periodesVerrouillees: [], exerciceCloture: false })).toBe(false);
+  });
+
+  it('debut-egal-fin-hors-bornes', () => {
+    const r = creerExercice({ id: 'a', debut: '2026-01-31', fin: '2026-01-31' }, bornes);
+    expect(r).toEqual({ resultat: 'refuse', motif: 'duree_hors_bornes' });
+  });
+
+  it('dates-impossibles-refusees', () => {
+    for (const d of ['2026-13-01', '2026-00-01', '2026-02-30', '2026-1-1', 'abc', '2026-01-00', '2026-01-011', 'x2026-01-01']) {
+      expect(creerExercice({ id: 'a', debut: d, fin: '2027-12-31' }, bornes)).toEqual({ resultat: 'refuse', motif: 'date_invalide' });
+      expect(creerExercice({ id: 'a', debut: '2026-01-01', fin: d }, bornes)).toEqual({ resultat: 'refuse', motif: 'date_invalide' });
+    }
+    expect(creerExercice({ id: 'a', debut: 'abc', fin: 'abd' }, bornes).motif).toBe('date_invalide');
+    const ex = { id: 'ex', debut: '2026-04-01', fin: '2027-03-31' };
+    expect(periodeDe('2026-13-01', ex)).toBeUndefined();
+    expect(periodeDe('2026-1-1', ex)).toBeUndefined();
+    expect(periodeDe('2026-05-01', { id: 'x', debut: '2026-1-1', fin: '2027-03-31' })).toBeUndefined();
+    expect(periodeDe('2026-05-01', { id: 'x', debut: '2026-04-01', fin: '2027-13-31' })).toBeUndefined();
+    const libre = { periodesVerrouillees: [], exerciceCloture: false };
+    expect(estVerrouillee('2026-13-01', libre)).toBe(true);
+    expect(estVerrouillee('abc', libre)).toBe(true);
+    expect(estVerrouillee('2026-02-30', libre)).toBe(true);
+    expect(estVerrouillee('2026-05-01', libre)).toBe(false);
+  });
+
+  it('bornes-invalides-refusees', () => {
+    const d = { id: 'a', debut: '2026-01-01', fin: '2026-12-31' };
+    const refus = { resultat: 'refuse', motif: 'bornes_invalides' };
+    expect(creerExercice(d, { minMois: NaN, maxMois: 30 })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 3, maxMois: NaN })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 30, maxMois: 3 })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 0, maxMois: 30 })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 3, maxMois: 0 })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 2.5, maxMois: 30 })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 3, maxMois: 30.5 })).toEqual(refus);
+    expect(creerExercice(d, { minMois: 12, maxMois: 12 }).resultat).toBe('accepte');
   });
 });
