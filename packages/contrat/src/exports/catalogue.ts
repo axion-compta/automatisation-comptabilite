@@ -1,57 +1,33 @@
 import { z } from 'zod';
-
-// Catalogue des listes exportables, CALCULÉ depuis le contrat : toute nouvelle liste y entre sans
-// toucher ce fichier. Un type inconnu devient « texte » (le plus prudent : il sera neutralisé).
-
+// Catalogue des listes exportables, CALCULÉ depuis le contrat (rien à écrire pour une nouvelle liste). Type inconnu = texte (neutralisé).
 export type TypeColonne = 'texte' | 'entier' | 'centimes' | 'date' | 'booleen';
-
-export interface ColonneExport {
-  code: string;
-  type: TypeColonne;
-}
-
+export interface ColonneExport { code: string; type: TypeColonne }
 export interface ListeExportable {
-  /** operationId de la route. */
   code: string;
   methode: string;
   chemin: string;
   colonnes: ColonneExport[];
-  /** Première colonne `centimes`, s'il y en a une. */
   colonneTotal?: string;
 }
-
 export class ErreurCatalogue extends Error {
-  readonly code: 'liste_sans_colonne';
-  readonly liste: string;
-  constructor(code: 'liste_sans_colonne', liste: string) {
+  constructor(readonly code: 'liste_sans_colonne', readonly liste: string) {
     super(code + ' : ' + liste);
     this.name = 'ErreurCatalogue';
-    this.code = code;
-    this.liste = liste;
   }
 }
-
 type Noeud = Record<string, unknown>;
-
-interface Procedure {
-  route: Noeud;
-  outputSchema: unknown;
-}
-
+interface Procedure { route: Noeud; outputSchema: unknown }
 const PROFONDEUR_MAX = 20;
 const MOTIF_DATE = /^\^?\\d\{4\}-\\d\{2\}-\\d\{2\}\$?$/;
-
 function estNoeud(x: unknown): x is Noeud {
   return typeof x === 'object' && x !== null;
 }
-
 function lireProcedure(x: unknown): Procedure | null {
   if ((typeof x !== 'object' && typeof x !== 'function') || x === null) return null;
   const def = (x as Noeud)['~orpc'];
   if (!estNoeud(def) || !estNoeud(def['route'])) return null;
   return { route: def['route'], outputSchema: def['outputSchema'] };
 }
-
 function collecter(noeud: unknown, chemin: string[], profondeur: number, vus: WeakSet<object>, sortie: { chemin: string[]; p: Procedure }[]): void {
   const p = lireProcedure(noeud);
   if (p !== null) {
@@ -62,7 +38,6 @@ function collecter(noeud: unknown, chemin: string[], profondeur: number, vus: We
   vus.add(noeud);
   for (const cle of Object.keys(noeud)) collecter(noeud[cle], [...chemin, cle], profondeur + 1, vus, sortie);
 }
-
 function schemaJson(schema: unknown): Noeud | null {
   try {
     const j = z.toJSONSchema(schema as z.ZodType, { io: 'output', unrepresentable: 'any' });
@@ -71,7 +46,6 @@ function schemaJson(schema: unknown): Noeud | null {
     return null;
   }
 }
-
 function typeDeColonne(code: string, propriete: unknown): TypeColonne {
   if (!estNoeud(propriete)) return 'texte';
   const type = propriete['type'];
@@ -84,7 +58,6 @@ function typeDeColonne(code: string, propriete: unknown): TypeColonne {
   }
   return 'texte';
 }
-
 function listeDe(code: string, p: Procedure): ListeExportable | null {
   const methode = p.route['method'];
   const chemin = p.route['path'];
@@ -104,7 +77,6 @@ function listeDe(code: string, p: Procedure): ListeExportable | null {
   if (total !== undefined) liste.colonneTotal = total.code;
   return liste;
 }
-
 /** Parcourt tout l'objet contrat (clés présentes et futures) et garde les routes GET qui renvoient une liste. */
 export function catalogueExportable(contrat: unknown): ListeExportable[] {
   const trouvees: { chemin: string[]; p: Procedure }[] = [];
@@ -118,7 +90,6 @@ export function catalogueExportable(contrat: unknown): ListeExportable[] {
   }
   return listes.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 }
-
 /** Couples liste / colonne dont le type est « texte » : ce sont elles que la neutralisation couvre. */
 export function colonnesTexte(catalogue: readonly ListeExportable[]): { liste: string; colonne: string }[] {
   return catalogue.flatMap((l) => l.colonnes.filter((c) => c.type === 'texte').map((c) => ({ liste: l.code, colonne: c.code })));

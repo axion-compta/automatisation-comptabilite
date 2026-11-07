@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { contrat } from '../../routes.js';
 import { ErreurCatalogue, catalogueExportable, colonnesTexte } from '../catalogue.js';
-
 const liste = (operationId: string, ligne: z.ZodType, chemin: `/${string}` = '/x') =>
   oc.route({ method: 'GET', path: chemin, operationId }).output(z.object({ body: z.array(ligne) }));
-
 describe('catalogue des listes exportables', () => {
   it('contient-plan-tiers-ecritures', () => {
     const c = catalogueExportable(contrat);
@@ -29,7 +27,6 @@ describe('catalogue des listes exportables', () => {
     expect('colonneTotal' in tiers).toBe(false);
     expect(c.find((l) => l.code === 'listerExercices')!.colonnes.map((x) => x.code)).toEqual(['id', 'libelle', 'debut', 'fin', 'statut']);
   });
-
   it('routes-non-liste-exclues', () => {
     const faux = {
       creer: oc.route({ method: 'POST', path: '/a', operationId: 'creerA' }).output(z.object({ body: z.array(z.object({ id: z.string() })) })),
@@ -49,7 +46,6 @@ describe('catalogue des listes exportables', () => {
     expect(catalogueExportable(undefined)).toEqual([]);
     expect(catalogueExportable({ a: 1, b: 'x', c: [1, 2] })).toEqual([]);
   });
-
   it('centimes-par-suffixe', () => {
     const [l] = catalogueExportable({
       v: liste('listerMontants', z.object({ totalCentimes: z.number().int(), centimes: z.number().int(), nombre: z.number().int(), reel: z.number() })),
@@ -67,7 +63,6 @@ describe('catalogue des listes exportables', () => {
     });
     expect(m!.colonneTotal).toBe('aCentimes');
   });
-
   it('inconnu-devient-texte', () => {
     const [l] = catalogueExportable({
       v: liste(
@@ -108,7 +103,6 @@ describe('catalogue des listes exportables', () => {
     expect(colonnesTexte([l!])[0]).toEqual({ liste: 'listerInconnus', colonne: 'union' });
     expect(colonnesTexte([])).toEqual([]);
   });
-
   it('catalogue-suit-le-contrat', () => {
     const avant = catalogueExportable(contrat).map((l) => l.code);
     const forge = {
@@ -129,7 +123,6 @@ describe('catalogue des listes exportables', () => {
     cyclique['soi'] = cyclique;
     expect(catalogueExportable(cyclique).map((l) => l.code)).toEqual(['listerCycle']);
   });
-
   it('ordre-stable', () => {
     const a = liste('listerA', z.object({ id: z.string() }), '/a');
     const b = liste('listerB', z.object({ id: z.string() }), '/b');
@@ -140,7 +133,6 @@ describe('catalogue des listes exportables', () => {
     expect(deux).toEqual(un);
     expect(catalogueExportable(contrat)).toEqual(catalogueExportable(contrat));
   });
-
   it('liste-sans-colonne-refusee', () => {
     const vide = { v: liste('listerVide', z.object({})) };
     expect(() => catalogueExportable(vide)).toThrow(ErreurCatalogue);
