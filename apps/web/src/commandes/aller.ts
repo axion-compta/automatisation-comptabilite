@@ -11,16 +11,17 @@ export type Destination = {
 
 // Mots-clés au singulier, sans accent : la phrase subit le même traitement (voir `racine`).
 export const destinations: readonly Destination[] = [
-  { id: 'accueil', titre: 'Accueil', chemin: '/', motsCles: ['accueil', 'debut', 'tableau', 'bord', 'resume'] },
-  { id: 'ecritures', titre: 'Écritures', chemin: '/ecritures', motsCles: ['ecriture', 'journal', 'saisie', 'ligne'] },
-  { id: 'banque', titre: 'Banque', chemin: '/banque', motsCles: ['banque', 'bancaire', 'releve', 'rapprochement', 'compte'] },
-  { id: 'ventes', titre: 'Ventes', chemin: '/ventes', motsCles: ['vente', 'client', 'devis', 'facture'] },
-  { id: 'achats', titre: 'Achats', chemin: '/achats', motsCles: ['achat', 'fournisseur', 'depense', 'facture'] },
-  { id: 'tva', titre: 'TVA', chemin: '/tva', motsCles: ['tva', 'taxe', 'declaration', 'declarer', 'collectee', 'deductible'] },
-  { id: 'documents', titre: 'Documents', chemin: '/documents', motsCles: ['document', 'piece', 'justificatif'] },
-  { id: 'controles', titre: 'Contrôles', chemin: '/controles', motsCles: ['controle', 'controler', 'verification', 'verifier', 'doute', 'anomalie'] },
-  { id: 'parametres', titre: 'Paramètres', chemin: '/parametres', motsCles: ['parametre', 'reglage', 'option', 'profil'] },
-  { id: 'aide', titre: 'Aide', chemin: '/aide', motsCles: ['aide', 'assistance', 'guide', 'notice', 'support'] },
+  { id: 'activite', titre: 'Mon activité', chemin: '/activite', motsCles: ['activite', 'accueil', 'debut', 'tableau', 'bord', 'resume'] },
+  { id: 'mois', titre: 'Mon mois', chemin: '/mois', motsCles: ['mois', 'mensuel', 'periode'] },
+  { id: 'banque', titre: 'Ma banque', chemin: '/banque', motsCles: ['banque', 'bancaire', 'releve', 'rapprochement'] },
+  { id: 'factures', titre: 'Mes factures', chemin: '/factures', motsCles: ['facture', 'vente', 'achat', 'depense'] },
+  { id: 'declarations', titre: 'Mes déclarations', chemin: '/declarations', motsCles: ['declaration', 'declarer'] },
+  { id: 'tva', titre: 'Ma TVA', chemin: '/declarations/tva', motsCles: ['tva', 'taxe', 'collectee', 'deductible'] },
+  { id: 'documents', titre: 'Mes documents', chemin: '/documents', motsCles: ['document', 'piece', 'justificatif'] },
+  { id: 'annees', titre: 'Mes années comptables', chemin: '/reglages/entreprise/annees', motsCles: ['annee', 'exercice', 'cloture'] },
+  { id: 'comptes', titre: 'Mes comptes comptables', chemin: '/reglages/entreprise/comptes', motsCles: ['compte', 'plan'] },
+  { id: 'tiers', titre: 'Mes clients et fournisseurs', chemin: '/reglages/entreprise/tiers', motsCles: ['client', 'fournisseur', 'tiers'] },
+  { id: 'aide', titre: 'Aide', chemin: '/reglages/aide', motsCles: ['aide', 'assistance', 'guide', 'notice', 'support'] },
 ];
 
 const MOTS_VIDES = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'd', 'l', 'au', 'aux', 'a', 'en', 'mon', 'ma', 'mes', 'je', 'j', 'ai', 'veux', 'voir', 'aller', 'va', 'ouvre', 'ouvrir', 'montre', 'montrer', 'afficher', 'affiche', 'sur', 'vers', 'page', 'ecran', 'svp', 'stp', 'moi', 'est', 'il', 'quelle', 'se']);
@@ -28,9 +29,12 @@ const NEGATIONS = new Set(['ne', 'n', 'pas', 'jamais', 'sans', 'non']);
 // Fautes de frappe courantes : résultat fixé, table volontairement courte.
 const FAUTES: Readonly<Record<string, string>> = { bnaque: 'banque', banqe: 'banque', tba: 'tva', ecritue: 'ecriture', facutre: 'facture', docment: 'document' };
 
-/** Racine d'un mot : le « s » final est retiré (mots de plus de 3 lettres), puis la faute courante est corrigée. */
+// Mots dont le « s » final fait partie du mot : « mois » ne doit pas devenir « moi » (mot vide).
+const INVARIABLES = new Set(['mois']);
+
+/** Racine d'un mot : le « s » final est retiré (mots de plus de 3 lettres, sauf invariables), puis la faute courante est corrigée. */
 function racine(m: string): string {
-  const s = m.length > 3 && m.endsWith('s') ? m.slice(0, -1) : m;
+  const s = m.length > 3 && m.endsWith('s') && !INVARIABLES.has(m) ? m.slice(0, -1) : m;
   return FAUTES[s] ?? s;
 }
 
