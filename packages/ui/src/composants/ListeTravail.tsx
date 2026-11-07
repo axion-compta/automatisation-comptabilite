@@ -5,7 +5,9 @@ import { Tableau, type ColonneTableau, type PaginationTableau } from "./Tableau.
 /** Formule A imposée : toute autre chaîne est refusée à la compilation. */
 export type MentionListeTravail = "document de travail, ne remplace pas le registre légal";
 
-export interface ListeTravailProps<L> {
+export type ListeTravailProps<L> = P<L>;
+
+interface P<L> {
   mention: MentionListeTravail;
   titre: string;
   type: "associes" | "decisions" | "mouvements_titres";
@@ -16,8 +18,8 @@ export interface ListeTravailProps<L> {
   pagination?: PaginationTableau;
 }
 
-export function ListeTravail<L>(props: ListeTravailProps<L>) {
-  const { mention, titre, type, colonnes, lignes, cleDeLigne, texteVide, pagination } = props;
+export const ListeTravail = <L,>(p: P<L>) => {
+  const { mention, titre, type, colonnes, lignes, cleDeLigne, texteVide, pagination } = p;
   const idMention = useId();
   return (
     <section className="axion-liste-travail" data-type={type} role="group" aria-describedby={idMention}>
@@ -31,4 +33,4 @@ export function ListeTravail<L>(props: ListeTravailProps<L>) {
       )}
     </section>
   );
-}
+};
