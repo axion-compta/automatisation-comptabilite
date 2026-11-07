@@ -77,7 +77,7 @@ describe('dates civiles', () => {
   });
 
   it('jour-de-semaine-connu', () => {
-    expect(jourDeSemaine('2027-05-15')).toBe(6);
+    expect(['2027-05-15', '2027-05-16', '2026-01-01'].map((d) => jourDeSemaine(d))).toEqual([6, 7, 4]);
     expect(code(() => jourDeSemaine('2026-02-30'))).toBe('date_invalide');
   });
 
@@ -92,9 +92,9 @@ describe('dates civiles', () => {
   });
 
   it('comparaison-et-cle-de-mois', () => {
-    expect(comparerDates('2026-01-01', '2026-01-02')).toBe(-1);
-    expect(comparerDates('2026-01-01', '2026-01-01')).toBe(0);
-    expect(code(() => comparerDates('2026-01-01', 'x'))).toBe('date_invalide');
+    const cas: [string, string][] = [['2026-01-01', '2026-01-02'], ['2026-01-01', '2026-01-01'], ['2026-01-02', '2026-01-01']];
+    expect(cas.map(([a, b]) => comparerDates(a, b))).toEqual([-1, 0, 1]);
+    expect((<[string, string][]>[['x', '2026-01-01'], ['2026-01-01', 'x']]).map(([a, b]) => code(() => comparerDates(a, b)))).toEqual(['date_invalide', 'date_invalide']);
     expect(moisCle('2026-03-31')).toBe('2026-03');
     expect(code(() => moisCle('2026-3-31'))).toBe('date_invalide');
   });
