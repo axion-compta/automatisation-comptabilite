@@ -43,24 +43,24 @@ export function Pourquoi({ decision, appel, libelles, onSource }: PourquoiProps)
   const absent = libelles.nonDisponible;
   const demandeur = decision.demandeur.sorte === "systeme" ? libelles.systeme : decision.demandeur.id;
   const modele = appel ? `${appel.alias} (${appel.version_modele})` : absent;
+  const sources = (
+    <ul key="s" className="axion-pourquoi__sources">
+      {decision.sources_legales.map((s) => (
+        <li key={s}>
+          <button type="button" className="axion-pourquoi__source" onClick={() => onSource(s)}>
+            {s}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
   const lignes: [string, ReactNode][] = [
     [libelles.demandeur, demandeur],
     [libelles.date, dateOuNonDisponible(decision.quand, absent)],
     [libelles.source, libelles.sources[decision.source_proposition]],
     [libelles.motif, decision.motif],
     [libelles.confiance, <MotConfiance key="c" mot={decision.confiance} libelles={libelles.mots} />],
-    [
-      libelles.sourcesLegales,
-      <ul key="s" className="axion-pourquoi__sources">
-        {decision.sources_legales.map((s) => (
-          <li key={s}>
-            <button type="button" className="axion-pourquoi__source" onClick={() => onSource(s)}>
-              {s}
-            </button>
-          </li>
-        ))}
-      </ul>,
-    ],
+    [libelles.sourcesLegales, sources],
     [libelles.modele, modele],
   ];
   const surTouche = (e: KeyboardEvent) => {
