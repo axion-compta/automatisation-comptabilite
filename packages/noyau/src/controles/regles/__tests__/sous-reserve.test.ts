@@ -36,12 +36,12 @@ const mt = (solide: number, sousReserve: number, perdue: number, tvaLue: number)
 const MAUVAIS = [Number.NaN, Number.POSITIVE_INFINITY, 1.5];
 
 describe('controles sous reserve', () => {
-  it('CT-20 sous reserve au compte d attente, hors declaration : OK', () => {
+  it('CT-20', () => {
     expect(regleCCT03.evaluer(ctx([ligne()]))).toEqual({ resultat: 'OK' });
     expect(regleCCT03A.evaluer(ctx([ligne()]))).toEqual({ resultat: 'OK', valeur: 0 });
   });
 
-  it('CT-21 trois montants egaux a la TVA lue : OK puis ALERTE 1 centime', () => {
+  it('CT-21', () => {
     const m = troisMontants([achat('1', 180000, 'solide'), achat('2', 4000, 'sous_reserve'), achat('3', 1200, 'perdue')]);
     expect(m).toEqual({ solide: 180000, sousReserve: 4000, perdue: 1200 });
     expect(regleCCT04.evaluer({ tvaLue: centimes(185200), ...m })).toEqual({ resultat: 'OK' });
