@@ -68,7 +68,7 @@ const refDe = (e: Extrait): string => {
 };
 
 // Sans date du jour, seule la forme est contrôlée : la date future est jugée par preRemplir.
-export function extraitEnSource(e: Extrait, dateDuJour = '9999-12-31'): Source | null {
+export function extraitEnSource(e: Extrait, dateDuJour = 'z'.repeat(10)): Source | null {
   if (motifIgnore(e, dateDuJour) !== null) return null;
   return { origine: 'document', valeur: e.valeur.trim(), confiance: e.confiance, dateSource: e.dateSource, ref: refDe(e) };
 }
