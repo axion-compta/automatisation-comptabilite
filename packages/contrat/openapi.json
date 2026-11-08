@@ -2411,7 +2411,7 @@
         }
       }
     },
-    "/chat/messages": {
+    "/api/compta/v1/societes/{s}/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
         "tags": [
@@ -2426,6 +2426,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -2509,7 +2518,7 @@
         }
       }
     },
-    "/chat/tours/{id}/arreter": {
+    "/api/compta/v1/societes/{s}/chat/tours/{id}/arreter": {
       "post": {
         "operationId": "arreterTour",
         "parameters": [
@@ -2524,29 +2533,14 @@
             }
           },
           {
-            "name": "id",
+            "name": "s",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "minLength": 1
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
           },
-          "404": {
-            "description": "Introuvable"
-          }
-        }
-      }
-    },
-    "/chat/propositions/{id}": {
-      "get": {
-        "operationId": "lireProposition",
-        "parameters": [
           {
             "name": "id",
             "in": "path",
@@ -2567,7 +2561,40 @@
         }
       }
     },
-    "/chat/propositions/{id}/appliquer": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}": {
+      "get": {
+        "operationId": "lireProposition",
+        "parameters": [
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/appliquer": {
       "post": {
         "operationId": "appliquerProposition",
         "parameters": [
@@ -2579,6 +2606,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2610,7 +2646,7 @@
         }
       }
     },
-    "/chat/propositions/{id}/annuler": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/annuler": {
       "post": {
         "operationId": "annulerProposition",
         "parameters": [
@@ -2622,6 +2658,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2647,10 +2692,19 @@
         }
       }
     },
-    "/chat/propositions/{id}/pourquoi": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/pourquoi": {
       "get": {
         "operationId": "pourquoiProposition",
         "parameters": [
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           {
             "name": "id",
             "in": "path",

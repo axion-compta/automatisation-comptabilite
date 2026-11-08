@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { cheminSociete } from '../prefixe-routes.js';
 import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
 
 type Op = { operationId: string; parameters: Array<{ name: string; in: string }>; responses: Record<string, unknown> };
 const paths = (genererOpenapi() as { paths: Record<string, Record<string, Op>> }).paths;
-const op = (chemin: string, m: string) => paths[`/chat/propositions/{id}${chemin}`]?.[m];
+const op = (chemin: string, m: string) => paths[cheminSociete(`/chat/propositions/{id}${chemin}`)]?.[m];
 
 describe('contrat des propositions du chat', () => {
   it('openapi-routes-cles-et-erreurs', () => {
