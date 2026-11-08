@@ -50,7 +50,7 @@ describe('identifiants', () => {
       expect(cleTvaFrance(s)).toBe(Number(cleFr(s)));
       expect(analyserTva('FR' + cleFr(s) + s)).toEqual({ statut: 'valide', pays: 'FR', siren: s });
     }
-    expect(cleTvaFrance('000000000')).toBe(12);
+    expect(cleTvaFrance(avecCle('00000000'))).toBe(12);
     expect(() => cleTvaFrance('123')).toThrow();
     expect(() => cleTvaFrance(SIREN + '0')).toThrow();
     expect(() => cleTvaFrance('12345678x')).toThrow();
