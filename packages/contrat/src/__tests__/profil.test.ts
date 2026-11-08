@@ -61,7 +61,7 @@ describe('profil.v1 en mémoire', () => {
     const base = { societeId: 'soc-lemoine', cle: 'a_commissaire_aux_comptes', valeur: 'oui', origine: 'saisie_personne', confiance: 'sur', source_ref: null, date_source: null, statut: 'confirme', effet_debut: '2026-07-01', confirme_par: null, confirme_le: null, rang: 99 };
     // cas témoin : régime TVA confirmé (même effet, rang supérieur), le profil serait complet sans blocage
     const tva = { ...base, cle: 'regime_tva', valeur: 'reel_simplifie', rang: 98 };
-    const avec = (extra: object[]) => creerServiceProfil('soc-lemoine', { champsSupplementaires: [tva, ...extra] }).lire(undefined, AUJOURDHUI);
+    const avec = (extra: Array<typeof base>) => creerServiceProfil('soc-lemoine', { champsSupplementaires: [tva, ...extra] }).lire(undefined, AUJOURDHUI);
     expect(avec([]).etat).toBe('complet');
     expect(avec([]).blocages).toEqual([]);
     for (const [extra, cle] of [[{}, 'commissaire_aux_comptes'], [{ cle: 'code_postal_siege', valeur: '99123' }, 'siege_exclu']] as const) {
