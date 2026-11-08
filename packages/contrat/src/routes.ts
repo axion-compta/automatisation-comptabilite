@@ -8,6 +8,7 @@ import {
   NouvelleEcriture,
 } from './schemas.js';
 import { plan } from './domaines/plan.js';
+import { principes } from './domaines/principes.js';
 import { tiers } from './domaines/tiers.js';
 import { tableauDeBord } from './domaines/tableau-de-bord.js';
 import { alertes } from './domaines/alertes.js';
@@ -51,6 +52,7 @@ export const modifier = oc
 export const contrat = {
   ecritures: { lister, creer, modifier },
   plan,
+  principes,
   tiers,
   tableauDeBord,
   alertes,

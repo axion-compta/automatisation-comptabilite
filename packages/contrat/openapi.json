@@ -225,6 +225,17 @@
         }
       }
     },
+    "/gestes-humains": {
+      "get": {
+        "operationId": "listerGestesHumains",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/tiers": {
       "get": {
         "operationId": "listerTiers",
