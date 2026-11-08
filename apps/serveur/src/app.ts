@@ -19,8 +19,10 @@ import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
+import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
 import { routesRegimes } from './domaines/regimes.js';
+import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
@@ -85,11 +87,14 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     tva: routesTva(),
     notifications: routesNotifications(s.notifications),
     profil: routesProfil(),
+    fec: routesFec(),
+    controles: routesControles(),
     regimes: routesRegimes(),
     change: routesChange(),
     frais: routesFrais(),
     vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
+    parametres: routesParametres(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
       ...implementerVolume(os, options.abonnement ?? {}),
