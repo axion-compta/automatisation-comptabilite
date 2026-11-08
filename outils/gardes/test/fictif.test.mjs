@@ -285,13 +285,25 @@ test('dix-chiffres-ignore', () => {
 
 test('hors-donnees-de-test-ignore', () => {
   assert.deepEqual(analyserTexte(`siren ${sirenJuste}`, 'packages/noyau/src/x.ts'), []);
-  assert.deepEqual(analyserTexte(sirenJuste, 'pnpm-lock.yaml'), []);
-  assert.deepEqual(analyserTexte(sirenJuste, 'openapi.json'), []);
+  // Chemins DANS la portée des données de test : seule la règle SIREN_EXCLUS les écarte.
+  assert.deepEqual(analyserTexte(sirenJuste, 'a/__tests__/pnpm-lock.yaml'), []);
+  assert.deepEqual(analyserTexte(sirenJuste, 'packages/donnees-fictives/openapi.json'), []);
   assert.equal(analyserTexte(sirenJuste, DONNEES).length, 1);
 });
 
+// Aucun tarif en clair dans ce fichier : chaque chaîne est assemblée à l'exécution.
+const EUR = String.fromCharCode(0x20ac);
+const NBSP = String.fromCharCode(0xa0);
+const assemble = (morceaux, sep) => morceaux.join(sep);
+
 test('tarif-par-mois-rouge', () => {
-  for (const t of ['29 € / mois', '29€/mois', `29\u00A0€\u00A0/\u00A0mois`, '29 TTC / mois']) {
+  const cas = [
+    assemble(['29', EUR, '/', 'mois'], ' '),
+    '29' + EUR + '/' + 'mois',
+    assemble(['29', EUR, '/', 'mois'], NBSP),
+    assemble(['29', 'TTC', '/', 'mois'], ' '),
+  ];
+  for (const t of cas) {
     const pb = analyserTexte(`x\n${t}`, 'doc.md');
     assert.equal(pb.length, 1, t);
     assert.match(pb[0], /^doc\.md:2 montant de tarif : /);
@@ -299,10 +311,11 @@ test('tarif-par-mois-rouge', () => {
 });
 
 test('tarif-par-an-ht-rouge', () => {
-  assert.equal(analyserTexte('120 HT/an', 'doc.md').length, 1);
-  assert.equal(analyserTexte('formule à 120 € HT / an', 'doc.md').length, 1);
-  assert.deepEqual(analyserTexte('120 HT/an', 'outils/gardes/test/x.mjs'), []);
-  assert.deepEqual(analyserTexte('120 HT/an', 'outils/gardes/fictif.mjs'), []);
+  const parAn = '120 ' + ['HT', 'an'].join('/');
+  assert.equal(analyserTexte(parAn, 'doc.md').length, 1);
+  assert.equal(analyserTexte('formule à ' + assemble(['120', EUR, 'HT', '/', 'an'], ' '), 'doc.md').length, 1);
+  assert.deepEqual(analyserTexte(parAn, 'outils/gardes/test/x.mjs'), []);
+  assert.deepEqual(analyserTexte(parAn, 'outils/gardes/fictif.mjs'), []);
 });
 
 test('montant-sans-periode-accepte', () => {

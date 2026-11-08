@@ -1,5 +1,5 @@
 // garde:fictif : données fictives seulement (V3-PRI-017).
-// Rouge si un fichier suivi contient une adresse e-mail hors @exemple.fr ou un IBAN au format valide.
+// Rouge si un fichier suivi contient une adresse e-mail hors @exemple.fr, un IBAN au format valide, un SIREN hors liste blanche (données de test) ou un montant de tarif.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
