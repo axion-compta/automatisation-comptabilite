@@ -23,7 +23,7 @@ describe('clients', () => {
   });
 
   it('trouve-par-tva-si-pas-de-siren', () => {
-    expect(chercherClient([A, B], { siren: '000000000', tva: ' XX 333 444 ', nom: 'Immobilière Marceau' })).toEqual({ client: B, par: 'tva' });
+    expect(chercherClient([A, B], { siren: '123456782', tva: ' XX 333 444 ', nom: 'Immobilière Marceau' })).toEqual({ client: B, par: 'tva' });
     expect(chercherClient([A, B], { tva: 'XX111222' })?.client).toBe(A);
     expect(chercherClient([C], { tva: '' })).toBeNull();
   });

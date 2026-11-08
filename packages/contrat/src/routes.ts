@@ -8,18 +8,23 @@ import {
   NouvelleEcriture,
 } from './schemas.js';
 import { plan } from './domaines/plan.js';
+import { principes } from './domaines/principes.js';
 import { tiers } from './domaines/tiers.js';
+import { banque } from './domaines/banque.js';
 import { tableauDeBord } from './domaines/tableau-de-bord.js';
 import { alertes } from './domaines/alertes.js';
 import { preferences } from './domaines/preferences.js';
 import { recherche } from './domaines/recherche.js';
 import { exports } from './domaines/exports.js';
 import { calendrier } from './domaines/calendrier.js';
+import { tva } from './domaines/tva.js';
 import { notifications } from './domaines/notifications.js';
 import { lireAcces } from './domaines/acces.js';
 import { lireVolume } from './domaines/volume.js';
 import { demanderPalier } from './domaines/palier.js';
 import { chat } from './domaines/chat.js';
+import { chatPropositions } from './domaines/chat-propositions.js';
+import { profil } from './domaines/profil.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -50,16 +55,20 @@ export const modifier = oc
 export const contrat = {
   ecritures: { lister, creer, modifier },
   plan,
+  principes,
   tiers,
+  banque,
   tableauDeBord,
   alertes,
   preferences,
   recherche,
   exports,
   calendrier,
+  tva,
   notifications,
   abonnement: { lireAcces, lireVolume, demanderPalier },
+  profil,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
-export const contratChat = { chat };
+export const contratChat = { chat, chatPropositions };
 export type Contrat = typeof contrat;
