@@ -1161,6 +1161,88 @@
         }
       }
     },
+    "/exports": {
+      "post": {
+        "operationId": "exporter",
+        "tags": [
+          "acces:export"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "liste": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "xlsx",
+                      "csv"
+                    ]
+                  },
+                  "filtres": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  },
+                  "tri": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "liste",
+                  "format"
+                ],
+                "additionalProperties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "413": {
+            "description": "Introuvable"
+          },
+          "501": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/exercices/{exercice}/calendrier": {
       "get": {
         "operationId": "lireCalendrier",
@@ -1678,6 +1760,51 @@
         }
       }
     },
+    "/siren/{siren}": {
+      "get": {
+        "operationId": "lireSiren",
+        "parameters": [
+          {
+            "name": "siren",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
+    "/tva-intracom/{numero}/verification": {
+      "get": {
+        "operationId": "verifierTva",
+        "parameters": [
+          {
+            "name": "numero",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/ecarts-change/{id}/explication": {
       "get": {
         "operationId": "expliquerEcartChange",
@@ -1873,6 +2000,93 @@
         }
       }
     },
+    "/echeances": {
+      "get": {
+        "operationId": "listerEcheances",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "du",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/controles/bloquants": {
+      "get": {
+        "operationId": "listerBloquants",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "validation",
+                "tva",
+                "export",
+                "cloture"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/exercices/{exercice}/juridique": {
+      "get": {
+        "operationId": "lireObligationsJuridiques",
+        "parameters": [
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/parametres": {
       "get": {
         "operationId": "lireParametre",
@@ -1903,6 +2117,126 @@
           },
           "404": {
             "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/tresorerie/prevision": {
+      "get": {
+        "operationId": "lirePrevision",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "horizon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "scenario",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "central",
+                "prudent"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/tresorerie/flux": {
+      "get": {
+        "operationId": "listerFlux",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "du",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "origine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/fournisseurs/echeances": {
+      "get": {
+        "operationId": "listerEcheancesFournisseurs",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "horizon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 366
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/fournisseurs/alertes-iban": {
+      "get": {
+        "operationId": "listerAlertesIban",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }

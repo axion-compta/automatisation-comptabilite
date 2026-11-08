@@ -26,4 +26,15 @@ describe('serveur : véhicules et barème', () => {
     for (const q of ['', '?date=', '?date=2025-02-30', '?date=15/06/2025']) expect([q, (await get('/parametres/bareme_ik_voiture' + q)).statusCode]).toEqual([q, 400]);
     expect((await a.inject({ method: 'POST', url: '/vehicules' })).statusCode).toBe(404);
   });
+
+  it('date-invalide-400', async () => {
+    const a = creerApp();
+    apps.push(a);
+    const get = (url: string) => a.inject({ method: 'GET', url });
+    // date calendaire inexistante, chaîne vide, date absente
+    for (const q of ['?date=2025-02-30', '?date=', '']) {
+      const r = await get('/parametres/bareme_ik_voiture' + q);
+      expect([q, r.statusCode]).toEqual([q, 400]);
+    }
+  });
 });

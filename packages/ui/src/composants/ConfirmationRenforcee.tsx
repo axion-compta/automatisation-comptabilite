@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { centimes } from "../../../noyau/src/argent/index.js";
 import { Bouton } from "./Bouton.js";
 import { Montant } from "./Montant.js";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./confirmation-renforcee.css";
 
 export interface ConfirmationRenforceeProps {

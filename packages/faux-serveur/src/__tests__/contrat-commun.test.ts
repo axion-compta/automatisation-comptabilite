@@ -17,6 +17,11 @@ import { suiteNotifications } from './suite-notifications.js';
 import { suiteTva } from './suite-tva.js';
 import { suiteChange } from './suite-change.js';
 import { suiteSante } from './suite-sante.js';
+import { suiteJuridique } from './suite-juridique.js';
+import { creerHandlersJuridique } from '../domaines/juridique.js';
+import { creerServiceJuridique } from '../../../contrat/src/domaines/juridique-service.js';
+import { routesJuridique } from '../../../../apps/serveur/src/domaines/juridique.js';
+import { genererJuridique } from '../../../donnees-fictives/src/juridique.js';
 import { suiteBanque } from './suite-banque.js';
 import { suiteBanqueSuivi } from './suite-banque-suivi.js';
 import { suitePrincipes } from './suite-principes.js';
@@ -140,3 +145,18 @@ suiteChange('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteChange('faux serveur (MSW)', cibleFaux);
 suiteSante('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteSante('faux serveur (MSW)', cibleFaux);
+
+// Le vrai serveur ne sert que la SARL par défaut (app.ts hors périmètre) : la SCI passe par la procédure du serveur, appelée directement.
+const SIREN_SCI = genererJuridique().obligations[1]!.societeSiren;
+const cibleSciVrai: Cible = async () => {
+  const procedure = routesJuridique(creerServiceJuridique(SIREN_SCI)).lireObligationsJuridiques;
+  const appeler: Appeler = async () => ({ status: 200, json: await procedure['~orpc'].handler({ input: { params: { exercice: 'EX2026' } }, errors: {} } as never) });
+  return { appeler, fermer: async () => undefined };
+};
+const cibleSciFaux: Cible = async () => {
+  const c = await cibleFaux();
+  serveur.use(...creerHandlersJuridique(H, async () => undefined, SIREN_SCI));
+  return c;
+};
+suiteJuridique('vrai serveur (Fastify + oRPC)', cibleVrai, cibleSciVrai);
+suiteJuridique('faux serveur (MSW)', cibleFaux, cibleSciFaux);
