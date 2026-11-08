@@ -38,7 +38,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Test `regle-eslint` de `packages/noyau` : peut dépasser 5 s en local, sans lien avec P0.
 
 ## Prochaine commande
-`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter le statut de L01-T39 et L01-T47 (remplacées) ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
+`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter les fiches L14-T34 et L14-T36 à L14-T41 (contre interface et faux serveur) et le statut de L01-T39 et L01-T47 (remplacées) ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
 
 ## Pièges
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
@@ -64,4 +64,24 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Écart à la fiche : elle annonçait 8 fiches bloquées (T48 à T55) ; T51 à T55 sont déjà faites, il n'en reste que 3.
 - Écarts à la spec gardés : identifiants suffixés (K11M, K12H, K13S, T03A, T12M, T18M) ; vocabulaire du CSV et du code (gravité B/M, `bloque`, `declencheurs`).
 - PR du lot (lignes, durée de CI, corrections après relecture) : non mesuré (pas de gh dans cette session) ; `pilotage/calibrage.csv` ne contient que l'en-tête, rien n'y est ajouté.
+- Aucune date de livraison annoncée.
+
+## Lot 14
+- Existe (parties pures, lecture, contrat et faux serveur) : gardes des formats et du registre légal ; veille (circuit, état, mode dégradé) ; Sirene (planification, partage, cache) ; santé des connecteurs.
+- Juridique : dispense, convocation, confidentialité, rapport de la SCI, rémunération, intérêts et écriture de compte courant.
+- Paramètres : paquet versionné, pays, utilisation exigée. TVA : carte de paiement et rappels, rattachement, « sous réserve ».
+- Cas sûr et ses versions ; budget de gestes ; textes et composants ; contrat et faux serveur (état de la veille et des connecteurs : L14-T32, L14-T33).
+- Fiches T00 à T33 attendues par L14-T08 : `statut: fait` (en-têtes lus sur main). T35 et T42 sont aussi faites.
+- Restent `a_faire`, toutes débloquées le 07/11/2026 (J3a avec conditions, données fictives, rien en production avant J10) mais à écrire contre une interface et un faux serveur :
+  - T34 : persistance `utilisation_parametre` et `version_paquet` ; schéma réel de la console (D29, 21/11/2026).
+  - T36 : résumé par IA d'une fiche de changement ; passerelle et liste fermée de l'UE (D43).
+  - T37 : Sirene réel (file et cache en base, identifiants) ; hébergeur (D42) et console (D29).
+  - T38 : script quotidien de santé des connecteurs ; hébergeur (D42), persistance (D29).
+  - T39 : routes d'écriture du juridique ; identité et double facteur de la console (D29).
+  - T40 : routes TVA (refus 403, « payé », « sous réserve ») ; identité et rôles de la console (D29).
+  - T41 : archive datée des rapports avec empreinte ; stockage chez l'hébergeur (D42).
+- Mesures sans IA, relevées le 08/11/2026 (REST `search/issues`, titres contenant « L14- ») :
+  - 45 PR fusionnées (fiches et PR de création de fiche mêlées) ;
+  - délai médian ouverture à fusion : 41,9 min pour 30 PR de fiches sensibles ; 39,8 min pour 15 PR de fiches non sensibles ;
+  - `pilotage/calibrage.csv` : en-tête seul ; score Stryker du noyau sur main : non mesuré.
 - Aucune date de livraison annoncée.
