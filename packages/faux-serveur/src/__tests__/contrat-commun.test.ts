@@ -13,6 +13,7 @@ import { suiteRecherche } from './suite-recherche.js';
 import { suiteExports } from './suite-exports.js';
 import { suiteCalendrier } from './suite-calendrier.js';
 import { suiteNotifications } from './suite-notifications.js';
+import { suiteChat, type CibleChat } from './suite-chat.js';
 
 const H = 'http://exemple.fr';
 const json = { 'content-type': 'application/json' };
@@ -49,6 +50,28 @@ const cibleFaux: Cible = async () => {
   return { appeler, fermer: async () => serveur.resetHandlers() };
 };
 
+const cibleChatVrai: CibleChat = async () => {
+  const app = creerApp();
+  return {
+    appeler: async (chemin, entetes, corps) => {
+      const r = await app.inject({ method: 'POST', url: chemin, headers: { ...(corps === undefined ? {} : json), ...entetes }, ...(corps === undefined ? {} : { payload: corps as object }) });
+      return { status: r.statusCode, texte: r.body, type: String(r.headers['content-type']) };
+    },
+    fermer: () => app.close(),
+  };
+};
+
+const cibleChatFaux: CibleChat = async () => {
+  serveur.use(...creerHandlers({ base: H }));
+  return {
+    appeler: async (chemin, entetes, corps) => {
+      const r = await fetch(H + chemin, { method: 'POST', headers: { ...(corps === undefined ? {} : json), ...entetes }, ...(corps === undefined ? {} : { body: JSON.stringify(corps) }) });
+      return { status: r.status, texte: await r.text(), type: r.headers.get('content-type') ?? '' };
+    },
+    fermer: async () => serveur.resetHandlers(),
+  };
+};
+
 suiteContrat('vrai serveur (Fastify + oRPC)', cibleVrai);
 suitePlan('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteTiers('vrai serveur (Fastify + oRPC)', cibleVrai);
@@ -71,3 +94,5 @@ suiteRecherche('faux serveur (MSW)', cibleFaux);
 suiteExports('faux serveur (MSW)', cibleFaux);
 suiteCalendrier('faux serveur (MSW)', cibleFaux);
 suiteNotifications('faux serveur (MSW)', cibleFaux);
+suiteChat('vrai serveur (Fastify + oRPC)', cibleChatVrai);
+suiteChat('faux serveur (MSW)', cibleChatFaux);
