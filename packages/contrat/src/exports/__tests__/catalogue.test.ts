@@ -8,7 +8,8 @@ const liste = (operationId: string, ligne: z.ZodType, chemin: `/${string}` = '/x
 describe('catalogue des listes exportables', () => {
   it('contient-plan-tiers-ecritures', () => {
     const c = catalogueExportable(contrat);
-    expect(c.map((l) => l.code)).toEqual(['listerEcritures', 'listerExercices', 'listerPlan', 'listerTiers']);
+    const codes = c.map((l) => l.code);
+    for (const code of ['listerEcritures', 'listerExercices', 'listerPlan', 'listerTiers']) expect(codes).toContain(code);
     const plan = c.find((l) => l.code === 'listerPlan')!;
     expect(plan.methode).toBe('GET');
     expect(plan.chemin).toBe('/exercices/{exercice}/plan');

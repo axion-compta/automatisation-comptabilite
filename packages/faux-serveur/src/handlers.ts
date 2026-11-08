@@ -11,6 +11,7 @@ import { creerHandlersExports } from './domaines/exports.js';
 import { creerHandlersCalendrier } from './domaines/calendrier.js';
 import { creerHandlersNotifications } from './domaines/notifications.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
+import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -28,6 +29,8 @@ export type OptionsFauxServeur = {
   base?: string;
   /** Chat : coupure après N événements, suspension d'un tour (tests). */
   chat?: OptionsChatFaux;
+  /** Propositions du chat : acteur, horloge et durées injectés (scénarios « compte de service », « horloge avancée »). */
+  propositions?: OptionsPropositionsFaux;
 };
 
 const MESSAGES: Record<403 | 423, string> = {
@@ -105,5 +108,6 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersCalendrier(base, attendre, options),
     ...creerHandlersNotifications(base, attendre, options),
     ...creerHandlersChat(base, attendre, options.chat),
+    ...creerHandlersChatPropositions(base, attendre, options.propositions),
   ];
 }
