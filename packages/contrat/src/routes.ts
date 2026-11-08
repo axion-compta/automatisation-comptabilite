@@ -15,6 +15,7 @@ import { preferences } from './domaines/preferences.js';
 import { recherche } from './domaines/recherche.js';
 import { exports } from './domaines/exports.js';
 import { calendrier } from './domaines/calendrier.js';
+import { tva } from './domaines/tva.js';
 import { notifications } from './domaines/notifications.js';
 import { lireAcces } from './domaines/acces.js';
 import { lireVolume } from './domaines/volume.js';
@@ -58,6 +59,7 @@ export const contrat = {
   recherche,
   exports,
   calendrier,
+  tva,
   notifications,
   abonnement: { lireAcces, lireVolume, demanderPalier },
 };
