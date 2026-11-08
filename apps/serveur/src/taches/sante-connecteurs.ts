@@ -9,9 +9,7 @@ import {
   type SeuilsEchecs,
 } from '../../../../packages/noyau/src/sources/connecteurs.js';
 
-export interface PortEssai {
-  essayer(connecteur: string, signal: AbortSignal): Promise<boolean>;
-}
+export interface PortEssai { essayer(connecteur: string, signal: AbortSignal): Promise<boolean> }
 export interface PortSante {
   lire(clientId: string): Promise<readonly SanteConnecteur[]>;
   ecrire(clientId: string, santes: readonly SanteConnecteur[]): Promise<void>;
@@ -60,7 +58,7 @@ async function essayer(port: PortEssai, connecteur: string, delaiMs: number): Pr
 
 async function passerConnecteur(p: ParametresSante, clientId: string, connecteur: string, santes: SanteConnecteur[]): Promise<ResultatConnecteur> {
   const rang = santes.findIndex((s) => s.connecteur === connecteur);
-  const avant = rang >= 0 ? (santes[rang] as SanteConnecteur) : santeInitiale(connecteur);
+  const avant = santes[rang] ?? santeInitiale(connecteur);
   if (avant.dernierEssai === p.jour) return { connecteur, etat: 'deja_fait', sante: avant };
   const ok = await essayer(p.essai, connecteur, p.delaiMs);
   let apres: SanteConnecteur;
@@ -70,8 +68,7 @@ async function passerConnecteur(p: ParametresSante, clientId: string, connecteur
     if (e instanceof ErreurConnecteur && e.code === 'meme_jour') return { connecteur, etat: 'deja_fait', sante: avant };
     throw e;
   }
-  if (rang >= 0) santes[rang] = apres;
-  else santes.push(apres);
+  santes[rang >= 0 ? rang : santes.length] = apres;
   await p.stock.ecrire(clientId, santes);
   const code = bandeau(apres);
   if (code !== null && code !== bandeau(avant)) await p.alerter({ code, clientId, connecteur });
