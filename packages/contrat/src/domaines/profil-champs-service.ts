@@ -46,10 +46,12 @@ export function creerServiceProfilChamps(societeId: string) {
     },
     confirmer(cle: string, cleIdem: string, corps: { effetDebut: string }, aujourdhui: string): ChampProfilV1 {
       const fabrique = (): ChampFictif | null => {
-        const propres = ajouts.filter((a) => a.cle === cle);
-        const derniere = propres.at(-1);
-        if (!derniere || derniere.statut !== 'a_confirmer') return null;
-        return { ...derniere, statut: 'confirme', confiance: 'sur', effet_debut: corps.effetDebut, confirme_par: PERSONNE_FICTIVE, confirme_le: aujourdhui, rang: RANG_DEBUT + ajouts.length };
+        const en = lire(corps.effetDebut, aujourdhui).champs.find((c) => c.cle === cle);
+        if (!en || en.statut !== 'a_confirmer') return null;
+        return {
+          societeId, cle, valeur: en.valeur as string, origine: en.origine, confiance: 'sur', source_ref: en.source?.ref ?? null, date_source: en.source?.date ?? null,
+          statut: 'confirme', effet_debut: corps.effetDebut, confirme_par: PERSONNE_FICTIVE, confirme_le: aujourdhui, rang: RANG_DEBUT + ajouts.length,
+        };
       };
       return ecrire(cle, cleIdem, JSON.stringify(['confirmer', cle, corps]), fabrique, aujourdhui);
     },

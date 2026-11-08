@@ -4,6 +4,7 @@ import { CLES_PROFIL, CorpsConfirmation, CorpsValeurChamp } from '../domaines/pr
 import { creerServiceProfilChamps, ErreurChamp } from '../domaines/profil-champs-service.js';
 
 const JOUR = '2026-06-15';
+const AOUT = '2026-08-01';
 const AJOUT = { valeur: 'SAS', origine: 'saisie_personne' as const, effetDebut: '2026-01-01' };
 const code = (f: () => unknown) => {
   try {
@@ -31,6 +32,14 @@ describe('profil : écriture des champs (service)', () => {
     const a = s.ajouter('forme', 'cle-test-000005', AJOUT, JOUR);
     expect(s.ajouter('forme', 'cle-test-000005', AJOUT, JOUR)).toEqual(a);
     expect(code(() => s.ajouter('forme', 'cle-test-000005', { ...AJOUT, valeur: 'SA' }, JOUR))).toBe('CLE_REUTILISEE');
+  });
+
+  it('confirme-la-valeur-proposee-du-jeu', () => {
+    const s = creerServiceProfilChamps('soc-lemoine');
+    expect(s.lire(undefined, AOUT).aConfirmer).toContain('regime_tva');
+    expect(s.confirmer('regime_tva', 'cle-test-000006', { effetDebut: '2026-07-01' }, AOUT).statut).toBe('confirme');
+    expect(s.lire('2026-07-01', AOUT).aConfirmer).not.toContain('regime_tva');
+    expect(code(() => s.confirmer('regime_tva', 'cle-test-000007', { effetDebut: '2026-07-01' }, AOUT))).toBe('RIEN_A_CONFIRMER');
   });
 
   it('corps-stricts', () => {
