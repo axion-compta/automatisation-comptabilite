@@ -138,6 +138,13 @@ describe('santé quotidienne des connecteurs', () => {
     expect(m.ecritures()).toBe(0);
   });
 
+  it.each([[NaN], [Infinity], [-DELAI], [0]])('delai-invalide-refuse (%s)', async (delaiMs) => {
+    const m = monde();
+    await expect(lancer(m, J1, ['client-a'], ['banque-fictive'], delaiMs)).rejects.toThrow('delai_invalide');
+    expect(m.essais).toEqual([]);
+    expect(m.ecritures()).toBe(0);
+  });
+
   it('jour-mal-forme-propage', async () => {
     await expect(lancer(monde(), '2026-13-40')).rejects.toMatchObject({ code: 'jour_invalide' });
   });

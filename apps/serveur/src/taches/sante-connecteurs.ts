@@ -1,13 +1,6 @@
 // Santé quotidienne des connecteurs : un essai technique par connecteur et par jour, sans IA.
 // Seul le nom du connecteur entre dans l'essai : aucune donnée client.
-import {
-  bandeau,
-  enregistrerEssai,
-  ErreurConnecteur,
-  santeInitiale,
-  type SanteConnecteur,
-  type SeuilsEchecs,
-} from '../../../../packages/noyau/src/sources/connecteurs.js';
+import { bandeau, enregistrerEssai, ErreurConnecteur, santeInitiale, type SanteConnecteur, type SeuilsEchecs } from '../../../../packages/noyau/src/sources/connecteurs.js';
 
 export interface PortEssai { essayer(connecteur: string, signal: AbortSignal): Promise<boolean> }
 export interface PortSante {
@@ -77,6 +70,7 @@ async function passerConnecteur(p: ParametresSante, clientId: string, connecteur
 
 /** Un client après l'autre, un connecteur après l'autre : jamais deux clients en cours. */
 export async function passerSanteQuotidienne(p: ParametresSante): Promise<ResultatSante> {
+  if (!(Number.isFinite(p.delaiMs) && p.delaiMs > Number.MIN_VALUE)) throw new RangeError('delai_invalide');
   enregistrerEssai(santeInitiale('controle'), { jour: p.jour, ok: true }, p.seuils);
   const clients: ResultatSante['clients'] = [];
   for (const clientId of p.clients) {
