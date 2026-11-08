@@ -64,7 +64,7 @@ const micro = (cle: string, valeur: number): Champs => ({
   statut: 'non_verifie',
   source_url: `${SERVICE_PUBLIC}F23267`,
   source_titre: TITRE_MICRO,
-  source_maj: '2026-05-13',
+  source_maj: cle.endsWith('ventes') ? '2026-05-13' : null,
 });
 
 const LIGNES: Champs[] = [
@@ -88,7 +88,7 @@ const LIGNES: Champs[] = [
     source_url: LEGIFRANCE,
     source_titre: `${TITRE_CGI}, 2 c, version au 06/11/2026`,
     source_maj: null,
-    note: NOTE_DEBUT,
+    note: `débits sur option ; ${NOTE_DEBUT}`,
   },
   {
     cle: 'tva.exigibilite.acompte_bien',

@@ -22,6 +22,27 @@ const CLES = [
   'tva.taux.particulier',
   'tva.taux.reduit',
 ];
+const ECO = 'https://www.economie.gouv.fr/entreprises';
+const SP = 'https://entreprendre.service-public.gouv.fr/vosdroits/';
+const LEGI = 'https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006069577';
+// Table écrite à la main, recopiée de pilotage/fiches/L09-T26.md (« Dates et statut par clé » et lectures A).
+const ATTENDU: Record<string, [string, string | null, string, string, string | null]> = {
+  'tva.taux.normal': ['2026-01-01', null, 'a_verifier', ECO, null],
+  'tva.taux.intermediaire': ['2026-01-01', null, 'a_verifier', ECO, null],
+  'tva.taux.reduit': ['2026-01-01', null, 'a_verifier', ECO, null],
+  'tva.taux.particulier': ['2026-01-01', null, 'a_verifier', ECO, null],
+  'tva.franchise.seuil.ventes': ['2026-01-01', '2027-01-01', 'non_verifie', SP + 'F21746', '2026-01-01'],
+  'tva.franchise.seuil.services': ['2026-01-01', '2027-01-01', 'non_verifie', SP + 'F21746', null],
+  'tva.franchise.prorata_creation': ['2026-01-01', '2027-01-01', 'a_verifier', SP + 'F21746', null],
+  'tva.franchise.seuil.avocats_auteurs': ['2026-01-01', '2027-01-01', 'a_verifier', SP + 'F21746', null],
+  'tva.exigibilite.services': ['2026-01-01', '2027-01-01', 'a_verifier', LEGI, null],
+  'tva.exigibilite.acompte_bien': ['2026-01-01', '2027-01-01', 'a_verifier', LEGI, null],
+  'tva.option_debits.effet': ['2026-01-01', null, 'a_verifier', 'https://bofip.impots.gouv.fr/', null],
+  'micro.plafond.ventes': ['2026-01-01', '2029-01-01', 'non_verifie', SP + 'F23267', '2026-05-13'],
+  'micro.plafond.services': ['2026-01-01', '2029-01-01', 'non_verifie', SP + 'F23267', null],
+  'reel_simplifie.plafond': ['2026-01-01', '2029-01-01', 'a_verifier', SP.replace('vosdroits/', 'actualites/') + 'A18813', null],
+  'alerte.seuil_pct': ['2026-01-01', null, 'a_verifier', '', null],
+};
 const val = (cle: string): unknown => JSON.parse(C.find((l) => l.cle === cle)?.valeur ?? 'null');
 const dans = (o: unknown): number[] =>
   typeof o === 'number' ? [o] : o !== null && typeof o === 'object' ? Object.values(o).flatMap((v) => dans(v)) : [];
@@ -86,6 +107,22 @@ describe('tva-micro', () => {
       }
     }
     expect(C.find((l) => l.cle === 'tva.exigibilite.services')?.effet_fin).toBe('2027-01-01');
+  });
+
+  it('dates-statuts-sources-ligne-par-ligne', () => {
+    expect(Object.keys(ATTENDU).sort()).toEqual(CLES);
+    for (const l of C) {
+      const [debut, fin, statut, url, maj] = ATTENDU[l.cle] ?? [];
+      expect([l.cle, l.effet_debut, l.effet_fin, l.statut, l.source_url, l.source_maj]).toEqual([
+        l.cle,
+        debut,
+        fin,
+        statut,
+        url,
+        maj,
+      ]);
+    }
+    expect(C.find((l) => l.cle === 'tva.exigibilite.services')?.source).toContain('débits sur option');
   });
 
   it('cles-attendues', () => {
