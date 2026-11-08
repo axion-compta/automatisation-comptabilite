@@ -20,6 +20,8 @@ import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
 import { routesProfilChamps } from './domaines/profil-champs.js';
+import { routesProfilChangements } from './domaines/profil-changements.js';
+import { creerServiceProfilChangements } from '../../../packages/contrat/src/domaines/profil-changements-service.js';
 import { creerServiceProfilChamps } from '../../../packages/contrat/src/domaines/profil-champs-service.js';
 import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
@@ -40,6 +42,8 @@ import { routesPieces } from './domaines/pieces.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
+import { implementerFinContrat } from './domaines/fin-contrat.js';
+import { implementerAcceptations } from './domaines/acceptations.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import type { OptionsExploitation } from './domaines/options-exploitation.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
@@ -102,6 +106,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     notifications: routesNotifications(s.notifications),
     profil: routesProfil(profilChamps),
     profilChamps: routesProfilChamps(profilChamps),
+    profilChangements: routesProfilChangements(creerServiceProfilChangements(profilChamps)),
     fec: routesFec(),
     controles: routesControles(),
     regimes: routesRegimes(),
@@ -121,6 +126,8 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     pieces: routesPieces(),
     tresorerie: routesTresorerie(),
     fournisseurs: routesFournisseurs(),
+    finContrat: implementerFinContrat(os, options.abonnement ?? {}),
+    acceptations: implementerAcceptations(os, options.abonnement ?? {}),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
       ...implementerVolume(os, options.abonnement ?? {}),
