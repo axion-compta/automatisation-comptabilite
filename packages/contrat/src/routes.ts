@@ -26,6 +26,7 @@ import { chat } from './domaines/chat.js';
 import { chatPropositions } from './domaines/chat-propositions.js';
 import { profil } from './domaines/profil.js';
 import { profilChamps } from './domaines/profil-champs.js';
+import { profilChangements } from './domaines/profil-changements.js';
 import { fec } from './domaines/fec.js';
 import { controles } from './domaines/controles.js';
 import { change } from './domaines/change.js';
@@ -90,6 +91,7 @@ export const contrat = {
   abonnement: { lireAcces, lireVolume, demanderPalier },
   profil,
   profilChamps,
+  profilChangements,
   fec,
   controles,
   regimes,
