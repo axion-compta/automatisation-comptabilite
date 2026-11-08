@@ -47,7 +47,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 
 ## Lot 13
 - Fiches : 56 au total ; 48 marquées `statut: fait` avant L13-T46 (mesure : en-tête de chaque fiche) ; V1 L13-T38 à L13-T45 : faites.
-- Restent `a_faire`, toutes sensibles : L13-T47, T48, T49, T51, T53, T54, T55. Elles attendent des décisions (D53 à D62) ou la console ; la décision précise de chacune : non mesuré.
+- Restent `a_faire`, toutes sensibles : L13-T47, T48, T49, T51, T53, T54, T55. Toutes débloquées par la décision de Will du 07/11/2026 (J3a avec conditions), lue dans la section « Contexte » de chaque fiche : T47 : J3a + D14, D18, D29 ; T48 : J3a + D29 ; T49 : J3a + D29 ; T51 : J3a + D29, D43 ; T53 : J3a + D29, D42 ; T54 : J3a + D42 ; T55 : D62. Ce qui attend encore la console : le schéma `a_compta` et le module C4 (D29, réponse attendue le 21/11/2026).
 - Durée réelle : premier commit de code de L13-T00 le 08/11/2026 à 04:57 (+01:00, #659) ; dernière fusion relevée le 08/11/2026 à 09:21 (#768), soit environ 4 h 24 min ; fiches du lot posées la veille à 14:13 (#120).
 - Nombre de PR du lot, délai médian de fusion (sensible, non sensible) : non mesuré (pas de gh dans cette session).
 - PR revenues en `a-corriger` et raisons : non mesuré.
