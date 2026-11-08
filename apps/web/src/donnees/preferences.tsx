@@ -148,9 +148,9 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
 }
 
 /** Lit une préférence et donne la fonction qui l'écrit (appliquée tout de suite, envoyée en arrière-plan). */
-export function usePreference<T = unknown>(cle: string): [T | undefined, (valeur: T) => void] {
+export const usePreference = <T = unknown,>(cle: string): [T | undefined, (valeur: T) => void] => {
   const c = useContext(Ctx);
   if (!c) throw new Error('usePreference hors de FournisseurPreferences');
   const { ecrire } = c;
   return [c.valeurs[cle] as T | undefined, useCallback((v: T) => ecrire(cle, v), [ecrire, cle])];
-}
+};
