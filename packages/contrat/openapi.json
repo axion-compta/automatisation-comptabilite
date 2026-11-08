@@ -2676,6 +2676,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           }
         }
       }
@@ -2717,6 +2723,12 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           }
@@ -2727,6 +2739,16 @@
       "get": {
         "operationId": "lireProposition",
         "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
           {
             "name": "s",
             "in": "path",
@@ -2749,6 +2771,12 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"
@@ -2792,6 +2820,9 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
           },
           "403": {
             "description": "Interdit"
@@ -2845,6 +2876,12 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           },
@@ -2858,6 +2895,16 @@
       "get": {
         "operationId": "pourquoiProposition",
         "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
           {
             "name": "s",
             "in": "path",
@@ -2880,6 +2927,12 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"
