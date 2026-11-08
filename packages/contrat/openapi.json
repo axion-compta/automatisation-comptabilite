@@ -1905,6 +1905,20 @@
         }
       }
     },
+    "/sante": {
+      "get": {
+        "operationId": "lireSanteExploitation",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/exercices/{exercice}/juridique": {
       "get": {
         "operationId": "lireObligationsJuridiques",

@@ -25,10 +25,12 @@ import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesSante } from './domaines/sante.js';
+import { implementerSanteExploitation } from './domaines/sante-exploitation.js';
 import { routesJuridique } from './domaines/juridique.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
+import type { OptionsExploitation } from './domaines/options-exploitation.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
 type Service = ReturnType<typeof creerService>;
@@ -45,7 +47,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -93,6 +95,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     change: routesChange(),
     frais: routesFrais(),
     sante: routesSante(),
+    santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),
     juridique: routesJuridique(),
     parametres: routesParametres(),
     abonnement: {
@@ -106,7 +109,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite } = {}): FastifyInstance {
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
