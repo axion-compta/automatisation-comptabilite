@@ -25,6 +25,8 @@ import { demanderPalier } from './domaines/palier.js';
 import { chat } from './domaines/chat.js';
 import { chatPropositions } from './domaines/chat-propositions.js';
 import { profil } from './domaines/profil.js';
+import { fec } from './domaines/fec.js';
+import { controles } from './domaines/controles.js';
 import { change } from './domaines/change.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
@@ -72,6 +74,8 @@ export const contrat = {
   notifications,
   abonnement: { lireAcces, lireVolume, demanderPalier },
   profil,
+  fec,
+  controles,
   regimes,
   change,
   frais,
