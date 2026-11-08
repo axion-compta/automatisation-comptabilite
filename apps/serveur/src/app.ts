@@ -20,6 +20,7 @@ import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
 import { routesChange } from './domaines/change.js';
+import { routesRegimes } from './domaines/regimes.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
@@ -81,6 +82,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     tva: routesTva(),
     notifications: routesNotifications(s.notifications),
     profil: routesProfil(),
+    regimes: routesRegimes(),
     change: routesChange(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
