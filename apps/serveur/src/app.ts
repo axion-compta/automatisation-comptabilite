@@ -22,6 +22,7 @@ import { routesProfil } from './domaines/profil.js';
 import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
 import { routesRegimes } from './domaines/regimes.js';
+import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesSante } from './domaines/sante.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
@@ -91,6 +92,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     change: routesChange(),
     frais: routesFrais(),
     sante: routesSante(),
+    parametres: routesParametres(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
       ...implementerVolume(os, options.abonnement ?? {}),
