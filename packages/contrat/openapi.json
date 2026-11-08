@@ -1934,6 +1934,30 @@
         }
       }
     },
+    "/exercices/{exercice}/juridique": {
+      "get": {
+        "operationId": "lireObligationsJuridiques",
+        "parameters": [
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/parametres": {
       "get": {
         "operationId": "lireParametre",
