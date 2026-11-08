@@ -1161,6 +1161,88 @@
         }
       }
     },
+    "/exports": {
+      "post": {
+        "operationId": "exporter",
+        "tags": [
+          "acces:export"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "liste": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "xlsx",
+                      "csv"
+                    ]
+                  },
+                  "filtres": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  },
+                  "tri": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "liste",
+                  "format"
+                ],
+                "additionalProperties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "413": {
+            "description": "Introuvable"
+          },
+          "501": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/exercices/{exercice}/calendrier": {
       "get": {
         "operationId": "lireCalendrier",
