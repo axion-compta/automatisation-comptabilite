@@ -48,6 +48,22 @@ export function suitePublication(nom: string, fabrique: Fabrique): void {
       }
     });
 
+    it('depot-invalide-refuse', async () => {
+      const { unite, stock } = fabrique();
+      const codes: string[] = [];
+      await unite.executer(async (tx) => {
+        for (const charge of [{ quantite: 120 }, { total_ttc: 'x' }]) {
+          try {
+            tx.boite.deposer(brut('a', { charge }) as unknown as Enveloppe);
+          } catch (e) {
+            codes.push((e as ErreurEvenement).code);
+          }
+        }
+      });
+      expect(codes).toEqual(['montant_interdit', 'champ_interdit']);
+      expect(await stock.enAttente(9)).toHaveLength(0);
+    });
+
     it('ordre-de-depot-conserve', async () => {
       const { unite, stock } = fabrique();
       await unite.executer(async (tx) => deposer(tx.boite, 'c', 'a'));
@@ -75,6 +91,14 @@ export function suitePublication(nom: string, fabrique: Fabrique): void {
       expect(await relayer(stock, faux.publieur, 2)).toEqual({ publiees: 2, arret: 'limite' });
       expect(faux.recus).toEqual(['1', '2']);
       expect(ids(await stock.enAttente(9))).toEqual(['3']);
+    });
+
+    it('relais-limite-invalide-et-boite-vide', async () => {
+      const { stock } = fabrique();
+      const faux = publieurTest(() => false);
+      for (const l of [Number.NaN, Number.POSITIVE_INFINITY, 1.5, -1]) await expect(relayer(stock, faux.publieur, l)).rejects.toThrow(RangeError);
+      expect(await relayer(stock, faux.publieur, 5)).toEqual({ publiees: 0, arret: 'vide' });
+      expect(faux.recus).toEqual([]);
     });
 
     it('meme-id-une-seule-fois', async () => {

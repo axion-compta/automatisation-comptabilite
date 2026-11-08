@@ -21,7 +21,7 @@ const CLES = ['id', 'type', 'societe_id', 'exercice_id', 'objet_id', 'version', 
 const ACTEURS: readonly string[] = ['personne', 'ia', 'systeme'];
 const SEGMENTS_INTERDITS = ['montant', 'total', 'solde', 'prix', 'tarif', 'centime', 'ttc', 'nom', 'email', 'iban', 'adresse', 'telephone'];
 const MOTIF_TYPE = /^compta(\.[a-z_]+){2,}$/;
-const MOTIF_NOMBRE = /^[-+]?\d[\d\s]*([.,]\d+)?$/;
+const MOTIF_NOMBRE = /^[-+]?\d[\d\s.]*([.,]\d+)?([eE][-+]?\d+)?$/;
 const MOTIF_ANNEE = /^\d{4}$/;
 const CLES_ANNEE = ['annee', 'exercice'];
 
@@ -35,7 +35,7 @@ function verifierCharge(charge: Record<string, unknown>): void {
   for (const [cle, v] of Object.entries(charge)) {
     if (typeof v === 'number') echec('montant_interdit');
     if (typeof v === 'string' && MOTIF_NOMBRE.test(v.trim()) && !(CLES_ANNEE.includes(cle) && MOTIF_ANNEE.test(v))) echec('montant_interdit');
-    if (cle.split('_').some((s) => SEGMENTS_INTERDITS.includes(s))) echec('champ_interdit');
+    if (cle.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase().split(/[_-]/).some((s) => SEGMENTS_INTERDITS.includes(s))) echec('champ_interdit');
     if (typeof v === 'string' ? v.includes('@') : v !== null && typeof v !== 'boolean') echec('champ_interdit');
   }
 }

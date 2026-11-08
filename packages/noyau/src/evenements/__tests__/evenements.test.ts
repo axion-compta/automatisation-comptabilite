@@ -37,7 +37,7 @@ describe('enveloppe', () => {
     for (const n of [120, 0, Number.NaN, Number.POSITIVE_INFINITY]) expect(code(avecCharge({ quantite: n }))).toBe('montant_interdit');
   });
   it('montant-en-texte-refuse', () => {
-    for (const t of ['120', '120,50', '-3.5']) expect(code(avecCharge({ valeur: t }))).toBe('montant_interdit');
+    for (const t of ['120', '120,50', '-3.5', '1.234,56', '1 234,56', '1 234,56', '1e3']) expect(code(avecCharge({ valeur: t }))).toBe('montant_interdit');
     expect(code(avecCharge({ valeur: 'statut 12' }))).toBeUndefined();
   });
   it('annee-a-quatre-chiffres-acceptee', () => {
@@ -48,7 +48,7 @@ describe('enveloppe', () => {
   });
   it('cle-montant-refusee', () => {
     expect(code(avecCharge({ total_ttc: 'x' }))).toBe('champ_interdit');
-    for (const k of ['montant', 'solde', 'prix', 'tarif', 'centime', 'nom', 'iban', 'adresse', 'telephone', 'email_client']) expect(code(avecCharge({ [k]: 'x' }))).toBe('champ_interdit');
+    for (const k of ['montant', 'solde', 'prix', 'tarif', 'centime', 'nom', 'iban', 'adresse', 'telephone', 'email_client', 'Montant', 'montantHT', 'totalTTC', 'nom-client']) expect(code(avecCharge({ [k]: 'x' }))).toBe('champ_interdit');
     expect(code(avecCharge({ nombre_pieces: 'x', denomination: 'x', subtotal_x: 'x' }))).toBeUndefined();
   });
   it('email-refuse', () => {
