@@ -18,6 +18,7 @@ import { routesNotifications, type ServiceNotifications } from './domaines/notif
 import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
+import { routesProfil } from './domaines/profil.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
@@ -78,6 +79,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     calendrier: routesCalendrier(s.calendrier),
     tva: routesTva(),
     notifications: routesNotifications(s.notifications),
+    profil: routesProfil(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
       ...implementerVolume(os, options.abonnement ?? {}),
