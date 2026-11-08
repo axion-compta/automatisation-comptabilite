@@ -1582,6 +1582,35 @@
         }
       }
     },
+    "/controles/bloquants": {
+      "get": {
+        "operationId": "listerBloquants",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "validation",
+                "tva",
+                "export",
+                "cloture"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",

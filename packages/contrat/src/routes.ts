@@ -31,6 +31,7 @@ import { change } from './domaines/change.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
 import { sante } from './domaines/sante.js';
+import { bloquants } from './domaines/bloquants.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -80,6 +81,7 @@ export const contrat = {
   change,
   frais,
   sante,
+  bloquants,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };
