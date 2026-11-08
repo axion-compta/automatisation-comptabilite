@@ -27,11 +27,14 @@ import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
+import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
+import { implementerPersonnes } from './domaines/personnes.js';
 import { implementerSanteExploitation } from './domaines/sante-exploitation.js';
 import { routesEcheances } from './domaines/echeances.js';
 import { routesBloquants } from './domaines/bloquants.js';
 import { routesJuridique } from './domaines/juridique.js';
+import { routesSources } from './domaines/sources.js';
 import { routesVentes } from './domaines/ventes.js';
 import { routesPieces } from './domaines/pieces.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
@@ -107,12 +110,15 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     identite: routesIdentite(),
     change: routesChange(),
     frais: routesFrais(),
+    vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),
+    personnes: implementerPersonnes(os, options.exploitation ?? {}),
     echeances: routesEcheances(),
     bloquants: routesBloquants(),
     juridique: routesJuridique(),
     parametres: routesParametres(),
+    sources: routesSources(),
     ventes: routesVentes(),
     pieces: routesPieces(),
     tresorerie: routesTresorerie(),

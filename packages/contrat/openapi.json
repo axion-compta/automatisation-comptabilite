@@ -2112,6 +2112,56 @@
         }
       }
     },
+    "/vehicules": {
+      "get": {
+        "operationId": "listerVehicules",
+        "parameters": [
+          {
+            "name": "personne",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/parametres/bareme_ik_voiture": {
+      "get": {
+        "operationId": "lireBaremeIk",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
     "/sante": {
       "get": {
         "operationId": "lireSanteExploitation",
@@ -2122,6 +2172,170 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/personnes/demandes": {
+      "get": {
+        "operationId": "listerDemandesPersonnes",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "enregistrerDemande",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "acces",
+                      "rectification",
+                      "effacement",
+                      "limitation",
+                      "portabilite",
+                      "opposition"
+                    ]
+                  },
+                  "recue_le": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "type",
+                  "recue_le"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/personnes/demandes/{id}/traitement": {
+      "post": {
+        "operationId": "traiterDemande",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "issue": {
+                    "type": "string",
+                    "enum": [
+                      "acces_produit",
+                      "portabilite_produite",
+                      "rectifiee",
+                      "a_effacer",
+                      "limitee",
+                      "refus_conservation",
+                      "refus_gel",
+                      "renvoi_societe"
+                    ]
+                  },
+                  "motif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "inclure_autres_personnes": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "issue"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          },
+          "503": {
+            "description": "Introuvable"
           }
         }
       }
@@ -2243,6 +2457,17 @@
           },
           "404": {
             "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/sources/etat": {
+      "get": {
+        "operationId": "lireEtatSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -2914,6 +3139,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           }
         }
       }
@@ -2955,6 +3186,12 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           }
@@ -2965,6 +3202,16 @@
       "get": {
         "operationId": "lireProposition",
         "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
           {
             "name": "s",
             "in": "path",
@@ -2987,6 +3234,12 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"
@@ -3030,6 +3283,9 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
           },
           "403": {
             "description": "Interdit"
@@ -3083,6 +3339,12 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           },
@@ -3096,6 +3358,16 @@
       "get": {
         "operationId": "pourquoiProposition",
         "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
           {
             "name": "s",
             "in": "path",
@@ -3118,6 +3390,12 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"

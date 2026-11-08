@@ -32,6 +32,8 @@ import { change } from './domaines/change.js';
 import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
+import { personnes } from './domaines/personnes.js';
+import { vehiculesBareme } from './domaines/vehicules-bareme.js';
 import { sante } from './domaines/sante.js';
 import { santeExploitation } from './domaines/sante-exploitation.js';
 import { echeances } from './domaines/echeances.js';
@@ -40,6 +42,7 @@ import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
 import { finContrat } from './domaines/fin-contrat.js';
 import { acceptations } from './domaines/acceptations.js';
+import { sources } from './domaines/sources.js';
 import { ventes } from './domaines/ventes.js';
 import { pieces } from './domaines/pieces.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
@@ -94,11 +97,14 @@ export const contrat = {
   change,
   frais,
   sante,
+  vehiculesBareme,
   santeExploitation,
+  personnes,
   echeances,
   bloquants,
   juridique,
   parametres,
+  sources,
   ventes,
   pieces,
   tresorerie: domaineTresorerie,
