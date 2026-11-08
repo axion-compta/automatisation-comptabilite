@@ -405,6 +405,113 @@
         }
       }
     },
+    "/banque/comptes/{compte}/couverture": {
+      "get": {
+        "operationId": "lireCouvertureCompte",
+        "parameters": [
+          {
+            "name": "exercice_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "compte",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/banque/trous": {
+      "get": {
+        "operationId": "listerTrousReleves",
+        "parameters": [
+          {
+            "name": "etat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ouvert",
+                "accepte",
+                "comble"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/banque/demandes": {
+      "get": {
+        "operationId": "listerDemandes",
+        "parameters": [
+          {
+            "name": "etat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ouverte",
+                "repondue"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/banque/doublons": {
+      "get": {
+        "operationId": "listerDoublons",
+        "parameters": [
+          {
+            "name": "etat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "propose",
+                "confirme",
+                "rejete"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/exercices/{exercice}/tableau-de-bord": {
       "get": {
         "operationId": "lireTableauDeBord",

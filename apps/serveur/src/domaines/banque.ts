@@ -14,6 +14,14 @@ export function routesBanque(service: ServiceBanque = creerServiceBanque()) {
       if (!page) throw errors.COMPTE_INCONNU();
       return page;
     }),
+    lireCouvertureCompte: os.lireCouvertureCompte.handler(({ input, errors }) => {
+      const c = service.couverture(input.params.compte);
+      if (!c) throw errors.COMPTE_INCONNU();
+      return c;
+    }),
+    listerTrousReleves: os.listerTrousReleves.handler(({ input }) => service.trous(input.query?.etat)),
+    listerDemandes: os.listerDemandes.handler(({ input }) => service.demandes(input.query?.etat)),
+    listerDoublons: os.listerDoublons.handler(({ input }) => service.doublons(input.query?.etat)),
     lireExplicationLigne: os.lireExplicationLigne.handler(({ input, errors }) => {
       const e = service.explication(input.params.ligne);
       if (!e) throw errors.LIGNE_INCONNUE();
