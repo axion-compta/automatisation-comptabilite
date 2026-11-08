@@ -588,6 +588,79 @@
         }
       }
     },
+    "/exercices/{exercice}/calendrier": {
+      "get": {
+        "operationId": "lireCalendrier",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "du",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/vocabulaire": {
+      "get": {
+        "operationId": "lireVocabulaire",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "simple",
+                "comptable"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/acces": {
       "get": {
         "operationId": "lireAcces",
