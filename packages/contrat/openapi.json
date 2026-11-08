@@ -723,6 +723,247 @@
         }
       }
     },
+    "/exercices/{exercice}/alertes/{id}/reporter": {
+      "post": {
+        "operationId": "reporterAlerte",
+        "tags": [
+          "acces:ecriture"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "jours": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "jours",
+                  "version"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
+    "/exercices/{exercice}/alertes/{id}/ignorer": {
+      "post": {
+        "operationId": "ignorerAlerte",
+        "tags": [
+          "acces:ecriture"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "motif": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "motif",
+                  "version"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
+    "/exercices/{exercice}/alertes/{id}/annuler": {
+      "post": {
+        "operationId": "annulerAlerte",
+        "tags": [
+          "acces:ecriture"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "exercice",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
     "/preferences": {
       "get": {
         "operationId": "lirePreferences",
@@ -915,6 +1156,88 @@
             "description": "OK"
           },
           "400": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/exports": {
+      "post": {
+        "operationId": "exporter",
+        "tags": [
+          "acces:export"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "liste": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "xlsx",
+                      "csv"
+                    ]
+                  },
+                  "filtres": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  },
+                  "tri": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "liste",
+                  "format"
+                ],
+                "additionalProperties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "413": {
+            "description": "Introuvable"
+          },
+          "501": {
             "description": "Introuvable"
           }
         }
@@ -1607,6 +1930,40 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/parametres": {
+      "get": {
+        "operationId": "lireParametre",
+        "parameters": [
+          {
+            "name": "cle",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.]{1,100}$"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
           }
         }
       }
