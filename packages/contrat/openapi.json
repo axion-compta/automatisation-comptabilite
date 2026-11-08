@@ -1582,6 +1582,40 @@
         }
       }
     },
+    "/echeances": {
+      "get": {
+        "operationId": "listerEcheances",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "du",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",

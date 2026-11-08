@@ -24,6 +24,7 @@ import { routesChange } from './domaines/change.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesSante } from './domaines/sante.js';
+import { routesEcheances } from './domaines/echeances.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
@@ -91,6 +92,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     change: routesChange(),
     frais: routesFrais(),
     sante: routesSante(),
+    echeances: routesEcheances(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
       ...implementerVolume(os, options.abonnement ?? {}),
