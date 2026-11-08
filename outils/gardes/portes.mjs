@@ -23,7 +23,7 @@ function dateReelle(s) {
 export function validerPorte(texte, nomFichier, aujourdhui) {
   let j;
   try {
-    j = JSON.parse(String(texte).replace(/^﻿/, ''));
+    j = JSON.parse(String(texte).replace(/^\uFEFF/, ''));
   } catch {
     return [`${nomFichier} : JSON illisible`];
   }
