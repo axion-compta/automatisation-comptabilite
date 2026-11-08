@@ -58,13 +58,18 @@ describe('profil.v1 en mémoire', () => {
   });
 
   it('blocage-commissaire-aux-comptes', () => {
-    const cac = { societeId: 'soc-lemoine', cle: 'a_commissaire_aux_comptes', valeur: 'oui', origine: 'saisie_personne', confiance: 'sur', source_ref: null, date_source: null, statut: 'confirme', effet_debut: '2024-01-01', confirme_par: null, confirme_le: null, rang: 99 };
-    const p = creerServiceProfil('soc-lemoine', { champsSupplementaires: [cac] }).lire(undefined, AUJOURDHUI);
-    expect(p.blocages).toEqual(['commissaire_aux_comptes']);
-    expect(p.etat).not.toBe('complet');
+    const base = { societeId: 'soc-lemoine', cle: 'a_commissaire_aux_comptes', valeur: 'oui', origine: 'saisie_personne', confiance: 'sur', source_ref: null, date_source: null, statut: 'confirme', effet_debut: '2026-07-01', confirme_par: null, confirme_le: null, rang: 99 };
+    // cas témoin : régime TVA confirmé (même effet, rang supérieur), le profil serait complet sans blocage
+    const tva = { ...base, cle: 'regime_tva', valeur: 'reel_simplifie', rang: 98 };
+    const avec = (extra: object[]) => creerServiceProfil('soc-lemoine', { champsSupplementaires: [tva, ...extra] }).lire(undefined, AUJOURDHUI);
+    expect(avec([]).etat).toBe('complet');
+    expect(avec([]).blocages).toEqual([]);
+    for (const [extra, cle] of [[{}, 'commissaire_aux_comptes'], [{ cle: 'code_postal_siege', valeur: '99123' }, 'siege_exclu']] as const) {
+      const p = avec([{ ...base, ...extra }]);
+      expect(p.etat).toBe('incomplet');
+      expect(p.blocages).toEqual([cle]);
+    }
     expect(lire('soc-lemoine').blocages).toEqual([]);
-    const siege = { ...cac, cle: 'code_postal_siege', valeur: '99123' };
-    expect(creerServiceProfil('soc-lemoine', { champsSupplementaires: [siege] }).lire(undefined, AUJOURDHUI).blocages).toEqual(['siege_exclu']);
   });
 
   it('openapi-contient-lire-profil', () => {
