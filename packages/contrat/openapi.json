@@ -1963,6 +1963,17 @@
         }
       }
     },
+    "/sources/etat": {
+      "get": {
+        "operationId": "lireEtatSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
