@@ -4,6 +4,7 @@ import { OpenAPIHandler } from '@orpc/openapi/fastify';
 import { contrat, contratChat } from '../../../packages/contrat/src/routes.js';
 import { ConflitVersion, creerService } from '../../../packages/contrat/src/service.js';
 import { routesPlan } from './domaines/plan.js';
+import { routesPrincipes } from './domaines/principes.js';
 import { routesTiers } from './domaines/tiers.js';
 import { routesTableauDeBord, type ServiceTableauDeBord } from './domaines/tableau-de-bord.js';
 import { routesAlertes, type ServiceAlertes } from './domaines/alertes.js';
@@ -65,6 +66,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
       }),
     },
     plan: routesPlan(),
+    principes: routesPrincipes(),
     tiers: routesTiers(),
     tableauDeBord: routesTableauDeBord(s.tableauDeBord),
     alertes: routesAlertes(s.alertes),
