@@ -1,6 +1,10 @@
-// Garde de route des 12 gestes (V3-PRI-018) : fonction autonome, non branchée ; l'acteur arrive déjà construit.
+// Garde de route des 12 gestes (V3-PRI-018) : fonction autonome, non branchée ; l'acteur personne vient d'une Session (L00-T50).
+import { creerEnveloppe } from '../../../../packages/noyau/src/evenements/enveloppe.js';
 import { ROUTES_A_GESTE, VERBES_SENSIBLES } from '../../../../packages/contrat/src/gestes-routes.js';
 import { CATALOGUE_GESTES, verifierGeste, type Acteur, type CodeGeste, type TypeActeur } from '../../../../packages/noyau/src/principes/gestes.js';
+import type { BoiteEnvoi, UniteDeTravail } from '../../../../packages/noyau/src/evenements/publication.js';
+import { exigerNouvelleConnexion, type Session } from '../../../../packages/noyau/src/session/port.js';
+import type { Canal } from '../../../../packages/noyau/src/securite/types.js';
 import type { DepotRefus, RefusGeste } from '../persistance/principes.js';
 
 export class ErreurGarde extends Error {
@@ -28,7 +32,7 @@ export type VerdictGarde = { ok: true } | { ok: false; statutHttp: 403; code: Co
 export interface OptionsGarde {
   carte?: Readonly<Record<string, string>>;
   refus: DepotRefus;
-  publier: (e: EvenementGesteRefuse) => void;
+  unite: UniteDeTravail;
   maintenant: () => number;
   delaiReauthMs: number;
   nouvelId: () => string;
@@ -38,8 +42,9 @@ export interface OptionsGarde {
 export interface DemandeGarde {
   operationId: string;
   societeId: string;
-  acteur: Acteur;
-  canal: string;
+  session: Session | null;
+  executant?: 'agent' | 'tache';
+  canal: Canal;
   fusion?: boolean;
 }
 
@@ -53,18 +58,31 @@ export function creerGardeGestes(o: OptionsGarde): { verifier(d: DemandeGarde): 
     throw new ErreurGarde('entree_invalide', 'Délai de réauthentification invalide.');
   }
 
-  async function refuser(d: DemandeGarde, geste: CodeGeste | null, code: CodeRefusGarde): Promise<VerdictGarde> {
+  function acteurDe(d: DemandeGarde): Acteur {
+    if (d.session === null) return { type: 'service', permissions: [] };
+    const type: TypeActeur = d.executant ?? (d.session.nature === 'personne' ? 'personne' : 'service');
+    const t = d.session.revendications.authTime;
+    return { type, permissions: d.session.permissions, ...(t === undefined ? {} : { derniereReauth: Math.round(t * 1000) }) };
+  }
+
+  async function refuser(d: DemandeGarde, acteur: Acteur, geste: CodeGeste | null, code: CodeRefusGarde): Promise<VerdictGarde> {
     const horodatage = o.maintenant();
     const ligne: RefusGeste = {
       id: o.nouvelId(), societeId: d.societeId, geste, operationId: d.operationId,
-      acteurType: d.acteur.type, code, canal: d.canal, horodatage,
+      acteurType: acteur.type, code, canal: d.canal, horodatage,
     };
+    const evenement: EvenementGesteRefuse = { type: 'compta.geste.refuse', societeId: d.societeId, geste, code, operationId: d.operationId, acteurType: acteur.type, horodatage };
+    const deposer = (boite: BoiteEnvoi): void => boite.deposer(creerEnveloppe({
+      id: o.nouvelId(), type: evenement.type, societe_id: d.societeId, exercice_id: null, objet_id: d.operationId, version: 1,
+      acteur: { type: 'systeme', id: 'garde-gestes' }, canal: d.canal, horodatage: new Date(horodatage).toISOString(),
+      correlation_id: ligne.id, charge: { geste, code, acteur_type: acteur.type },
+    }));
     try {
-      await o.refus.ajouter(ligne);
+      await o.unite.executer(async ({ boite }) => { await o.refus.ajouter(ligne); deposer(boite); });
     } catch (e) {
       o.signalerPanne(e);
+      try { await o.unite.executer(async ({ boite }) => deposer(boite)); } catch (e2) { o.signalerPanne(e2); }
     }
-    o.publier({ type: 'compta.geste.refuse', societeId: d.societeId, geste, code, operationId: d.operationId, acteurType: d.acteur.type, horodatage });
     return { ok: false, statutHttp: 403, code };
   }
 
@@ -72,11 +90,19 @@ export function creerGardeGestes(o: OptionsGarde): { verifier(d: DemandeGarde): 
     async verifier(d) {
       if (Object.hasOwn(carte, d.operationId)) {
         const geste = carte[d.operationId] as CodeGeste;
-        const v = verifierGeste(d.acteur, geste, { maintenant: o.maintenant(), delaiReauthMs: o.delaiReauthMs, ...(d.fusion === undefined ? {} : { fusion: d.fusion }) });
-        return v.ok ? { ok: true } : refuser(d, geste, v.code);
+        const acteur = acteurDe(d);
+        const maintenant = o.maintenant();
+        const v = verifierGeste(acteur, geste, { maintenant, delaiReauthMs: o.delaiReauthMs, ...(d.fusion === undefined ? {} : { fusion: d.fusion }) });
+        if (!v.ok) return refuser(d, acteur, geste, v.code);
+        const regle = CATALOGUE_GESTES.find((g) => g.code === geste)?.reauth;
+        if (regle === 'toujours' || (regle === 'fusion_seulement' && d.fusion === true)) {
+          const n = exigerNouvelleConnexion(d.session, 'cloturer', maintenant, { reauthMaxMs: o.delaiReauthMs, attenteApresRecuperationMs: 0 });
+          if (!n.ok) return refuser(d, acteur, geste, 'reauth_requise');
+        }
+        return { ok: true };
       }
       const nom = d.operationId.toLowerCase();
-      if (VERBES_SENSIBLES.some((p) => nom.startsWith(p))) return refuser(d, null, 'route_non_declaree');
+      if (VERBES_SENSIBLES.some((p) => nom.startsWith(p))) return refuser(d, acteurDe(d), null, 'route_non_declaree');
       return { ok: true };
     },
   };
