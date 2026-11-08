@@ -1250,6 +1250,17 @@
         }
       }
     },
+    "/controles/sante": {
+      "get": {
+        "operationId": "lireSanteControles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
