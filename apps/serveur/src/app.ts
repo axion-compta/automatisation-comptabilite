@@ -26,6 +26,7 @@ import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesSante } from './domaines/sante.js';
 import { routesEcheances } from './domaines/echeances.js';
+import { routesJuridique } from './domaines/juridique.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
@@ -94,6 +95,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     frais: routesFrais(),
     sante: routesSante(),
     echeances: routesEcheances(),
+    juridique: routesJuridique(),
     parametres: routesParametres(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
