@@ -40,7 +40,7 @@ export function Ecran({ noms = {}, envoyer }: { noms?: Record<string, string>; e
   }
 
   return (
-    <main>
+    <div>
       <h1>{t.titre}</h1>
       <section id={s.confidentialite.ancre}>
         <h2>{s.confidentialite.titre}</h2>
@@ -85,6 +85,6 @@ export function Ecran({ noms = {}, envoyer }: { noms?: Record<string, string>; e
           {reference && <p role="status">{t.formulaire.envoye.replace('{reference}', reference)}</p>}
         </form>
       </section>
-    </main>
+    </div>
   );
 }
