@@ -12,6 +12,8 @@ interface Def {
   errors: Record<string, { status: number }>;
 }
 
+const DESCRIPTIONS: Record<number, string> = { 403: 'Interdit', 409: 'Conflit de version', 422: 'Refusé', 423: 'Fermé' };
+
 function definitions(): Def[] {
   return Object.values({ ...contrat, ...contratChat }).flatMap((domaine) => Object.values(domaine)).map((r) => {
     const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string; tags?: string[]; successStatus?: number }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
@@ -61,7 +63,7 @@ export function genererOpenapi(): object {
     for (const m of d.path.matchAll(/\{(\w+)\}/g)) parametres.push({ name: m[1], in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
     const chemin = d.path;
     const reponses: Record<string, unknown> = { [String(d.successStatus ?? 200)]: { description: d.successStatus === 201 ? 'Créé' : 'OK' } };
-    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: e.status === 409 ? 'Conflit de version' : e.status === 422 ? 'Refusé' : 'Introuvable' };
+    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: DESCRIPTIONS[e.status] ?? 'Introuvable' };
     if (d.tags?.includes('flux:evenements')) reponses['200'] = { description: 'Flux d\'événements', content: { 'text/event-stream': { schema: { type: 'string' } } } };
     (paths[chemin] ??= {})[d.method.toLowerCase()] = {
       operationId: d.operationId,
