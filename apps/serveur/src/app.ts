@@ -21,6 +21,7 @@ import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
 import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
+import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
@@ -90,6 +91,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     fec: routesFec(),
     controles: routesControles(),
     regimes: routesRegimes(),
+    identite: routesIdentite(),
     change: routesChange(),
     frais: routesFrais(),
     sante: routesSante(),

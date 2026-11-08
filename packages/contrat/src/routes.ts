@@ -28,6 +28,7 @@ import { profil } from './domaines/profil.js';
 import { fec } from './domaines/fec.js';
 import { controles } from './domaines/controles.js';
 import { change } from './domaines/change.js';
+import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
 import { sante } from './domaines/sante.js';
@@ -79,6 +80,7 @@ export const contrat = {
   fec,
   controles,
   regimes,
+  identite,
   change,
   frais,
   sante,
