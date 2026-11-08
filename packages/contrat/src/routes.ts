@@ -32,11 +32,13 @@ import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
 import { sante } from './domaines/sante.js';
+import { santeExploitation } from './domaines/sante-exploitation.js';
 import { echeances } from './domaines/echeances.js';
 import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
 import { sources } from './domaines/sources.js';
+import { ventes } from './domaines/ventes.js';
 import { pieces } from './domaines/pieces.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
 
@@ -89,11 +91,13 @@ export const contrat = {
   change,
   frais,
   sante,
+  santeExploitation,
   echeances,
   bloquants,
   juridique,
   parametres,
   sources,
+  ventes,
   pieces,
   tresorerie: domaineTresorerie,
   fournisseurs: domaineFournisseurs,

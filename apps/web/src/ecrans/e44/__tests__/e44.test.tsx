@@ -148,4 +148,31 @@ describe('cheminTiers', () => {
     expect(cheminTiers('tous', 'a&b=c', 0)).toContain('q=a%26b%3Dc');
   });
   it('route-declaree', () => expect([route.id, route.chemin, route.groupe]).toEqual(['e44', '/reglages/entreprise/tiers', 'reglages']));
+  it('e44-export-filtres-courants', async () => {
+    URL.createObjectURL = () => 'blob:x';
+    URL.revokeObjectURL = () => undefined;
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const posts: unknown[] = [];
+    vi.stubGlobal('fetch', (_u: string, init?: RequestInit) => {
+      if (init?.method !== 'POST') return Promise.resolve(Response.json({ body: [], decalage: 0, total: 0 }));
+      posts.push(JSON.parse(init.body as string));
+      return Promise.resolve(Response.json({ body: { nom: 'x.csv', typeContenu: 'text/csv', octetsBase64: btoa('a;b'), nbLignes: 1, empreinte: 'a'.repeat(64) } }));
+    });
+    await monter();
+    const bouton = (t: string) => [...document.querySelectorAll('button')].find((b) => b.textContent === t)!;
+    const exporter = async () => (await cliquer(bouton(e44.export.bouton)), await cliquer(bouton(e44.export.csv)));
+    await cliquer(onglet(e44.onglets.fournisseurs));
+    await saisir('  Zeta inventé  ');
+    await exporter();
+    expect(posts).toEqual([{ liste: 'listerTiers', format: 'csv', filtres: { type: 'fournisseur', q: 'Zeta inventé' } }]);
+    await cliquer(onglet(e44.onglets.tous));
+    await exporter();
+    expect(posts[1]).toEqual({ liste: 'listerTiers', format: 'csv', filtres: { q: 'Zeta inventé' } });
+  });
+  it('e44-bouton-present', async () => {
+    await monter();
+    const b = [...document.querySelectorAll('button')].find((x) => x.textContent === e44.export.bouton);
+    expect(b).toBeDefined();
+    expect(b?.closest('section')).toBe(document.querySelector('section'));
+  });
 });
