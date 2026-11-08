@@ -17,6 +17,7 @@ import { creerHandlersChange } from './domaines/change.js';
 import { creerHandlersSante } from './domaines/sante.js';
 import { creerHandlersJuridique } from './domaines/juridique.js';
 import { creerHandlersProfil } from './domaines/profil.js';
+import { creerHandlersBloquants } from './domaines/bloquants.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 
@@ -123,5 +124,6 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersSante(base, attendre),
     ...creerHandlersJuridique(base, attendre),
     ...creerHandlersProfil(base, attendre),
+    ...creerHandlersBloquants(base, attendre),
   ];
 }

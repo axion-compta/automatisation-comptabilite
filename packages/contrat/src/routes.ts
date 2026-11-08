@@ -36,6 +36,7 @@ import { echeances } from './domaines/echeances.js';
 import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
+import { pieces } from './domaines/pieces.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
@@ -91,6 +92,7 @@ export const contrat = {
   bloquants,
   juridique,
   parametres,
+  pieces,
   tresorerie: domaineTresorerie,
   fournisseurs: domaineFournisseurs,
 };

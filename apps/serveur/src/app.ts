@@ -29,6 +29,7 @@ import { routesSante } from './domaines/sante.js';
 import { routesEcheances } from './domaines/echeances.js';
 import { routesBloquants } from './domaines/bloquants.js';
 import { routesJuridique } from './domaines/juridique.js';
+import { routesPieces } from './domaines/pieces.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
@@ -102,6 +103,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     bloquants: routesBloquants(),
     juridique: routesJuridique(),
     parametres: routesParametres(),
+    pieces: routesPieces(),
     tresorerie: routesTresorerie(),
     fournisseurs: routesFournisseurs(),
     abonnement: {
