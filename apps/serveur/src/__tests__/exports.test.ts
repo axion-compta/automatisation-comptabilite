@@ -36,6 +36,9 @@ describe('serveur : export des listes', () => {
   it('serveur-erreurs-400-404', async () => {
     const { exporter } = neuf();
     expect((await exporter({ ...CSV, societe_id: 'soc-fictive' })).statusCode).toBe(400);
+    // le garde-fou commun réécrit le corps des 400 : le code se vérifie sur la route elle-même
+    const corps = { ...CSV, societe_id: 'soc-fictive' } as typeof CSV & { format: 'csv' };
+    await expect(call(routesExports().exporter, { headers: { 'idempotency-key': 'cle-fictive-1' }, body: corps })).rejects.toMatchObject({ code: 'CHAMP_INCONNU', status: 400 });
     expect((await exporter(CSV, '')).statusCode).toBe(400);
     expect((await exporter({ ...CSV, format: 'pdf' })).statusCode).toBe(400);
     const inconnue = await exporter({ ...CSV, liste: 'inconnue' });

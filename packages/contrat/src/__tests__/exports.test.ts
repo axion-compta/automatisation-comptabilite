@@ -52,6 +52,9 @@ describe('contrat exports : service en mémoire', () => {
     expect(filtre.body.nbLignes).toBe(creerServiceTiers().lister({ type: 'fournisseur' }).total);
     expect(filtre.body.nbLignes).toBeLessThan(tout.body.nbLignes);
     expect(lignesCsv(filtre.body.octetsBase64).slice(1).every((l) => cellules(l)[2] === 'fournisseur')).toBe(true);
+    const classeTexte = await s.exporter(CLE, { liste: 'listerPlan', format: 'csv', filtres: { classe: '6' } });
+    expect(classeTexte.body.nbLignes).toBe(creerServicePlan().plan('EX2026', { classe: 6 })!.total);
+    expect(classeTexte.body.nbLignes).toBeGreaterThan(0);
     for (const filtres of [{ inconnu: 'x' }, { type: 'autre' }, { limite: 1 }]) expect(await code(s.exporter(CLE, { liste: 'listerTiers', format: 'csv', filtres }))).toBe('filtre_invalide');
     expect(await code(s.exporter(CLE, { liste: 'listerTiers', format: 'csv', tri: 'nom' }))).toBe('filtre_invalide');
   });
@@ -81,6 +84,7 @@ describe('contrat exports : service en mémoire', () => {
     const ok = { liste: 'listerTiers', format: 'csv' };
     expect(DemandeExport.safeParse(ok).success).toBe(true);
     for (const extra of [{ societe_id: 'soc-fictive' }, { autre: 1 }]) expect(DemandeExport.safeParse({ ...ok, ...extra }).success).toBe(false);
+    expect(contrat.exports.exporter['~orpc'].errorMap).toHaveProperty('CHAMP_INCONNU.status', 400);
     expect(DemandeExport.safeParse({ ...ok, format: 'pdf' }).success).toBe(false);
   });
 

@@ -12,6 +12,8 @@ export const DemandeExport = z.strictObject({
   tri: z.string().min(1).optional(),
 });
 export type DemandeExport = z.infer<typeof DemandeExport>;
+/** Corps accepté par la route : les champs en plus passent, le serveur les refuse en 400 `CHAMP_INCONNU`. */
+const CorpsExport = z.looseObject(DemandeExport.shape);
 
 export const ReponseExport = z.object({
   body: z.strictObject({
@@ -26,8 +28,8 @@ export const ReponseExport = z.object({
 /** Export d'une liste du contrat : mêmes lignes que l'écran, totaux étiquetés. Jamais envoyé à un tiers. */
 export const exporter = oc
   .route({ method: 'POST', path: '/exports', inputStructure: 'detailed', operationId: 'exporter', tags: ['acces:export'] })
-  .errors({ LISTE_NON_EXPORTABLE: { status: 404 }, FILTRE_INVALIDE: { status: 400 }, EXPORT_TROP_GROS: { status: 413 }, EXPORT_EN_TACHE_A_VENIR: { status: 501 } })
-  .input(z.object({ headers: EnTeteEcriture, body: DemandeExport }))
+  .errors({ CHAMP_INCONNU: { status: 400 }, LISTE_NON_EXPORTABLE: { status: 404 }, FILTRE_INVALIDE: { status: 400 }, EXPORT_TROP_GROS: { status: 413 }, EXPORT_EN_TACHE_A_VENIR: { status: 501 } })
+  .input(z.object({ headers: EnTeteEcriture, body: CorpsExport }))
   .output(ReponseExport);
 
 export const exports = { exporter };

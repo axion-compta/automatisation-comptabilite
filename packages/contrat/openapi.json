@@ -978,7 +978,7 @@
                   "liste",
                   "format"
                 ],
-                "additionalProperties": false
+                "additionalProperties": {}
               }
             }
           }

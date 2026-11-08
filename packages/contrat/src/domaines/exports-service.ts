@@ -62,12 +62,16 @@ export function sourcesParDefaut(): Record<string, SourceExport> {
 }
 
 /** Valide les valeurs de filtre avec le schéma d'entrée de la route de liste (mêmes bornes que l'écran). */
-function filtresValides(operationId: string, source: SourceExport, filtres: Record<string, string | number>): void {
+function filtresValides(operationId: string, source: SourceExport, filtres: Record<string, string | number>): Record<string, string | number> {
   if (Object.keys(filtres).some((k) => !source.filtres.includes(k))) throw new ErreurExport('filtre_invalide');
   const { exercice, ...query } = filtres;
-  const procedure = Object.values(contrat).flatMap((d) => Object.entries(d as object)).find(([nom]) => nom === operationId)?.[1] as { '~orpc': { inputSchema: { safeParse(v: unknown): { success: boolean } } } };
+  const procedure = Object.values(contrat).flatMap((d) => Object.entries(d as object)).find(([nom]) => nom === operationId)?.[1] as { '~orpc': { inputSchema: { safeParse(v: unknown): { success: boolean; data?: { params: Record<string, string>; query?: Record<string, string | number> } } } } };
   const entree = { params: { exercice: String(exercice ?? EXERCICE_FICTIF) }, query };
-  if (!procedure['~orpc'].inputSchema.safeParse(entree).success) throw new ErreurExport('filtre_invalide');
+  const lu = procedure['~orpc'].inputSchema.safeParse(entree);
+  if (!lu.success || !lu.data) throw new ErreurExport('filtre_invalide');
+  // Valeurs issues du schéma (converties, comme la route de liste), jamais les valeurs brutes.
+  const converti: Record<string, string | number> = { ...lu.data.query, ...lu.data.params };
+  return Object.fromEntries(Object.entries(converti).filter(([k, v]) => source.filtres.includes(k) && v !== undefined));
 }
 
 /** Fichier CSV ou XLSX d'une liste : total par `ajouter`, nom par `nomDeFichier`, aucun envoi. */
@@ -102,8 +106,7 @@ export function creerServiceExports(options: OptionsServiceExports = {}) {
       const liste = catalogue.find((l) => l.code === demande.liste);
       if (!source || !liste) throw new ErreurExport('liste_non_exportable');
       if (demande.tri !== undefined) throw new ErreurExport('filtre_invalide');
-      const filtres = demande.filtres ?? {};
-      filtresValides(demande.liste, source, filtres);
+      const filtres = filtresValides(demande.liste, source, demande.filtres ?? {});
       const lignes: Ligne[] = [];
       for (let total = Infinity; lignes.length < total; ) {
         const page = source.lister(filtres, lignes.length, TAILLE_PAGE);
