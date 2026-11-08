@@ -10,6 +10,7 @@ import { creerHandlersRecherche } from './domaines/recherche.js';
 import { creerHandlersExports } from './domaines/exports.js';
 import { creerHandlersCalendrier } from './domaines/calendrier.js';
 import { creerHandlersNotifications } from './domaines/notifications.js';
+import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -25,6 +26,8 @@ export type OptionsFauxServeur = {
   panne?: Panne;
   /** Préfixe des routes, vide par défaut. */
   base?: string;
+  /** Chat : coupure après N événements, suspension d'un tour (tests). */
+  chat?: OptionsChatFaux;
 };
 
 const MESSAGES: Record<403 | 423, string> = {
@@ -101,5 +104,6 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersExports(base, attendre, options),
     ...creerHandlersCalendrier(base, attendre, options),
     ...creerHandlersNotifications(base, attendre, options),
+    ...creerHandlersChat(base, attendre, options.chat),
   ];
 }
