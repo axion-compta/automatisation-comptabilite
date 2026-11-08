@@ -40,6 +40,8 @@ export interface PortObjets { lister(societeId: string): Promise<readonly ObjetC
 export interface PortPurges {
   lire(societeId: string, objetId: string): Promise<PurgePlanifiee | null>;
   ecrire(purge: PurgePlanifiee): Promise<void>;
+  /** Purges au statut `effacee_base` : l'objet n'est plus listé par `PortObjets`, il faut donc les relire ici. */
+  listerEffaceesBase(societeId: string): Promise<readonly PurgePlanifiee[]>;
 }
 export interface PortGels { lire(societeId: string): Promise<readonly Gel[]> }
 export interface PortEffacement { effacerBase(societeId: string, objetId: string): Promise<void> }
@@ -105,11 +107,12 @@ async function traiterObjet(p: ParametresPurge, objet: ObjetConservable, gels: r
 async function passerSociete(p: ParametresPurge, societeId: string, limite: string): Promise<void> {
   const objets = await p.ports.objets.lister(societeId);
   const gels = await p.ports.gels.lire(societeId);
-  const aConfirmer: PurgePlanifiee[] = [];
+  const aConfirmer = (await p.ports.purges.listerEffaceesBase(societeId)).filter(
+    (x) => x.societeId === societeId && x.statut === 'effacee_base',
+  );
   for (const objet of objets) {
     if (objet.societeId !== societeId) continue;
     const existante = await p.ports.purges.lire(societeId, objet.id);
-    if (existante?.statut === 'effacee_base') aConfirmer.push(existante);
     if (existante !== null && EFFACEES.includes(existante.statut)) continue;
     await traiterObjet(p, objet, gels, limite);
   }

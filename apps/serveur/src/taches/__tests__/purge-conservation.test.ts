@@ -30,10 +30,13 @@ function monde(objets: ObjetConservable[], opts: {
     societes: ['societe-a', 'societe-b'], regles: opts.regles ?? [regle()], aujourdhui: AUJOURDHUI,
     rotationSauvegardesJours: ROTATION, finsDeContrat: opts.fins ?? {}, alerte,
     ports: {
-      objets: { lister: async (s) => objets.filter((o) => o.societeId === s) },
+      // Rend aussi les objets des autres sociétés, mais plus ceux effacés de la base (comme une base réelle).
+      objets: { lister: async () => objets.filter((o) => !efface.includes(`${o.societeId}/${o.id}`)) },
       purges: {
         lire: async (s, o) => purges.get(`${s}/${o}`) ?? null,
         ecrire: async (x) => { purges.set(`${x.societeId}/${x.objetId}`, structuredClone(x)); },
+        // Ne filtre pas par société : le code doit le faire.
+        listerEffaceesBase: async () => [...purges.values()].filter((x) => x.statut === 'effacee_base'),
       },
       gels: { lire: async () => opts.gels ?? [] },
       effacement: {
@@ -125,6 +128,21 @@ describe('purge selon la règle de conservation', () => {
       expect(m.etat('societe-a', 'o1')?.statut).toBe(attendu);
       expect(m.efface).toHaveLength(1);
     }
+  });
+
+  it('sauvegardes-confirmees-sans-relister-objet-et-par-societe', async () => {
+    const m = monde([objet('o1', ECHU, 'societe-a'), objet('o2', ECHU, 'societe-b')], { plusAncienne: ajouterJours(AUJOURDHUI, 1) });
+    await passerPurge(m.params({ societes: ['societe-a'] }));
+    await passerPurge(m.params({ societes: ['societe-a'] }));
+    expect(m.etat('societe-a', 'o1')?.statut).toBe('effacee_sauvegardes');
+    expect(m.etat('societe-b', 'o2')).toBeUndefined();
+    const autre = monde([objet('o2', ECHU, 'societe-b')], {
+      plusAncienne: ajouterJours(AUJOURDHUI, 1),
+      purges: [{ objetId: 'o2', societeId: 'societe-b', categorie: 'pieces', datePrevue: null, statut: 'effacee_base',
+        preuve: { effaceBaseLe: AUJOURDHUI, sauvegardesAuPlusTardLe: AUJOURDHUI, source: 'source-inventee' } }],
+    });
+    await passerPurge(autre.params({ societes: ['societe-a'] }));
+    expect(autre.etat('societe-b', 'o2')?.statut).toBe('effacee_base');
   });
 
   it('une-societe-n-efface-pas-une-autre', async () => {
