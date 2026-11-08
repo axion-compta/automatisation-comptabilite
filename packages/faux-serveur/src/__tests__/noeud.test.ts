@@ -84,3 +84,15 @@ describe('faux serveur du chat côté Node', () => {
     }
   });
 });
+
+describe('faux serveur des propositions côté Node', () => {
+  it('compte de service : le scénario de la configuration refuse, l\'en-tête ne change rien', async () => {
+    const noeud = demarrerNoeud({ base: 'http://127.0.0.1:1', propositions: { acteur: 'compte_service', ajouts: [{ id: 'prp-0001', outil: 'enregistrer_ecriture', niveau: 'B', cibles: ['ecr-1'], avant: {}, apres: { m: 1 } }] } });
+    try {
+      const r = await fetch('http://127.0.0.1:1/chat/propositions/prp-0001/appliquer', { method: 'POST', headers: { 'idempotency-key': 'cle-00001', 'x-acteur': 'personne' } });
+      expect([r.status, ((await r.json()) as { code: string }).code]).toEqual([403, 'ACTEUR_NON_HUMAIN']);
+    } finally {
+      noeud.fermer();
+    }
+  });
+});
