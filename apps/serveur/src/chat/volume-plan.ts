@@ -20,3 +20,13 @@ export async function deciderVolume(port: PortVolume): Promise<DecisionVolume> {
   if (l.utilise >= l.inclus) return 'sans_modele';
   return l.utilise * POINTS_DE_BASE_TOTAL >= l.seuilPdb * l.inclus ? 'avertissement' : 'normal';
 }
+
+export interface PortModele { repondre: (message: string) => Promise<string> }
+export interface ReponseSelonVolume { decision: DecisionVolume; reponse: string | null }
+
+/** Passe par la décision avant tout appel au modèle : à 100 % ou volume illisible, le modèle n'est jamais appelé. */
+export async function repondreSelonVolume(portVolume: PortVolume, portModele: PortModele, message: string): Promise<ReponseSelonVolume> {
+  const decision = await deciderVolume(portVolume);
+  if (decision === 'sans_modele') return { decision, reponse: null };
+  return { decision, reponse: await portModele.repondre(message) };
+}

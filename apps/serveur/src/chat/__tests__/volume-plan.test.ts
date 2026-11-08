@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { deciderVolume, type LectureVolume, type PortVolume } from '../volume-plan.js';
+import { deciderVolume, repondreSelonVolume, type LectureVolume, type PortVolume } from '../volume-plan.js';
 
 const faux = (l: LectureVolume | Error): PortVolume => ({ lire: () => (l instanceof Error ? Promise.reject(l) : Promise.resolve(l)) });
 const lecture = (utilise: number, inclus: number, seuilPdb: number): LectureVolume => ({ utilise, inclus, seuilPdb });
+
+const fauxModele = () => { let n = 0; return { modele: { repondre: async () => { n++; return 'ok'; } }, appels: () => n }; };
 
 describe('volume de chat du plan', () => {
   it('sous-le-seuil', async () => {
@@ -16,13 +18,20 @@ describe('volume de chat du plan', () => {
   it('a-cent-pour-cent-sans-modele', async () => {
     expect(await deciderVolume(faux(lecture(10, 10, 8000)))).toBe('sans_modele');
     expect(await deciderVolume(faux(lecture(25, 10, 8000)))).toBe('sans_modele');
-    let appelsModele = 0;
-    const decision = await deciderVolume(faux(lecture(10, 10, 8000)));
-    if (decision !== 'sans_modele') appelsModele++;
-    expect(appelsModele).toBe(0);
+    for (const l of [lecture(10, 10, 8000), lecture(25, 10, 8000)]) {
+      const { modele, appels } = fauxModele();
+      expect(await repondreSelonVolume(faux(l), modele, 'bonjour')).toEqual({ decision: 'sans_modele', reponse: null });
+      expect(appels()).toBe(0);
+    }
+    const { modele, appels } = fauxModele();
+    expect((await repondreSelonVolume(faux(lecture(7, 10, 8000)), modele, 'bonjour')).reponse).toBe('ok');
+    expect(appels()).toBe(1);
   });
   it('volume-illisible-sans-modele', async () => {
     expect(await deciderVolume(faux(new Error('console absente')))).toBe('sans_modele');
+    const illisible = fauxModele();
+    expect((await repondreSelonVolume(faux(new Error('console absente')), illisible.modele, 'bonjour')).reponse).toBeNull();
+    expect(illisible.appels()).toBe(0);
     const mauvaises = [
       lecture(NaN, 10, 8000), lecture(1, NaN, 8000), lecture(Infinity, 10, 8000), lecture(1, Infinity, 8000),
       lecture(-1, 10, 8000), lecture(1.5, 10, 8000), lecture(1, 0, 8000), lecture(1, 10, NaN), lecture(1, 10, -1),
