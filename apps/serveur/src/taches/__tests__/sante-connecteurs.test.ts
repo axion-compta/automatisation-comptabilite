@@ -67,20 +67,18 @@ describe('santé quotidienne des connecteurs', () => {
 
   it('essai-qui-leve-compte-comme-echec', async () => {
     const m = monde(() => 'leve');
-    await lancer(m, J1);
-    await lancer(m, J2);
+    for (const j of [J1, J2]) await lancer(m, j);
     expect((await lireEtatClient(m.stock, 'client-a'))[0]?.etat).toBe('degrade');
   });
 
   it('delai-depasse-compte-comme-echec', async () => {
     vi.useFakeTimers();
     const m = monde(() => 'bloque');
-    const p1 = lancer(m, J1);
-    await vi.advanceTimersByTimeAsync(DELAI);
-    await p1;
-    const p2 = lancer(m, J2);
-    await vi.advanceTimersByTimeAsync(DELAI);
-    await p2;
+    for (const j of [J1, J2]) {
+      const p = lancer(m, j);
+      await vi.advanceTimersByTimeAsync(DELAI);
+      await p;
+    }
     expect((await lireEtatClient(m.stock, 'client-a'))[0]).toMatchObject({ etat: 'degrade', dernierOk: null });
   });
 
@@ -97,9 +95,7 @@ describe('santé quotidienne des connecteurs', () => {
 
   it('alerte-une-seule-fois-au-passage-en-degrade', async () => {
     const m = monde(() => false);
-    await lancer(m, J1);
-    await lancer(m, J2);
-    await lancer(m, J3);
+    for (const j of [J1, J2, J3]) await lancer(m, j);
     expect(m.alertes).toEqual([{ code: 'connecteur_degrade', clientId: 'client-a', connecteur: 'banque-fictive' }]);
   });
 

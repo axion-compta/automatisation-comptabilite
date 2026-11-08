@@ -1,5 +1,4 @@
 // Santé quotidienne des connecteurs : un essai technique par connecteur et par jour, sans IA.
-// Écrit contre des interfaces (essai, stock, alerte) : aucun réseau, aucune base ici.
 // Seul le nom du connecteur entre dans l'essai : aucune donnée client.
 import {
   bandeau,
@@ -74,14 +73,13 @@ async function passerConnecteur(p: ParametresSante, clientId: string, connecteur
   if (rang >= 0) santes[rang] = apres;
   else santes.push(apres);
   await p.stock.ecrire(clientId, santes);
-  const nouveau = bandeau(apres);
-  if (nouveau !== null && nouveau !== bandeau(avant)) await p.alerter({ code: nouveau, clientId, connecteur });
+  const code = bandeau(apres);
+  if (code !== null && code !== bandeau(avant)) await p.alerter({ code, clientId, connecteur });
   return { connecteur, etat: 'fait', sante: apres };
 }
 
 /** Un client après l'autre, un connecteur après l'autre : jamais deux clients en cours. */
 export async function passerSanteQuotidienne(p: ParametresSante): Promise<ResultatSante> {
-  // Seuils et jour contrôlés avant tout essai ; les erreurs remontent telles quelles.
   enregistrerEssai(santeInitiale('controle'), { jour: p.jour, ok: true }, p.seuils);
   const clients: ResultatSante['clients'] = [];
   for (const clientId of p.clients) {
