@@ -27,9 +27,34 @@ export function ibanValide(s) {
   return reste === 1;
 }
 
+export const SIREN_PERMIS = ['123456782', '987654324'];
+// Clé de Luhn d'une chaîne de chiffres seulement (vide ou autre caractère : faux).
+export function luhnValide(chiffres) {
+  if (typeof chiffres !== 'string' || !/^\d+$/.test(chiffres)) return false;
+  let somme = 0;
+  [...chiffres].reverse().forEach((c, i) => {
+    const n = Number(c) * (i % 2 === 1 ? 2 : 1);
+    somme += n > 9 ? n - 9 : n;
+  });
+  return somme % 10 === 0;
+}
+const SIREN = /(?<![0-9A-Za-z.,_])\d{9}(?![0-9A-Za-z.,_])/g;
+const TARIF = /\d(?:\s*(?:€|HT|TTC))+\s*\/\s*(?:mois|an)(?![A-Za-z])/i;
+const DONNEES_DE_TEST = /\/__tests__\/|\.test\.|\.spec\.|\/e2e\/|(^|\/)packages\/donnees-fictives\//;
+const SIREN_EXCLUS = /(^|\/)(pnpm-lock\.yaml|openapi\.json)$/;
+const TARIF_EXEMPTES = /^outils\/gardes\/(fictif\.mjs|test\/)/;
+
 export function analyserTexte(texte, nom) {
   const pb = [];
+  const sirenActif = DONNEES_DE_TEST.test('/' + nom) && !SIREN_EXCLUS.test(nom);
+  const tarifActif = !TARIF_EXEMPTES.test(nom);
   texte.split(/\r?\n/).forEach((l, i) => {
+    if (sirenActif) {
+      for (const m of l.matchAll(SIREN)) {
+        if (luhnValide(m[0]) && !SIREN_PERMIS.includes(m[0])) pb.push(`${nom}:${i + 1} SIREN hors liste blanche : ${m[0]}`);
+      }
+    }
+    if (tarifActif && TARIF.test(l)) pb.push(`${nom}:${i + 1} montant de tarif : ${l.trim().slice(0, 60)}`);
     for (const m of l.matchAll(EMAIL)) {
       if (m[1].toLowerCase() !== 'exemple.fr') pb.push(`${nom}:${i + 1} e-mail hors @exemple.fr : ${m[0]}`);
     }
