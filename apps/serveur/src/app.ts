@@ -20,6 +20,8 @@ import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
 import { routesProfilChamps } from './domaines/profil-champs.js';
+import { routesProfilChangements } from './domaines/profil-changements.js';
+import { creerServiceProfilChangements } from '../../../packages/contrat/src/domaines/profil-changements-service.js';
 import { creerServiceProfilChamps } from '../../../packages/contrat/src/domaines/profil-champs-service.js';
 import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
@@ -104,6 +106,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     notifications: routesNotifications(s.notifications),
     profil: routesProfil(profilChamps),
     profilChamps: routesProfilChamps(profilChamps),
+    profilChangements: routesProfilChangements(creerServiceProfilChangements(profilChamps)),
     fec: routesFec(),
     controles: routesControles(),
     regimes: routesRegimes(),
