@@ -12,13 +12,11 @@ const MINUTE_MS = 60_000;
 const REGLAGES_ESSAI = { validiteMs: 30 * MINUTE_MS, toastMs: 10 * MINUTE_MS, historiqueMs: 60 * MINUTE_MS };
 
 export type NouvelleProposition = Omit<EntreeProposition, 'creeLe' | 'dureeMs'>;
+/** Acteur et horloge viennent de la configuration (scénarios « compte de service », « horloge avancée »), jamais de la requête ; `ajouts` remplace le jeu fictif de L05-T36. */
 export interface OptionsPropositionsFaux {
-  /** Scénario « compte de service » : jamais lu dans la requête. */
   acteur?: Acteur;
-  /** Scénario « horloge avancée » : jamais lue dans la requête. */
   horloge?: () => string;
   reglages?: typeof REGLAGES_ESSAI;
-  /** Propositions de départ (par défaut : le jeu fictif de L05-T36). */
   ajouts?: NouvelleProposition[];
 }
 
