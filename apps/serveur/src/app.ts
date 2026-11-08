@@ -22,6 +22,7 @@ import { routesProfil } from './domaines/profil.js';
 import { routesChange } from './domaines/change.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesFrais } from './domaines/frais.js';
+import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
@@ -87,6 +88,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     regimes: routesRegimes(),
     change: routesChange(),
     frais: routesFrais(),
+    vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),

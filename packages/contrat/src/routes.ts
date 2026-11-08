@@ -28,6 +28,7 @@ import { profil } from './domaines/profil.js';
 import { change } from './domaines/change.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
+import { vehiculesBareme } from './domaines/vehicules-bareme.js';
 import { sante } from './domaines/sante.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
@@ -76,6 +77,7 @@ export const contrat = {
   change,
   frais,
   sante,
+  vehiculesBareme,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };
