@@ -2297,6 +2297,17 @@
         }
       }
     },
+    "/sources/etat": {
+      "get": {
+        "operationId": "lireEtatSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/ventes": {
       "get": {
         "operationId": "listerVentes",
