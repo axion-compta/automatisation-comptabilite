@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { setupServer } from 'msw/node';
 import { creerApp } from '../../../../apps/serveur/src/app.js';
+import { creerServicePropositions } from '../../../../apps/serveur/src/domaines/chat-propositions.js';
 import { creerHandlers } from '../handlers.js';
 import { suiteContrat, type Appeler, type Cible } from './suite-contrat.js';
 import { suitePlan } from './suite-plan.js';
@@ -14,6 +15,7 @@ import { suiteExports } from './suite-exports.js';
 import { suiteCalendrier } from './suite-calendrier.js';
 import { suiteNotifications } from './suite-notifications.js';
 import { suiteChat, type CibleChat } from './suite-chat.js';
+import { AJOUTS, DEBUT, REGLAGES, suiteChatPropositions, type CiblePropositions } from './suite-chat-propositions.js';
 
 const H = 'http://exemple.fr';
 const json = { 'content-type': 'application/json' };
@@ -72,6 +74,28 @@ const cibleChatFaux: CibleChat = async () => {
   };
 };
 
+const cibleProposVrai: CiblePropositions = async ({ acteur }) => {
+  const t = { ms: Date.parse(DEBUT) };
+  const service = creerServicePropositions({ acteur, horloge: () => new Date(t.ms).toISOString(), reglages: REGLAGES });
+  for (const e of AJOUTS) service.ajouter(e);
+  const app = creerApp(undefined, { propositions: service });
+  const appeler: Appeler = async (methode, chemin, entetes, corps) => {
+    const r = await app.inject({ method: methode as 'GET', url: chemin, headers: { ...(corps === undefined ? {} : json), ...entetes } });
+    return { status: r.statusCode, json: r.json() };
+  };
+  return { appeler, avancer: (ms) => void (t.ms += ms), fermer: () => app.close() };
+};
+
+const cibleProposFaux: CiblePropositions = async ({ acteur }) => {
+  const t = { ms: Date.parse(DEBUT) };
+  serveur.use(...creerHandlers({ base: H, propositions: { acteur, horloge: () => new Date(t.ms).toISOString(), reglages: REGLAGES, ajouts: AJOUTS } }));
+  const appeler: Appeler = async (methode, chemin, entetes) => {
+    const r = await fetch(H + chemin, { method: methode, ...(entetes ? { headers: entetes } : {}) });
+    return { status: r.status, json: await r.json() };
+  };
+  return { appeler, avancer: (ms) => void (t.ms += ms), fermer: async () => serveur.resetHandlers() };
+};
+
 suiteContrat('vrai serveur (Fastify + oRPC)', cibleVrai);
 suitePlan('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteTiers('vrai serveur (Fastify + oRPC)', cibleVrai);
@@ -96,3 +120,5 @@ suiteCalendrier('faux serveur (MSW)', cibleFaux);
 suiteNotifications('faux serveur (MSW)', cibleFaux);
 suiteChat('vrai serveur (Fastify + oRPC)', cibleChatVrai);
 suiteChat('faux serveur (MSW)', cibleChatFaux);
+suiteChatPropositions('vrai serveur (Fastify + oRPC)', cibleProposVrai);
+suiteChatPropositions('faux serveur (MSW)', cibleProposFaux);
