@@ -46,7 +46,7 @@ const IS = (cle: string, valeur: string): Def => ({
   url: SERVICE_PUBLIC + 'F23575',
   titre: 'Impôt sur les sociétés : taux (lecture A) ; CGI art. 219 et BOI-IS-LIQ-20-20-20230621 (partielles)',
   source: 'Exercices clos depuis le 31/12/2022 ; 2e lecture complète à faire',
-  maj: '2026-02-17',
+  maj: cle === 'is.taux.normal' ? '2026-02-17' : undefined,
 });
 
 const SEUILS_MICRO = { bilan: 45000000, ca: 90000000, effectif: 10, criteres: 2 };
