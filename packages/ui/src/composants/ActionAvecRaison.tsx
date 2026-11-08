@@ -1,6 +1,5 @@
 import { useId } from "react";
 import { Bouton } from "./Bouton.js";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./action-avec-raison.css";
 
 export type CapaciteAction = { permis: true } | { permis: false; raison_texte: string };

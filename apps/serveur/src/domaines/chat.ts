@@ -7,12 +7,14 @@ import { reglageEntier } from '../../../../packages/parametres/src/reglages-chat
 import { microCentimes } from '../../../../packages/noyau/src/chat/types.js';
 import { executerTour, type ContexteTour, type ReglagesTour } from '../chat/tour.js';
 import type { ModeleTexte } from '../ia/appel.js';
+import { identifier, traduire, type OptionsIdentite } from '../chat/identite.js';
 
 const ALIAS = 'simule';
 const LECTURE = '{"outil":"exercices.lister","arguments":{}}';
 export interface OptionsChat {
   /** Société du serveur : jamais lue dans la requête. */
   societe?: string;
+  identite?: OptionsIdentite;
   /** Appelée avant chaque événement (rang à partir de 1) : permet de suspendre un tour dans les tests. */
   attendre?: (rang: number) => Promise<void> | undefined;
 }
@@ -71,6 +73,7 @@ export function creerServiceChat(options: OptionsChat = {}) {
   }
 
   return {
+    identite: options.identite,
     envoyer(demande: DemandeMessage): Promise<string> {
       let r = reponses.get(demande.message_id);
       if (!r) reponses.set(demande.message_id, (r = jouer(demande)));
@@ -93,11 +96,13 @@ export type ServiceChat = ReturnType<typeof creerServiceChat>;
 
 export function implementerChat(os: ReturnType<typeof implement<typeof contratChat>>, service: ServiceChat) {
   return {
-    envoyerMessage: os.chat.envoyerMessage.handler(async ({ input }) => {
+    envoyerMessage: os.chat.envoyerMessage.handler(async ({ input, errors }) => {
+      if (service.identite) await identifier(service.identite, input.headers, input.params.s).catch((e: unknown) => traduire(errors, e));
       if (input.headers['idempotency-key'] !== input.body.message_id) throw new ORPCError('BAD_REQUEST', { message: 'cle_differente_du_message' });
       return new Blob([await service.envoyer(input.body)], { type: 'text/event-stream' });
     }),
-    arreterTour: os.chat.arreterTour.handler(({ input, errors }) => {
+    arreterTour: os.chat.arreterTour.handler(async ({ input, errors }) => {
+      if (service.identite) await identifier(service.identite, input.headers, input.params.s).catch((e: unknown) => traduire(errors, e));
       if (!service.arreter(input.params.id)) throw errors.TOUR_INCONNU();
       return { body: { tour_id: input.params.id, arrete: true as const } };
     }),

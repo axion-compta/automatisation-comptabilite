@@ -1,5 +1,6 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { EnTeteEcriture } from '../../../contrat/src/schemas.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import type { AppelIa, DecisionIa } from '../../../contrat/src/chat/journal-ia.js';
 import type { PropositionVue } from '../../../contrat/src/domaines/chat-propositions.js';
 import { appliquer, creerProposition, type EntreeProposition, type Proposition } from '../../../noyau/src/chat/proposition.js';
@@ -90,7 +91,7 @@ export function creerHandlersChatPropositions(base: string, attendre: () => Prom
     }
   };
   const cle = (r: Request) => r.headers.get('idempotency-key') ?? '';
-  const chemin = base + '/chat/propositions/:id';
+  const chemin = base + PREFIXE_ROUTES_SOCIETE.replace('{s}', ':s') + '/chat/propositions/:id';
 
   return [
     http.get(chemin, ({ request, params }) => repondre(request, false, () => vue(trouver(String(params['id']))))),
