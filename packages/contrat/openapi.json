@@ -1950,6 +1950,20 @@
         }
       }
     },
+    "/sante": {
+      "get": {
+        "operationId": "lireSanteExploitation",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/echeances": {
       "get": {
         "operationId": "listerEcheances",
