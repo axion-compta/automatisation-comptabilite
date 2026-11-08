@@ -1,5 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import { QueryLignes } from '../../../contrat/src/domaines/banque.js';
+import { EtatDemande, EtatDoublon, EtatTrou, QueryLignes } from '../../../contrat/src/domaines/banque.js';
 import { creerServiceBanque } from '../../../contrat/src/domaines/banque-service.js';
 
 const erreur = (code: string, status: number, defined = false) =>
@@ -30,6 +30,27 @@ export function creerHandlersBanque(base: string, attendre: () => Promise<void>)
       const page = service.lignes(query.data);
       return page ? HttpResponse.json(page) : erreur('COMPTE_INCONNU', 404, true);
     }),
+    http.get(base + '/banque/comptes/:compte/couverture', async ({ request, params }) => {
+      await attendre();
+      const refus = panne(request);
+      if (refus) return refus;
+      const ex = new URL(request.url).searchParams.getAll('exercice_id');
+      const compte = decodeURIComponent(String(params['compte']));
+      if (ex.length > 1 || ex[0] === '' || compte === '') return erreur('BAD_REQUEST', 400);
+      const c = service.couverture(compte);
+      return c ? HttpResponse.json(c) : erreur('COMPTE_INCONNU', 404, true);
+    }),
+    ...(['trous', 'demandes', 'doublons'] as const).map((nom) =>
+      http.get(base + '/banque/' + nom, async ({ request }) => {
+        await attendre();
+        const refus = panne(request);
+        if (refus) return refus;
+        const etats = new URL(request.url).searchParams.getAll('etat');
+        const schema = { trous: EtatTrou, demandes: EtatDemande, doublons: EtatDoublon }[nom];
+        const etat = etats.length === 0 ? { success: true as const, data: undefined } : schema.safeParse(etats.length === 1 ? etats[0] : etats);
+        return etat.success ? HttpResponse.json(service[nom](etat.data)) : erreur('BAD_REQUEST', 400);
+      }),
+    ),
     http.get(base + '/banque/lignes/:ligne/explication', async ({ request, params }) => {
       await attendre();
       const refus = panne(request);
