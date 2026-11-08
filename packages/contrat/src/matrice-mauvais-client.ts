@@ -3,7 +3,7 @@
 export type GenreElement = 'route' | 'outil' | 'export' | 'tache';
 export interface CasMauvaisClient { genre: GenreElement; code: string; methode?: string; chemin?: string }
 
-/** Noms de fichier (sans extension) de apps/serveur/src/taches/. */
+/** Noms de fichier (sans extension) de apps/serveur/src/taches/ (existants ou prévus par une fiche à faire). */
 export const TACHES_PLANIFIEES: readonly string[] = Object.freeze([
   'controles-nocturnes',
   'veille-balayage',
@@ -11,6 +11,7 @@ export const TACHES_PLANIFIEES: readonly string[] = Object.freeze([
   'purge-conservation',
   'sondes-exploitation',
   'veille-resume',
+  'verifier-exercice-clos',
 ]);
 
 export class ErreurMatrice extends Error {
