@@ -68,7 +68,11 @@ describe('profil deviné par l\'IA', () => {
       avec({ date: 7, libelle: [1] }), avec({ date: -1, libelle: [1] }), avec({ date: 0.5, libelle: [1] }), avec({ date: 0, libelle: [] }),
       avec({ date: 0, libelle: [0] }), avec({ date: 0, libelle: [1, 1] }), avec({ date: null, libelle: [1] }), avec({ date: 0, libelle: [1], extra: 2 }),
       JSON.stringify({ ...profil, ligneEntete: 1 }), JSON.stringify({ ...profil, champEnTrop: 1 }), JSON.stringify({ ...profil, signe: { type: 'inconnu' } }),
-      JSON.stringify({ ...profil, signe: { type: 'signe', colonne: '9' } }), JSON.stringify({ ...profil, formatDate: 'XX' }), '[]', 'null', '42',
+      JSON.stringify({ ...profil, signe: { type: 'signe', colonne: '9' } }), JSON.stringify({ ...profil, formatDate: 'XX' }),
+      JSON.stringify({ ...profil, signe: { type: 'signe', colonne: '2', pirate: 1 } }), JSON.stringify({ ...profil, format: { decimal: ',', milliers: '', x: 1 } }),
+      JSON.stringify({ ...profil, format: { decimal: 'x', milliers: 'y' } }), JSON.stringify({ ...profil, format: {} }),
+      JSON.stringify({ ...profil, optionsDate: { siecle: 'abc', z: 1 } }), JSON.stringify({ ...profil, optionsDate: { siecle: 2000.5 } }),
+      JSON.stringify({ ...profil, deviseParDefaut: '' }), '[]', 'null', '42',
     ];
     for (const t of mauvais) expect([t, await motif(t)]).toEqual([t, 'profil_invalide']);
   });

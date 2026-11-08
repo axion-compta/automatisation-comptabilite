@@ -17,16 +17,30 @@ const CHAMPS = ['colonnes', 'signe', 'format', 'formatDate', 'optionsDate', 'dev
 const COLONNES = ['date', 'dateValeur', 'libelle', 'reference', 'soldeCourant', 'devise'];
 const FORMATS_DATE = ['JJ/MM/AAAA', 'MM/JJ/AAAA', 'JJ/MM/AA', 'JJ.MM.AAAA', 'JJ-MM-AAAA', 'AAAA-MM-JJ', 'AAAAMMJJ', 'AAAAMMJJHHMMSS', 'serie'];
 const TYPES_SIGNE = ['signe', 'debit_credit', 'sens_dc', 'suffixe_moins'];
+const CHAMPS_SIGNE: Record<string, string[]> = {
+  signe: ['colonne'], suffixe_moins: ['colonne'], debit_credit: ['debit', 'credit'], sens_dc: ['montant', 'sens', 'debit', 'credit'],
+};
 const objet = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 const dans = (o: Record<string, unknown>, permis: string[]): boolean => Object.keys(o).every((k) => permis.includes(k));
+
+function signeValide(s: Record<string, unknown>): boolean {
+  const champs = Object.hasOwn(CHAMPS_SIGNE, String(s.type)) ? CHAMPS_SIGNE[String(s.type)]! : undefined;
+  return champs !== undefined && dans(s, ['type', ...champs]) && champs.every((k) => typeof s[k] === 'string');
+}
+const formatValide = (f: Record<string, unknown>): boolean =>
+  dans(f, ['decimal', 'milliers']) && [',', '.'].includes(String(f.decimal)) && typeof f.decimal === 'string' &&
+  typeof f.milliers === 'string' && ['', ' ', '.', ',', "'"].includes(f.milliers);
+const optionsDateValides = (o: unknown): boolean =>
+  o === undefined || (objet(o) && dans(o, ['siecle', 'origineSerie']) && (o.siecle === undefined || Number.isInteger(o.siecle)) &&
+    (o.origineSerie === undefined || typeof o.origineSerie === 'string'));
 
 /** Forme exigée avant verifierProfil : aucun champ en trop, aucune correction silencieuse. */
 function formeValide(p: unknown): p is ProfilImport {
   if (!objet(p) || !dans(p, CHAMPS)) return false;
   const { colonnes: c, signe: s, format: f } = p;
   return (
-    objet(c) && dans(c, COLONNES) && Array.isArray(c.libelle) && objet(s) && TYPES_SIGNE.includes(String(s.type)) &&
-    objet(f) && FORMATS_DATE.includes(String(p.formatDate)) && typeof p.deviseParDefaut === 'string' && typeof p.ligneEntete === 'number'
+    objet(c) && dans(c, COLONNES) && Array.isArray(c.libelle) && objet(s) && TYPES_SIGNE.includes(String(s.type)) && signeValide(s) &&
+    objet(f) && formatValide(f) && optionsDateValides(p.optionsDate) && FORMATS_DATE.includes(String(p.formatDate)) && typeof p.deviseParDefaut === 'string' && p.deviseParDefaut !== '' && typeof p.ligneEntete === 'number'
   );
 }
 
