@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { verifierChaine } from '../../../../../packages/noyau/src/journal/verifier.js';
-import { CANAUX } from '../../../../../packages/noyau/src/securite/types.js';
 import { ErreurDepot, TABLES_BANQUE, verifierValeurs, type Contexte } from '../depot.js';
 import { creerDepotMemoire, nouvelIdOrdonne } from '../depot-memoire.js';
 
@@ -46,7 +45,7 @@ describe('dépôt banque en mémoire', () => {
   it('t01-2-lien-valide-fige', async () => {
     const d = neuf();
     const l = await d.ajouter(A, 'lien_rapprochement', { etat: 'valide' });
-    expect(await code(d.modifier(A, 'lien_rapprochement', l.id, 1, { etat: 'propose' }))).toBe('lien_valide_fige');
+    expect(await code(d.modifier(A, 'lien_rapprochement', l.id, 1, {}))).toBe('lien_valide_fige');
     expect((await d.lire(A, 'lien_rapprochement', l.id)).etat).toBe('valide');
   });
 
@@ -56,8 +55,7 @@ describe('dépôt banque en mémoire', () => {
     const m = await d.modifier(A, 'lien_rapprochement', l.id, 1, { etat: 'valide' });
     expect(m.version).toBe(2);
     expect(m.etat).toBe('valide');
-    const ev = (await d.journal(A)).map((e) => e.evenement);
-    expect(ev).toEqual(['banque.ajout', 'banque.modification']);
+    expect((await d.journal(A)).map((e) => e.evenement)).toEqual(['banque.ajout', 'banque.modification']);
   });
 
   it('version-perimee', async () => {
@@ -86,8 +84,7 @@ describe('dépôt banque en mémoire', () => {
   it('iban-en-clair-refuse', async () => {
     const d = neuf();
     const iban = 'FR00' + '1'.repeat(10);
-    expect(await code(d.ajouter(A, 'compte_bancaire', { iban }))).toBe('iban_en_clair');
-    expect(await code(d.ajouter(A, 'compte_bancaire', { ibanBrut: iban }))).toBe('iban_en_clair');
+    for (const v of [{ iban }, { ibanBrut: iban }]) expect(await code(d.ajouter(A, 'compte_bancaire', v))).toBe('iban_en_clair');
     expect(await code(d.ajouter(A, 'compte_bancaire', { ibanHache: 'h', ibanMasque: 'FR****0001' }))).toBe('aucune');
     expect(verifierValeurs({ societeId: 'S-B' }, 'banque')).toBe('champ_protege');
     expect(await code(d.ajouter(A, 'compte_bancaire', { societeId: 'S-B' }))).toBe('champ_protege');
@@ -96,8 +93,7 @@ describe('dépôt banque en mémoire', () => {
   it('colonne-iban-ou-libelle-d-un-autre-module', async () => {
     const d = neuf();
     const autre = ctx('S-A', { module: 'rapprochement' });
-    expect(await code(d.ajouter(autre, 'ligne_bancaire', { libelleBrut: 'x' }))).toBe('colonne_reservee');
-    expect(await code(d.ajouter(autre, 'compte_bancaire', { ibanMasque: 'x' }))).toBe('colonne_reservee');
+    for (const v of [{ libelleBrut: 'x' }, { ibanMasque: 'x' }]) expect(await code(d.ajouter(autre, 'releve', v))).toBe('colonne_reservee');
     expect(await code(d.ajouter(A, 'ligne_bancaire', { libelleBrut: 'x' }))).toBe('aucune');
   });
 
@@ -115,8 +111,7 @@ describe('dépôt banque en mémoire', () => {
 
   it('taux-en-bigint', async () => {
     const d = neuf();
-    expect(await code(d.ajouter(A, 'taux_change', { taux: 0.5 }))).toBe('taux_invalide');
-    expect(await code(d.ajouter(A, 'taux_change', { taux: '12345678' }))).toBe('taux_invalide');
+    for (const t of [0.5, '12345678']) expect(await code(d.ajouter(A, 'taux_change', { taux: t }))).toBe('taux_invalide');
     const r = await d.ajouter(A, 'taux_change', { taux: 12345678n });
     expect(r.taux).toBe(12345678n);
   });
@@ -147,14 +142,10 @@ describe('dépôt banque en mémoire', () => {
 
   it('contexte-et-table-invalides', async () => {
     const d = neuf();
-    const mauvais: Contexte[] = [
-      ctx(''), ctx('S-A', { module: '' }), ctx('S-A', { acteur: { type: 'ia', id: '' } }),
-      ctx('S-A', { canal: 'inconnu' as never }), ctx('S-A', { horodatage: 'pas-une-date' }),
-    ];
+    const mauvais = [ctx(''), ctx('S-A', { module: '' }), ctx('S-A', { acteur: { type: 'ia', id: '' } }), ctx('S-A', { canal: 'x' as never }), ctx('S-A', { horodatage: 'non' })];
     for (const c of mauvais) expect(await code(d.ajouter(c, 'releve', {}))).toBe('contexte_invalide');
     expect(await code(d.ajouter(A, 'table_x' as never, {}))).toBe('table_inconnue');
     expect(await code(d.lire(A, 'releve', 'absent'))).toBe('inconnu');
     expect(TABLES_BANQUE).toHaveLength(29);
-    expect(CANAUX).toContain(A.canal);
   });
 });

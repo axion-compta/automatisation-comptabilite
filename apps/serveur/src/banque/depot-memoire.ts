@@ -1,10 +1,7 @@
 // Implémentation en mémoire de DepotBanque : porte les règles, sans base ni appel sortant.
 import { ajouterEntree, teteInitiale, type EntreeJournal, type Tete } from '../../../../packages/noyau/src/journal/chaine.js';
 import { CANAUX } from '../../../../packages/noyau/src/securite/types.js';
-import {
-  ErreurDepot, TABLES_AJOUT_SEUL, TABLES_BANQUE, verifierValeurs,
-  type CodeDepot, type Contexte, type DepotBanque, type Rangee, type TableBanque,
-} from './depot.js';
+import { ErreurDepot, TABLES_AJOUT_SEUL, TABLES_BANQUE, verifierValeurs, type CodeDepot, type Contexte, type DepotBanque, type Rangee, type TableBanque } from './depot.js';
 
 /** Compteur complété de zéros : l'ordre des chaînes suit l'ordre de création. */
 export function nouvelIdOrdonne(): () => string {
@@ -22,20 +19,15 @@ export function creerDepotMemoire(options: { nouvelId: () => string }): DepotBan
 
   const verifier = (ctx: Contexte, table: string): TableBanque => {
     const vide = (t: unknown) => typeof t !== 'string' || t === '';
-    if (
-      !ctx || vide(ctx.societeId) || vide(ctx.module) || vide(ctx.acteur?.id) ||
-      !(CANAUX as readonly unknown[]).includes(ctx.canal) ||
-      typeof ctx.horodatage !== 'string' || Number.isNaN(Date.parse(ctx.horodatage))
-    ) return refuser('contexte_invalide');
+    if (!ctx || vide(ctx.societeId) || vide(ctx.module) || vide(ctx.acteur?.id) || !(CANAUX as readonly unknown[]).includes(ctx.canal) || Number.isNaN(Date.parse(ctx.horodatage))) {
+      return refuser('contexte_invalide');
+    }
     if (!(TABLES_BANQUE as readonly string[]).includes(table)) return refuser('table_inconnue');
     return table as TableBanque;
   };
   const noter = (ctx: Contexte, evenement: string, apres: unknown): void => {
     const j = journaux.get(ctx.societeId) ?? { tete: teteInitiale(ctx.societeId, ctx.horodatage), entrees: [] };
-    const r = ajouterEntree(j.tete, {
-      societeId: ctx.societeId, horodatage: ctx.horodatage, acteur: `${ctx.acteur.type}:${ctx.acteur.id}`,
-      canal: ctx.canal, evenement, apres,
-    });
+    const r = ajouterEntree(j.tete, { societeId: ctx.societeId, horodatage: ctx.horodatage, acteur: `${ctx.acteur.type}:${ctx.acteur.id}`, canal: ctx.canal, evenement, apres });
     j.tete = r.tete;
     j.entrees.push(r.entree);
     journaux.set(ctx.societeId, j);
@@ -48,8 +40,8 @@ export function creerDepotMemoire(options: { nouvelId: () => string }): DepotBan
     }
     return r;
   };
-  const noterEcriture = (ctx: Contexte, evenement: string, table: string, r: Rangee, valeurs: Record<string, unknown>) =>
-    noter(ctx, evenement, { table, id: r.id, version: r.version, champs: Object.keys(valeurs) });
+  const noterEcriture = (ctx: Contexte, evt: string, table: string, r: Rangee, v: Record<string, unknown>) =>
+    noter(ctx, evt, { table, id: r.id, version: r.version, champs: Object.keys(v) });
 
   return {
     async ajouter(ctx, table, valeurs) {

@@ -22,10 +22,7 @@ export type Contexte = {
 };
 export type Rangee = { id: string; societeId: string; version: number } & Record<string, unknown>;
 
-export type CodeDepot =
-  | 'acces_refuse' | 'inconnu' | 'table_inconnue' | 'ajout_seul' | 'lien_valide_fige' | 'version_perimee'
-  | 'champ_protege' | 'colonne_reservee' | 'iban_en_clair' | 'montant_invalide' | 'taux_invalide'
-  | 'contexte_invalide' | 'journal_reserve';
+export type CodeDepot = 'acces_refuse' | 'inconnu' | 'table_inconnue' | 'ajout_seul' | 'lien_valide_fige' | 'version_perimee' | 'champ_protege' | 'colonne_reservee' | 'iban_en_clair' | 'montant_invalide' | 'taux_invalide' | 'contexte_invalide' | 'journal_reserve';
 
 export class ErreurDepot extends Error {
   override name = 'ErreurDepot';
