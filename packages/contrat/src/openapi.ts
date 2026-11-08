@@ -21,10 +21,15 @@ function definitions(): Def[] {
 
 const forme = (s: Sch): { shape: Record<string, Sch> } => s as unknown as { shape: Record<string, Sch> };
 
+/** Routes qui lisent en POST (le texte est dans le corps) : seule exemption d'Idempotency-Key. */
+export function routesLectureParPost(): string[] {
+  return definitions().filter((d) => d.tags?.includes('lecture-par-post')).map((d) => d.operationId);
+}
+
 /** Une route d'écriture (hors GET) sans en-tête Idempotency-Key est une anomalie. */
 export function routesEcritureSansEnTete(): string[] {
   return definitions()
-    .filter((d) => d.method !== 'GET')
+    .filter((d) => d.method !== 'GET' && !d.tags?.includes('lecture-par-post'))
     .filter((d) => {
       const h = forme(d.inputSchema).shape['headers'];
       return !h || !('idempotency-key' in forme(h).shape);

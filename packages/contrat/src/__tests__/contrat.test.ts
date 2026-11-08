@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { parametresRequete, contrat, ConflitVersion, creerService, genererOpenapi, routesEcritureSansEnTete, EnTeteEcriture } from '../index.js';
+import { parametresRequete, contrat, ConflitVersion, creerService, genererOpenapi, routesEcritureSansEnTete, routesLectureParPost, EnTeteEcriture } from '../index.js';
 
 describe('parametresRequete', () => {
   it('tire noms, obligation et bornes du schéma Zod', () => {
@@ -20,6 +20,10 @@ describe('contrat', () => {
 
   it('aucune route d\'écriture sans en-tête Idempotency-Key', () => {
     expect(routesEcritureSansEnTete()).toEqual([]);
+  });
+
+  it('lecture-par-post-explicite', () => {
+    expect(routesLectureParPost()).toEqual(['chercher']);
   });
 
   it('refuse une écriture sans en-tête', () => {
