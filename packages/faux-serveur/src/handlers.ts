@@ -13,6 +13,7 @@ import { creerHandlersNotifications } from './domaines/notifications.js';
 import { creerHandlersBanque } from './domaines/banque.js';
 import { creerHandlersPrincipes } from './domaines/principes.js';
 import { creerHandlersTva } from './domaines/tva.js';
+import { creerHandlersChange } from './domaines/change.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 
@@ -115,5 +116,6 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersBanque(base, attendre),
     ...creerHandlersPrincipes(base, attendre),
     ...creerHandlersTva(base, attendre),
+    ...creerHandlersChange(base, attendre),
   ];
 }
