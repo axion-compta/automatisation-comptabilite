@@ -1760,6 +1760,51 @@
         }
       }
     },
+    "/siren/{siren}": {
+      "get": {
+        "operationId": "lireSiren",
+        "parameters": [
+          {
+            "name": "siren",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
+    "/tva-intracom/{numero}/verification": {
+      "get": {
+        "operationId": "verifierTva",
+        "parameters": [
+          {
+            "name": "numero",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/ecarts-change/{id}/explication": {
       "get": {
         "operationId": "expliquerEcartChange",
