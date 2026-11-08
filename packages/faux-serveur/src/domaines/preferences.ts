@@ -1,6 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { CorpsPreference, CorpsUsage, QueryPreferences } from '../../../contrat/src/domaines/preferences.js';
-import { creerServicePreferences, ErreurPreference, ErreurUsage } from '../../../contrat/src/domaines/preferences-service.js';
 import { EnTeteEcriture } from '../../../contrat/src/schemas.js';
 import type { OptionsFauxServeur } from '../handlers.js';
 
@@ -9,7 +8,12 @@ const NOMS_PANNE = { 403: 'FORBIDDEN', 423: 'RESSOURCE_VERROUILLEE' } as const;
 
 /** Handlers des préférences et de la mesure d'usage, branchés sur le service du contrat (service neuf par fabrique). */
 export function creerHandlersPreferences(base: string, attendre: () => Promise<void>, options: OptionsFauxServeur = {}): HttpHandler[] {
-  const service = creerServicePreferences();
+  // Import différé : le service tire `node:crypto` (noyau/usage), absent du navigateur où ce faux serveur est aussi servi.
+  const charger = () => import('../../../contrat/src/domaines/preferences-service.js');
+  let memo: ReturnType<typeof charger> | undefined;
+  const module = () => (memo ??= charger());
+  let instance: ReturnType<Awaited<ReturnType<typeof charger>>['creerServicePreferences']> | undefined;
+  const serviceDe = async () => (instance ??= (await module()).creerServicePreferences());
   /** `x-panne: reseau` coupe le réseau (toutes routes) ; 403 et 423 touchent les écritures seulement. */
   const panne = (request: Request, ecriture: boolean): Response | undefined => {
     const entete = request.headers.get('x-panne');
@@ -28,7 +32,7 @@ export function creerHandlersPreferences(base: string, attendre: () => Promise<v
       const q = new URL(request.url).searchParams;
       const query = QueryPreferences.safeParse(q.has('appareil') ? { appareil: q.get('appareil') } : {});
       if (!query.success || q.getAll('appareil').length > 1) return erreur('BAD_REQUEST', 400);
-      return HttpResponse.json(service.lire(query.data.appareil));
+      return HttpResponse.json((await serviceDe()).lire(query.data.appareil));
     }),
 
     http.put(base + '/preferences/:cle', async ({ request, params }) => {
@@ -38,6 +42,8 @@ export function creerHandlersPreferences(base: string, attendre: () => Promise<v
       const entete = cle(request);
       const corps = CorpsPreference.safeParse(await corpsDe(request));
       if (!entete.success || !corps.success) return erreur('BAD_REQUEST', 400);
+      const service = await serviceDe();
+      const { ErreurPreference } = await module();
       try {
         return HttpResponse.json(service.ecrire(String(params['cle']), corps.data, entete.data['idempotency-key']));
       } catch (e) {
@@ -53,6 +59,8 @@ export function creerHandlersPreferences(base: string, attendre: () => Promise<v
       const entete = cle(request);
       const corps = CorpsUsage.safeParse(await corpsDe(request));
       if (!entete.success || !corps.success) return erreur('BAD_REQUEST', 400);
+      const service = await serviceDe();
+      const { ErreurUsage } = await module();
       try {
         service.enregistrerUsage(corps.data.evenements, entete.data['idempotency-key']);
       } catch (e) {
