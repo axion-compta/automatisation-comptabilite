@@ -148,4 +148,10 @@ describe('cheminTiers', () => {
     expect(cheminTiers('tous', 'a&b=c', 0)).toContain('q=a%26b%3Dc');
   });
   it('route-declaree', () => expect([route.id, route.chemin, route.groupe]).toEqual(['e44', '/reglages/entreprise/tiers', 'reglages']));
+  it('e44-bouton-present', async () => {
+    await monter();
+    const b = [...document.querySelectorAll('button')].find((x) => x.textContent === e44.export.bouton);
+    expect(b).toBeDefined();
+    expect(b?.closest('section')).toBe(document.querySelector('section'));
+  });
 });
