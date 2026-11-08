@@ -11,6 +11,7 @@ import { routesPreferences, type ServicePreferences } from './domaines/preferenc
 import { routesRecherche, type ServiceRecherche } from './domaines/recherche.js';
 import { routesExports, type ServiceExports } from './domaines/exports.js';
 import { routesCalendrier, type ServiceCalendrier } from './domaines/calendrier.js';
+import { routesTva } from './domaines/tva.js';
 import { routesNotifications, type ServiceNotifications } from './domaines/notifications.js';
 import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
@@ -71,6 +72,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     recherche: routesRecherche(s.recherche),
     exports: routesExports(s.exports),
     calendrier: routesCalendrier(s.calendrier),
+    tva: routesTva(),
     notifications: routesNotifications(s.notifications),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
