@@ -31,6 +31,7 @@ import { change } from './domaines/change.js';
 import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
+import { personnes } from './domaines/personnes.js';
 import { sante } from './domaines/sante.js';
 import { santeExploitation } from './domaines/sante-exploitation.js';
 import { echeances } from './domaines/echeances.js';
@@ -90,6 +91,7 @@ export const contrat = {
   frais,
   sante,
   santeExploitation,
+  personnes,
   echeances,
   bloquants,
   juridique,
