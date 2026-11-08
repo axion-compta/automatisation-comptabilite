@@ -10,6 +10,7 @@ const valides: Record<string, unknown> = {
   'tiers.lister': { recherche: 'Dupont' },
   'ecritures.lister': { exercice_id: 'ex_a1' },
   'vue.ouvrir': { vue: 'ecritures' },
+  'change.expliquer_ecart': { ecart_id: 'ec_a1' },
   proposer_validation: { exercice_id: 'ex_a1', lignes: [ligne, { ...ligne, debit_centimes: 0, credit_centimes: 100 }] },
 };
 const nomsValides = Object.keys(valides);
