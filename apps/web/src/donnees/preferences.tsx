@@ -2,23 +2,20 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { z } from 'zod';
 import { ErreurEcriture, ErreurLecture, ecrire as ecrireApi, lire, nouvelleCle } from '../api.js';
 import { validerPreference } from '../../../../packages/noyau/src/preferences/valider.js';
-
 /** Même borne que la coque (socle.css). */
 const REQUETE_MOBILE = '(max-width: 719px)';
 const CLE_COPIE = 'axion.preferences.v1';
 const CLE_FILE = 'axion.preferences.file.v1';
 const CLES_DISPOSITION = ['menu_etat', 'chat_etat', 'chat_largeur_pct'];
-
 export type Appareil = 'bureau' | 'mobile';
 type Ecriture = { cle: string; valeur: unknown; appareil: string; modifieLeClient: number; idempotencyKey: string };
 type Valeurs = Record<string, unknown>;
-
 const SchemaLecture = z.object({ body: z.record(z.string(), z.object({ valeur: z.unknown() })) });
 const SchemaEcriture = z.object({}).passthrough();
-
 export const appareilCourant = (): Appareil =>
   typeof window.matchMedia === 'function' && window.matchMedia(REQUETE_MOBILE).matches ? 'mobile' : 'bureau';
 const appareilDe = (cle: string, appareil: Appareil): string => (CLES_DISPOSITION.includes(cle) ? appareil : 'tous');
+const objet = (b: unknown): b is Valeurs => typeof b === 'object' && b !== null && !Array.isArray(b);
 
 function lireJson(cle: string): unknown {
   try {
@@ -43,25 +40,23 @@ function propre(cle: string, valeur: unknown, appareil: Appareil): { valeur: unk
     return null;
   }
 }
-
-function copieLocale(appareil: Appareil): Valeurs {
-  const brut = lireJson(CLE_COPIE);
+const nettoyer = (entrees: [string, unknown][], appareil: Appareil): Valeurs => {
   const sortie: Valeurs = {};
-  if (typeof brut !== 'object' || brut === null || Array.isArray(brut)) return sortie;
-  const parAppareil = (brut as Record<string, unknown>)[appareil];
-  if (typeof parAppareil !== 'object' || parAppareil === null || Array.isArray(parAppareil)) return sortie;
-  for (const [cle, valeur] of Object.entries(parAppareil)) {
+  for (const [cle, valeur] of entrees) {
     const v = propre(cle, valeur, appareil);
     if (v) sortie[cle] = v.valeur;
   }
   return sortie;
-}
+};
+const copieLocale = (appareil: Appareil): Valeurs => {
+  const brut = lireJson(CLE_COPIE);
+  const par = objet(brut) ? brut[appareil] : null;
+  return objet(par) ? nettoyer(Object.entries(par), appareil) : {};
+};
 function memoriser(appareil: Appareil, valeurs: Valeurs): void {
   const brut = lireJson(CLE_COPIE);
-  const base = typeof brut === 'object' && brut !== null && !Array.isArray(brut) ? (brut as Record<string, unknown>) : {};
-  ecrireJson(CLE_COPIE, { ...base, [appareil]: valeurs });
+  ecrireJson(CLE_COPIE, { ...(objet(brut) ? brut : {}), [appareil]: valeurs });
 }
-
 const estEcriture = (e: unknown): e is Ecriture => {
   const o = e as Partial<Ecriture> | null;
   return typeof o?.cle === 'string' && typeof o.appareil === 'string' && typeof o.idempotencyKey === 'string' && typeof o.modifieLeClient === 'number';
@@ -70,7 +65,6 @@ const lireFile = (): Ecriture[] => {
   const brut = lireJson(CLE_FILE);
   return Array.isArray(brut) ? brut.filter(estEcriture) : [];
 };
-
 type Contexte = { valeurs: Valeurs; ecrire: (cle: string, valeur: unknown) => void };
 const Ctx = createContext<Contexte | null>(null);
 
@@ -80,7 +74,6 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
   const [valeurs, setValeurs] = useState<Valeurs>(() => copieLocale(appareil));
   const enCours = useRef(false);
   const vivant = useRef(true);
-
   const rejouer = useCallback(async (): Promise<void> => {
     if (enCours.current) return;
     enCours.current = true;
@@ -98,16 +91,11 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
       enCours.current = false;
     }
   }, []);
-
   const charger = useCallback(async (): Promise<void> => {
     await rejouer();
     try {
       const r = await lire('/preferences?appareil=' + appareil, SchemaLecture);
-      const serveur: Valeurs = {};
-      for (const [cle, { valeur }] of Object.entries(r.body)) {
-        const v = propre(cle, valeur, appareil);
-        if (v) serveur[cle] = v.valeur;
-      }
+      const serveur = nettoyer(Object.entries(r.body).map(([cle, { valeur }]): [string, unknown] => [cle, valeur]), appareil);
       for (const e of lireFile()) serveur[e.cle] = e.valeur;
       memoriser(appareil, serveur);
       if (vivant.current) setValeurs(serveur);
@@ -115,7 +103,6 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
       if (!(x instanceof ErreurLecture)) throw x;
     }
   }, [appareil, rejouer]);
-
   useEffect(() => {
     vivant.current = true;
     void charger();
@@ -126,7 +113,6 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
       window.removeEventListener('online', auRetour);
     };
   }, [charger, rejouer]);
-
   const ecrire = useCallback(
     (cle: string, valeur: unknown) => {
       const v = propre(cle, valeur, appareil);
@@ -142,7 +128,6 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
     },
     [appareil, rejouer],
   );
-
   const contexte = useMemo(() => ({ valeurs, ecrire }), [valeurs, ecrire]);
   return <Ctx.Provider value={contexte}>{children}</Ctx.Provider>;
 }
