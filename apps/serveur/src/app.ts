@@ -19,6 +19,8 @@ import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
+import { routesProfilChamps } from './domaines/profil-champs.js';
+import { creerServiceProfilChamps } from '../../../packages/contrat/src/domaines/profil-champs-service.js';
 import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
 import { routesIdentite } from './domaines/identite.js';
@@ -59,6 +61,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     calendrier: services.calendrier ?? {},
     notifications: services.notifications ?? {},
   };
+  const profilChamps = creerServiceProfilChamps('soc-lemoine');
   const os = implement(contrat);
   const routeur = os.router({
     ecritures: {
@@ -90,7 +93,8 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     calendrier: routesCalendrier(s.calendrier),
     tva: routesTva(),
     notifications: routesNotifications(s.notifications),
-    profil: routesProfil(),
+    profil: routesProfil(profilChamps),
+    profilChamps: routesProfilChamps(profilChamps),
     fec: routesFec(),
     controles: routesControles(),
     regimes: routesRegimes(),
