@@ -1,5 +1,4 @@
 import { useId } from "react";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./liste-bloquants.css";
 
 export interface PointBloquant {
