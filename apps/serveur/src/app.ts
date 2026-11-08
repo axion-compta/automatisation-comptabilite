@@ -31,6 +31,7 @@ import { implementerSanteExploitation } from './domaines/sante-exploitation.js';
 import { routesEcheances } from './domaines/echeances.js';
 import { routesBloquants } from './domaines/bloquants.js';
 import { routesJuridique } from './domaines/juridique.js';
+import { routesVentes } from './domaines/ventes.js';
 import { routesPieces } from './domaines/pieces.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
@@ -108,6 +109,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     bloquants: routesBloquants(),
     juridique: routesJuridique(),
     parametres: routesParametres(),
+    ventes: routesVentes(),
     pieces: routesPieces(),
     tresorerie: routesTresorerie(),
     fournisseurs: routesFournisseurs(),

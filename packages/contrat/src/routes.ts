@@ -38,6 +38,7 @@ import { echeances } from './domaines/echeances.js';
 import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
+import { ventes } from './domaines/ventes.js';
 import { pieces } from './domaines/pieces.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
 
@@ -96,6 +97,7 @@ export const contrat = {
   bloquants,
   juridique,
   parametres,
+  ventes,
   pieces,
   tresorerie: domaineTresorerie,
   fournisseurs: domaineFournisseurs,
