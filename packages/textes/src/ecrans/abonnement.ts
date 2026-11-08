@@ -15,6 +15,12 @@ const SUITE = 'Vous pouvez toujours consulter et exporter vos documents.';
 const jauge = {
   libelle: 'Pièces traitées ce mois-ci',
   depasse: "Vous avez dépassé le volume de votre palier. Vos pièces continuent d'être traitées.",
+} as {
+  libelle: string;
+  depasse: string;
+  valeur: (utilise: string, compris: string) => string;
+  estimation: (n: string) => string;
+  seuilAtteint: (pourcent: string) => string;
 };
 ajoute(jauge, 'valeur', (utilise: string, compris: string): string => `${utilise} sur ${compris}`);
 ajoute(jauge, 'estimation', (n: string): string => `Estimation de fin de mois : ${n}`);
