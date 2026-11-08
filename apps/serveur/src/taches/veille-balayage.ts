@@ -1,6 +1,7 @@
 // Balayage planifié des sources de la veille : empreinte ciblée, sans IA, alerte si changement ou arrêt.
 // Écrit contre des interfaces (lecture, veille, alerte) : aucun réseau, aucune base, aucune file réelle ici.
 import { createHash } from 'node:crypto';
+import type { PortAlerteExploitation } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
 import { creerFiche, type FicheChangement } from '../../../../packages/noyau/src/sources/veille-circuit.js';
 import {
   enPeriodeRapprochee, etatVeille, ErreurEtatVeille,
@@ -22,7 +23,7 @@ export type AlerteVeille =
   | { code: 'changement_detecte'; sourceId: string; ficheId: string }
   | { code: 'source_illisible'; sourceId: string }
   | { code: 'veille_arretee'; dernierBalayage: string | null };
-export interface PortAlerte { alerter(a: AlerteVeille): Promise<void> }
+export type PortAlerte = PortAlerteExploitation<AlerteVeille>;
 
 /** Hachage du texte compris entre les deux marqueurs (blancs normalisés) ; null si un marqueur manque. */
 export function empreinteCiblee(contenu: string, source: SourceVeille): string | null {

@@ -1,6 +1,7 @@
 // Passage nocturne : tout le catalogue sur l'exercice ouvert, une société après l'autre.
 // Écrit contre des interfaces (source, journal, alerte) : aucune file ni base réelle ici.
 import { nocturneEnRetard, objetsAControler } from '../../../../packages/noyau/src/controles/declencheurs.js';
+import type { PortAlerteExploitation } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
 import { executerControles, type ObjetControle, type RegleControle, type TraceControle } from '../../../../packages/noyau/src/controles/moteur.js';
 
 export interface SourceSociete<T> {
@@ -23,7 +24,7 @@ export interface ParametresNocturne<T> {
   source: SourceSociete<T>;
   journal: PortJournal;
   maintenant(): string;
-  alerter(alerte: AlerteExploitation): void | Promise<void>;
+  alerte: PortAlerteExploitation<AlerteExploitation>;
 }
 
 export interface ResultatSociete { societeId: string; etat: 'fait' | 'deja_fait' | 'echec'; traces: number }
@@ -49,11 +50,11 @@ export async function passerNocturne<T>(p: ParametresNocturne<T>): Promise<Resul
       societes.push(await passerSociete(p, societeId));
     } catch {
       societes.push({ societeId, etat: 'echec', traces: 0 });
-      await p.alerter({ code: 'nocturne_societe_en_echec', passageId: p.passageId, societeId });
+      await p.alerte.alerter({ code: 'nocturne_societe_en_echec', passageId: p.passageId, societeId });
     }
   }
   const fin = p.maintenant();
   const enRetard = nocturneEnRetard(debut, fin, p.dureeMaxMinutes, fin);
-  if (enRetard) await p.alerter({ code: 'nocturne_en_retard', passageId: p.passageId });
+  if (enRetard) await p.alerte.alerter({ code: 'nocturne_en_retard', passageId: p.passageId });
   return { passageId: p.passageId, enRetard, societes };
 }

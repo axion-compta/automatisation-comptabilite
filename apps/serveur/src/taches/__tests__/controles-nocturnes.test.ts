@@ -36,7 +36,7 @@ function monde(donnees: Record<string, ObjetControle<number>[]>, minutes: number
   const maintenant = (): string => apres(minutes[Math.min(i++, minutes.length - 1)] ?? 0);
   const lancer = () => passerNocturne({
     societes: Object.keys(donnees), passageId: 'nuit-1', dureeMaxMinutes: DUREE_MAX,
-    source, journal, maintenant, alerter: (a) => { alertes.push(a); },
+    source, journal, maintenant, alerte: { alerter: async (a) => { alertes.push(a); } },
   });
   return { lancer, stock, alertes, appels, maxSimultane: () => maxSimultane };
 }
@@ -81,7 +81,7 @@ describe('contrôles nocturnes', () => {
       societes: ['soc-a', 'soc-b'], passageId: 'nuit-2', dureeMaxMinutes: DUREE_MAX,
       source: { charger: async (id) => { if (id === 'soc-a') throw new Error('base indisponible'); return { regles: [regle], objets: [objet('b1', 1)] }; } },
       journal: { dejaPasse: async () => false, ajouter: async (s, p, t) => { stock.set(s + p, [...t]); } },
-      maintenant: () => T0, alerter: (a) => { alertes.push(a); },
+      maintenant: () => T0, alerte: { alerter: async (a) => { alertes.push(a); } },
     });
     expect(r.societes.map((s) => s.etat)).toEqual(['echec', 'fait']);
     expect(alertes).toEqual([{ code: 'nocturne_societe_en_echec', passageId: 'nuit-2', societeId: 'soc-a' }]);

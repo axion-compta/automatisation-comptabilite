@@ -10,6 +10,12 @@ import { creerHandlersRecherche } from './domaines/recherche.js';
 import { creerHandlersExports } from './domaines/exports.js';
 import { creerHandlersCalendrier } from './domaines/calendrier.js';
 import { creerHandlersNotifications } from './domaines/notifications.js';
+import { creerHandlersBanque } from './domaines/banque.js';
+import { creerHandlersPrincipes } from './domaines/principes.js';
+import { creerHandlersTva } from './domaines/tva.js';
+import { creerHandlersChange } from './domaines/change.js';
+import { creerHandlersSante } from './domaines/sante.js';
+import { creerHandlersJuridique } from './domaines/juridique.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 
@@ -109,5 +115,11 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersNotifications(base, attendre, options),
     ...creerHandlersChat(base, attendre, options.chat),
     ...creerHandlersChatPropositions(base, attendre, options.propositions),
+    ...creerHandlersBanque(base, attendre),
+    ...creerHandlersPrincipes(base, attendre),
+    ...creerHandlersTva(base, attendre),
+    ...creerHandlersChange(base, attendre),
+    ...creerHandlersSante(base, attendre),
+    ...creerHandlersJuridique(base, attendre),
   ];
 }

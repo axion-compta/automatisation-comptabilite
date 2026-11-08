@@ -57,4 +57,53 @@ export const lireExplicationLigne = oc
   .input(z.object({ params: z.object({ ligne: z.string().min(1) }) }))
   .output(ReponseExplication);
 
-export const banque = { listerComptesBancaires, listerLignesBancaires, lireExplicationLigne };
+export const EtatMois = z.enum(['couvert', 'manquant', 'partiel']);
+export const Couverture = z.object({ compteId: z.string(), mois: z.array(z.object({ mois: z.string().regex(/^\d{4}-\d{2}$/), etat: EtatMois })) });
+export const EtatTrou = z.enum(['ouvert', 'accepte', 'comble']);
+export const TrouReleve = z.object({
+  id: z.string(), compteId: z.string(), debut: Date10, fin: Date10, preuve: z.string(), ecartCentimes: Entier.optional(), etat: EtatTrou,
+});
+export const EtatDemande = z.enum(['ouverte', 'repondue']);
+export const Demande = z.object({
+  id: z.string(), cle: z.string(), ligneIds: z.array(z.string()), impactCentimes: Entier, nombre: Entier, type: z.string(),
+  codeQuestion: z.string(), reponsesPretes: z.array(z.string()), etat: EtatDemande,
+});
+export const EtatDoublon = z.enum(['propose', 'confirme', 'rejete']);
+export const DoublonPropose = z.object({ id: z.string(), ligneA: z.string(), ligneB: z.string(), motif: z.string(), etat: EtatDoublon });
+export type Couverture = z.infer<typeof Couverture>;
+export type TrouReleve = z.infer<typeof TrouReleve>;
+export type Demande = z.infer<typeof Demande>;
+export type DoublonPropose = z.infer<typeof DoublonPropose>;
+
+export const ReponseCouverture = z.object({ body: Couverture });
+export const ReponseTrous = enveloppe(TrouReleve);
+export const ReponseDemandes = enveloppe(Demande);
+export const ReponseDoublons = enveloppe(DoublonPropose);
+
+const queryEtat = <T extends z.ZodType>(etat: T) => z.object({ query: z.object({ etat: etat.optional() }).optional() });
+
+export const lireCouvertureCompte = oc
+  .route({ method: 'GET', path: '/banque/comptes/{compte}/couverture', inputStructure: 'detailed', operationId: 'lireCouvertureCompte' })
+  .errors({ COMPTE_INCONNU: { status: 404 } })
+  .input(z.object({ params: z.object({ compte: z.string().min(1) }), query: z.object({ exercice_id: z.string().min(1).optional() }).optional() }))
+  .output(ReponseCouverture);
+
+export const listerTrousReleves = oc
+  .route({ method: 'GET', path: '/banque/trous', inputStructure: 'detailed', operationId: 'listerTrousReleves' })
+  .input(queryEtat(EtatTrou))
+  .output(ReponseTrous);
+
+export const listerDemandes = oc
+  .route({ method: 'GET', path: '/banque/demandes', inputStructure: 'detailed', operationId: 'listerDemandes' })
+  .input(queryEtat(EtatDemande))
+  .output(ReponseDemandes);
+
+export const listerDoublons = oc
+  .route({ method: 'GET', path: '/banque/doublons', inputStructure: 'detailed', operationId: 'listerDoublons' })
+  .input(queryEtat(EtatDoublon))
+  .output(ReponseDoublons);
+
+export const banque = {
+  listerComptesBancaires, listerLignesBancaires, lireExplicationLigne,
+  lireCouvertureCompte, listerTrousReleves, listerDemandes, listerDoublons,
+};
