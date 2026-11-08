@@ -3,7 +3,6 @@ import type { Centimes } from "../../../noyau/src/argent/index.js";
 import { formaterDateAffiche } from "../format/affichage.js";
 import { Bouton } from "./Bouton.js";
 import { Montant } from "./Montant.js";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./carte-action.css";
 
 export type NiveauAction = "B" | "M" | "I";
