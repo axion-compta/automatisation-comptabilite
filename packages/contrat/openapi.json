@@ -1094,6 +1094,33 @@
         }
       }
     },
+    "/ecarts-change/{id}/explication": {
+      "get": {
+        "operationId": "expliquerEcartChange",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
