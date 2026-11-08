@@ -20,6 +20,7 @@ import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
 import { routesControles, routesFec } from './domaines/fec.js';
+import { routesControlesActions, type ContexteSession, type FournisseurSession, type ServiceControlesActions } from './domaines/controles-actions.js';
 import { routesChange } from './domaines/change.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
@@ -47,7 +48,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions; controlesActions?: ServiceControlesActions } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -57,7 +58,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     calendrier: services.calendrier ?? {},
     notifications: services.notifications ?? {},
   };
-  const os = implement(contrat);
+  const os = implement(contrat).$context<ContexteSession>();
   const routeur = os.router({
     ecritures: {
       lister: os.ecritures.lister.handler(({ input }) => {
@@ -91,6 +92,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     profil: routesProfil(),
     fec: routesFec(),
     controles: routesControles(),
+    controlesActions: routesControlesActions(options.controlesActions),
     regimes: routesRegimes(),
     change: routesChange(),
     frais: routesFrais(),
@@ -111,13 +113,13 @@ export function creerRouteur(service: Service = creerService(), services: Partia
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite; controlesActions?: ServiceControlesActions; session?: FournisseurSession } = {}): FastifyInstance {
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
   app.addContentTypeParser('*', (_req, _payload, done) => done(null, undefined));
   app.all('/*', async (request, reply) => {
-    const { matched } = await handler.handle(request, reply, { prefix: '/', context: {} });
+    const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session: options.session?.(request.headers) } });
     if (!matched) reply.status(404).send({ code: 'INTROUVABLE', status: 404 });
   });
   return app;
