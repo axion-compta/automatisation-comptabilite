@@ -31,6 +31,7 @@ import { change } from './domaines/change.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
 import { sante } from './domaines/sante.js';
+import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
@@ -83,6 +84,7 @@ export const contrat = {
   change,
   frais,
   sante,
+  bloquants,
   juridique,
   parametres,
   tresorerie: domaineTresorerie,
