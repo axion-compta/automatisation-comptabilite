@@ -1,7 +1,6 @@
 import { useId, useState } from "react";
 import { centimes } from "../../../noyau/src/argent/index.js";
 import { Montant } from "./Montant.js";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./documents.css";
 
 export interface SourceMontant {
