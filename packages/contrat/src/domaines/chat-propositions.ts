@@ -2,6 +2,7 @@ import { oc } from '@orpc/contract';
 import { z } from 'zod';
 import { EnTeteEcriture } from '../schemas.js';
 import { AppelIa, DecisionIa } from '../chat/journal-ia.js';
+import { cheminSociete } from '../prefixe-routes.js';
 import { ETATS_PROPOSITION, NIVEAUX } from '../../../noyau/src/chat/types.js';
 
 /** Vue d'une proposition : jamais le texte d'une pièce ni d'un message. */
@@ -15,9 +16,9 @@ export type PropositionVue = z.infer<typeof PropositionVue>;
 
 export const Pourquoi = z.object({ decision: DecisionIa, appel: AppelIa }).strict();
 
-const parametres = z.object({ id: z.string().min(1) });
+const parametres = z.object({ s: z.string().min(1), id: z.string().min(1) });
 const INCONNUE = { PROPOSITION_INCONNUE: { status: 404 } } as const;
-const chemin = '/chat/propositions/{id}';
+const chemin = cheminSociete('/chat/propositions/{id}') as `/${string}`;
 
 export const lireProposition = oc
   .route({ method: 'GET', path: chemin, inputStructure: 'detailed', operationId: 'lireProposition' })

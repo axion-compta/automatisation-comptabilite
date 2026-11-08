@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { demarrerNoeud } from '../noeud.js';
 import { DecodeurFlux } from '../../../contrat/src/chat/flux.js';
+import { cheminSociete } from '../../../contrat/src/prefixe-routes.js';
+const CHAT = cheminSociete('/chat').replace('{s}', 'soc_a');
 
 describe('faux serveur côté Node', () => {
   it('demarrer-noeud-repond', async () => {
@@ -61,9 +63,9 @@ describe('faux serveur du chat côté Node', () => {
     const porte = new Promise<void>((res) => (ouvrir = res));
     const noeud = demarrerNoeud({ base: B, chat: { attendre: (rang) => (rang === 3 ? porte : undefined) } });
     try {
-      const envoi = poster('/chat/messages', demande);
+      const envoi = poster(`${CHAT}/messages`, demande);
       await new Promise((r) => setTimeout(r, 20));
-      expect((await poster('/chat/tours/msg-0001/arreter')).status).toBe(200);
+      expect((await poster(CHAT + '/tours/msg-0001/arreter')).status).toBe(200);
       ouvrir();
       const evts = new DecodeurFlux().pousser(await (await envoi).text());
       expect(evts.map((e) => e.type)).toEqual(['tour.debut', 'etape', 'tour.fin']);
@@ -76,8 +78,8 @@ describe('faux serveur du chat côté Node', () => {
     const noeud = demarrerNoeud({ base: B, chat: { coupureApres: 1 } });
     try {
       const d = new DecodeurFlux();
-      expect(d.pousser(await (await poster('/chat/messages', demande)).text()).map((e) => e.id)).toEqual([1]);
-      const suite = await poster('/chat/messages', demande, { 'last-event-id': '1' });
+      expect(d.pousser(await (await poster(`${CHAT}/messages`, demande)).text()).map((e) => e.id)).toEqual([1]);
+      const suite = await poster(`${CHAT}/messages`, demande, { 'last-event-id': '1' });
       expect(d.pousser(await suite.text()).map((e) => e.id)).toEqual([2]);
     } finally {
       noeud.fermer();
@@ -89,7 +91,7 @@ describe('faux serveur des propositions côté Node', () => {
   it('compte de service : le scénario de la configuration refuse, l\'en-tête ne change rien', async () => {
     const noeud = demarrerNoeud({ base: 'http://127.0.0.1:1', propositions: { acteur: 'compte_service', ajouts: [{ id: 'prp-0001', outil: 'enregistrer_ecriture', niveau: 'B', cibles: ['ecr-1'], avant: {}, apres: { m: 1 } }] } });
     try {
-      const r = await fetch('http://127.0.0.1:1/chat/propositions/prp-0001/appliquer', { method: 'POST', headers: { 'idempotency-key': 'cle-00001', 'x-acteur': 'personne' } });
+      const r = await fetch(`http://127.0.0.1:1${CHAT}/propositions/prp-0001/appliquer`, { method: 'POST', headers: { 'idempotency-key': 'cle-00001', 'x-acteur': 'personne' } });
       expect([r.status, ((await r.json()) as { code: string }).code]).toEqual([403, 'ACTEUR_NON_HUMAIN']);
     } finally {
       noeud.fermer();
