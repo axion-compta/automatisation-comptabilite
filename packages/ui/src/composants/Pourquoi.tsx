@@ -2,7 +2,6 @@ import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { AppelIa, DecisionIa } from "../../../contrat/src/chat/journal-ia.js";
 import { formaterDateAffiche } from "../format/affichage.js";
 import { MotConfiance, type MotConfiance as Confiance } from "./MotConfiance.js";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./pourquoi.css";
 
 export interface PourquoiLibelles {
