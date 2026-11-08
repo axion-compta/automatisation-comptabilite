@@ -12,6 +12,8 @@ interface Def {
   errors: Record<string, { status: number }>;
 }
 
+const DESCRIPTIONS: Record<number, string> = { 403: 'Interdit', 409: 'Conflit de version', 422: 'Refusé', 423: 'Fermé' };
+
 function definitions(): Def[] {
   return Object.values({ ...contrat, ...contratChat }).flatMap((domaine) => Object.values(domaine)).map((r) => {
     const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string; tags?: string[]; successStatus?: number }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
@@ -21,10 +23,15 @@ function definitions(): Def[] {
 
 const forme = (s: Sch): { shape: Record<string, Sch> } => s as unknown as { shape: Record<string, Sch> };
 
+/** Routes qui lisent en POST (le texte est dans le corps) : seule exemption d'Idempotency-Key. */
+export function routesLectureParPost(): string[] {
+  return definitions().filter((d) => d.tags?.includes('lecture-par-post')).map((d) => d.operationId);
+}
+
 /** Une route d'écriture (hors GET) sans en-tête Idempotency-Key est une anomalie. */
 export function routesEcritureSansEnTete(): string[] {
   return definitions()
-    .filter((d) => d.method !== 'GET')
+    .filter((d) => d.method !== 'GET' && !d.tags?.includes('lecture-par-post'))
     .filter((d) => {
       const h = forme(d.inputSchema).shape['headers'];
       return !h || !('idempotency-key' in forme(h).shape);
@@ -56,7 +63,7 @@ export function genererOpenapi(): object {
     for (const m of d.path.matchAll(/\{(\w+)\}/g)) parametres.push({ name: m[1], in: 'path', required: true, schema: { type: 'string', minLength: 1 } });
     const chemin = d.path;
     const reponses: Record<string, unknown> = { [String(d.successStatus ?? 200)]: { description: d.successStatus === 201 ? 'Créé' : 'OK' } };
-    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: e.status === 409 ? 'Conflit de version' : e.status === 422 ? 'Refusé' : 'Introuvable' };
+    for (const e of Object.values(d.errors)) reponses[String(e.status)] = { description: DESCRIPTIONS[e.status] ?? 'Introuvable' };
     if (d.tags?.includes('flux:evenements')) reponses['200'] = { description: 'Flux d\'événements', content: { 'text/event-stream': { schema: { type: 'string' } } } };
     (paths[chemin] ??= {})[d.method.toLowerCase()] = {
       operationId: d.operationId,

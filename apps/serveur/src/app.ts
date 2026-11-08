@@ -16,6 +16,7 @@ import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
+import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
@@ -33,7 +34,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -78,11 +79,11 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     },
   });
   const osChat = implement(contratChat);
-  return { ...routeur, ...osChat.router({ chat: implementerChat(osChat, options.chat ?? creerServiceChat()) }) };
+  return { ...routeur, ...osChat.router({ chat: implementerChat(osChat, options.chat ?? creerServiceChat()), chatPropositions: implementerChatPropositions(osChat, options.propositions ?? creerServicePropositions()) }) };
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; securite?: OptionsSecurite } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite } = {}): FastifyInstance {
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
