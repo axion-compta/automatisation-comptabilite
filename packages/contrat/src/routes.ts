@@ -26,6 +26,7 @@ import { chat } from './domaines/chat.js';
 import { chatPropositions } from './domaines/chat-propositions.js';
 import { profil } from './domaines/profil.js';
 import { profilChamps } from './domaines/profil-champs.js';
+import { profilChangements } from './domaines/profil-changements.js';
 import { fec } from './domaines/fec.js';
 import { controles } from './domaines/controles.js';
 import { change } from './domaines/change.js';
@@ -40,6 +41,8 @@ import { echeances } from './domaines/echeances.js';
 import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
+import { finContrat } from './domaines/fin-contrat.js';
+import { acceptations } from './domaines/acceptations.js';
 import { sources } from './domaines/sources.js';
 import { ventes } from './domaines/ventes.js';
 import { pieces } from './domaines/pieces.js';
@@ -88,6 +91,7 @@ export const contrat = {
   abonnement: { lireAcces, lireVolume, demanderPalier },
   profil,
   profilChamps,
+  profilChangements,
   fec,
   controles,
   regimes,
@@ -107,6 +111,8 @@ export const contrat = {
   pieces,
   tresorerie: domaineTresorerie,
   fournisseurs: domaineFournisseurs,
+  finContrat,
+  acceptations,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };
