@@ -15,14 +15,13 @@ type Refus = 'inconnue' | 'non_ecartable' | 'permission_manquante' | 'reauthenti
 export type ResultatActions<T> = { ok: true; valeur: T } | { ok: false; refus: Refus };
 
 const OUVERT: readonly Resultat[] = ['ALERTE', 'IMPOSSIBLE'];
-const essai = (regleId: string, resultat: Resultat): TraceControle => ({ horodatage: new Date(Date.UTC(2026, 3, 1, 8)).toISOString(), declencheur: 'nocturne', regleId, versionRegle: 1, objetType: 'piece', objetId: 'p1', resultat });
 const exerciceDe = (t: TraceControle): string => `EX${t.horodatage.slice(0, 4)}`;
 
 /** Service en mémoire, sans base : traces fictives, horloge injectée, rejeu par clé d'idempotence. */
 export function creerServiceControlesActions(options: OptionsActions = {}) {
   const horloge = options.horloge ?? (() => new Date().toISOString());
   const traces = new Map<string, TraceControle>();
-  for (const t of options.traces ?? [essai('CC-T01', 'ALERTE'), essai('TVA-C01', 'ALERTE')]) traces.set(t.regleId + SEPARATEUR + t.objetId, t);
+  for (const t of options.traces ?? []) traces.set(t.regleId + SEPARATEUR + t.objetId, t);
   const rejeux = new Map<string, unknown>();
   const unefois = <T>(cle: string, produire: () => ResultatActions<T>): ResultatActions<T> => {
     const vu = rejeux.get(cle);

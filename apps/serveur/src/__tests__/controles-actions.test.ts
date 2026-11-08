@@ -1,14 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { creerApp } from '../app.js';
 import { creerServiceControlesActions, type Session } from '../domaines/controles-actions.js';
+import type { TraceControle } from '../../../../packages/noyau/src/controles/moteur.js';
 
 const PERM = 'compta-lever-bloquant';
 const BONNE: Session = { sorte: 'personne', par: 'Alice Exemple', permissions: [PERM], reauthentifie: true };
 const apps: Array<ReturnType<typeof creerApp>> = [];
 afterEach(() => Promise.all(apps.splice(0).map((a) => a.close())).then(() => undefined));
 
-function monter(session: Session | null = BONNE) {
-  const service = creerServiceControlesActions({ horloge: () => '2026-04-02T08:00:00Z' });
+const trace = (regleId: string): TraceControle => ({ horodatage: new Date(Date.UTC(2026, 3, 1, 8)).toISOString(), declencheur: 'nocturne', regleId, versionRegle: 1, objetType: 'piece', objetId: 'p1', resultat: 'ALERTE' });
+function monter(session: Session | null = BONNE, horloge: () => string = () => '2026-04-02T08:00:00Z', regles = ['CC-T01', 'TVA-C01']) {
+  const service = creerServiceControlesActions({ traces: regles.map(trace), horloge });
   const app = creerApp(undefined, { controlesActions: service, session: () => session ?? undefined });
   apps.push(app);
   return app;
@@ -63,10 +65,14 @@ describe('serveur : écarter un contrôle', () => {
     expect((await ecarter(app, 'TVA-C01~p1', { motif: 'Motif fictif' }, {} as never)).statusCode).toBe(400);
   });
   it('idempotence', async () => {
-    const app = monter();
+    let n = 0;
+    const app = monter(BONNE, () => `2026-04-02T08:00:0${++n}Z`, ['TVA-C01', 'TVA-C02']);
     const a = await ecarter(app, 'TVA-C01~p1');
     const b = await ecarter(app, 'TVA-C01~p1');
     expect([b.statusCode, b.json()]).toEqual([200, a.json()]);
+    expect(b.json().body.horodatage).toBe('2026-04-02T08:00:01Z');
+    const c = await ecarter(app, 'TVA-C02~p1', { motif: 'Motif fictif' }, cle('cle-00002'));
+    expect(c.json().body.horodatage).toBe('2026-04-02T08:00:02Z');
   });
 });
 
