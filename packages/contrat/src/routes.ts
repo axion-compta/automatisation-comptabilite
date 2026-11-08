@@ -10,6 +10,7 @@ import {
 import { plan } from './domaines/plan.js';
 import { principes } from './domaines/principes.js';
 import { tiers } from './domaines/tiers.js';
+import { banque } from './domaines/banque.js';
 import { tableauDeBord } from './domaines/tableau-de-bord.js';
 import { alertes } from './domaines/alertes.js';
 import { preferences } from './domaines/preferences.js';
@@ -55,6 +56,7 @@ export const contrat = {
   plan,
   principes,
   tiers,
+  banque,
   tableauDeBord,
   alertes,
   preferences,

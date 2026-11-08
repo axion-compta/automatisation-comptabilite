@@ -6,6 +6,7 @@ import { ConflitVersion, creerService } from '../../../packages/contrat/src/serv
 import { routesPlan } from './domaines/plan.js';
 import { routesPrincipes } from './domaines/principes.js';
 import { routesTiers } from './domaines/tiers.js';
+import { routesBanque } from './domaines/banque.js';
 import { routesTableauDeBord, type ServiceTableauDeBord } from './domaines/tableau-de-bord.js';
 import { routesAlertes, type ServiceAlertes } from './domaines/alertes.js';
 import { routesPreferences, type ServicePreferences } from './domaines/preferences.js';
@@ -68,6 +69,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     plan: routesPlan(),
     principes: routesPrincipes(),
     tiers: routesTiers(),
+    banque: routesBanque(),
     tableauDeBord: routesTableauDeBord(s.tableauDeBord),
     alertes: routesAlertes(s.alertes),
     preferences: routesPreferences(s.preferences),
