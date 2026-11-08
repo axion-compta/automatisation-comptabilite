@@ -28,6 +28,7 @@ import { profil } from './domaines/profil.js';
 import { fec } from './domaines/fec.js';
 import { controles } from './domaines/controles.js';
 import { change } from './domaines/change.js';
+import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
 import { sante } from './domaines/sante.js';
@@ -36,6 +37,7 @@ import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
 import { ventes } from './domaines/ventes.js';
+import { pieces } from './domaines/pieces.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
@@ -83,6 +85,7 @@ export const contrat = {
   fec,
   controles,
   regimes,
+  identite,
   change,
   frais,
   sante,
@@ -91,6 +94,7 @@ export const contrat = {
   juridique,
   parametres,
   ventes,
+  pieces,
   tresorerie: domaineTresorerie,
   fournisseurs: domaineFournisseurs,
 };
