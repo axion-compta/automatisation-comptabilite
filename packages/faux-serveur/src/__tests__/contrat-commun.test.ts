@@ -18,6 +18,7 @@ import { suiteTva } from './suite-tva.js';
 import { suiteChange } from './suite-change.js';
 import { suiteSante } from './suite-sante.js';
 import { suiteProfil } from './suite-profil.js';
+import { suiteTresorerie } from './suite-tresorerie.js';
 import { suiteBloquants } from './suite-bloquants.js';
 import { suiteJuridique } from './suite-juridique.js';
 import { creerHandlersJuridique } from '../domaines/juridique.js';
@@ -147,6 +148,8 @@ suiteChange('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteChange('faux serveur (MSW)', cibleFaux);
 suiteSante('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteSante('faux serveur (MSW)', cibleFaux);
+suiteTresorerie('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteTresorerie('faux serveur (MSW)', cibleFaux);
 suiteBloquants('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteBloquants('faux serveur (MSW)', cibleFaux);
 
