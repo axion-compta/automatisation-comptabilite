@@ -9,6 +9,7 @@ import {
 } from './schemas.js';
 import { plan } from './domaines/plan.js';
 import { tiers } from './domaines/tiers.js';
+import { banque } from './domaines/banque.js';
 import { tableauDeBord } from './domaines/tableau-de-bord.js';
 import { alertes } from './domaines/alertes.js';
 import { preferences } from './domaines/preferences.js';
@@ -52,6 +53,7 @@ export const contrat = {
   ecritures: { lister, creer, modifier },
   plan,
   tiers,
+  banque,
   tableauDeBord,
   alertes,
   preferences,
