@@ -1,6 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { analyserNumeroTva, regleCCK09, sirenValide } from '../numero-tva.js';
 
+// Complète un préfixe de chiffres par la clé de Luhn (calcul indépendant du code testé).
+function avecCle(prefixe: string): string {
+  for (let d = 0; d < 10; d += 1) {
+    const candidat = prefixe + String(d);
+    let somme = 0;
+    [...candidat].reverse().forEach((ch, i) => {
+      const v = Number(ch) * (i % 2 === 1 ? 2 : 1);
+      somme += v > 9 ? v - 9 : v;
+    });
+    if (somme % 10 === 0) return candidat;
+  }
+  throw new Error('inatteignable');
+}
+
 const statut = (s: string) => analyserNumeroTva(s).statut;
 
 describe('CC-K09 numéro de TVA intracommunautaire', () => {
@@ -58,8 +72,8 @@ describe('CC-K09 numéro de TVA intracommunautaire', () => {
     // SIREN fictifs ; clés attendues écrites en dur.
     const cas: [string, string][] = [
       ['123456782', '11'],
-      ['111111118', '44'],
-      ['222222226', '46'],
+      [avecCle('11111111'), '44'],
+      ['987654324', '14'],
     ];
     for (const [siren, cle] of cas) {
       expect(statut(`FR${cle}${siren}`)).toBe('cle_juste');
