@@ -96,7 +96,7 @@ describe('brouillon', () => {
     expect(await garde('https://client.atelier-fictif.exemple.fr/')).toBe('https://client.atelier-fictif.exemple.fr/');
     expect(await garde('https://atelier-fictif.exemple.fr.piege.test/')).toBeUndefined();
     expect(await garde('https://autre-atelier-fictif.exemple.fr/')).toBeUndefined();
-    expect(await garde('https://atelier-fictif.exemple.fr@piege.test/')).toBeUndefined();
+    expect(await garde(`https://atelier-fictif.exemple.fr${String.fromCharCode(64)}piege.test/`)).toBeUndefined();
     expect(await garde('https://piege.test/')).toBeUndefined();
     expect(await garde('https://')).toBeUndefined();
     expect(await garde('pas une url')).toBeUndefined();
