@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { creerApp } from '../app.js';
 import { creerServiceChat } from '../domaines/chat.js';
 import { DecodeurFlux } from '../../../../packages/contrat/src/chat/flux.js';
+import { cheminSociete } from '../../../../packages/contrat/src/prefixe-routes.js';
+const CHAT = cheminSociete('/chat').replace('{s}', 'soc_a');
 
 const apps: Array<ReturnType<typeof creerApp>> = [];
 afterEach(async () => {
@@ -23,13 +25,18 @@ const demande = (id = 'msg-0001', plus: Record<string, unknown> = {}) => ({
 const envoyer = (app: ReturnType<typeof monter>, corps: unknown, cle: string | null = 'msg-0001') =>
   app.inject({
     method: 'POST',
-    url: '/chat/messages',
+    url: `${CHAT}/messages`,
     headers: { 'content-type': 'application/json', ...(cle ? { 'idempotency-key': cle } : {}) },
     payload: JSON.stringify(corps),
   });
 const lire = (texte: string) => new DecodeurFlux().pousser(texte);
 
 describe('serveur : chat en mémoire', () => {
+  it('chemin-nu-404', async () => {
+    const r = await monter().inject({ method: 'POST', url: '/chat/messages', headers: { 'content-type': 'application/json', 'idempotency-key': 'msg-0001' }, payload: JSON.stringify(demande()) });
+    expect(r.statusCode).toBe(404);
+  });
+
   it('message-rend-un-flux-ordonne', async () => {
     const r = await envoyer(monter(), demande());
     expect(r.statusCode).toBe(200);
@@ -75,7 +82,7 @@ describe('serveur : chat en mémoire', () => {
     const app = monter(service);
     const envoi = envoyer(app, demande());
     await service.tourOuvert('msg-0001');
-    const arret = await app.inject({ method: 'POST', url: '/chat/tours/msg-0001/arreter', headers: { 'idempotency-key': 'arret-0001' } });
+    const arret = await app.inject({ method: 'POST', url: CHAT + '/tours/msg-0001/arreter', headers: { 'idempotency-key': 'arret-0001' } });
     expect(arret.statusCode).toBe(200);
     ouvrir();
     const evts = lire((await envoi).body);
@@ -89,14 +96,14 @@ describe('serveur : chat en mémoire', () => {
 
   it('arret-tour-inconnu-404', async () => {
     const app = monter();
-    const r = await app.inject({ method: 'POST', url: '/chat/tours/inconnu/arreter', headers: { 'idempotency-key': 'arret-0001' } });
+    const r = await app.inject({ method: 'POST', url: CHAT + '/tours/inconnu/arreter', headers: { 'idempotency-key': 'arret-0001' } });
     expect(r.statusCode).toBe(404);
   });
 
   it('idempotency-key-absente-400', async () => {
     const app = monter();
     expect((await envoyer(app, demande(), null)).statusCode).toBe(400);
-    const r = await app.inject({ method: 'POST', url: '/chat/tours/msg-0001/arreter' });
+    const r = await app.inject({ method: 'POST', url: CHAT + '/tours/msg-0001/arreter' });
     expect(r.statusCode).toBe(400);
     expect((await envoyer(app, demande('msg-0001'), 'autre-cle-1')).statusCode).toBe(400);
   });

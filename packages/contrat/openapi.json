@@ -1622,6 +1622,168 @@
         }
       }
     },
+    "/profil/champs/{cle}": {
+      "post": {
+        "operationId": "ajouterValeurChamp",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "cle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "valeur": {
+                    "$ref": "#/$defs/__schema0"
+                  },
+                  "origine": {
+                    "type": "string",
+                    "enum": [
+                      "saisie_personne",
+                      "document"
+                    ]
+                  },
+                  "effetDebut": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "valeur",
+                  "origine"
+                ],
+                "additionalProperties": false,
+                "$defs": {
+                  "__schema0": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/profil/champs/{cle}/confirmer": {
+      "post": {
+        "operationId": "confirmerChamp",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "cle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "effetDebut": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "effetDebut"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
     "/exercices/{exercice}/fec/historique": {
       "get": {
         "operationId": "listerHistoriqueFec",
@@ -1950,6 +2112,56 @@
         }
       }
     },
+    "/vehicules": {
+      "get": {
+        "operationId": "listerVehicules",
+        "parameters": [
+          {
+            "name": "personne",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/parametres/bareme_ik_voiture": {
+      "get": {
+        "operationId": "lireBaremeIk",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
     "/sante": {
       "get": {
         "operationId": "lireSanteExploitation",
@@ -2245,6 +2457,17 @@
           },
           "404": {
             "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/sources/etat": {
+      "get": {
+        "operationId": "lireEtatSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -2575,7 +2798,7 @@
         }
       }
     },
-    "/chat/messages": {
+    "/api/compta/v1/societes/{s}/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
         "tags": [
@@ -2590,6 +2813,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -2673,7 +2905,7 @@
         }
       }
     },
-    "/chat/tours/{id}/arreter": {
+    "/api/compta/v1/societes/{s}/chat/tours/{id}/arreter": {
       "post": {
         "operationId": "arreterTour",
         "parameters": [
@@ -2688,29 +2920,14 @@
             }
           },
           {
-            "name": "id",
+            "name": "s",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "minLength": 1
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
           },
-          "404": {
-            "description": "Introuvable"
-          }
-        }
-      }
-    },
-    "/chat/propositions/{id}": {
-      "get": {
-        "operationId": "lireProposition",
-        "parameters": [
           {
             "name": "id",
             "in": "path",
@@ -2731,7 +2948,40 @@
         }
       }
     },
-    "/chat/propositions/{id}/appliquer": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}": {
+      "get": {
+        "operationId": "lireProposition",
+        "parameters": [
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/appliquer": {
       "post": {
         "operationId": "appliquerProposition",
         "parameters": [
@@ -2743,6 +2993,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2774,7 +3033,7 @@
         }
       }
     },
-    "/chat/propositions/{id}/annuler": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/annuler": {
       "post": {
         "operationId": "annulerProposition",
         "parameters": [
@@ -2786,6 +3045,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2811,10 +3079,19 @@
         }
       }
     },
-    "/chat/propositions/{id}/pourquoi": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/pourquoi": {
       "get": {
         "operationId": "pourquoiProposition",
         "parameters": [
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           {
             "name": "id",
             "in": "path",

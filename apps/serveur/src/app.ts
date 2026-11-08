@@ -19,18 +19,22 @@ import { implementerAcces } from './domaines/acces.js';
 import { implementerVolume } from './domaines/volume.js';
 import { implementerPalier } from './domaines/palier.js';
 import { routesProfil } from './domaines/profil.js';
+import { routesProfilChamps } from './domaines/profil-champs.js';
+import { creerServiceProfilChamps } from '../../../packages/contrat/src/domaines/profil-champs-service.js';
 import { routesControles, routesFec } from './domaines/fec.js';
 import { routesChange } from './domaines/change.js';
 import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
+import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
 import { implementerPersonnes } from './domaines/personnes.js';
 import { implementerSanteExploitation } from './domaines/sante-exploitation.js';
 import { routesEcheances } from './domaines/echeances.js';
 import { routesBloquants } from './domaines/bloquants.js';
 import { routesJuridique } from './domaines/juridique.js';
+import { routesSources } from './domaines/sources.js';
 import { routesVentes } from './domaines/ventes.js';
 import { routesPieces } from './domaines/pieces.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
@@ -64,6 +68,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     calendrier: services.calendrier ?? {},
     notifications: services.notifications ?? {},
   };
+  const profilChamps = creerServiceProfilChamps('soc-lemoine');
   const os = implement(contrat);
   const routeur = os.router({
     ecritures: {
@@ -95,13 +100,15 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     calendrier: routesCalendrier(s.calendrier),
     tva: routesTva(),
     notifications: routesNotifications(s.notifications),
-    profil: routesProfil(),
+    profil: routesProfil(profilChamps),
+    profilChamps: routesProfilChamps(profilChamps),
     fec: routesFec(),
     controles: routesControles(),
     regimes: routesRegimes(),
     identite: routesIdentite(),
     change: routesChange(),
     frais: routesFrais(),
+    vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),
     personnes: implementerPersonnes(os, options.exploitation ?? {}),
@@ -109,6 +116,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     bloquants: routesBloquants(),
     juridique: routesJuridique(),
     parametres: routesParametres(),
+    sources: routesSources(),
     ventes: routesVentes(),
     pieces: routesPieces(),
     tresorerie: routesTresorerie(),
