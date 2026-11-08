@@ -62,7 +62,7 @@ describe('indicateurs', () => {
     const f = { statut: 'en_formation' } as const;
     expect(disponibilite('declaration', f)).toBe('apres_immatriculation');
     expect(disponibilite('fec_officiel', f)).toBe('apres_immatriculation');
-    const i = { statut: 'immatriculee', siren: '000000000' } as const;
+    const i = { statut: 'immatriculee', siren: '123456782' } as const;
     expect(disponibilite('declaration', i)).toBe('disponible');
     expect(disponibilite('fec_officiel', i)).toBe('disponible');
     for (const siren of [undefined, '', '  ']) {
@@ -78,6 +78,6 @@ describe('indicateurs', () => {
 
   it('formation-autres-ecrans-disponibles', () => {
     expect(disponibilite('autre', { statut: 'en_formation' })).toBe('disponible');
-    expect(disponibilite('autre', { statut: 'immatriculee', siren: '000000000' })).toBe('disponible');
+    expect(disponibilite('autre', { statut: 'immatriculee', siren: '123456782' })).toBe('disponible');
   });
 });
