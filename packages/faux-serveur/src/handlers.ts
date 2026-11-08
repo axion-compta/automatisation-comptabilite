@@ -11,6 +11,7 @@ import { creerHandlersExports } from './domaines/exports.js';
 import { creerHandlersCalendrier } from './domaines/calendrier.js';
 import { creerHandlersNotifications } from './domaines/notifications.js';
 import { creerHandlersBanque } from './domaines/banque.js';
+import { creerHandlersPrincipes } from './domaines/principes.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 
@@ -111,5 +112,6 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersChat(base, attendre, options.chat),
     ...creerHandlersChatPropositions(base, attendre, options.propositions),
     ...creerHandlersBanque(base, attendre),
+    ...creerHandlersPrincipes(base, attendre),
   ];
 }
