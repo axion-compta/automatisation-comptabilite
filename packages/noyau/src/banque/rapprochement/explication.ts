@@ -21,7 +21,7 @@ const CODE_PAR_ETAT: Record<EtatRapprochement, CodeMot> = {
   RAPPROCHEE: 'rattache', PROPOSEE: 'propose', DOUTEUSE: 'hesite', SANS_PIECE: 'sans_piece', SANS_PIECE_REQUISE: 'sans_piece',
   A_QUALIFIER: 'a_qualifier', NEUTRALISEE: 'neutralisee', PERSO: 'neutralisee', IGNOREE: 'ignoree',
 };
-const FORME_IBAN = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
+const FORME_IBAN = /[A-Z]{2}\d{2}[A-Z0-9]{11,30}/;
 const ressembleIban = (v: string): boolean => FORME_IBAN.test(v.replace(/\s+/g, '').toUpperCase());
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 

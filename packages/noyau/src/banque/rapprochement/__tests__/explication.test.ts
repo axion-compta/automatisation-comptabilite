@@ -59,7 +59,7 @@ describe('explication', () => {
 
   it('aucun-iban-dans-les-valeurs', () => {
     const iban = ['FR76', '3000', '6000', '0112', '3456', '7890', '189'];
-    const valeurs = { montant: { brut: iban.join(''), espace: iban.join(' '), minuscule: iban.join('').toLowerCase(), libelle: 'Atelier Fictif', n: 5 } };
+    const valeurs = { montant: { brut: iban.join(''), espace: iban.join(' '), minuscule: iban.join('').toLowerCase(), libelle: 'Atelier Fictif', n: 5, glisse: `VIR ${iban.join('')} F-12`, nan: Number.NaN, infini: Infinity, moinsInfini: -Infinity } };
     const r = expliquer(ligne('PROPOSEE'), lien(facteurs.slice(0, 1)), [], 0, valeurs);
     expect(r.facteurs[0]?.valeurs).toEqual({ libelle: 'Atelier Fictif', n: 5 });
     expect(JSON.stringify(r)).not.toMatch(/FR76/i);
