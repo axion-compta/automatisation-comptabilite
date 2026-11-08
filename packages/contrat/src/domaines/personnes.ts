@@ -39,7 +39,7 @@ const reglage = { REGLAGE_ABSENT: { status: 503 } } as const;
 const sortie = z.object({ body: DemandeVue });
 
 export const listerDemandes = oc
-  .route({ method: 'GET', path: '/personnes/demandes', inputStructure: 'detailed', operationId: 'listerDemandes', tags: ['acces:compte'] })
+  .route({ method: 'GET', path: '/personnes/demandes', inputStructure: 'detailed', operationId: 'listerDemandesPersonnes', tags: ['acces:compte'] })
   .errors(reglage)
   .input(z.object({}))
   .output(z.object({ body: z.array(DemandeVue) }));

@@ -1966,7 +1966,7 @@
     },
     "/personnes/demandes": {
       "get": {
-        "operationId": "listerDemandes",
+        "operationId": "listerDemandesPersonnes",
         "tags": [
           "acces:compte"
         ],
