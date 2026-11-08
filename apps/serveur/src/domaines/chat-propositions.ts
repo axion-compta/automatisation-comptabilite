@@ -5,6 +5,8 @@ import type { PropositionVue } from '../../../../packages/contrat/src/domaines/c
 import { appliquer, creerProposition, type EntreeProposition, type Proposition } from '../../../../packages/noyau/src/chat/proposition.js';
 import { annuler, modeAnnulation } from '../../../../packages/noyau/src/chat/annulation.js';
 import { ErreurChat, type Acteur } from '../../../../packages/noyau/src/chat/types.js';
+import { exigerPermissionOutil, exigerPersonne, identifier, traduire, type OptionsIdentite } from '../chat/identite.js';
+import type { Session } from '../../../../packages/noyau/src/session/port.js';
 import { genererChat } from '../../../../packages/donnees-fictives/src/chat.js';
 
 /** Réglages injectés (L05-T54 viendra les fournir) : validité de la proposition, fenêtres d'annulation. */
@@ -14,6 +16,7 @@ export interface OptionsPropositions {
   acteur: Acteur;
   horloge: () => string;
   reglages: ReglagesPropositions;
+  identite?: OptionsIdentite;
 }
 export type NouvelleProposition = Omit<EntreeProposition, 'creeLe' | 'dureeMs'>;
 
@@ -44,15 +47,21 @@ export function creerServicePropositions(options: OptionsPropositions = optionsP
     };
     const appel: AppelIa = { id: `appel-${e.id}`, agent: 'agent_chat', ...rattache, alias: 'modele_essai', modele: 'modele_fictif', version_modele: 'v0', fournisseur: 'faux_fournisseur', region: 'ue', jetons_entree: 0, jetons_sortie: 0, cout_micro_centimes: 0, duree_ms: 0, issue: 'ok' };
     fiches.set(e.id, { proposition, etatObjet: e.avant, decision, appel });
+    options.identite?.journal?.noter({ horodatage: creeLe, acteur: 'agent_chat', evenement: 'chat.proposition', outil: e.outil, niveau: e.niveau, avant: e.avant, apres: e.apres, resultat: 'proposee' });
   }
 
   for (const p of genererChat().propositions) ajouter({ id: p.id, outil: 'enregistrer_ecriture', niveau: 'B', cibles: [p.id], avant: { montantCentimes: 0 }, apres: { montantCentimes: p.montantCentimes } }, `${p.le}T08:00:00.000Z`);
 
   /** Même clé : même réponse ; une autre clé sur un objet déjà traité est refusée. */
-  function appliquerProposition(id: string, cle: string): PropositionVue {
+  function appliquerProposition(id: string, cle: string, qui?: { demandeur: string }): PropositionVue {
+    const acteur: Acteur = qui ? 'personne' : options.acteur;
     const f = trouver(id);
-    const r = appliquer(f.proposition, { acteur: options.acteur, cle, maintenant: options.horloge(), niveauIOuvert: false });
-    if (r.effet === 'applique') Object.assign(f, { proposition: r.proposition, appliqueLe: options.horloge(), etatObjet: r.proposition.apres });
+    const avant = f.etatObjet;
+    const r = appliquer(f.proposition, { acteur, cle, maintenant: options.horloge(), niveauIOuvert: false });
+    if (r.effet === 'applique') {
+      Object.assign(f, { proposition: r.proposition, appliqueLe: options.horloge(), etatObjet: r.proposition.apres });
+      options.identite?.journal?.noter({ horodatage: options.horloge(), acteur: qui?.demandeur ?? acteur, evenement: 'chat.application', outil: f.proposition.outil, niveau: f.proposition.niveau, avant, apres: f.etatObjet, resultat: f.proposition.etat });
+    }
     return vue(f);
   }
 
@@ -71,6 +80,8 @@ export function creerServicePropositions(options: OptionsPropositions = optionsP
 
   return {
     ajouter,
+    identite: options.identite,
+    outilDe: (id: string): string | undefined => fiches.get(id)?.proposition.outil,
     lireProposition: (id: string): PropositionVue => vue(trouver(id)),
     appliquerProposition,
     annulerProposition,
@@ -97,10 +108,30 @@ function proteger<T>(errors: Record<string, (o?: object) => Error>, f: () => T):
 export function implementerChatPropositions(os: ReturnType<typeof implement<typeof contratChat>>, service: ServicePropositions) {
   const o = os.chatPropositions;
   const err = (e: unknown) => e as Record<string, (o?: object) => Error>;
+  const garde = async (errors: unknown, entete: { authorization?: string | undefined }, societe: string, plus?: (s: Session) => void): Promise<Session | undefined> => {
+    if (!service.identite) return undefined;
+    try { const s = await identifier(service.identite, entete, societe); plus?.(s); return s; } catch (e) { return traduire(errors, e); }
+  };
   return {
-    lireProposition: o.lireProposition.handler(({ input, errors }) => proteger(err(errors), () => service.lireProposition(input.params.id))),
-    appliquerProposition: o.appliquerProposition.handler(({ input, errors }) => proteger(err(errors), () => service.appliquerProposition(input.params.id, input.headers['idempotency-key']))),
-    annulerProposition: o.annulerProposition.handler(({ input, errors }) => proteger(err(errors), () => service.annulerProposition(input.params.id, input.headers['idempotency-key']))),
-    pourquoi: o.pourquoi.handler(({ input, errors }) => proteger(err(errors), () => service.pourquoi(input.params.id))),
+    lireProposition: o.lireProposition.handler(async ({ input, errors }) => {
+      await garde(errors, input.headers, input.params.s);
+      return proteger(err(errors), () => service.lireProposition(input.params.id));
+    }),
+    appliquerProposition: o.appliquerProposition.handler(async ({ input, errors }) => {
+      const session = await garde(errors, input.headers, input.params.s, (s) => {
+        exigerPersonne(s);
+        const outil = service.outilDe(input.params.id);
+        if (outil !== undefined) exigerPermissionOutil(s, outil);
+      });
+      return proteger(err(errors), () => service.appliquerProposition(input.params.id, input.headers['idempotency-key'], session && { demandeur: session.personneId }));
+    }),
+    annulerProposition: o.annulerProposition.handler(async ({ input, errors }) => {
+      await garde(errors, input.headers, input.params.s);
+      return proteger(err(errors), () => service.annulerProposition(input.params.id, input.headers['idempotency-key']));
+    }),
+    pourquoi: o.pourquoi.handler(async ({ input, errors }) => {
+      await garde(errors, input.headers, input.params.s);
+      return proteger(err(errors), () => service.pourquoi(input.params.id));
+    }),
   };
 }

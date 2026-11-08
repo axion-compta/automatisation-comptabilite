@@ -13,6 +13,19 @@ export const e44 = {
     fournisseur: 'Fournisseur',
   },
   pagination: { precedent: 'Page précédente', suivant: 'Page suivante', resume: '{debut} à {fin} sur {total}' },
+  export: {
+    bouton: 'Exporter',
+    enCours: 'Export en cours…',
+    choix: "Format de l'export",
+    csv: 'CSV',
+    xlsx: 'XLSX',
+    erreurs: {
+      trop_gros: 'Cet export est trop volumineux : affinez vos filtres.',
+      au_dela_du_direct: "Cette liste dépasse la taille d'un export direct ; l'export en tâche arrive bientôt.",
+      introuvable: "Cette liste n'est pas exportable.",
+      autre: "Impossible d'exporter cette liste pour le moment.",
+    },
+  },
   etats: {
     chargement: 'Chargement de vos clients et fournisseurs…',
     vide: 'Aucun client ni fournisseur pour le moment.',

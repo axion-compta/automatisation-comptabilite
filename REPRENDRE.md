@@ -53,3 +53,15 @@ Mesures sans IA, relevées le 07/11/2026 :
 - PR revenues en `a-corriger` et raisons : non mesuré.
 - Score Stryker du noyau à la fin : non mesuré.
 - Aucune date de livraison annoncée.
+
+## Lot 12
+- Fiches : 56 au total ; 53 marquées `statut: fait` (en-têtes lus sur main, L12-T30 comprise) ; restent L12-T48, T49 et T50, toutes sensibles.
+- Catalogue : `docs/controles.csv`, 72 lignes de données (68 identifiants CC-* et 4 identifiants TVA-C*), relevé par comptage.
+- Banc (L12-T28, référence `docs/calibrage-controles.json`) : 20 anomalies détectées sur 20, 0 fausse alerte sur 200 pièces propres ; seuil toléré : 10.
+- L12-T48 (journal en ajout seul, colonnes de `regle_controle`) : attend J3a et le schéma de la console (D29, réponse attendue le 21/11/2026).
+- L12-T49 (écarter un contrôle, revérifier) : attend J3a (identité, permission, réauthentification) et la console (D29).
+- L12-T50 (garde-fou sur les actions réelles) : attend J3a et les routes L03-T53 et L03-T54 (D29). D42 et D43 ne sont plus attendues : T51 à T55 sont faites.
+- Écart à la fiche : elle annonçait 8 fiches bloquées (T48 à T55) ; T51 à T55 sont déjà faites, il n'en reste que 3.
+- Écarts à la spec gardés : identifiants suffixés (K11M, K12H, K13S, T03A, T12M, T18M) ; vocabulaire du CSV et du code (gravité B/M, `bloque`, `declencheurs`).
+- PR du lot (lignes, durée de CI, corrections après relecture) : non mesuré (pas de gh dans cette session) ; `pilotage/calibrage.csv` ne contient que l'en-tête, rien n'y est ajouté.
+- Aucune date de livraison annoncée.

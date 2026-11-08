@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { formaterDateAffiche } from "../format/affichage.js";
 import { Bouton } from "./Bouton.js";
 import { Pastille, type EtatPastille } from "./Pastille.js";
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./carte-alerte.css";
 
 export type GraviteAlerte = "info" | "a_faire" | "urgent" | "bloquant";
