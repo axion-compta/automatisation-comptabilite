@@ -1,4 +1,3 @@
-// @ts-expect-error -- ce paquet n'a pas de déclaration de module pour les feuilles .css
 import "./documents.css";
 
 export type Filigrane = "aucun" | "a_valider" | "indicatif" | "non_officiel";
