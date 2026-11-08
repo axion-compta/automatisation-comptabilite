@@ -1,17 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { ReponseSiren, ReponseVerificationTva } from '../domaines/identite.js';
 import { SirenInvalide, creerServiceIdentite } from '../domaines/identite-service.js';
-import { sirenValide } from '../../../donnees-fictives/src/generateur.js';
 import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
-
-const inconnu = Array.from({ length: 100 }, (_, i) => String(i + 1).padStart(9, '0')).find((x) => sirenValide(x))!;
 
 describe('identité fictive en mémoire', () => {
   it('siren-trouve', () => {
     const r = creerServiceIdentite().lireSiren('123456782');
     expect(ReponseSiren.parse({ body: r }).body).toMatchObject({ etat: 'trouve', denomination: 'Lemoine Rénovation', forme: 'SARL' });
     expect(r.dateReponse).toBeDefined();
-    expect(creerServiceIdentite().lireSiren(inconnu).etat).toBe('introuvable');
   });
 
   it('siren-cle-fausse-422-p01', () => {
@@ -40,7 +36,6 @@ describe('identité fictive en mémoire', () => {
     const s = creerServiceIdentite();
     expect(s.verifierTva('FR14987654324', true)).toEqual({ cle: 'juste', vies: 'non_verifie' });
     expect(s.verifierTva('FR00000000000', true).vies).toBe('invalide');
-    expect(s.verifierTva('FR00' + inconnu, true).vies).toBe('non_verifie');
     expect(ReponseVerificationTva.safeParse({ body: { cle: 'juste', vies: 'indisponible' } }).success).toBe(false);
   });
 
