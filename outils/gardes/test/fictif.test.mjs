@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS, ibanValide, LONGUEURS_IBAN } from '../fictif.mjs';
+import { analyserDepot, analyserTexte, DOSSIERS_PDF_FICTIFS, ibanValide, LONGUEURS_IBAN, luhnValide, SIREN_PERMIS } from '../fictif.mjs';
 
 // Les valeurs sont assemblées ici pour ne pas figurer en clair dans le dépôt.
 const domaineReel = ['exemple', 'com'].join('.');
@@ -234,4 +234,77 @@ test('email-sans-explosion', () => {
   const pb = analyserTexte(`${'a'.repeat(100)}${arobase}${domaineReel}`, 't.txt');
   assert.equal(pb.length, 1);
   assert.ok(pb[0].endsWith(`: ${'a'.repeat(64)}${arobase}${domaineReel}`), pb[0]);
+});
+
+// SIREN et tarifs (R24 c et d) : le nombre à clé juste est fabriqué ici par calcul.
+const cleLuhn = (base) => {
+  let somme = 0;
+  [...base].reverse().forEach((c, i) => {
+    const n = Number(c) * (i % 2 === 0 ? 2 : 1);
+    somme += n > 9 ? n - 9 : n;
+  });
+  return String((10 - (somme % 10)) % 10);
+};
+const sirenJuste = (() => {
+  for (let k = 1; ; k++) {
+    const base = String(10000000 + k * 7919).slice(0, 8);
+    const s = base + cleLuhn(base);
+    if (!SIREN_PERMIS.includes(s)) return s;
+  }
+})();
+const sirenFaux = sirenJuste.slice(0, 8) + String((Number(sirenJuste[8]) + 1) % 10);
+const DONNEES = 'packages/donnees-fictives/x.json';
+
+test('siren-permis-acceptes', () => {
+  for (const s of SIREN_PERMIS) {
+    assert.equal(luhnValide(s), true);
+    assert.deepEqual(analyserTexte(`siren ${s}`, DONNEES), []);
+  }
+});
+
+test('siren-luhn-juste-hors-liste-rouge', () => {
+  assert.equal(luhnValide(sirenJuste), true);
+  const pb = analyserTexte(`siren ${sirenJuste}`, 'a/b.test.ts');
+  assert.equal(pb.length, 1);
+  assert.match(pb[0], /^a\/b\.test\.ts:1 SIREN hors liste blanche : /);
+  assert.equal(analyserTexte(sirenJuste, 'a/__tests__/x.ts').length, 1);
+  assert.equal(analyserTexte(`x\n${sirenJuste}`, 'a/e2e/x.ts')[0].startsWith('a/e2e/x.ts:2 '), true);
+  assert.equal(analyserTexte(`${sirenJuste} fin`, 'a.spec.ts').length, 1);
+});
+
+test('luhn-faux-ignore', () => {
+  assert.equal(luhnValide(sirenFaux), false);
+  assert.deepEqual(analyserTexte(`siren ${sirenFaux}`, 'a.test.ts'), []);
+  for (const v of ['', '12345678a', 'abc', ' 123456782', String(NaN), String(Infinity), '1.5']) assert.equal(luhnValide(v), false);
+});
+
+test('dix-chiffres-ignore', () => {
+  for (const t of [`1${sirenJuste}`, `${sirenJuste}1`, `a${sirenJuste}`, `${sirenJuste}b`, `v.${sirenJuste}`, `${sirenJuste},5`, `_${sirenJuste}`])
+    assert.deepEqual(analyserTexte(t, 'a.test.ts'), [], t);
+});
+
+test('hors-donnees-de-test-ignore', () => {
+  assert.deepEqual(analyserTexte(`siren ${sirenJuste}`, 'packages/noyau/src/x.ts'), []);
+  assert.deepEqual(analyserTexte(sirenJuste, 'pnpm-lock.yaml'), []);
+  assert.deepEqual(analyserTexte(sirenJuste, 'openapi.json'), []);
+  assert.equal(analyserTexte(sirenJuste, DONNEES).length, 1);
+});
+
+test('tarif-par-mois-rouge', () => {
+  for (const t of ['29 € / mois', '29€/mois', `29\u00A0€\u00A0/\u00A0mois`, '29 TTC / mois']) {
+    const pb = analyserTexte(`x\n${t}`, 'doc.md');
+    assert.equal(pb.length, 1, t);
+    assert.match(pb[0], /^doc\.md:2 montant de tarif : /);
+  }
+});
+
+test('tarif-par-an-ht-rouge', () => {
+  assert.equal(analyserTexte('120 HT/an', 'doc.md').length, 1);
+  assert.equal(analyserTexte('formule à 120 € HT / an', 'doc.md').length, 1);
+  assert.deepEqual(analyserTexte('120 HT/an', 'outils/gardes/test/x.mjs'), []);
+  assert.deepEqual(analyserTexte('120 HT/an', 'outils/gardes/fictif.mjs'), []);
+});
+
+test('montant-sans-periode-accepte', () => {
+  for (const t of ['29,00 €', '', '€ / mois', '29 € par an', '29 € / moisson', '3 ans', '12 HT']) assert.deepEqual(analyserTexte(t, 'doc.md'), [], t);
 });
