@@ -1201,6 +1201,28 @@
         }
       }
     },
+    "/profil/regimes/tva": {
+      "get": {
+        "operationId": "listerRegimesTva",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/profil/regimes/imposition": {
+      "get": {
+        "operationId": "listerRegimesImposition",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/ecarts-change/{id}/explication": {
       "get": {
         "operationId": "expliquerEcartChange",

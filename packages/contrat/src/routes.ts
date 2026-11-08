@@ -26,6 +26,7 @@ import { chat } from './domaines/chat.js';
 import { chatPropositions } from './domaines/chat-propositions.js';
 import { profil } from './domaines/profil.js';
 import { change } from './domaines/change.js';
+import { regimes } from './domaines/regimes.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -69,6 +70,7 @@ export const contrat = {
   notifications,
   abonnement: { lireAcces, lireVolume, demanderPalier },
   profil,
+  regimes,
   change,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
