@@ -1,5 +1,6 @@
 import { genererBanque } from '../../../donnees-fictives/src/banque.js';
-import type { CompteBancaire, Explication, LigneBancaire, QueryLignes } from './banque.js';
+import { genererVuesBanque } from '../../../donnees-fictives/src/banque-vues.js';
+import type { CompteBancaire, Couverture, Demande, DoublonPropose, Explication, TrouReleve, LigneBancaire, QueryLignes } from './banque.js';
 
 type Etat = LigneBancaire['etat'];
 const ETAT_PAR_MOT: Record<string, Etat> = { rattache: 'RAPPROCHEE', propose: 'PROPOSEE', hesite: 'DOUTEUSE', sans_piece: 'SANS_PIECE' };
@@ -43,7 +44,34 @@ export function creerServiceBanque(jeu = genererBanque()) {
       };
     });
 
+  const vues = genererVuesBanque(jeu);
+  const moisFrise = vues.couverture[0]?.mois.map((m) => m.mois) ?? [];
+  const trous: TrouReleve[] = vues.trous.map((t) => ({
+    id: t.id, compteId: t.compteId, debut: t.debut, fin: t.fin, preuve: t.preuve,
+    ...(t.ecart !== undefined ? { ecartCentimes: t.ecart } : {}), etat: t.etat as TrouReleve['etat'],
+  }));
+  const demandes: Demande[] = vues.demandes
+    .map((d): Demande => ({
+      id: d.id, cle: d.cle, ligneIds: d.ligneIds, impactCentimes: d.impact, nombre: d.nombre, type: d.type,
+      codeQuestion: d.codeQuestion, reponsesPretes: d.reponsesPretes, etat: 'ouverte',
+    }))
+    .sort((a, b) => b.impactCentimes - a.impactCentimes || cmp(a.id, b.id));
+  const doublons: DoublonPropose[] = vues.doublons;
+  const filtrer = <T extends { etat: string }>(l: T[], etat?: string) => {
+    const body = etat === undefined ? l : l.filter((x) => x.etat === etat);
+    return { body, decalage: 0, total: body.length };
+  };
+
   return {
+    /** `undefined` si le compte n'existe pas ; sans relevé, tous les mois sont `manquant`. */
+    couverture(compteId: string): { body: Couverture } | undefined {
+      if (!comptes.some((c) => c.id === compteId)) return undefined;
+      const c = vues.couverture.find((x) => x.compteId === compteId);
+      return { body: c ?? { compteId, mois: moisFrise.map((mois) => ({ mois, etat: 'manquant' as const })) } };
+    },
+    trous: (etat?: string) => filtrer(trous, etat),
+    demandes: (etat?: string) => filtrer(demandes, etat),
+    doublons: (etat?: string) => filtrer(doublons, etat),
     comptes(): { body: CompteBancaire[]; decalage: number; total: number } {
       return { body: comptes, decalage: 0, total: comptes.length };
     },

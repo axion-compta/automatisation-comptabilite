@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CODES_ERREUR } from '../../../../noyau/src/chat/types.js';
 import { registre } from '../../actions/index.js';
 import outilsJson from '../outils.json' with { type: 'json' };
 import { NOMS_OUTILS, schemaEntree, schemaSortie, validerEntree } from '../outils.js';
@@ -10,6 +11,7 @@ const valides: Record<string, unknown> = {
   'tiers.lister': { recherche: 'Dupont' },
   'ecritures.lister': { exercice_id: 'ex_a1' },
   'vue.ouvrir': { vue: 'ecritures' },
+  'change.expliquer_ecart': { ecart_id: 'ec_a1' },
   proposer_validation: { exercice_id: 'ex_a1', lignes: [ligne, { ...ligne, debit_centimes: 0, credit_centimes: 100 }] },
 };
 const nomsValides = Object.keys(valides);
@@ -88,5 +90,13 @@ describe('outils du chat', () => {
     const noms = outilsJson.map((o) => o.nom);
     expect(new Set(noms).size).toBe(noms.length);
     expect(new Set(NOMS_OUTILS).size).toBe(NOMS_OUTILS.length);
+  });
+  it('codes-erreur-liste-fermee', () => {
+    const connus: readonly string[] = CODES_ERREUR;
+    for (const o of outilsJson) {
+      expect(o.codes_erreur.length).toBeGreaterThan(0);
+      expect(new Set(o.codes_erreur).size).toBe(o.codes_erreur.length);
+      for (const c of o.codes_erreur) expect(connus).toContain(c);
+    }
   });
 });

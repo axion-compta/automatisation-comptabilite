@@ -5,13 +5,27 @@ export function creerBase() {
   return { appliquees: [] };
 }
 
-export function instructionRefusee(instruction) {
-  const bas = String(instruction)
+function normaliser(instruction) {
+  return String(instruction)
     .toLowerCase()
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/--[^\n]*/g, ' ')
-    .replace(/\s+/g, ' ');
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function instructionRefusee(instruction) {
+  const bas = normaliser(instruction);
   return INTERDITS.find((mot) => bas.includes(mot)) ?? null;
+}
+
+// Base simulee : rien n'est execute ; refuse update/delete/truncate sur une table ajout seul.
+export function executer(module, instruction) {
+  const r = /^(?:update|delete from|truncate(?: table)?) (?:only )?"?([a-z0-9_.]+)/.exec(normaliser(instruction));
+  if (r && (module.tablesAjoutSeul ?? []).includes(r[1])) {
+    throw new Error(`Instruction refusee (ajout seul) : ${instruction}`);
+  }
+  return 'ok';
 }
 
 // Idempotent par registre des instructions deja appliquees.
