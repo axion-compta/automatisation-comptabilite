@@ -34,6 +34,8 @@ import { sante } from './domaines/sante.js';
 import { bloquants } from './domaines/bloquants.js';
 import { juridique } from './domaines/juridique.js';
 import { parametres } from './domaines/parametres.js';
+import { finContrat } from './domaines/fin-contrat.js';
+import { acceptations } from './domaines/acceptations.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
@@ -89,6 +91,8 @@ export const contrat = {
   parametres,
   tresorerie: domaineTresorerie,
   fournisseurs: domaineFournisseurs,
+  finContrat,
+  acceptations,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };

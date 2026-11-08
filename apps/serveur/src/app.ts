@@ -30,6 +30,8 @@ import { routesJuridique } from './domaines/juridique.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
 import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
+import { implementerFinContrat } from './domaines/fin-contrat.js';
+import { implementerAcceptations } from './domaines/acceptations.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
@@ -100,6 +102,8 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     parametres: routesParametres(),
     tresorerie: routesTresorerie(),
     fournisseurs: routesFournisseurs(),
+    finContrat: implementerFinContrat(os, options.abonnement ?? {}),
+    acceptations: implementerAcceptations(os, options.abonnement ?? {}),
     abonnement: {
       ...implementerAcces(os, options.abonnement ?? {}),
       ...implementerVolume(os, options.abonnement ?? {}),
