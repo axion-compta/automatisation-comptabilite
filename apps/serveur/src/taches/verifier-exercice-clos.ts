@@ -1,5 +1,6 @@
 // Relecture d'un exercice clos : détecte une altération, la signale, ne répare jamais.
 // Écrit contre des interfaces (écritures, instantanés, boîte d'envoi, alerte) : aucun réseau, aucune base.
+import type { Passage, Planificateur, Rythme } from '../../../../packages/noyau/src/exploitation/planificateur.js';
 import type { PortAlerteExploitation } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
 import type { Enveloppe } from '../../../../packages/noyau/src/evenements/enveloppe.js';
 import type { BoiteEnvoi } from '../../../../packages/noyau/src/evenements/publication.js';
@@ -35,7 +36,7 @@ export async function verifierExerciceClos(p: ParametresVerification): Promise<R
     const [trace] = executerControles(
       [regleRelectureExercice],
       [{ type: 'exercice', id: exerciceId, donnee: { ecritures, instantane: ligne } }],
-      'a_la_demande',
+      motif === 'avant_export' ? 'avant_export' : 'a_la_demande',
       horodatage,
     );
     statut = trace?.resultat === 'OK' ? 'intact' : 'altere';
@@ -58,4 +59,17 @@ export async function verifierExerciceClos(p: ParametresVerification): Promise<R
     await p.alerte.alerter({ code: statut === 'altere' ? 'exercice_altere' : 'instantane_absent', societeId, exerciceId });
   }
   return { statut, exportAutorise: statut === 'intact' };
+}
+
+/** Inscrit la relecture annuelle au planificateur ; `preparer` fournit les ports du passage (le branchement réel reste à décider). */
+export function inscrireVerificationExercice(
+  planificateur: Planificateur, rythme: Rythme,
+  preparer: (passage: Passage) => Promise<Omit<ParametresVerification, 'motif'>>,
+): void {
+  planificateur.inscrire({
+    nom: 'verifier-exercice-clos', rythme,
+    async executer(passage) {
+      await verifierExerciceClos({ ...(await preparer(passage)), motif: 'annuelle' });
+    },
+  });
 }

@@ -3,13 +3,14 @@ import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { instantaneCloture } from '../../../../../packages/noyau/src/conservation/relecture-exercice.js';
 import type { Ecriture } from '../../../../../packages/noyau/src/ecritures/modele.js';
 import type { Enveloppe } from '../../../../../packages/noyau/src/evenements/enveloppe.js';
+import { creerFauxPlanificateur } from '../../../../../packages/noyau/src/exploitation/planificateur.js';
 import { creerFauxAlertes } from '../../../../../packages/noyau/src/exploitation/port-alerte.js';
 import {
   cleEcriture, EcrituresMemoire, ErreurInalterable, type LigneStockee,
 } from '../../persistance/ecritures-figees.js';
 import type { LigneSnapshotCloture, PortMoteur } from '../../persistance/moteur-ports.js';
 import {
-  verifierExerciceClos, type AlerteExercice, type MotifVerification,
+  inscrireVerificationExercice, verifierExerciceClos, type AlerteExercice, type MotifVerification,
 } from '../verifier-exercice-clos.js';
 
 const A = 'soc-a'; // SIREN fictif 123456782
@@ -60,6 +61,15 @@ describe('inaltérabilité des écritures', () => {
     expect(await ecritures.lister(A, EXO)).toEqual(avant);
   });
 
+  it('lister-rend-des-copies', async () => {
+    const { ecritures } = await monde();
+    const [e1] = await ecritures.lister(A, EXO);
+    e1!.lignes[0]!.debit = centimes(1);
+    e1!.statut = 'brouillon';
+    const [relue] = await ecritures.lister(A, EXO);
+    expect(relue?.lignes[0]?.debit).toBe(10000);
+    expect(relue?.statut).toBe('valide');
+  });
   it('brouillon-modifiable', async () => {
     const ecritures = new EcrituresMemoire();
     await ecritures.ajouter(A, EXO, ecriture('b1', 'brouillon', 500));
@@ -129,5 +139,23 @@ describe('relecture des exercices clos', () => {
     for (const e of m.deposes) {
       expect(e).toMatchObject({ type: 'compta.exercice.verifie', exercice_id: EXO, objet_id: EXO, horodatage: T });
     }
+  });
+
+  it('inscription-au-planificateur', async () => {
+    const m = await monde();
+    const { planificateur, avancerJusqua } = creerFauxPlanificateur();
+    const passages: string[] = [];
+    inscrireVerificationExercice(planificateur, { chaque: 'jour', heure: 2, minute: 0 }, async (passage) => {
+      passages.push(passage.passageId);
+      return {
+        societeId: A, exerciceId: EXO, ecritures: m.ecritures,
+        instantanes: { dernierInstantane: async () => null },
+        maintenant: () => T, boiteEnvoi: { deposer: (e) => { m.deposes.push(e); } }, alerte: creerFauxAlertes<AlerteExercice>().port,
+      };
+    });
+    await avancerJusqua('2026-03-01T03:00:00Z');
+    expect(passages).toHaveLength(1);
+    expect(m.deposes).toHaveLength(1);
+    expect(m.deposes[0]?.charge).toEqual({ motif: 'annuelle', statut: 'instantane_absent' });
   });
 });
