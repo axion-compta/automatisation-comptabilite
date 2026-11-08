@@ -16,6 +16,7 @@ import { suiteCalendrier } from './suite-calendrier.js';
 import { suiteNotifications } from './suite-notifications.js';
 import { suiteTva } from './suite-tva.js';
 import { suiteBanque } from './suite-banque.js';
+import { suitePrincipes } from './suite-principes.js';
 import { suiteChat, type CibleChat } from './suite-chat.js';
 import { AJOUTS, DEBUT, REGLAGES, suiteChatPropositions, type CiblePropositions } from './suite-chat-propositions.js';
 
@@ -126,5 +127,7 @@ suiteChatPropositions('vrai serveur (Fastify + oRPC)', cibleProposVrai);
 suiteChatPropositions('faux serveur (MSW)', cibleProposFaux);
 suiteBanque('vrai serveur (Fastify + oRPC)', cibleVrai, false);
 suiteBanque('faux serveur (MSW)', cibleFaux, true);
+suitePrincipes('vrai serveur (Fastify + oRPC)', cibleVrai);
+suitePrincipes('faux serveur (MSW)', cibleFaux);
 suiteTva('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteTva('faux serveur (MSW)', cibleFaux);
