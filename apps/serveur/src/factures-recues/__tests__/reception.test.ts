@@ -63,6 +63,12 @@ describe('webhook', () => {
     for (const h of [MAINTENANT - ATTENTE, MAINTENANT + ATTENTE, Number.NaN, Infinity]) {
       expect(await codeWebhook(corps, signer(corps, h), h)).toEqual({ ok: false, code: 'webhook_perime' });
     }
+    const reglages = [{ maintenantMs: Number.NaN, toleranceMs: FENETRE }, { maintenantMs: Infinity, toleranceMs: FENETRE },
+      { maintenantMs: 1e13, toleranceMs: Number.NaN }, { maintenantMs: 1e13, toleranceMs: Infinity }, { maintenantMs: 1e13, toleranceMs: -1 }];
+    for (const r of reglages) {
+      const res = await verifierWebhook({ corps, signature: signer(corps, 0), horodatageMs: 0 }, { coffre: coffre(SECRET), nomSecret: NOM_SECRET, ...r });
+      expect(res).toEqual({ ok: false, code: 'webhook_perime' });
+    }
     expect(await codeWebhook(corps, signer(corps, MAINTENANT - FENETRE), MAINTENANT - FENETRE)).toEqual({ ok: true });
   });
   it('webhook-sans-secret-refuse', async () => {
@@ -116,6 +122,15 @@ describe('rangement et rattrapage', () => {
     expect(curseur()).toBe('p3');
     expect(m.val().etat.factures).toHaveLength(2);
     expect(tvaComptee(m.val().etat)).toBe(centimes(3000));
+  });
+  it('arrivee-mal-formee-alerte-sans-bloquer-la-page', async () => {
+    const f = faux({ '': { arrivees: [brute(1, { date: '2026-02-30' }), brute(2)], curseurSuivant: 'p2' } });
+    const { m, recues, p, curseur } = ctx(f, { derniereReceptionMs: { 'plateforme-fictive': MAINTENANT - ATTENTE - 1 } });
+    expect(await rattraper(p)).toEqual({ rangees: 1, echec: false });
+    expect(m.val().etat.factures.map((x) => x.idExterne)).toEqual(['EXT-2']);
+    expect(f.accuses).toEqual(['EXT-2']);
+    expect(curseur()).toBe('p2');
+    expect(recues).toEqual([{ code: 'arrivee_invalide', plateforme: 'plateforme-fictive', idExterne: 'EXT-1' }]);
   });
   it('plateforme-en-echec-alerte-sans-bascule', async () => {
     vi.useFakeTimers();

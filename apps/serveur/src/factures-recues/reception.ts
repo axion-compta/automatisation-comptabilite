@@ -27,6 +27,7 @@ export interface ValeurReception { etat: EtatFacturesRecues; curseurs: Record<st
 export interface PortEtatReception { lire(societeId: string): Promise<ValeurReception>; ecrire(societeId: string, valeur: ValeurReception): Promise<void> }
 export type AlerteReception =
   | { code: 'facture_autre_destinataire'; plateforme: string; idExterne: string }
+  | { code: 'arrivee_invalide'; plateforme: string; idExterne: string }
   | { code: 'plateforme_en_echec'; plateforme: string }
   | { code: 'reception_en_retard'; plateforme: string };
 export type PortAlerteReception = PortAlerteExploitation<AlerteReception>;
@@ -39,7 +40,8 @@ export async function verifierWebhook(
 ): Promise<ResultatWebhook> {
   const secret = await o.coffre.lireSecret(o.nomSecret);
   if (secret === undefined || secret === '') return { ok: false, code: 'secret_absent' };
-  if (!Number.isFinite(m.horodatageMs) || Math.abs(o.maintenantMs - m.horodatageMs) > o.toleranceMs) {
+  const reglageValide = Number.isFinite(o.maintenantMs) && Number.isSafeInteger(o.toleranceMs) && o.toleranceMs >= 0;
+  if (!reglageValide || !Number.isFinite(m.horodatageMs) || Math.abs(o.maintenantMs - m.horodatageMs) > o.toleranceMs) {
     return { ok: false, code: 'webhook_perime' };
   }
   const attendue = Buffer.from(createHmac('sha256', secret).update(`${String(m.horodatageMs)}.`).update(m.corps).digest('hex'));
@@ -59,8 +61,16 @@ export async function rangerArrivees(
   let etat = valeur.etat;
   const aAccuser: string[] = [];
   const autres: string[] = [];
+  const invalides: string[] = [];
   for (const a of arrivees) {
-    const r = recevoir(etat, { ...a, source: plateforme.nom }, sirenSociete);
+    let r;
+    try {
+      r = recevoir(etat, { ...a, source: plateforme.nom }, sirenSociete);
+    } catch (e) {
+      if (!(e instanceof Error) || e.name !== 'ErreurFactureRecue') throw e;
+      invalides.push(a.idExterne);
+      continue;
+    }
     etat = r.etat;
     (r.resultat === 'autre_destinataire' ? autres : aAccuser).push(a.idExterne);
   }
@@ -68,6 +78,9 @@ export async function rangerArrivees(
   for (const id of aAccuser) await plateforme.accuser(id);
   for (const idExterne of autres) {
     await ports.alerte.alerter({ code: 'facture_autre_destinataire', plateforme: plateforme.nom, idExterne });
+  }
+  for (const idExterne of invalides) {
+    await ports.alerte.alerter({ code: 'arrivee_invalide', plateforme: plateforme.nom, idExterne });
   }
   return { aAccuser };
 }
@@ -108,7 +121,6 @@ export async function rattraper(p: {
     const dates = recu ? { ...apres.derniereReceptionMs, [nom]: p.maintenantMs } : apres.derniereReceptionMs;
     await p.ports.etat.ecrire(societeId, { ...apres, curseurs: { ...apres.curseurs, [nom]: page.curseurSuivant }, derniereReceptionMs: dates });
   } catch (e) {
-    if (e instanceof Error && e.name === 'ErreurFactureRecue') throw e;
     echec = true;
     await alerte.alerter({ code: 'plateforme_en_echec', plateforme: nom });
   }
