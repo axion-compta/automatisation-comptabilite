@@ -16,7 +16,7 @@ function lireQuery(url: string) {
 
 /**
  * Handlers des deux routes du tableau de bord, branchés sur le service du contrat (aucun calcul réécrit).
- * `x-panne-bloc: <code>` (faux serveur seul) met ce bloc en panne : 503 sur sa route, état « impossible » dans le tableau.
+ * `x-panne-bloc: <code>` (faux serveur seul) met ce bloc en panne : la route répond 200 avec ce bloc à l’état « impossible » dans le tableau.
  */
 export function creerHandlersTableauDeBord(base: string, attendre: () => Promise<void>, ...reste: unknown[]): HttpHandler[] {
   void reste;
