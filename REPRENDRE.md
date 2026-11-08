@@ -44,3 +44,12 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
 - Ne jamais fusionner depuis une session auteur.
 - Écrire les fichiers avec un outil d'édition, jamais d'octet NUL.
+
+## Lot 13
+- Fiches : 56 au total ; 48 marquées `statut: fait` avant L13-T46 (mesure : en-tête de chaque fiche) ; V1 L13-T38 à L13-T45 : faites.
+- Restent `a_faire`, toutes sensibles : L13-T47, T48, T49, T51, T53, T54, T55. Elles attendent des décisions (D53 à D62) ou la console ; la décision précise de chacune : non mesuré.
+- Durée réelle : premier commit de code de L13-T00 le 08/11/2026 à 04:57 (+01:00, #659) ; dernière fusion relevée le 08/11/2026 à 09:21 (#768), soit environ 4 h 24 min ; fiches du lot posées la veille à 14:13 (#120).
+- Nombre de PR du lot, délai médian de fusion (sensible, non sensible) : non mesuré (pas de gh dans cette session).
+- PR revenues en `a-corriger` et raisons : non mesuré.
+- Score Stryker du noyau à la fin : non mesuré.
+- Aucune date de livraison annoncée.
