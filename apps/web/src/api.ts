@@ -1,3 +1,6 @@
+import { DecodeurFlux } from '../../../packages/contrat/src/chat/flux.js';
+import type { DemandeMessage, Evenement } from '../../../packages/contrat/src/chat/evenements.js';
+import { Pourquoi, PropositionVue } from '../../../packages/contrat/src/domaines/chat-propositions.js';
 export type Panne = '' | '403' | '409' | '423';
 /** statut 0 = le serveur n'a pas répondu (réseau). */
 export type Reponse = { statut: number; corps: unknown };
@@ -123,3 +126,64 @@ export async function ecrire<T>(
 export type EtatLecture<T> = { etat: 'chargement' | 'erreur' | 'vide' | 'pret'; donnees?: T; erreur?: ErreurLecture };
 /** Forme de useLecture (déclarée ici : la garde textes lit mal les génériques dans un .tsx). */
 export type UseLecture = <T>(chemin: string, schema: SchemaLecture<T>) => EtatLecture<T>;
+
+export type FinTour = 'tour_fini' | 'coupe' | 'arrete';
+export type OptionsTour = { surEvenement: (e: Evenement) => void; signal?: AbortSignal; dernierId?: number };
+const codeHttp = (statut: number): CodeLecture => CODES[statut] ?? (statut >= 500 ? 'serveur' : 'reponse_invalide');
+const sansSchema: SchemaLecture<unknown> = { safeParse: (data) => ({ success: true, data }) };
+/**
+ * Flux d'un message : POST lu par fetch (EventSource ne sait pas POST). Coupure réseau = « coupe » : l'appelant
+ * relance avec le dernierId rendu (Last-Event-ID). Signal annulé = « arrete », sans exception.
+ */
+export async function ecouterTour(demande: DemandeMessage, o: OptionsTour): Promise<{ dernierId: number; fin: FinTour }> {
+  const decodeur = new DecodeurFlux();
+  decodeur.dernierId = o.dernierId ?? 0;
+  const bilan = (fin: FinTour) => ({ dernierId: decodeur.dernierId, fin });
+  if (o.signal?.aborted) return bilan('arrete');
+  const entetes: Record<string, string> = { 'content-type': 'application/json', accept: 'text/event-stream', 'idempotency-key': demande.message_id };
+  if (o.dernierId !== undefined) entetes['last-event-id'] = String(o.dernierId);
+  const stop = new Promise<'stop'>((fini) => o.signal?.addEventListener('abort', () => fini('stop'), { once: true }));
+  const cible = new URL('/chat/messages', location.origin).toString();
+  let lecteur: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  try {
+    const r = await Promise.race([fetch(cible, { method: 'POST', headers: entetes, body: JSON.stringify(demande), ...(o.signal ? { signal: o.signal } : {}) }), stop]);
+    if (r === 'stop') return bilan('arrete');
+    if (!r.ok) throw new ErreurLecture(r.status, codeHttp(r.status));
+    lecteur = r.body?.getReader();
+    const texte = new TextDecoder();
+    for (;;) {
+      const lu = lecteur ? await Promise.race([lecteur.read(), stop]) : { done: true as const };
+      if (lu === 'stop') return bilan('arrete');
+      if (lu.done) return bilan('coupe');
+      for (const e of decodeur.pousser(texte.decode(lu.value, { stream: true }))) {
+        o.surEvenement(e);
+        if (e.type === 'tour.fin') return bilan('tour_fini');
+      }
+    }
+  } catch (e) {
+    if (e instanceof ErreurLecture) throw e;
+    return bilan(o.signal?.aborted ? 'arrete' : 'coupe');
+  } finally {
+    void lecteur?.cancel().catch(() => undefined);
+  }
+}
+const route = (id: string, suite: string): string => '/chat/' + suite.replace('{id}', encodeURIComponent(id));
+/** Demande l'arrêt d'un tour ; le flux se coupe côté serveur. */
+export async function arreterTour(id: string): Promise<void> {
+  await ecrire('POST', route(id, 'tours/{id}/arreter'), undefined, sansSchema, nouvelleCle());
+}
+async function agirSurProposition(id: string, action: 'appliquer' | 'annuler', cle: string) {
+  let r: Response;
+  try {
+    r = await fetch(new URL(route(id, `propositions/{id}/${action}`), location.origin).toString(), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': cle } });
+  } catch {
+    throw new ErreurLecture(0, 'reseau');
+  }
+  if (!r.ok) throw new ErreurLecture(r.status, codeHttp(r.status));
+  const v = PropositionVue.safeParse(await r.json().catch(() => undefined));
+  if (!v.success) throw new ErreurLecture(r.status, 'reponse_invalide');
+  return v.data;
+}
+export const appliquerProposition = (id: string, cle: string) => agirSurProposition(id, 'appliquer', cle);
+export const annulerProposition = (id: string, cle: string) => agirSurProposition(id, 'annuler', cle);
+export const lirePourquoi = (id: string, signal?: AbortSignal) => lire(route(id, 'propositions/{id}/pourquoi'), Pourquoi, signal);
