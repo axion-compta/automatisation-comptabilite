@@ -21,7 +21,7 @@ export type EtatFinContrat = z.infer<typeof EtatFinContrat>;
 const LONGUEUR_MAX_MOTIF = 500;
 export const MotifGel = z.object({ motif: z.string().trim().min(1).max(LONGUEUR_MAX_MOTIF) });
 
-const ecriture = (path: string, operationId: string) =>
+const ecriture = (path: `/${string}`, operationId: string) =>
   oc.route({ method: 'POST', path, inputStructure: 'detailed', operationId, tags: ['acces:compte'] });
 
 export const lireFinContrat = oc

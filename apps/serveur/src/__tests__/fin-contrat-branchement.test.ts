@@ -1,3 +1,4 @@
+import type { InjectOptions } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { creerApp } from '../app.js';
 
@@ -19,9 +20,9 @@ describe('serveur : branchement fin de contrat et acceptations', () => {
       { method: 'POST', url: '/fin-contrat/gel/levee', headers: h, payload: { motif: 'litige clos' } },
       { method: 'GET', url: '/documents-contractuels/a-accepter' },
       { method: 'POST', url: '/acceptations', headers: h, payload: { type: 'cgv', version: 1 } },
-    ] as const;
+    ] satisfies InjectOptions[];
     for (const req of appels) {
-      const r = await a.inject({ ...req, headers: 'headers' in req ? { ...req.headers } : undefined });
+      const r = await a.inject(req);
       expect(r.statusCode, req.url).not.toBe(404);
     }
     expect((await a.inject({ method: 'GET', url: '/tiers' })).statusCode).toBe(200);
