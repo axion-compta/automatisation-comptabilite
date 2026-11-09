@@ -28,7 +28,11 @@ import { routesChange } from './domaines/change.js';
 import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
+import { genererFrais } from '../../../packages/donnees-fictives/src/frais.js';
+import { creerServiceFrais } from '../../../packages/contrat/src/domaines/frais-service.js';
+import { creerServiceFraisActions } from '../../../packages/contrat/src/domaines/frais-actions-service.js';
 import { routesFrais } from './domaines/frais.js';
+import { routesFraisActions } from './domaines/frais-actions.js';
 import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
 import { implementerPersonnes } from './domaines/personnes.js';
@@ -74,6 +78,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
   };
   const profilChamps = creerServiceProfilChamps('soc-lemoine');
   const os = implement(contrat);
+  const jeuFrais = genererFrais();
   const routeur = os.router({
     ecritures: {
       lister: os.ecritures.lister.handler(({ input }) => {
@@ -112,7 +117,8 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     regimes: routesRegimes(),
     identite: routesIdentite(),
     change: routesChange(),
-    frais: routesFrais(),
+    frais: routesFrais(creerServiceFrais(jeuFrais)),
+    fraisActions: routesFraisActions(creerServiceFraisActions({ jeu: jeuFrais })),
     vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),

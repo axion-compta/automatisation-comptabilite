@@ -23,13 +23,13 @@ export class BornesInvalides extends Error {
 
 /** Service en mémoire pur sur le jeu fictif des frais. Lecture seulement ; totaux du noyau. */
 export function creerServiceFrais(jeu: JeuFrais = genererFrais()) {
-  const trajets = new Map<string, Trajet>(jeu.trajets.map((t) => [t.fraisId, t]));
+  const trajets = (): Map<string, Trajet> => new Map(jeu.trajets.map((t) => [t.fraisId, t]));
   const noyau = (f: JeuFrais['frais'][number]): Frais => {
     const { montantTtc, tva, partPersoTtc, ...reste } = f;
     return { ...(reste as Omit<Frais, 'montantTtc' | 'tva' | 'partPersoTtc'>), montantTtc: centimes(montantTtc), tva: centimes(tva), partPersoTtc: centimes(partPersoTtc) } as Frais;
   };
   const km = (id: string): number | undefined => {
-    const t = trajets.get(id);
+    const t = trajets().get(id);
     return t === undefined ? undefined : kmRetenus(t);
   };
   const resume = (f: JeuFrais['frais'][number]): FraisResume => {
@@ -43,12 +43,12 @@ export function creerServiceFrais(jeu: JeuFrais = genererFrais()) {
       ...(k !== undefined ? { kmDixiemes: k, montantTrajetCentimes: null } : {}),
     };
   };
-  const tous = [...jeu.frais].sort((a, b) => (a.dateDepense !== b.dateDepense ? (a.dateDepense < b.dateDepense ? 1 : -1) : a.id < b.id ? -1 : 1));
+  const tous = (): JeuFrais['frais'] => [...jeu.frais].sort((a, b) => (a.dateDepense !== b.dateDepense ? (a.dateDepense < b.dateDepense ? 1 : -1) : a.id < b.id ? -1 : 1));
 
   return {
     lister(o: OptionsFrais = {}): { body: FraisResume[]; decalage: number; total: number; totaux: Totaux } {
       if (o.du !== undefined && o.au !== undefined && o.du > o.au) throw new BornesInvalides();
-      const sel = tous.filter(
+      const sel = tous().filter(
         (f) => (o.personne === undefined || f.personneId === o.personne) && (o.du === undefined || f.dateDepense >= o.du) && (o.au === undefined || f.dateDepense <= o.au) && (o.statut === undefined || f.statut === o.statut),
       );
       const montants = new Map(sel.filter((f) => f.nature === 'trajet').map((f) => [f.id, null] as const));
@@ -74,6 +74,7 @@ export function creerServiceFrais(jeu: JeuFrais = genererFrais()) {
         ...(f.pieceId !== undefined ? { pieceId: f.pieceId } : {}),
         ...(f.motifSansJustificatif !== undefined ? { motifSansJustificatif: f.motifSansJustificatif } : {}),
         partPersoTtcCentimes: f.partPersoTtc,
+        ...(f.ligneBanqueId !== undefined ? { ligneBanqueId: f.ligneBanqueId } : {}),
         version: f.version,
       };
     },
