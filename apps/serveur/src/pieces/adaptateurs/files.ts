@@ -4,7 +4,7 @@ import { etapeAntivirus, etapeEntree, type ContexteEntree } from '../etape-entre
 import { etapeClassement, type ContexteClassement } from '../etape-classement.js';
 import { etapeLecture, type ContexteLecture, type JournalTaches, type ResultatLecture } from '../etape-lecture.js';
 import { etapePreparation, type ContextePreparation, type ResultatPreparation } from '../etape-preparation.js';
-import type { Horloge } from '../ports.js';
+import type { Horloge, PieceEnregistree } from '../ports.js';
 
 const MS_PAR_MINUTE = 60_000;
 export const NOMS_FILES: Record<Etape, string> = Object.fromEntries(ETAPES.map((e) => [e, `compta-pieces-${e}`])) as Record<Etape, string>;
@@ -97,8 +97,12 @@ export const executeurEntree = (ctx: ContexteEntree, source: { lire(depotId: str
   return { pieces };
 };
 export const executeurAntivirus = (ctx: ContexteEntree): Executeur => async (id) => {
-  const piece = await ctx.depot.parId(id);
-  if (piece === null) return { fin: true };
+  const trouvee = await ctx.depot.parId(id);
+  if (trouvee === null) return { fin: true };
+  // Relance d'une pièce en erreur : retour en quarantaine (tentatives gardées), puis nouveau contrôle.
+  const piece: PieceEnregistree = { ...trouvee, etat: trouvee.etat === 'en_erreur' ? appliquerTransition('en_erreur', 'quarantaine') : trouvee.etat };
+  if (trouvee.etat === 'en_erreur') delete piece.prochaineRelanceA;
+  if (trouvee.etat === 'en_erreur') await ctx.depot.enregistrer(piece);
   const r = await etapeAntivirus(piece, ctx);
   if (r.etat === 'en_erreur' && r.prochaineRelanceA !== undefined && r.prochaineRelanceA !== 'abandon') return { relanceA: r.prochaineRelanceA };
   return r.etat === 'quarantaine' ? { pieces: [id] } : { fin: true };
