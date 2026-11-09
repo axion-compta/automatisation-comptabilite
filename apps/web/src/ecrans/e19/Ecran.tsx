@@ -9,6 +9,8 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import type { ErreurLecture } from '../../api.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { useState } from 'react';
+import { Declaration, idDeclaration } from './Declaration.js';
 
 const messageErreur = (e: ErreurLecture | undefined): string => (e?.code === 'acces_refuse' ? e19.etats.acces : e19.etats.erreur);
 const ETAT_PASTILLE: Record<PeriodeTva['statut'], EtatPastille> = { ouverte: 'attente', validee: 'ok', deposee_par_client: 'ok' };
@@ -37,7 +39,7 @@ function Estimation({ exercice }: { exercice: string }) {
   );
 }
 
-function Periodes({ exercice }: { exercice: string }) {
+function Periodes({ exercice, ouvrir }: { exercice: string; ouvrir: (periodeId: string) => void }) {
   const lecture = useLecture('/exercices/' + encodeURIComponent(exercice) + '/tva/periodes', ReponsePeriodesTva);
   if (lecture.etat === 'chargement') return <EtatChargement libelle={e19.etats.chargement} />;
   if (lecture.etat === 'erreur') return <EtatErreur message={messageErreur(lecture.erreur)} />;
@@ -49,6 +51,7 @@ function Periodes({ exercice }: { exercice: string }) {
         { cle: 'debut', entete: e19.periodes.du, rendu: (p: PeriodeTva) => p.debut },
         { cle: 'fin', entete: e19.periodes.au, rendu: (p: PeriodeTva) => p.fin },
         { cle: 'statut', entete: e19.periodes.etat, rendu: (p: PeriodeTva) => <Pastille etat={ETAT_PASTILLE[p.statut]} libelle={e19.periodes.etats[p.statut]} /> },
+        { cle: 'declaration', entete: e19.declaration.titre, rendu: (p: PeriodeTva) => (p.statut === 'ouverte' ? null : <button type="button" onClick={() => ouvrir(p.id)}>{e19.declaration.ouvrir}</button>) },
       ]}
       lignes={lecture.donnees.body}
       cleDeLigne={(p) => p.id}
@@ -59,12 +62,20 @@ function Periodes({ exercice }: { exercice: string }) {
 /** Écran E19 : estimation de la TVA (bloquée si des pièces sont en doute) et périodes de l'exercice le plus récent. */
 export function Ecran() {
   const exercices = useLecture('/exercices', ReponseExercices);
+  const [ouverte, setOuverte] = useState<string | null>(null);
   const premier = exercices.donnees?.body[0]?.id;
   let contenu;
   if (exercices.etat === 'chargement') contenu = <EtatChargement libelle={e19.etats.chargement} />;
   else if (exercices.etat === 'erreur') contenu = <EtatErreur message={messageErreur(exercices.erreur)} />;
   else if (premier === undefined) contenu = <EtatVide titre={e19.etats.aucuneAnnee} />;
-  else {
+  else if (ouverte !== null) {
+    contenu = (
+      <>
+        <button type="button" onClick={() => setOuverte(null)}>{e19.declaration.retour}</button>
+        <Declaration id={idDeclaration(ouverte)} />
+      </>
+    );
+  } else {
     contenu = (
       <>
         <section aria-labelledby="e19-estimation">
@@ -73,7 +84,7 @@ export function Ecran() {
         </section>
         <section aria-labelledby="e19-periodes">
           <h2 id="e19-periodes">{e19.periodes.titre}</h2>
-          <Periodes exercice={premier} />
+          <Periodes exercice={premier} ouvrir={setOuverte} />
         </section>
       </>
     );
