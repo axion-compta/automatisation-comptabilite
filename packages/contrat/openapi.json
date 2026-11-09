@@ -3776,6 +3776,30 @@
         }
       }
     },
+    "/api/compta/v1/societes/{s}/moi/capacites": {
+      "get": {
+        "operationId": "lireCapacites",
+        "parameters": [
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/api/compta/v1/societes/{s}/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
