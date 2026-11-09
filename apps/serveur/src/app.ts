@@ -24,6 +24,7 @@ import { routesProfilChangements } from './domaines/profil-changements.js';
 import { creerServiceProfilChangements } from '../../../packages/contrat/src/domaines/profil-changements-service.js';
 import { creerServiceProfilChamps } from '../../../packages/contrat/src/domaines/profil-champs-service.js';
 import { routesControles, routesFec } from './domaines/fec.js';
+import { routesControlesActions, type ContexteSession, type FournisseurSession, type ServiceControlesActions } from './domaines/controles-actions.js';
 import { routesChange } from './domaines/change.js';
 import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
@@ -33,6 +34,7 @@ import { creerServiceFrais } from '../../../packages/contrat/src/domaines/frais-
 import { creerServiceFraisActions } from '../../../packages/contrat/src/domaines/frais-actions-service.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesFraisActions } from './domaines/frais-actions.js';
+import { configEssai, creerServiceFraisValidation, routesFraisValidation } from './domaines/frais-validation.js';
 import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
 import { implementerPersonnes } from './domaines/personnes.js';
@@ -48,8 +50,10 @@ import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import { implementerFinContrat } from './domaines/fin-contrat.js';
 import { implementerAcceptations } from './domaines/acceptations.js';
+import { routesCapacites } from './domaines/capacites.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import type { OptionsExploitation } from './domaines/options-exploitation.js';
+import { corpsEtatAcces, creerGardeAcces, STATUT_ETAT_ACCES } from './garde-acces.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
 type Service = ReturnType<typeof creerService>;
@@ -66,7 +70,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; controlesActions?: ServiceControlesActions; securite?: OptionsSecurite } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -77,7 +81,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     notifications: services.notifications ?? {},
   };
   const profilChamps = creerServiceProfilChamps('soc-lemoine');
-  const os = implement(contrat);
+  const os = implement(contrat).$context<ContexteSession>();
   const jeuFrais = genererFrais();
   const routeur = os.router({
     ecritures: {
@@ -114,11 +118,13 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     profilChangements: routesProfilChangements(creerServiceProfilChangements(profilChamps)),
     fec: routesFec(),
     controles: routesControles(),
+    controlesActions: routesControlesActions(options.controlesActions),
     regimes: routesRegimes(),
     identite: routesIdentite(),
     change: routesChange(),
     frais: routesFrais(creerServiceFrais(jeuFrais)),
     fraisActions: routesFraisActions(creerServiceFraisActions({ jeu: jeuFrais })),
+    fraisValidation: routesFraisValidation(creerServiceFraisValidation(jeuFrais, configEssai())),
     vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),
@@ -132,6 +138,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     pieces: routesPieces(),
     tresorerie: routesTresorerie(),
     fournisseurs: routesFournisseurs(),
+    capacites: routesCapacites(options),
     finContrat: implementerFinContrat(os, options.abonnement ?? {}),
     acceptations: implementerAcceptations(os, options.abonnement ?? {}),
     abonnement: {
@@ -145,13 +152,16 @@ export function creerRouteur(service: Service = creerService(), services: Partia
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite; controlesActions?: ServiceControlesActions; session?: FournisseurSession } = {}): FastifyInstance {
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
+  const garde = creerGardeAcces({ horloge: options.abonnement?.horloge ?? (() => new Date(Date.now()).toISOString()), scenario: options.abonnement?.scenario });
   app.addContentTypeParser('*', (_req, _payload, done) => done(null, undefined));
   app.all('/*', async (request, reply) => {
-    const { matched } = await handler.handle(request, reply, { prefix: '/', context: {} });
+    const refus = garde(request.method, request.url.split('?')[0] ?? '');
+    if (refus) return reply.status(STATUT_ETAT_ACCES).send(corpsEtatAcces(refus));
+    const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session: options.session?.(request.headers) } });
     if (!matched) reply.status(404).send({ code: 'INTROUVABLE', status: 404 });
   });
   return app;

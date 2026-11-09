@@ -1,18 +1,18 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import { useState } from 'react';
 import { socle } from '../../../../packages/textes/src/ecrans/socle.js';
-import { ouvrirPalette } from '../commandes/Palette.js';
 import { BARRE_MOBILE, MENU_PLUS, estActive } from './menu.js';
 
 /** Barre du bas (téléphone) : 4 entrées + « Plus » (panneau), et le bouton « Discuter » toujours visible. */
 export function BarreMobile() {
+  const router = useRouter();
   const [plusOuvert, setPlusOuvert] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const courant = (chemin: string): 'page' | undefined => (estActive(chemin, pathname) ? 'page' : undefined);
 
   return (
     <div className="barre-mobile">
-      <button type="button" className="barre-discuter" onClick={() => ouvrirPalette()}>
+      <button type="button" className="barre-discuter" onClick={() => void router.navigate({ to: '/discussion' })}>
         {socle.discuter}
       </button>
       {plusOuvert && (
