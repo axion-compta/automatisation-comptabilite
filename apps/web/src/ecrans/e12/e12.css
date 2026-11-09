@@ -3,3 +3,5 @@
 .e12-carte { border: 1px solid var(--couleur-bordure); padding: var(--espace-m); } .e12-carte p { margin: var(--espace-xs) 0 0; }
 .e12-filtres { display: flex; flex-wrap: wrap; gap: var(--espace-m); margin: var(--espace-m) 0; }
 .e12-filtres label { display: flex; flex-direction: column; gap: var(--espace-xs); }
+.e12-explication { border: 1px solid var(--couleur-bordure); padding: var(--espace-m); margin: var(--espace-m) 0; }
+.e12-explication ul { padding-left: var(--espace-m); } .e12-explication li { margin: var(--espace-xs) 0; }
