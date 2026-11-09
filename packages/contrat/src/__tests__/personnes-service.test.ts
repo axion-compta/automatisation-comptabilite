@@ -82,6 +82,15 @@ describe('service des demandes des personnes', () => {
     expect(s.journal().map((e) => e.type)).toEqual(['personne.demande_recue', 'personne.marque_a_effacer']);
   });
 
+  it('aucune-regle-reglee-refus-prudent', () => {
+    const jeu = genererRgpd({ dateReference: REF });
+    jeu.conversations = [{ id: 'conv_x', texte: 'Question de Zoe Inventee.', derniereActiviteLe: '2024-01-01' }];
+    const s = creer({ jeu, regles: [], concernes: { 'dem-1': { nom: 'Zoe Inventee' } } });
+    s.enregistrer('k', { type: 'effacement', recue_le: REF });
+    expect(code(() => s.traiter('c', 'dem-1', { issue: 'a_effacer' }))).toBe('ISSUE_NON_PERMISE:422');
+    expect(s.rechercher({ nom: 'Zoe Inventee' })).toHaveLength(1);
+  });
+
   it('issue-contredite-refusee', () => {
     const s = creer();
     expect(code(() => s.traiter('c', 'dem_6', { issue: 'acces_produit' }))).toBe('ISSUE_NON_PERMISE:422');

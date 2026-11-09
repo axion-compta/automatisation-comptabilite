@@ -11,8 +11,8 @@ import type { DemandeVue } from './personnes.js';
 export type CodePersonnes = 'DEMANDE_INTROUVABLE' | 'DEJA_TRAITEE' | 'TRANSITION_INTERDITE' | 'ISSUE_NON_PERMISE' | 'MOTIF_MANQUANT' | 'SOURCE_MANQUANTE' | 'RECHERCHE_VIDE' | 'RECHERCHE_TROP_COURTE' | 'ERREUR_INTERNE';
 
 const STATUT: Record<CodePersonnes, number> = {
-  DEMANDE_INTROUVABLE: 404, DEJA_TRAITEE: 409, TRANSITION_INTERDITE: 409, ISSUE_NON_PERMISE: 422, MOTIF_MANQUANT: 422,
-  SOURCE_MANQUANTE: 422, RECHERCHE_VIDE: 422, RECHERCHE_TROP_COURTE: 422, ERREUR_INTERNE: 500,
+  DEMANDE_INTROUVABLE: 404, DEJA_TRAITEE: 409, TRANSITION_INTERDITE: 409, ISSUE_NON_PERMISE: 422, MOTIF_MANQUANT: 422, SOURCE_MANQUANTE: 422,
+  RECHERCHE_VIDE: 422, RECHERCHE_TROP_COURTE: 422, ERREUR_INTERNE: 500,
 };
 
 /** Le message est le seul code : jamais de motif ni de donnée de personne. */
@@ -41,9 +41,8 @@ export interface OptionsPersonnes {
 
 const ACTEUR_ESSAI = 'agent_exemple';
 const PAYS_ESSAI = ['FR'] as const;
-const CATEGORIE: Record<Source, 'pieces' | 'ecritures_livres' | 'conversations' | null> = {
-  pieces: 'pieces', ecritures: 'ecritures_livres', conversations: 'conversations', tiers: null,
-};
+type Cat = 'pieces' | 'ecritures_livres' | 'conversations' | null;
+const CATEGORIE: Record<Source, Cat> = { pieces: 'pieces', ecritures: 'ecritures_livres', conversations: 'conversations', tiers: null };
 const MAPPAGE: Readonly<Record<string, CodePersonnes>> = {
   deja_traitee: 'DEJA_TRAITEE', transition_interdite: 'TRANSITION_INTERDITE', issue_non_permise: 'ISSUE_NON_PERMISE',
   motif_manquant: 'MOTIF_MANQUANT', source_manquante: 'SOURCE_MANQUANTE', recherche_vide: 'RECHERCHE_VIDE',
@@ -61,10 +60,8 @@ function traduire(e: unknown): Error {
 export function creerServicePersonnes(options: OptionsPersonnes) {
   const jeu = options.jeu ?? genererRgpd({ dateReference: options.dateReference });
   const demandes = new Map<string, DemandePersonne>(jeu.demandes.map((d) => [d.id, { ...d }]));
-  const issues = new Map<string, Issue>();
-  const conserves = new Map<string, string>();
-  const marques = new Map<string, Marque[]>();
-  const rejeux = new Map<string, DemandeVue>();
+  const issues = new Map<string, Issue>(), conserves = new Map<string, string>();
+  const marques = new Map<string, Marque[]>(), rejeux = new Map<string, DemandeVue>();
   const evenements: EvenementPersonne[] = [];
   let compteur = 0;
   const maintenant = options.horloge;
@@ -101,7 +98,7 @@ export function creerServicePersonnes(options: OptionsPersonnes) {
   const decider = (source: Source, id: string): DecisionEffacement => {
     const categorie = CATEGORIE[source];
     const regles = options.regles.filter((r) => r.categorie === categorie);
-    const conservation = categorie === null || regles.length === 0 ? null
+    const conservation = categorie === null ? null
       : conserverJusquAu(regles, { pays: [...(options.pays ?? PAYS_ESSAI)], categorie, dates: datesDe(source, id) });
     return deciderEffacement({ objet: { source, id }, conservation, gelActif: options.gel?.(source, id) ?? false, finSauvegardes: null }, aujourdhui());
   };
@@ -116,9 +113,7 @@ export function creerServicePersonnes(options: OptionsPersonnes) {
   };
 
   return {
-    lister(): DemandeVue[] {
-      return [...demandes.values()].sort((a, b) => comparer(a.echeance, b.echeance) || comparer(a.id, b.id)).map(vue);
-    },
+    lister: (): DemandeVue[] => [...demandes.values()].sort((a, b) => comparer(a.echeance, b.echeance) || comparer(a.id, b.id)).map(vue),
     enregistrer(cleRejeu: string, corps: { type: DemandePersonne['type']; recue_le: string }): DemandeVue {
       return unefois(`enregistrer|${cleRejeu}`, () => {
         compteur += 1;
@@ -139,8 +134,7 @@ export function creerServicePersonnes(options: OptionsPersonnes) {
         if (!(ISSUES_PAR_DROIT[d.type] as readonly string[]).includes(corps.issue)) throw new ErreurRgpd('issue_non_permise');
         const le = aujourdhui();
         let objets: { source: Source; id: string }[] = [];
-        let source = corps.source;
-        let jusquAu: string | null = null;
+        let [source, jusquAu] = [corps.source, null as string | null];
         if (d.type === 'effacement' && corps.issue !== 'renvoi_societe') {
           const critere = options.concernes?.[id];
           objets = critere === undefined ? [] : trouver(critere);
@@ -169,8 +163,6 @@ export function creerServicePersonnes(options: OptionsPersonnes) {
         return vue(r.demande);
       });
     },
-    journal(): EvenementPersonne[] {
-      return evenements.map((e) => ({ ...e, donnees: { ...e.donnees } }));
-    },
+    journal: (): EvenementPersonne[] => evenements.map((e) => ({ ...e, donnees: { ...e.donnees } })),
   };
 }
