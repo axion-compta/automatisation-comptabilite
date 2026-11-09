@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CODES_ERREUR, ISSUES, MOTIFS_REFUS } from '../../../../noyau/src/chat/types.js';
+import { CODES_ERREUR, CONFIANCES, ISSUES, MOTIFS_REFUS, SOURCES_PROPOSITION, TYPES_CARTE } from '../../../../noyau/src/chat/types.js';
 import { e25 } from '../e25.js';
 
 // Les fonctions de mise en forme vivent dans les composants ; le fichier de textes ne porte que des gabarits.
@@ -71,6 +71,14 @@ describe('textes E25 discussion', () => {
     expect(secondesRestantes(2)).toBe('2 secondes restantes');
     for (const n of [-3, Number.NaN, Number.POSITIVE_INFINITY]) expect(secondesRestantes(n)).toBe('0 seconde restante');
     expect(secondesRestantes(2.9)).toBe('2 secondes restantes');
+  });
+
+  it('libelles-des-composants', () => {
+    const cles = (o: object) => Object.keys(o).sort();
+    expect(cles(e25.rendu.types)).toEqual([...TYPES_CARTE].sort());
+    expect(cles(e25.pourquoi.sources)).toEqual([...SOURCES_PROPOSITION].sort());
+    expect(cles(e25.pourquoi.mots)).toEqual([...CONFIANCES].sort());
+    for (const [chemin, texte] of toutes.filter(([c]) => c.startsWith('e25.pourquoi.mots'))) expect(texte, chemin).not.toContain('%');
   });
 
   it('aucune-chaine-vide', () => {
