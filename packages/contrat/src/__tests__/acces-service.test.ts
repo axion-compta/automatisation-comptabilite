@@ -9,7 +9,12 @@ const NON_ACTIFS: ReadonlyArray<readonly [string, string]> = [
 ];
 function parcourir(j: unknown, sortie: string[] = []): string[] {
   if (Array.isArray(j)) j.forEach((x) => parcourir(x, sortie));
-  else if (j !== null && typeof j === 'object') for (const [k, v] of Object.entries(j)) (sortie.push(k), parcourir(v, sortie));
+  else if (j !== null && typeof j === 'object') {
+    for (const [k, v] of Object.entries(j)) {
+      sortie.push(k);
+      parcourir(v, sortie);
+    }
+  }
   else sortie.push(String(j));
   return sortie;
 }
