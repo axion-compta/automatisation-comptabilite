@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 
@@ -10,7 +10,7 @@ function chemins(): string[] {
   if (!motif) throw new Error('motif de découverte introuvable dans ecrans.ts');
   const [, dossier, fichier] = motif;
   return readdirSync(join(src, dossier!), { withFileTypes: true })
-    .filter((d) => d.isDirectory())
+    .filter((d) => d.isDirectory() && existsSync(join(src, dossier!, d.name, fichier!)))
     .map((d) => /chemin:\s*'([^']+)'/.exec(readFileSync(join(src, dossier!, d.name, fichier!), 'utf8'))?.[1])
     .filter((c): c is string => c !== undefined);
 }

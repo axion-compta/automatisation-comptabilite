@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Appeler } from './suite-contrat.js';
+import { cheminSociete } from '../../../contrat/src/prefixe-routes.js';
+const CHAT = cheminSociete('/chat').replace('{s}', 'soc_a');
 
 export const MIN = 60_000;
 export const DEBUT = '2031-03-10T08:00:00.000Z';
@@ -14,7 +16,7 @@ export type ScenarioPropositions = { acteur: 'personne' | 'compte_service' };
 export type CiblePropositions = (s: ScenarioPropositions) => Promise<{ appeler: Appeler; avancer: (ms: number) => void; fermer: () => Promise<void> }>;
 
 const cle = (c = 'cle-00001') => ({ 'idempotency-key': c });
-const CHEMIN = '/chat/propositions/';
+const CHEMIN = CHAT + '/propositions/';
 const CHAMPS_TEXTE = ['texte', 'entree', 'sortie', 'prompt', 'consigne', 'contenu'];
 const cles = (v: unknown): string[] => (typeof v === 'object' && v !== null ? Object.entries(v).flatMap(([k, x]) => [k, ...cles(x)]) : []);
 const code = (r: { json: unknown }) => (r.json as { code?: string }).code;

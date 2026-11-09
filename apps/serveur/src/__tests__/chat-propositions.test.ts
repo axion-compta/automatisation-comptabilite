@@ -3,6 +3,8 @@ import { creerApp } from '../app.js';
 import { creerServicePropositions, type OptionsPropositions } from '../domaines/chat-propositions.js';
 import { AppelIa, DecisionIa, CHAMPS_INTERDITS } from '../../../../packages/contrat/src/chat/journal-ia.js';
 import type { Niveau } from '../../../../packages/noyau/src/chat/types.js';
+import { cheminSociete } from '../../../../packages/contrat/src/prefixe-routes.js';
+const CHAT = cheminSociete('/chat').replace('{s}', 'soc_a');
 
 const MIN = 60_000;
 const DEBUT = Date.parse('2031-03-10T08:00:00.000Z');
@@ -20,13 +22,13 @@ function monter(plus: Partial<OptionsPropositions> = {}, niveau: Niveau = 'B') {
 }
 const cle = (c = 'cle-00001') => ({ 'idempotency-key': c });
 const post = (app: ReturnType<typeof creerApp>, action: string, entetes: Record<string, string> = cle(), id = 'prp-0001') =>
-  app.inject({ method: 'POST', url: `/chat/propositions/${id}/${action}`, headers: entetes });
+  app.inject({ method: 'POST', url: `${CHAT}/propositions/${id}/${action}`, headers: entetes });
 const cles = (v: unknown): string[] =>
   typeof v === 'object' && v !== null ? Object.entries(v).flatMap(([k, x]) => [k, ...cles(x)]) : [];
 
 describe('serveur : propositions du chat en mémoire', () => {
   it('lire-une-proposition', async () => {
-    const r = await monter().app.inject({ method: 'GET', url: '/chat/propositions/prp-0001' });
+    const r = await monter().app.inject({ method: 'GET', url: CHAT + '/propositions/prp-0001' });
     expect(r.json().body).toMatchObject({ id: 'prp-0001', etat: 'proposee', niveau: 'B', nombre_objets: 1 });
   });
   it('appliquer-par-une-personne', async () => {
@@ -34,7 +36,7 @@ describe('serveur : propositions du chat en mémoire', () => {
     const r = await post(app, 'appliquer');
     expect(r.statusCode).toBe(200);
     expect(r.json().body).toMatchObject({ etat: 'appliquee', applique_le: new Date(DEBUT).toISOString() });
-    expect((await app.inject({ method: 'GET', url: '/chat/propositions/prp-0001' })).json().body.etat).toBe('appliquee');
+    expect((await app.inject({ method: 'GET', url: CHAT + '/propositions/prp-0001' })).json().body.etat).toBe('appliquee');
   });
   it('meme-cle-meme-reponse', async () => {
     const { app, horloge } = monter();
@@ -50,7 +52,7 @@ describe('serveur : propositions du chat en mémoire', () => {
     const r = await post(app, 'appliquer', { ...cle(), 'x-acteur': 'personne' });
     expect(r.statusCode).toBe(403);
     expect(r.json().code).toBe('ACTEUR_NON_HUMAIN');
-    expect((await app.inject({ method: 'GET', url: '/chat/propositions/prp-0001' })).json().body.etat).toBe('proposee');
+    expect((await app.inject({ method: 'GET', url: CHAT + '/propositions/prp-0001' })).json().body.etat).toBe('proposee');
   });
   it('expiree-409', async () => {
     const { app, horloge } = monter();
@@ -85,7 +87,7 @@ describe('serveur : propositions du chat en mémoire', () => {
     expect(service.etatObjet('prp-0001')).toEqual({ montant: 4200 });
   });
   it('pourquoi-sans-texte', async () => {
-    const r = await monter().app.inject({ method: 'GET', url: '/chat/propositions/prp-0001/pourquoi' });
+    const r = await monter().app.inject({ method: 'GET', url: CHAT + '/propositions/prp-0001/pourquoi' });
     const corps = r.json().body;
     expect(DecisionIa.safeParse(corps.decision).success).toBe(true);
     expect(AppelIa.safeParse(corps.appel).success).toBe(true);
@@ -96,7 +98,7 @@ describe('serveur : propositions du chat en mémoire', () => {
   it('proposition-inconnue-404', async () => {
     const { app } = monter();
     for (const [methode, url] of [['GET', ''], ['GET', '/pourquoi'], ['POST', '/appliquer'], ['POST', '/annuler']] as const) {
-      const r = await app.inject({ method: methode, url: `/chat/propositions/nulle${url}`, headers: methode === 'POST' ? cle() : {} });
+      const r = await app.inject({ method: methode, url: `${CHAT}/propositions/nulle${url}`, headers: methode === 'POST' ? cle() : {} });
       expect(r.statusCode, url).toBe(404);
     }
   });
