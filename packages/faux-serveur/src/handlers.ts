@@ -31,6 +31,12 @@ import { handlersVolume } from './domaines/volume.js';
 import { handlersPalier } from './domaines/palier.js';
 import { handlersFinContrat } from './domaines/fin-contrat.js';
 import { handlersAcceptations } from './domaines/acceptations.js';
+import { handlersSante } from './domaines/sante.js';
+import { handlersPersonnes } from './domaines/personnes.js';
+import type { OptionsExploitationFaux } from './domaines/options-exploitation.js';
+
+/** Réglages FICTIFS des personnes pour le mode simulé : jamais une valeur légale. */
+const REGLAGES_FICTIFS_PERSONNES = { moisReponse: 2, joursRappel: 3 };
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -54,6 +60,8 @@ export type OptionsFauxServeur = {
   scenarioAbonnement?: string;
   /** Abonnement : horloge injectée (horodatage ISO). */
   horloge?: () => string;
+  /** Exploitation : date de référence fictive (ISO, jour) ; par défaut le jour de l'horloge. */
+  dateReferenceExploitation?: string;
 };
 
 const MESSAGES: Record<403 | 423, string> = {
@@ -81,6 +89,16 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     horloge: options.horloge ?? (() => new Date().toISOString()),
     scenarioParDefaut: options.scenarioAbonnement ?? null,
     attendre,
+  };
+
+  const horloge = abonnement.horloge;
+  const exploitation: OptionsExploitationFaux = {
+    base,
+    horloge,
+    dateReference: options.dateReferenceExploitation ?? horloge().slice(0, 10),
+    attendre,
+    reglagesPersonnes: REGLAGES_FICTIFS_PERSONNES,
+    reglesConservation: [],
   };
 
   const refus = (panne: Panne, versionActuelle = 1) =>
@@ -152,6 +170,8 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersBloquants(base, attendre),
     ...creerHandlersSources(base, attendre),
     ...creerHandlersEcheances(base, attendre),
+    ...handlersSante(exploitation),
+    ...handlersPersonnes(exploitation),
     ...[handlersAcces, handlersVolume, handlersPalier, handlersFinContrat, handlersAcceptations].flatMap((f) => f(abonnement)),
   ];
 }
