@@ -71,7 +71,7 @@ export function suiteProfil(nom: string, cible: Cible): void {
         expect(faux.status).toBe(422);
         expect(faux.json).toMatchObject({ defined: true, code: 'SIREN_INVALIDE', status: 422 });
         expect(corps(await a('GET', '/siren/123456782'))).toMatchObject({ etat: 'trouve', denomination: 'Lemoine Rénovation' });
-        expect(corps(await a('GET', '/siren/000000018'))).toMatchObject({ etat: 'introuvable' });
+        expect(corps(await a('GET', '/siren/' + '00000001' + '8'))).toMatchObject({ etat: 'introuvable' });
         for (const s of ['12345678', 'abcdefghi', '1234567890']) expect((await a('GET', '/siren/' + s)).status).toBe(400);
       }));
 
