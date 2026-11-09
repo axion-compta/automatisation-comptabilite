@@ -33,6 +33,7 @@ import { handlersFinContrat } from './domaines/fin-contrat.js';
 import { handlersAcceptations } from './domaines/acceptations.js';
 import { handlersSante } from './domaines/sante.js';
 import { handlersPersonnes } from './domaines/personnes.js';
+import { handlersGardeAcces } from './garde-acces.js';
 import type { OptionsExploitationFaux } from './domaines/options-exploitation.js';
 
 /** Réglages FICTIFS des personnes pour le mode simulé : jamais une valeur légale. */
@@ -109,6 +110,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined });
 
   return [
+    ...handlersGardeAcces(abonnement),
     http.get(base + '/ecritures', async ({ request }) => {
       await attendre();
       const q = new URL(request.url).searchParams;

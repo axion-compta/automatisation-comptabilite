@@ -35,6 +35,7 @@ import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
 import { fraisActions } from './domaines/frais-actions.js';
+import { fraisValidation } from './domaines/frais-validation.js';
 import { personnes } from './domaines/personnes.js';
 import { vehiculesBareme } from './domaines/vehicules-bareme.js';
 import { sante } from './domaines/sante.js';
@@ -48,6 +49,7 @@ import { acceptations } from './domaines/acceptations.js';
 import { sources } from './domaines/sources.js';
 import { ventes } from './domaines/ventes.js';
 import { pieces } from './domaines/pieces.js';
+import { capacites } from './domaines/capacites.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
@@ -102,6 +104,7 @@ export const contrat = {
   change,
   frais,
   fraisActions,
+  fraisValidation,
   sante,
   vehiculesBareme,
   santeExploitation,
@@ -117,6 +120,7 @@ export const contrat = {
   fournisseurs: domaineFournisseurs,
   finContrat,
   acceptations,
+  capacites,
 };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };
