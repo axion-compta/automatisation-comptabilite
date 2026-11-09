@@ -1,16 +1,11 @@
-// Réception des factures électroniques : interfaces d'adaptateur, webhook signé, rattrapage par curseur.
-// Écrit contre des interfaces : aucun réseau, aucune base, aucun adaptateur réel. Aucune IA.
+// Réception des factures : interfaces, webhook signé, rattrapage par curseur (aucun réseau, aucune IA).
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { PortAlerteExploitation } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
-import {
-  type Arrivee, type EtatFacturesRecues, type FactureRecue, statutAEnvoyer, recevoir,
-} from '../../../../packages/noyau/src/factures-recues/cycle.js';
+import { type Arrivee, type EtatFacturesRecues, type FactureRecue, statutAEnvoyer, recevoir } from '../../../../packages/noyau/src/factures-recues/cycle.js';
 
 export class ErreurReception extends Error {
   override name = 'ErreurReception';
-  constructor(readonly code: string) {
-    super(code);
-  }
+  constructor(readonly code: string) { super(code); }
 }
 
 export interface PortCoffre { lireSecret(nom: string): Promise<string | undefined> }
@@ -28,8 +23,7 @@ export interface PortEtatReception { lire(societeId: string): Promise<ValeurRece
 export type AlerteReception =
   | { code: 'facture_autre_destinataire'; plateforme: string; idExterne: string }
   | { code: 'arrivee_invalide'; plateforme: string; idExterne: string }
-  | { code: 'plateforme_en_echec'; plateforme: string }
-  | { code: 'reception_en_retard'; plateforme: string };
+  | { code: 'plateforme_en_echec' | 'reception_en_retard'; plateforme: string };
 export type PortAlerteReception = PortAlerteExploitation<AlerteReception>;
 
 export type ResultatWebhook = { ok: true } | { ok: false; code: 'secret_absent' | 'signature_invalide' | 'webhook_perime' };
@@ -41,9 +35,7 @@ export async function verifierWebhook(
   const secret = await o.coffre.lireSecret(o.nomSecret);
   if (secret === undefined || secret === '') return { ok: false, code: 'secret_absent' };
   const reglageValide = Number.isFinite(o.maintenantMs) && Number.isSafeInteger(o.toleranceMs) && o.toleranceMs >= 0;
-  if (!reglageValide || !Number.isFinite(m.horodatageMs) || Math.abs(o.maintenantMs - m.horodatageMs) > o.toleranceMs) {
-    return { ok: false, code: 'webhook_perime' };
-  }
+  if (!reglageValide || !Number.isFinite(m.horodatageMs) || Math.abs(o.maintenantMs - m.horodatageMs) > o.toleranceMs) return { ok: false, code: 'webhook_perime' };
   const attendue = Buffer.from(createHmac('sha256', secret).update(`${String(m.horodatageMs)}.`).update(m.corps).digest('hex'));
   const recue = Buffer.from(typeof m.signature === 'string' ? m.signature : '');
   const bon = recue.length === attendue.length && timingSafeEqual(recue, attendue);
@@ -76,12 +68,8 @@ export async function rangerArrivees(
   }
   await ports.etat.ecrire(societeId, { ...valeur, etat });
   for (const id of aAccuser) await plateforme.accuser(id);
-  for (const idExterne of autres) {
-    await ports.alerte.alerter({ code: 'facture_autre_destinataire', plateforme: plateforme.nom, idExterne });
-  }
-  for (const idExterne of invalides) {
-    await ports.alerte.alerter({ code: 'arrivee_invalide', plateforme: plateforme.nom, idExterne });
-  }
+  for (const idExterne of autres) await ports.alerte.alerter({ code: 'facture_autre_destinataire', plateforme: plateforme.nom, idExterne });
+  for (const idExterne of invalides) await ports.alerte.alerter({ code: 'arrivee_invalide', plateforme: plateforme.nom, idExterne });
   return { aAccuser };
 }
 
@@ -91,11 +79,7 @@ async function listerAvecDelai(a: AdaptateurPlateforme, curseur: string | null, 
   const delai = new Promise<never>((_, rejeter) => {
     minuterie = setTimeout(() => { ctrl.abort(); rejeter(new ErreurReception('delai_depasse')); }, delaiAppelMs);
   });
-  try {
-    return await Promise.race([a.lister(curseur, ctrl.signal), delai]);
-  } finally {
-    clearTimeout(minuterie);
-  }
+  try { return await Promise.race([a.lister(curseur, ctrl.signal), delai]); } finally { clearTimeout(minuterie); }
 }
 
 export async function rattraper(p: {
@@ -108,7 +92,8 @@ export async function rattraper(p: {
   delaiAppelMs: number;
   alerte: PortAlerteReception;
 }): Promise<{ rangees: number; echec: boolean }> {
-  const { adaptateur: a, alerte, societeId } = p, nom = a.nom;
+  const { adaptateur: a, alerte, societeId } = p;
+  const nom = a.nom;
   const avant = await p.ports.etat.lire(societeId);
   let rangees = 0, echec = false, recu = false;
   try {
@@ -120,14 +105,12 @@ export async function rattraper(p: {
     const apres = await p.ports.etat.lire(societeId);
     const dates = recu ? { ...apres.derniereReceptionMs, [nom]: p.maintenantMs } : apres.derniereReceptionMs;
     await p.ports.etat.ecrire(societeId, { ...apres, curseurs: { ...apres.curseurs, [nom]: page.curseurSuivant }, derniereReceptionMs: dates });
-  } catch (e) {
+  } catch {
     echec = true;
     await alerte.alerter({ code: 'plateforme_en_echec', plateforme: nom });
   }
   const derniere = recu ? p.maintenantMs : avant.derniereReceptionMs[nom];
-  if (derniere !== undefined && p.maintenantMs - derniere > p.delaiAlerteMs) {
-    await alerte.alerter({ code: 'reception_en_retard', plateforme: nom });
-  }
+  if (derniere !== undefined && p.maintenantMs - derniere > p.delaiAlerteMs) await alerte.alerter({ code: 'reception_en_retard', plateforme: nom });
   return { rangees, echec };
 }
 

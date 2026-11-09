@@ -3,19 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { creerFauxAlertes } from '../../../../../packages/noyau/src/exploitation/port-alerte.js';
 import { type Arrivee, tvaComptee } from '../../../../../packages/noyau/src/factures-recues/cycle.js';
-import {
-  type AdaptateurPlateforme, type AlerteReception, type PortCoffre, type PortEtatReception, type ValeurReception,
-  envoyerStatutValide, rangerArrivees, rattraper, verifierWebhook,
-} from '../reception.js';
+import { type AdaptateurPlateforme, type AlerteReception, type PortCoffre, type PortEtatReception, type ValeurReception, envoyerStatutValide, rangerArrivees, rattraper, verifierWebhook } from '../reception.js';
 
 const SOCIETE = '123456782';
 const EMETTEUR = '987654324';
-const MIN = 60_000;
-const FENETRE = 5 * MIN;
-const ATTENTE = 10 * MIN;
-const APPEL = 2 * MIN;
-const NOM_SECRET = 'secret-webhook';
-const SECRET = 'q'.repeat(8) + 'z'.repeat(8);
+const MIN = 60_000, FENETRE = 5 * MIN, ATTENTE = 10 * MIN, APPEL = 2 * MIN;
+const NOM_SECRET = 'secret-webhook', SECRET = 'q'.repeat(8) + 'z'.repeat(8);
 const MAINTENANT = Date.UTC(2026, 2, 10, 12);
 type Brute = Omit<Arrivee, 'source'>;
 
@@ -26,9 +19,8 @@ const signer = (corps: Uint8Array, h: number, s = SECRET): string =>
   createHmac('sha256', s).update(`${String(h)}.`).update(corps).digest('hex');
 
 function faux(pages: Record<string, { arrivees: Brute[]; curseurSuivant: string | null }>, panne?: () => Promise<never>) {
-  const accuses: string[] = [];
+  const accuses: string[] = [], appels: (string | null)[] = [];
   const statuts: { id: string; envoi: unknown }[] = [];
-  const appels: (string | null)[] = [];
   const a: AdaptateurPlateforme = {
     nom: 'plateforme-fictive', authentifier: async () => undefined, telecharger: async () => new Uint8Array(), sante: async () => true,
     lister: async (c) => { appels.push(c); return panne ? panne() : pages[c ?? ''] ?? { arrivees: [], curseurSuivant: c }; },
@@ -49,32 +41,21 @@ afterEach(() => { vi.useRealTimers(); });
 
 describe('webhook', () => {
   const corps = new TextEncoder().encode('{"id":"EXT-1"}');
-  it('webhook-signature-valide-accepte', async () => {
-    expect(await codeWebhook(corps, signer(corps, MAINTENANT), MAINTENANT)).toEqual({ ok: true });
-  });
+  it('webhook-signature-valide-accepte', async () => { expect(await codeWebhook(corps, signer(corps, MAINTENANT), MAINTENANT)).toEqual({ ok: true }); });
   it('webhook-signature-fausse-refuse', async () => {
     const bonne = signer(corps, MAINTENANT);
     const modifie = corps.map((o, i) => (i === 0 ? o ^ 1 : o));
-    for (const [c, s] of [[modifie, bonne], [corps, bonne.slice(0, -2)], [corps, ''], [corps, `${bonne}00`], [corps, signer(corps, MAINTENANT, 'autre')]] as const) {
-      expect(await codeWebhook(c, s, MAINTENANT)).toEqual({ ok: false, code: 'signature_invalide' });
-    }
+    for (const [c, s] of [[modifie, bonne], [corps, bonne.slice(0, -2)], [corps, ''], [corps, `${bonne}00`], [corps, signer(corps, MAINTENANT, 'autre')]] as const) expect(await codeWebhook(c, s, MAINTENANT)).toEqual({ ok: false, code: 'signature_invalide' });
   });
   it('webhook-perime-refuse', async () => {
-    for (const h of [MAINTENANT - ATTENTE, MAINTENANT + ATTENTE, Number.NaN, Infinity]) {
-      expect(await codeWebhook(corps, signer(corps, h), h)).toEqual({ ok: false, code: 'webhook_perime' });
-    }
+    for (const h of [MAINTENANT - ATTENTE, MAINTENANT + ATTENTE, Number.NaN, Infinity]) expect(await codeWebhook(corps, signer(corps, h), h)).toEqual({ ok: false, code: 'webhook_perime' });
     const reglages = [{ maintenantMs: Number.NaN, toleranceMs: FENETRE }, { maintenantMs: Infinity, toleranceMs: FENETRE },
       { maintenantMs: 1e13, toleranceMs: Number.NaN }, { maintenantMs: 1e13, toleranceMs: Infinity }, { maintenantMs: 1e13, toleranceMs: -1 }];
-    for (const r of reglages) {
-      const res = await verifierWebhook({ corps, signature: signer(corps, 0), horodatageMs: 0 }, { coffre: coffre(SECRET), nomSecret: NOM_SECRET, ...r });
-      expect(res).toEqual({ ok: false, code: 'webhook_perime' });
-    }
+    for (const r of reglages) expect(await verifierWebhook({ corps, signature: signer(corps, 0), horodatageMs: 0 }, { coffre: coffre(SECRET), nomSecret: NOM_SECRET, ...r })).toEqual({ ok: false, code: 'webhook_perime' });
     expect(await codeWebhook(corps, signer(corps, MAINTENANT - FENETRE), MAINTENANT - FENETRE)).toEqual({ ok: true });
   });
   it('webhook-sans-secret-refuse', async () => {
-    for (const s of [null, '']) {
-      expect(await codeWebhook(corps, signer(corps, MAINTENANT, ''), MAINTENANT, s)).toEqual({ ok: false, code: 'secret_absent' });
-    }
+    for (const s of [null, '']) expect(await codeWebhook(corps, signer(corps, MAINTENANT, ''), MAINTENANT, s)).toEqual({ ok: false, code: 'secret_absent' });
   });
 });
 
@@ -88,8 +69,7 @@ function ctx(f: { a: AdaptateurPlateforme }, init: Partial<ValeurReception> = {}
 
 describe('rangement et rattrapage', () => {
   it('pa2-doublon-entre-webhook-et-rattrapage-tva-une-fois', async () => {
-    const f = faux({});
-    const { m, recues, ports } = ctx(f);
+    const f = faux({}), { m, recues, ports } = ctx(f);
     await rangerArrivees('s1', SOCIETE, f.a, [brute(1)], ports);
     await rangerArrivees('s1', SOCIETE, f.a, [brute(2, { numero: 'F-2026-1' })], ports);
     expect(m.val().etat.factures.map((x) => x.rattacheeA === null)).toEqual([true, false]);
@@ -100,8 +80,7 @@ describe('rangement et rattrapage', () => {
     expect(recues).toEqual([{ code: 'facture_autre_destinataire', plateforme: 'plateforme-fictive', idExterne: 'EXT-3' }]);
   });
   it('pa4-rejeu-idempotent', async () => {
-    const f = faux({});
-    const { m, ports } = ctx(f);
+    const f = faux({}), { m, ports } = ctx(f);
     for (let i = 0; i < 3; i++) await rangerArrivees('s1', SOCIETE, f.a, [brute(1)], ports);
     expect(m.val().etat.factures).toHaveLength(1);
     expect(tvaComptee(m.val().etat)).toBe(centimes(2000));
@@ -156,14 +135,11 @@ describe('rangement et rattrapage', () => {
 
 describe('statut', () => {
   it('pa6-statut-sans-validation-jamais-envoye', async () => {
-    const f = faux({});
-    const { m, ports } = ctx(f);
+    const f = faux({}), { m, ports } = ctx(f);
     await rangerArrivees('s1', SOCIETE, f.a, [brute(1)], ports);
     const facture = m.val().etat.factures[0]!;
     const permis = ['approuvee'];
-    for (const v of [undefined, { par: ' ', le: '2026-03-11' }, { par: 'Alice Test', le: '' }]) {
-      expect(await envoyerStatutValide(facture, 'approuvee', permis, v, f.a)).toEqual({ ok: false, code: 'validation_client_requise' });
-    }
+    for (const v of [undefined, { par: ' ', le: '2026-03-11' }, { par: 'Alice Test', le: '' }]) expect(await envoyerStatutValide(facture, 'approuvee', permis, v, f.a)).toEqual({ ok: false, code: 'validation_client_requise' });
     expect(await envoyerStatutValide(facture, 'inconnu', permis, { par: 'Alice Test', le: '2026-03-11' }, f.a)).toEqual({ ok: false, code: 'statut_inconnu' });
     expect(f.statuts).toEqual([]);
     expect(await envoyerStatutValide(facture, 'approuvee', permis, { par: 'Alice Test', le: '2026-03-11' }, f.a)).toEqual({ ok: true });
