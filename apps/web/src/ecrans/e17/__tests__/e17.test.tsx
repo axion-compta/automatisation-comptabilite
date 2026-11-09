@@ -4,6 +4,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { demarrerNoeud } from '../../../../../../packages/faux-serveur/src/noeud.js';
+import { e12 } from '../../../../../../packages/textes/src/ecrans/e12.js';
+import { e17Frais } from '../../../../../../packages/textes/src/ecrans/e17-frais.js';
 import { e17 } from '../../../../../../packages/textes/src/ecrans/e17.js';
 import { FournisseurDonnees, creerClient } from '../../../donnees/lecture.js';
 import { Ecran } from '../Ecran.js';
@@ -106,5 +108,14 @@ describe('E17', () => {
     expect(document.querySelector('table')).not.toBeNull();
     for (const td of document.querySelectorAll('tbody td')) expect(td.getAttribute('data-entete')).toBeTruthy();
     expect(document.querySelectorAll('section.axion-carte')).toHaveLength(3);
+  });
+  it('en-tetes-de-colonnes-correspondent-a-la-colonne', async () => {
+    simuler([ligne('F1', { statut: 'exclu_paye_societe', payeur: 'societe' })]);
+    await monter();
+    const attendus = [e17Frais.champs.date, e12.tableau.libelle, e17Frais.champs.montant, e17Frais.champs.etat];
+    expect([...document.querySelectorAll('thead th')].map((h) => h.textContent)).toEqual(attendus);
+    const cellules = [...document.querySelectorAll('tbody tr')[0]!.querySelectorAll('td')];
+    expect(cellules.map((c) => c.getAttribute('data-entete'))).toEqual(attendus);
+    expect(cellules[2]!.getAttribute('data-entete')).not.toBe(e17.totaux.aRembourser);
   });
 });

@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { ReponseFrais, type FraisResume } from '../../../../../packages/contrat/src/domaines/frais.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
+import { e12 } from '../../../../../packages/textes/src/ecrans/e12.js';
 import { e17 } from '../../../../../packages/textes/src/ecrans/e17.js';
+import { e17Frais } from '../../../../../packages/textes/src/ecrans/e17-frais.js';
 import { fr } from '../../../../../packages/textes/src/fr.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Carte } from '../../../../../packages/ui/src/composants/Carte.js';
@@ -61,11 +63,10 @@ export function Ecran() {
         <Tableau
           legende={e17.titre}
           colonnes={[
-            { cle: 'date', entete: e17.periode.du, rendu: (f: FraisResume) => <Cellule f={f}>{f.date}</Cellule> },
-            { cle: 'libelle', entete: e17.titre, rendu: (f: FraisResume) => <Cellule f={f}><a href={CHEMIN_DETAIL + encodeURIComponent(f.id)}>{f.libelle}</a></Cellule> },
-            { cle: 'montant', entete: e17.totaux.aRembourser, alignement: 'droite', rendu: (f: FraisResume) => <Cellule f={f}><Montant centimes={centimes(f.montantTrajetCentimes ?? f.montantTtcCentimes)} /></Cellule> },
-            { cle: 'etat', entete: e17.totaux.enAttente, rendu: (f: FraisResume) => <Cellule f={f}><Etat f={f} /></Cellule> },
-            { cle: 'manque', entete: e17.manques.justificatif, rendu: (f: FraisResume) => <Cellule f={f}>{f.statut === 'exclu_paye_societe' ? e17.payeParEntreprise : phraseManque(f)}</Cellule> },
+            { cle: 'date', entete: e17Frais.champs.date, rendu: (f: FraisResume) => <Cellule f={f}>{f.date}</Cellule> },
+            { cle: 'libelle', entete: e12.tableau.libelle, rendu: (f: FraisResume) => <Cellule f={f}><a href={CHEMIN_DETAIL + encodeURIComponent(f.id)}>{f.libelle}</a></Cellule> },
+            { cle: 'montant', entete: e17Frais.champs.montant, alignement: 'droite', rendu: (f: FraisResume) => <Cellule f={f}><Montant centimes={centimes(f.montantTrajetCentimes ?? f.montantTtcCentimes)} /></Cellule> },
+            { cle: 'etat', entete: e17Frais.champs.etat, rendu: (f: FraisResume) => <Cellule f={f}><Etat f={f} /><div>{f.statut === 'exclu_paye_societe' ? e17.payeParEntreprise : phraseManque(f)}</div></Cellule> },
           ]}
           lignes={body}
           cleDeLigne={(f) => f.id}
