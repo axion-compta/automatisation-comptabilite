@@ -2,6 +2,7 @@ import { Link, Outlet, useRouter, useRouterState } from '@tanstack/react-router'
 import { socle } from '../../../../packages/textes/src/ecrans/socle.js';
 import { Palette } from '../commandes/Palette.js';
 import { FournisseurDonnees } from '../donnees/lecture.js';
+import { BandeauAcces } from './BandeauAcces.js';
 import { BarreMobile } from './BarreMobile.js';
 import { MENU_BUREAU, estActive } from './menu.js';
 import './socle.css';
@@ -13,6 +14,7 @@ export function Coque() {
   return (
     <FournisseurDonnees>
       <div className="coque">
+        <BandeauAcces />
         <main className="coque-principal">
           <Outlet />
         </main>
