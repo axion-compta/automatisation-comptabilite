@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appliquerProposition, arreterTour, ecouterTour, ErreurLecture } from '../api.js';
 import { encoderEvenement } from '../../../../packages/contrat/src/chat/flux.js';
 import type { DemandeMessage, Evenement } from '../../../../packages/contrat/src/chat/evenements.js';
+import { cheminSociete } from '../../../../packages/contrat/src/prefixe-routes.js';
+const CHAT = cheminSociete('/chat').replace('{s}', 'soc_a');
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -35,7 +37,7 @@ const serveur = (reponse: () => Response | Promise<Response>) => {
 };
 const ecouter = (o: { dernierId?: number; signal?: AbortSignal } = {}) => {
   const recus: Evenement[] = [];
-  return ecouterTour(DEMANDE, { surEvenement: (e) => recus.push(e), ...o }).then((r) => ({ ...r, ids: recus.map((e) => e.id) }));
+  return ecouterTour('soc_a', DEMANDE, { surEvenement: (e) => recus.push(e), ...o }).then((r) => ({ ...r, ids: recus.map((e) => e.id) }));
 };
 const cle = (a: { init: RequestInit }, nom: string) => (a.init.headers as Record<string, string>)[nom];
 const code = async (p: Promise<unknown>) => p.then(() => 'ok', (e: ErreurLecture) => [e.statut, e.code]);
@@ -45,7 +47,7 @@ describe('flux du chat par fetch', () => {
     const appels = serveur(() => flux(SSE));
     expect(await ecouter()).toEqual({ dernierId: 3, fin: 'tour_fini', ids: [1, 2, 3] });
     expect(appels[0]?.init.method).toBe('POST');
-    expect(appels[0]?.url).toContain('/chat/messages');
+    expect(appels[0]?.url).toContain('/societes/soc_a/chat/messages');
     expect(cle(appels[0]!, 'idempotency-key')).toBe('msg-0001');
     expect(cle(appels[0]!, 'accept')).toBe('text/event-stream');
     expect(cle(appels[0]!, 'last-event-id')).toBeUndefined();
@@ -100,25 +102,34 @@ describe('flux du chat par fetch', () => {
     expect((await ecouter()).ids).toEqual([1, 2, 3]);
   });
 
+  it('client-web-prefixe', async () => {
+    const appels = serveur(() => flux(SSE));
+    await ecouter();
+    const arret = serveur(() => Response.json({ tour_id: 'm', arrete: true }));
+    await arreterTour('soc a', 'm');
+    expect(appels[0]?.url).toContain('/societes/soc_a/chat/');
+    expect(arret[0]?.url).toContain('/societes/soc%20a/chat/tours/m/arreter');
+  });
+
   it('arreter-tour-appelle-la-route', async () => {
     const appels = serveur(() => Response.json({ tour_id: 'msg-0001', arrete: true }));
-    await arreterTour('msg-0001');
-    expect([appels[0]?.init.method, appels[0]?.url]).toEqual(['POST', location.origin + '/chat/tours/msg-0001/arreter']);
+    await arreterTour('soc_a', 'msg-0001');
+    expect([appels[0]?.init.method, appels[0]?.url]).toEqual(['POST', location.origin + CHAT + '/tours/msg-0001/arreter']);
     expect(cle(appels[0]!, 'idempotency-key')).toHaveLength(36);
   });
 
   const PROPOSITION = { id: 'p1', outil: 'proposer_validation', niveau: 'B', etat: 'appliquee', nombre_objets: 1, cree_le: '2026-01-01T10:00:00Z', expire_le: '2026-01-01T11:00:00Z' };
   it('appliquer-envoie-la-cle', async () => {
     const appels = serveur(() => Response.json(PROPOSITION));
-    expect(await appliquerProposition('p1', 'cle-appliquer-1')).toMatchObject({ id: 'p1', etat: 'appliquee' });
+    expect(await appliquerProposition('soc_a', 'p1', 'cle-appliquer-1')).toMatchObject({ id: 'p1', etat: 'appliquee' });
     expect(cle(appels[0]!, 'idempotency-key')).toBe('cle-appliquer-1');
-    expect(appels[0]?.url).toBe(location.origin + '/chat/propositions/p1/appliquer');
+    expect(appels[0]?.url).toBe(location.origin + CHAT + '/propositions/p1/appliquer');
   });
 
   it('appliquer-403-409-423', async () => {
     for (const [statut, attendu] of [[403, 'acces_refuse'], [409, 'conflit'], [423, 'verrouille']] as const) {
       serveur(() => Response.json({ code: 'x' }, { status: statut }));
-      expect(await code(appliquerProposition('p1', 'cle-appliquer-1'))).toEqual([statut, attendu]);
+      expect(await code(appliquerProposition('soc_a', 'p1', 'cle-appliquer-1'))).toEqual([statut, attendu]);
     }
   });
 });

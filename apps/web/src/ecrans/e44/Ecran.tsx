@@ -3,6 +3,7 @@ import { ReponseTiers } from '../../../../../packages/contrat/src/domaines/tiers
 import { e44 } from '../../../../../packages/textes/src/ecrans/e44.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
+import { BoutonExporter } from '../../socle/BoutonExporter.js';
 import { useLecture } from '../../donnees/lecture.js';
 const LIMITE = 50;
 const MAX_RECHERCHE = 50;
@@ -21,6 +22,11 @@ export function cheminTiers(filtre: Filtre, recherche: string, decalage: number)
   p.set('limite', String(LIMITE));
   p.set('decalage', String(decalage));
   return '/tiers?' + p.toString();
+}
+/** Filtres courants de l'écran, au format de l'export (mêmes que GET /tiers, sans la page). */
+function filtresExport(filtre: Filtre, recherche: string): Record<string, string> {
+  const q = recherche.trim().slice(0, MAX_RECHERCHE);
+  return { ...(filtre !== 'tous' ? { type: filtre } : {}), ...(q !== '' ? { q } : {}) };
 }
 /** Écran E44 : lecture des clients et fournisseurs, onglets, recherche, pagination. */
 export function Ecran() {
@@ -90,6 +96,7 @@ export function Ecran() {
         value={recherche}
         onChange={(e) => (setRecherche(e.target.value), setDecalage(0))}
       />
+      <BoutonExporter liste="listerTiers" filtres={filtresExport(filtre, recherche)} textes={e44.export} />
       <div role="tabpanel" id="e44-panneau" aria-labelledby={'e44-onglet-' + filtre}>
         {contenu}
       </div>
