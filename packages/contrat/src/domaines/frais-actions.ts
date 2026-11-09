@@ -30,7 +30,7 @@ export const creerFrais = oc
 /** `If-Match` = version lue du frais. */
 export const completerFrais = oc
   .route({ method: 'PATCH', path: '/frais/{id}', inputStructure: 'detailed', operationId: 'completerFrais' })
-  .errors({ ...ErreursCommunes, FRAIS_INCONNU: { status: 404 }, VERSION_PERIMEE: { status: 412 }, FRAIS_VALIDE: { status: 409 } })
+  .errors({ ...ErreursCommunes, FRAIS_INCONNU: { status: 404 }, VERSION_PERIMEE: { status: 412 }, FRAIS_VALIDE: { status: 409 }, TRANSITION_INTERDITE: { status: 409 } })
   .input(z.object({ params: z.object({ id: z.string().min(1) }), headers: EnTetesModif, body: CompletementFrais }))
   .output(z.object({ body: FraisDetail }));
 

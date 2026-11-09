@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { genererFrais, type FraisFictif, type JeuFrais } from '../../../../packages/donnees-fictives/src/frais.js';
-import { creerServiceFraisActions, ErreurActions } from '../../../../packages/contrat/src/domaines/frais-actions-service.js';
+import { conflitBanque, creerServiceFraisActions, ErreurActions } from '../../../../packages/contrat/src/domaines/frais-actions-service.js';
+import { contrat } from '../../../../packages/contrat/src/routes.js';
 import { creerApp } from '../app.js';
 
 const apps: Array<ReturnType<typeof creerApp>> = [];
@@ -31,7 +32,8 @@ function nouvelle() {
   const creer = (corps: unknown, k = cle(), p = PER) => a.inject({ method: 'POST', url: '/frais', headers: { 'idempotency-key': k, 'x-personne': p }, payload: corps as object });
   const completer = (id: string, corps: unknown, v: string, k = cle(), p = PER) =>
     a.inject({ method: 'PATCH', url: '/frais/' + id, headers: { 'idempotency-key': k, 'x-personne': p, 'if-match': v }, payload: corps as object });
-  return { a, creer, completer };
+  const lire = (id: string) => a.inject({ method: 'GET', url: '/frais/' + id });
+  return { a, creer, completer, lire };
 }
 
 describe('serveur : créer et compléter un frais', () => {
@@ -249,5 +251,69 @@ describe('serveur : créer et compléter un frais', () => {
     const avant = [jeu.frais.length, jeu.trajets.length];
     expect(code(() => nouveauService(jeu).creer(trajet({ vehiculeId: 'VEH-03' }) as never, PER, cle()))).toBe('VEHICULE_SOCIETE');
     expect([jeu.frais.length, jeu.trajets.length]).toEqual(avant);
+  });
+});
+
+const rattache = (jeu: JeuFrais, o: Partial<FraisFictif>): FraisFictif => ({ ...(jeu.frais.find((f) => f.id === 'FRA-004') as FraisFictif), id: 'FRA-097', dateDepense: '2025-04-08', montantTtc: 5200, pieceId: 'PIE-097', statut: 'a_completer', payeur: 'personne', ...o });
+
+describe('serveur : un seul jeu de frais, relecture bancaire', () => {
+  it('jeu-partage-frais-cree-lisible', async () => {
+    const { a, creer, lire } = nouvelle();
+    const avant = (await a.inject({ method: 'GET', url: '/frais' })).json().total;
+    const id = (await creer(depense())).json().body.id;
+    const r = await lire(id);
+    expect([r.statusCode, r.json().body.id]).toEqual([200, id]);
+    expect((await a.inject({ method: 'GET', url: '/frais' })).json().total).toBe(avant + 1);
+  });
+
+  it('jeu-partage-km-trajet-cree', async () => {
+    const { creer, lire } = nouvelle();
+    const cree = (await creer(trajet())).json().body;
+    expect(cree.kmDixiemes).toBe(125);
+    expect((await lire(cree.id)).json().body.kmDixiemes).toBe(cree.kmDixiemes);
+  });
+
+  it('jeu-propre-a-chaque-application', async () => {
+    const un = nouvelle();
+    const id = (await un.creer(depense())).json().body.id;
+    expect((await un.lire(id)).statusCode).toBe(200);
+    expect((await nouvelle().lire(id)).statusCode).toBe(404);
+  });
+
+  it('lire-ligne-banque-id', async () => {
+    const { lire } = nouvelle();
+    expect((await lire('FRA-001')).json().body.ligneBanqueId).toBe('LIB-001');
+    expect('ligneBanqueId' in (await lire('FRA-004')).json().body).toBe(false);
+  });
+
+  it('completer-perso-transition-interdite-409', async () => {
+    const { completer, lire } = nouvelle();
+    const avant = (await lire('FRA-009')).json().body;
+    expect(avant.statut).toBe('perso');
+    const r = await completer('FRA-009', { declaration: 'personne' }, String(avant.version));
+    expect([r.statusCode, r.json().code]).toEqual([409, 'TRANSITION_INTERDITE']);
+    const apres = (await lire('FRA-009')).json().body;
+    expect([apres.statut, apres.version, apres.payeur]).toEqual(['perso', avant.version, avant.payeur]);
+  });
+
+  it('contrat-completer-transition-interdite-409', () => {
+    const erreurs = (contrat.fraisActions.completerFrais as unknown as { '~orpc': { errorMap: Record<string, { status: number }> } })['~orpc'].errorMap;
+    expect(erreurs.TRANSITION_INTERDITE?.status).toBe(409);
+  });
+
+  it('conflit-banque-ligne-societe-libre', () => {
+    const jeu = jeuSurMesure();
+    jeu.frais.push(rattache(jeu, {}));
+    const avant = JSON.stringify(jeu);
+    expect(conflitBanque(jeu, 'FRA-097')).toBe('LIB-002');
+    expect(JSON.stringify(jeu)).toBe(avant);
+  });
+
+  it('conflit-banque-ligne-deja-rattachee-ignoree', () => {
+    const jeu = jeuSurMesure();
+    jeu.frais.push(rattache(jeu, {}), { ...rattache(jeu, {}), id: 'FRA-096', pieceId: 'PIE-096', statut: 'propose', ligneBanqueId: 'LIB-002' });
+    expect(conflitBanque(jeu, 'FRA-097')).toBeUndefined();
+    (jeu.frais.find((f) => f.id === 'FRA-096') as FraisFictif).statut = 'refuse';
+    expect(conflitBanque(jeu, 'FRA-097')).toBe('LIB-002');
   });
 });
