@@ -24,7 +24,7 @@ describe('migration 011-frais.sql', () => {
   });
 
   it('inv1-check-refuse-rembourse-paye-societe', () => {
-    const c = /CONSTRAINT inv1_paye_societe CHECK \(([\s\S]*?)\n  \)/.exec(table('frais'))?.[1] ?? '';
+    const c = /CONSTRAINT inv1_paye_societe CHECK \(([\s\S]*?)\n {2}\)/.exec(table('frais'))?.[1] ?? '';
     expect(c).toMatch(/payeur <> 'societe' OR/);
     expect(c).toMatch(/destination IS NULL/);
     expect(c).toMatch(/remboursement_id IS NULL/);
