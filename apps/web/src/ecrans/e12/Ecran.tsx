@@ -9,6 +9,7 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterDateAffiche, formaterMontantAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { Couverture } from './Couverture.js';
 import { Explication } from './Explication.js';
 import './e12.css';
 const LIMITE = 20;
@@ -108,6 +109,7 @@ export function Ecran() {
     <section aria-labelledby="e12-titre">
       <h1 id="e12-titre">{e12.titre}</h1>
       {blocComptes}
+      {(compte || comptes.donnees?.body[0]?.id) && <Couverture compteId={compte || comptes.donnees?.body[0]?.id || ''} />}
       <div className="e12-filtres">
         <label>
           {e12.filtres.etat}

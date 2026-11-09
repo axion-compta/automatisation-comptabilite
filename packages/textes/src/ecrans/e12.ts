@@ -30,6 +30,17 @@ export const e12 = {
     introuvable: "Cette ligne n'existe plus.",
     erreur: "Impossible de charger l'explication.",
   },
+  couverture: {
+    titre: 'Vos relevés mois par mois',
+    frise: 'Frise des relevés',
+    liste: 'Relevés mois par mois, en texte',
+    ligne: '{mois} {annee} : {etat}',
+    etats: { couvert: 'Couvert', manquant: 'Manquant', partiel: 'Partiel' },
+    mois: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+    separateur: ',',
+    ecart: 'Écart constaté : {montant}.',
+    erreur: 'Impossible de charger la couverture de vos relevés.',
+  },
   etats: {
     chargement: 'Chargement de votre banque…',
     erreur: 'Impossible de charger votre banque.',
