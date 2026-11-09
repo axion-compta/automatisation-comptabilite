@@ -4,6 +4,8 @@ import { RouterProvider, createMemoryHistory } from '@tanstack/react-router';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { demarrerNoeud } from '../../../../../packages/faux-serveur/src/noeud.js';
+import { acceptation } from '../../../../../packages/textes/src/ecrans/acceptation.js';
 import { ouvrirPalette } from '../../commandes/Palette.js';
 import { socle } from '../../../../../packages/textes/src/ecrans/socle.js';
 import { BARRE_MOBILE, LIBELLES_MENU, MENU_BUREAU, MENU_PLUS } from '../menu.js';
@@ -196,5 +198,19 @@ describe('coque', () => {
     expect(rendus.length).toBe(MENU_BUREAU.length + BARRE_MOBILE.length + 1 + MENU_PLUS.length + 1);
     for (const r of rendus) expect(LIBELLES_MENU).toContain(r);
     expect(new Set(MENU_BUREAU.map((e) => e.id)).size).toBe(MENU_BUREAU.length);
+  });
+});
+
+describe('coque et porte d’acceptation', () => {
+  it('menu-toujours-visible', async () => {
+    const serveur = demarrerNoeud({ scenarioAbonnement: 'cgv=a_accepter' });
+    try {
+      const h = await afficher('/banque');
+      await act(async () => void (await new Promise((r) => setTimeout(r, 200))));
+      expect(h.querySelector('main')?.textContent).toContain(acceptation.titre);
+      expect(bureau(h).querySelectorAll('a')).toHaveLength(MENU_BUREAU.length);
+    } finally {
+      serveur.fermer();
+    }
   });
 });

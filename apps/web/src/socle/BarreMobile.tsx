@@ -1,10 +1,11 @@
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import { useState } from 'react';
 import { socle } from '../../../../packages/textes/src/ecrans/socle.js';
+import { Compteur, type CompteurEntree } from './Compteur.js';
 import { BARRE_MOBILE, MENU_PLUS, estActive } from './menu.js';
 
 /** Barre du bas (téléphone) : 4 entrées + « Plus » (panneau), et le bouton « Discuter » toujours visible. */
-export function BarreMobile() {
+export function BarreMobile({ compteurs = {} }: { compteurs?: Record<string, CompteurEntree> }) {
   const router = useRouter();
   const [plusOuvert, setPlusOuvert] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -20,6 +21,7 @@ export function BarreMobile() {
           {MENU_PLUS.map((e) => (
             <Link key={e.id} to={e.chemin} aria-current={courant(e.chemin)} onClick={() => setPlusOuvert(false)}>
               {e.libelle}
+              <Compteur compteur={compteurs[e.id]} />
             </Link>
           ))}
         </div>
@@ -28,6 +30,7 @@ export function BarreMobile() {
         {BARRE_MOBILE.map((e) => (
           <Link key={e.id} to={e.chemin} aria-current={courant(e.chemin)}>
             {e.libelle}
+            <Compteur compteur={compteurs[e.id]} />
           </Link>
         ))}
         <button type="button" aria-expanded={plusOuvert} aria-controls="barre-plus" onClick={() => setPlusOuvert(!plusOuvert)}>
