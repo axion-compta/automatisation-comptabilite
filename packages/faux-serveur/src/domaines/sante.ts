@@ -1,5 +1,8 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import { handlersNonImplementesExploitation, type OptionsExploitationFaux } from './options-exploitation.js';
+import type { OptionsExploitationFaux } from './options-exploitation.js';
+import { versionDuServeur } from '../../../../apps/serveur/src/domaines/sante-exploitation.js';
+import { creerServiceSanteExploitation } from '../../../contrat/src/domaines/sante-exploitation-service.js';
+import type { Verification } from '../../../noyau/src/exploitation/sante.js';
 import { creerServiceSante } from '../../../contrat/src/domaines/sante-service.js';
 
 /** Santé des contrôles : lecture seule, servie par le service en mémoire du contrat (mêmes données fictives, même graine). */
@@ -13,6 +16,16 @@ export function creerHandlersSante(base: string, attendre: () => Promise<void>):
   ];
 }
 
-/** Santé d'exploitation : 501 en attendant L08-T35. */
-export const handlersSante = (options: OptionsExploitationFaux): HttpHandler[] =>
-  handlersNonImplementesExploitation(options, [['get', '/sante']]);
+const PANNES_SANTE: Record<string, Partial<Verification>> = { degrade: { file: false }, panne: { base: false } };
+
+/** Santé d'exploitation : même service que le serveur en mémoire ; `x-panne-sante: degrade | panne` simule une panne. */
+export function handlersSante(options: OptionsExploitationFaux): HttpHandler[] {
+  const version = versionDuServeur();
+  return [
+    http.get(options.base + '/sante', async ({ request }) => {
+      await options.attendre();
+      const verification = PANNES_SANTE[request.headers.get('x-panne-sante') ?? ''];
+      return HttpResponse.json({ body: creerServiceSanteExploitation({ version, ...(verification ? { verification } : {}) }).lire() });
+    }),
+  ];
+}
