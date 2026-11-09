@@ -29,6 +29,7 @@ import { profilChamps } from './domaines/profil-champs.js';
 import { profilChangements } from './domaines/profil-changements.js';
 import { fec } from './domaines/fec.js';
 import { controles } from './domaines/controles.js';
+import { controlesActions } from './domaines/controles-actions.js';
 import { change } from './domaines/change.js';
 import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
@@ -95,6 +96,7 @@ export const contrat = {
   profilChangements,
   fec,
   controles,
+  controlesActions,
   regimes,
   identite,
   change,
