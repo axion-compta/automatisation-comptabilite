@@ -34,6 +34,7 @@ import { creerServiceFrais } from '../../../packages/contrat/src/domaines/frais-
 import { creerServiceFraisActions } from '../../../packages/contrat/src/domaines/frais-actions-service.js';
 import { routesFrais } from './domaines/frais.js';
 import { routesFraisActions } from './domaines/frais-actions.js';
+import { configEssai, creerServiceFraisValidation, routesFraisValidation } from './domaines/frais-validation.js';
 import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
 import { implementerPersonnes } from './domaines/personnes.js';
@@ -121,6 +122,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     change: routesChange(),
     frais: routesFrais(creerServiceFrais(jeuFrais)),
     fraisActions: routesFraisActions(creerServiceFraisActions({ jeu: jeuFrais })),
+    fraisValidation: routesFraisValidation(creerServiceFraisValidation(jeuFrais, configEssai())),
     vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),
