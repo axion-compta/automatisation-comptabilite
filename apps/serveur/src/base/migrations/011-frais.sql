@@ -1,4 +1,4 @@
--- Lot 11 : frais, trajets, vehicules personnels, cumul km, remboursements. Ajout seul, rejouable.
+-- L11-T37. Lot 11 : frais, trajets, vehicules personnels, cumul km, remboursements. Ajout seul, rejouable.
 CREATE SCHEMA IF NOT EXISTS a_compta;
 
 CREATE TABLE IF NOT EXISTS a_compta.vehicule_personnel (
