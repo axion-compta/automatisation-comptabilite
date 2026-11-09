@@ -27,8 +27,7 @@ export interface ParametresVerification {
 export interface ResultatVerification { statut: StatutVerification; exportAutorise: boolean }
 
 export async function verifierExerciceClos(p: ParametresVerification): Promise<ResultatVerification> {
-  const { societeId, exerciceId, motif } = p;
-  const horodatage = p.maintenant();
+  const { societeId, exerciceId, motif } = p, horodatage = p.maintenant();
   const ecritures = await p.ecritures.lister(societeId, exerciceId);
   const ligne = await p.instantanes.dernierInstantane(societeId, exerciceId);
   let statut: StatutVerification = 'instantane_absent';
@@ -68,8 +67,6 @@ export function inscrireVerificationExercice(
 ): void {
   planificateur.inscrire({
     nom: 'verifier-exercice-clos', rythme,
-    async executer(passage) {
-      await verifierExerciceClos({ ...(await preparer(passage)), motif: 'annuelle' });
-    },
+    executer: async (passage) => { await verifierExerciceClos({ ...(await preparer(passage)), motif: 'annuelle' }); },
   });
 }

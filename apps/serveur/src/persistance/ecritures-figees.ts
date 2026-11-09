@@ -12,10 +12,7 @@ export type CodeErreurInalterable = 'ligne_validee' | 'absent' | 'doublon';
 export class ErreurInalterable extends Error {
   override name = 'ErreurInalterable';
   readonly code: CodeErreurInalterable;
-  constructor(code: CodeErreurInalterable) {
-    super(code);
-    this.code = code;
-  }
+  constructor(code: CodeErreurInalterable) { super(code); this.code = code; }
 }
 
 export interface LigneStockee { societeId: string; exerciceId: string; ecriture: Ecriture }
