@@ -11,7 +11,7 @@ const CODES: Record<number, CodeLecture> = { 403: 'acces_refuse', 404: 'introuva
 const cles = new Map<string, string>();
 const enVol = new Map<string, Promise<unknown>>();
 
-/** Corps conforme au contrat : champs attendus par l'action, version entière d'au moins 1. */
+/** Corps vérifié selon le contrat : champs attendus par l'action, version entière d'au moins 1. */
 function verifier(action: ActionAlerte, c: CorpsAction): Record<string, unknown> {
   const champ = action === 'reporter' ? { jours: c.jours } : action === 'ignorer' ? { motif: c.motif } : {};
   const bon = Number.isInteger(c.version) && c.version >= 1 && (action !== 'reporter' || Number.isInteger(c.jours)) && (action !== 'ignorer' || typeof c.motif === 'string');

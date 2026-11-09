@@ -37,9 +37,10 @@ const reporter = async () => (await cliquer(bouton(info(), t08.alertes.reporter)
 const message = () => document.querySelector('[role="status"]')!.textContent ?? '';
 const compter = (css: string) => document.querySelectorAll(css).length;
 const poster = (panne?: string, cles?: string[]) => {
-  const vrai = globalThis.fetch;
-  vi.stubGlobal('fetch', (u: string, o: RequestInit = {}) => {
-    if (o.method !== 'POST') return vrai(u, o);
+  const vrai = globalThis.fetch, etat = { relu: false };
+  vi.stubGlobal('fetch', async (u: string, o: RequestInit = {}) => {
+    if (o.method !== 'POST') return etat.relu && u.includes('/alertes') ? Response.json({ body: [], decalage: 0, total: 0 }) : vrai(u, o);
+    etat.relu = panne === '409';
     cles?.push((o.headers as Record<string, string>)['idempotency-key'] ?? '');
     return vrai(u, panne ? { ...o, headers: { ...(o.headers as object), 'x-panne': panne } } : o);
   });
@@ -87,7 +88,7 @@ describe('Cloche', () => {
     await monter();
     poster('409');
     await reporter();
-    expect([message(), cartes().length]).toEqual([t08.messages.conflit, 5]);
+    expect([message(), cartes().length, document.body.textContent]).toEqual([t08.messages.conflit, 0, expect.stringContaining(t08.alertes.vide)]);
   });
   it('tout-lire', async () => {
     await monter();
