@@ -3,3 +3,11 @@
 .e12-carte { border: 1px solid var(--couleur-bordure); padding: var(--espace-m); } .e12-carte p { margin: var(--espace-xs) 0 0; }
 .e12-filtres { display: flex; flex-wrap: wrap; gap: var(--espace-m); margin: var(--espace-m) 0; }
 .e12-filtres label { display: flex; flex-direction: column; gap: var(--espace-xs); }
+.e12-explication { border: 1px solid var(--couleur-bordure); padding: var(--espace-m); margin: var(--espace-m) 0; }
+.e12-explication ul { padding-left: var(--espace-m); } .e12-explication li { margin: var(--espace-xs) 0; }
+.e12-couverture { margin: var(--espace-m) 0; }
+.e12-bandeau { border: 1px solid var(--couleur-bordure); padding: var(--espace-m); margin: var(--espace-m) 0; } .e12-bandeau p { margin: var(--espace-xs) 0; }
+.e12-frise { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--espace-s); padding: 0; list-style: none; }
+.e12-frise-mois { border: 1px solid var(--couleur-bordure); padding: var(--espace-s); display: flex; flex-direction: column; gap: var(--espace-xs); }
+@media (min-width: 640px) { .e12-frise { grid-template-columns: repeat(12, 1fr); } }
+.e12-frise-texte { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
