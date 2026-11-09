@@ -38,7 +38,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Test `regle-eslint` de `packages/noyau` : peut dépasser 5 s en local, sans lien avec P0.
 
 ## Prochaine commande
-`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter le statut de L01-T39 et L01-T47 (remplacées) ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
+`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter les fiches L14-T39 à L14-T41 (contre interface et faux serveur) et le statut de L01-T39 et L01-T47 (remplacées) ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
 
 ## Pièges
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
@@ -64,4 +64,18 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Écart à la fiche : elle annonçait 8 fiches bloquées (T48 à T55) ; T51 à T55 sont déjà faites, il n'en reste que 3.
 - Écarts à la spec gardés : identifiants suffixés (K11M, K12H, K13S, T03A, T12M, T18M) ; vocabulaire du CSV et du code (gravité B/M, `bloque`, `declencheurs`).
 - PR du lot (lignes, durée de CI, corrections après relecture) : non mesuré (pas de gh dans cette session) ; `pilotage/calibrage.csv` ne contient que l'en-tête, rien n'y est ajouté.
+- Aucune date de livraison annoncée.
+
+## Lot 14
+- Existe (parties pures, lecture, contrat et faux serveur) : gardes des formats et du registre légal ; veille (circuit, état, mode dégradé) ; Sirene (planification, partage, cache) ; santé des connecteurs.
+- Juridique : dispense, convocation, confidentialité, rapport de la SCI, rémunération, intérêts et écriture de compte courant.
+- Paramètres : paquet versionné, pays, utilisation exigée. TVA : carte de paiement et rappels, rattachement, « sous réserve ».
+- Cas sûr et ses versions ; budget de gestes ; textes et composants ; contrat et faux serveur (état de la veille et des connecteurs : L14-T32, L14-T33).
+- Fiches T00 à T33 attendues par L14-T08 : `statut: fait` (en-têtes lus sur main). T35 et T42 sont aussi faites.
+- Faites depuis (statut: fait sur main au 09/11/2026) : T34, T36, T37, T38.
+- Restent `a_faire`, à écrire contre une interface et un faux serveur (données fictives, rien en production avant J10) :
+  - T39 : routes d'écriture du juridique ; identité et double facteur de la console (D29).
+  - T40 : routes TVA (refus 403, « payé », « sous réserve ») ; identité et rôles de la console (D29).
+  - T41 : archive datée des rapports avec empreinte ; stockage chez l'hébergeur (D42).
+- Mesures sans IA : les relevés du 08/11/2026 sont périmés (fusions faites depuis). Nombre de PR fusionnées et délais médians : non mesuré (à refaire, fiches et créations de fiche séparées) ; `pilotage/calibrage.csv` : en-tête seul ; score Stryker du noyau sur main : non mesuré.
 - Aucune date de livraison annoncée.
