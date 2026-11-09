@@ -9,34 +9,17 @@ import { BarreMobile } from './BarreMobile.js';
 import { MENU_BUREAU, estActive } from './menu.js';
 import './socle.css';
 
-export const CLE_COLONNE_REPLIEE = 'axion.colonne-discussion.repliee';
 export const CHEMIN_DISCUSSION = '/discussion';
 /** Écran technique d'essai (tests de pannes) : pas de colonne, son bouton « Envoyer » doit rester unique. */
 const CHEMIN_ESSAI = '/essai';
-
-/** Lecture du stockage local : toute panne (stockage absent ou refusé) donne « déplié ». */
-function lireReplie(): boolean {
-  try {
-    return localStorage.getItem(CLE_COLONNE_REPLIEE) === 'oui';
-  } catch {
-    return false;
-  }
-}
-function ecrireReplie(replie: boolean): void {
-  try {
-    localStorage.setItem(CLE_COLONNE_REPLIEE, replie ? 'oui' : 'non');
-  } catch {
-    /* stockage indisponible : l'état reste en mémoire seulement */
-  }
-}
 
 /** Coque de l'application : menu de bureau, barre du bas (téléphone), zone principale, palette. */
 export function Coque() {
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [replie, setReplie] = useState(lireReplie);
+  const [replie, setReplie] = useState(false);
   const basculer = () => {
-    ecrireReplie(!replie);
+    // État en mémoire du composant seulement : rien n'est écrit dans le navigateur.
     setReplie(!replie);
   };
   return (

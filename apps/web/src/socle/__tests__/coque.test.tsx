@@ -8,7 +8,6 @@ import { ouvrirPalette } from '../../commandes/Palette.js';
 import { socle } from '../../../../../packages/textes/src/ecrans/socle.js';
 import { BARRE_MOBILE, LIBELLES_MENU, MENU_BUREAU, MENU_PLUS } from '../menu.js';
 import { route as routeM04 } from '../../ecrans/m04/route.js';
-import { CLE_COLONNE_REPLIEE } from '../Coque.js';
 import { creerRouteur } from '../routeur.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -138,19 +137,19 @@ describe('coque', () => {
   });
 
   it('etat-replie-memorise', async () => {
-    window.localStorage.removeItem(CLE_COLONNE_REPLIEE);
-    let h = await afficher('/');
-    cliquer(bascule(h));
-    expect(window.localStorage.getItem(CLE_COLONNE_REPLIEE)).not.toBeNull();
-    act(() => racine?.unmount());
-    document.body.innerHTML = '';
-    h = await afficher('/');
-    expect(bascule(h).getAttribute('aria-expanded')).toBe('false');
-    cliquer(bascule(h));
-    act(() => racine?.unmount());
-    document.body.innerHTML = '';
-    h = await afficher('/');
-    expect(bascule(h).getAttribute('aria-expanded')).toBe('true');
+    const ecritureLocale = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      const h = await afficher('/');
+      cliquer(bascule(h));
+      expect(bascule(h).getAttribute('aria-expanded')).toBe('false');
+      cliquer(bascule(h));
+      expect(bascule(h).getAttribute('aria-expanded')).toBe('true');
+      expect(ecritureLocale).not.toHaveBeenCalled();
+      expect(window.localStorage.length).toBe(0);
+      expect(window.sessionStorage.length).toBe(0);
+    } finally {
+      ecritureLocale.mockRestore();
+    }
   });
 
   it('stockage-indisponible-sans-plantage', async () => {
