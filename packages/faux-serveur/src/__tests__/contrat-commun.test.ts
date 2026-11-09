@@ -23,6 +23,7 @@ import { suiteProfil } from './suite-profil.js';
 import { suiteTresorerie } from './suite-tresorerie.js';
 import { suiteBloquants } from './suite-bloquants.js';
 import { suiteSources } from './suite-sources.js';
+import { suiteEcheances } from './suite-echeances.js';
 import { suiteJuridique } from './suite-juridique.js';
 import { creerHandlersJuridique } from '../domaines/juridique.js';
 import { creerServiceJuridique } from '../../../contrat/src/domaines/juridique-service.js';
@@ -161,6 +162,8 @@ suiteBloquants('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteBloquants('faux serveur (MSW)', cibleFaux);
 suiteSources('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteSources('faux serveur (MSW)', cibleFaux);
+suiteEcheances('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteEcheances('faux serveur (MSW)', cibleFaux);
 
 suiteProfil('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteProfil('faux serveur (MSW)', cibleFaux);
