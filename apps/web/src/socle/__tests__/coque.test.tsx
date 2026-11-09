@@ -118,6 +118,12 @@ describe('coque', () => {
     expect((h.querySelector('#colonne-discussion-corps') as HTMLElement).hidden).toBe(false);
   });
 
+  it('pas-de-colonne-sur-l-ecran-d-essai', async () => {
+    const h = await afficher('/essai');
+    expect(h.querySelector('aside.colonne-discussion')).toBeNull();
+    expect(h.querySelectorAll('main').length).toBe(1);
+  });
+
   it('colonne-repliable-au-clavier', async () => {
     const h = await afficher('/');
     const b = bascule(h);

@@ -11,6 +11,8 @@ import './socle.css';
 
 export const CLE_COLONNE_REPLIEE = 'axion.colonne-discussion.repliee';
 export const CHEMIN_DISCUSSION = '/discussion';
+/** Écran technique d'essai (tests de pannes) : pas de colonne, son bouton « Envoyer » doit rester unique. */
+const CHEMIN_ESSAI = '/essai';
 
 /** Lecture du stockage local : toute panne (stockage absent ou refusé) donne « déplié ». */
 function lireReplie(): boolean {
@@ -43,7 +45,7 @@ export function Coque() {
         <main className="coque-principal">
           <Outlet />
         </main>
-        {pathname !== CHEMIN_DISCUSSION && (
+        {pathname !== CHEMIN_DISCUSSION && pathname !== CHEMIN_ESSAI && (
           <aside className="colonne-discussion" data-replie={replie ? 'oui' : 'non'}>
             <button type="button" className="colonne-bascule" aria-expanded={!replie} aria-controls="colonne-discussion-corps" onClick={basculer}>
               {e25.titre}
