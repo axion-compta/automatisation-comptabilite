@@ -1,0 +1,5 @@
+/* E01 Mon mois : mise en page seulement, jetons de packages/ui/src/jetons.css. */
+.e01-blocs { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--espace-m); margin: var(--espace-m) 0; }
+.e01-alertes { display: grid; gap: var(--espace-m); }
+.e01-bloc p { margin: var(--espace-xs) 0 0; }
+.e01-alertes .axion-carte-alerte__actions { display: none; } /* résolution : écran des alertes, pas ici */
