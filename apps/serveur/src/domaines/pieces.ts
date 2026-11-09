@@ -1,15 +1,16 @@
 import { implement, ORPCError } from '@orpc/server';
+import { detailPiece, listerPiecesService } from '../../../../packages/contrat/src/domaines/pieces-service.js';
 import { contrat } from '../../../../packages/contrat/src/routes.js';
 
-/** Bouchon : le contrat est figé, le service réel viendra avec L04-T30. Signature sans paramètre, figée. */
+/** Signature sans paramètre, figée par L04-T55. Lecture seule sur le jeu fictif. */
 export function routesPieces() {
   const os = implement(contrat.pieces);
   return {
-    listerPieces: os.listerPieces.handler(() => {
-      throw new ORPCError('NOT_IMPLEMENTED');
-    }),
-    lirePiece: os.lirePiece.handler(() => {
-      throw new ORPCError('NOT_IMPLEMENTED');
+    listerPieces: os.listerPieces.handler(({ input }) => listerPiecesService(input.query ?? {})),
+    lirePiece: os.lirePiece.handler(({ input, errors }) => {
+      const d = detailPiece(input.params.id);
+      if (d === undefined) throw errors.PIECE_INCONNUE();
+      return { body: d };
     }),
   };
 }
