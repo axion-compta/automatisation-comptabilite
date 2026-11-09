@@ -20,7 +20,7 @@ const RECENT = '2026-01-01';
 
 function monde(objets: ObjetConservable[], opts: {
   gels?: Gel[]; regles?: RegleConservation[]; fins?: ParametresPurge['finsDeContrat']; panne?: string[];
-  plusAncienne?: string | null; purges?: PurgePlanifiee[];
+  plusAncienne?: string | null; purges?: PurgePlanifiee[]; relister?: boolean;
 } = {}) {
   const purges = new Map((opts.purges ?? []).map((x) => [`${x.societeId}/${x.objetId}`, x]));
   const efface: string[] = [];
@@ -31,7 +31,7 @@ function monde(objets: ObjetConservable[], opts: {
     rotationSauvegardesJours: ROTATION, finsDeContrat: opts.fins ?? {}, alerte,
     ports: {
       // Rend aussi les objets des autres sociétés, mais plus ceux effacés de la base (comme une base réelle).
-      objets: { lister: async () => objets.filter((o) => !efface.includes(`${o.societeId}/${o.id}`)) },
+      objets: { lister: async () => objets.filter((o) => opts.relister === true || !efface.includes(`${o.societeId}/${o.id}`)) },
       purges: {
         lire: async (s, o) => purges.get(`${s}/${o}`) ?? null,
         ecrire: async (x) => { purges.set(`${x.societeId}/${x.objetId}`, structuredClone(x)); },
@@ -74,8 +74,7 @@ describe('purge selon la règle de conservation', () => {
   it('trop-tot-planifiee-avec-date-prevue', async () => {
     const m = monde([objet('o1', RECENT)]);
     await passerPurge(m.params());
-    expect(m.efface).toEqual([]);
-    expect(m.etat('societe-a', 'o1')).toMatchObject({ statut: 'planifiee', datePrevue: '2033-01-01' });
+    expect([m.efface, m.etat('societe-a', 'o1')]).toMatchObject([[], { statut: 'planifiee', datePrevue: '2033-01-01' }]);
   });
 
   it('echue-effacee-avec-preuve', async () => {
@@ -102,9 +101,11 @@ describe('purge selon la règle de conservation', () => {
   });
 
   it('relance-idempotente', async () => {
-    const m = monde([objet('o1', ECHU)]);
-    for (let i = 0; i < 2; i++) await passerPurge(m.params());
-    expect(m.efface).toEqual(['societe-a/o1']);
+    for (const [plusAncienne, statut] of [[null, 'effacee_base'], [ajouterJours(AUJOURDHUI, 1), 'effacee_sauvegardes']] as const) {
+      const m = monde([objet('o1', ECHU)], { relister: true, plusAncienne }); // l'objet reste listé après effacement
+      for (const jours of [0, 0, 2]) await passerPurge(m.params({ aujourdhui: ajouterJours(AUJOURDHUI, jours) }));
+      expect([m.efface, m.etat('societe-a', 'o1')]).toMatchObject([['societe-a/o1'], { statut, preuve: { effaceBaseLe: AUJOURDHUI } }]);
+    }
   });
 
   it('effacement-en-echec-jamais-marque-efface', async () => {
