@@ -5,7 +5,7 @@ SHA relu : 2e4da2279572ff3c6054b94133e072a74c400e78
 
 ## Contrôles faits
 - Fichiers modifiés : les 7 font partie des `fichiers_autorises`. `.github/` et les gardes ne sont pas touchés. Aucune dépendance n'est ajoutée.
-- Taille : 219 lignes ajoutées et 4 supprimées, soit 223 pour 260 au plus (aucune ligne « - - »).
+- Taille : 219 lignes ajoutées et 5 supprimées, soit 224 pour 260 au plus (aucune ligne « - - »).
 - Tests : `a-justifier.test.tsx` passe en entier (7 sur 7). Les 6 tests nommés sont présents. Les cas limites exigés (1 facture au singulier, nom de fournisseur absent avec une clé `c:`, total à 0,01) sont dans `cas-limites-singulier-sans-nom-et-un-centime`.
 - Mutations, toutes annulées ensuite :
   - un bouton de réponse qui envoie un `POST` → `reponses-desactivees-et-annoncees` rougit ;
