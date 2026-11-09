@@ -103,8 +103,7 @@ describe('purge selon la règle de conservation', () => {
 
   it('relance-idempotente', async () => {
     const m = monde([objet('o1', ECHU)]);
-    await passerPurge(m.params());
-    await passerPurge(m.params());
+    for (let i = 0; i < 2; i++) await passerPurge(m.params());
     expect(m.efface).toEqual(['societe-a/o1']);
   });
 
@@ -117,14 +116,12 @@ describe('purge selon la règle de conservation', () => {
   });
 
   it('sauvegardes-confirmees-apres-rotation', async () => {
-    const jour = (plusAncienne: string | null) => monde([objet('o1', ECHU)], { plusAncienne });
     for (const [valeur, attendu] of [
       [null, 'effacee_base'], [ajouterJours(AUJOURDHUI, -1), 'effacee_base'], [AUJOURDHUI, 'effacee_base'],
       [ajouterJours(AUJOURDHUI, 1), 'effacee_sauvegardes'],
     ] as const) {
-      const m = jour(valeur);
-      await passerPurge(m.params());
-      await passerPurge(m.params());
+      const m = monde([objet('o1', ECHU)], { plusAncienne: valeur });
+      for (let i = 0; i < 2; i++) await passerPurge(m.params());
       expect(m.etat('societe-a', 'o1')?.statut).toBe(attendu);
       expect(m.efface).toHaveLength(1);
     }
@@ -132,15 +129,12 @@ describe('purge selon la règle de conservation', () => {
 
   it('sauvegardes-confirmees-sans-relister-objet-et-par-societe', async () => {
     const m = monde([objet('o1', ECHU, 'societe-a'), objet('o2', ECHU, 'societe-b')], { plusAncienne: ajouterJours(AUJOURDHUI, 1) });
-    await passerPurge(m.params({ societes: ['societe-a'] }));
-    await passerPurge(m.params({ societes: ['societe-a'] }));
+    for (let i = 0; i < 2; i++) await passerPurge(m.params({ societes: ['societe-a'] }));
     expect(m.etat('societe-a', 'o1')?.statut).toBe('effacee_sauvegardes');
     expect(m.etat('societe-b', 'o2')).toBeUndefined();
-    const autre = monde([objet('o2', ECHU, 'societe-b')], {
-      plusAncienne: ajouterJours(AUJOURDHUI, 1),
-      purges: [{ objetId: 'o2', societeId: 'societe-b', categorie: 'pieces', datePrevue: null, statut: 'effacee_base',
-        preuve: { effaceBaseLe: AUJOURDHUI, sauvegardesAuPlusTardLe: AUJOURDHUI, source: 'source-inventee' } }],
-    });
+    const preuve = { effaceBaseLe: AUJOURDHUI, sauvegardesAuPlusTardLe: AUJOURDHUI, source: 'source-inventee' };
+    const purges: PurgePlanifiee[] = [{ objetId: 'o2', societeId: 'societe-b', categorie: 'pieces', datePrevue: null, statut: 'effacee_base', preuve }];
+    const autre = monde([], { plusAncienne: ajouterJours(AUJOURDHUI, 1), purges });
     await passerPurge(autre.params({ societes: ['societe-a'] }));
     expect(autre.etat('societe-b', 'o2')?.statut).toBe('effacee_base');
   });

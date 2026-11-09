@@ -2,12 +2,8 @@
 // Écrit contre des interfaces (objets, purges, gels, effacement, sauvegardes, trace, alerte) : rien de réel ici.
 import { ajouterJours, comparerDates } from '../../../../packages/noyau/src/dates/civiles.js';
 import {
-  conserverJusquAu,
-  purgePossible,
-  type CategorieConservation,
-  type Gel,
-  type PointDepart,
-  type RegleConservation,
+  conserverJusquAu, purgePossible,
+  type CategorieConservation, type Gel, type PointDepart, type RegleConservation,
 } from '../../../../packages/noyau/src/conservation/regles.js';
 import type { PortAlerteExploitation } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
 
@@ -75,27 +71,24 @@ async function traiterObjet(p: ParametresPurge, objet: ObjetConservable, gels: r
   const base = { objetId, societeId, categorie };
   const ecrire = (reste: Omit<PurgePlanifiee, 'objetId' | 'societeId' | 'categorie'>): Promise<void> =>
     p.ports.purges.ecrire({ ...base, ...reste });
+  const refus = (code: 'gel_actif' | 'a_confirmer' | 'export_non_remis'): Promise<void> =>
+    ecrire({ datePrevue: null, statut: 'refusee', code });
   const conservation = conserverJusquAu(p.regles, { pays: objet.pays, categorie, dates: objet.dates });
   const decision = purgePossible(conservation, { gels, aujourdhui: p.aujourdhui });
   if (!decision.ok && decision.code === 'gel_actif') {
     await p.ports.trace.ajouter(societeId, { code: 'suppression_refusee_gel', objetId, le: p.aujourdhui });
-    return ecrire({ datePrevue: null, statut: 'refusee', code: 'gel_actif' });
+    return refus('gel_actif');
   }
   const fin = p.finsDeContrat[societeId];
-  if (fin !== undefined && fin.exportRemisLe === undefined) {
-    return ecrire({ datePrevue: null, statut: 'refusee', code: 'export_non_remis' });
-  }
-  if (!decision.ok && decision.code === 'a_confirmer') {
-    return ecrire({ datePrevue: null, statut: 'refusee', code: 'a_confirmer' });
-  }
+  if (fin !== undefined && fin.exportRemisLe === undefined) return refus('export_non_remis');
+  if (!decision.ok && decision.code === 'a_confirmer') return refus('a_confirmer');
   if (!decision.ok || conservation.etat !== 'date') {
     return ecrire({ datePrevue: conservation.etat === 'date' ? conservation.date : null, statut: 'planifiee' });
   }
   try {
     await p.ports.effacement.effacerBase(societeId, objetId);
   } catch {
-    await p.alerte.alerter({ code: 'purge_en_echec', societeId, objetId });
-    return;
+    return p.alerte.alerter({ code: 'purge_en_echec', societeId, objetId });
   }
   await ecrire({
     datePrevue: conservation.date,
@@ -107,17 +100,14 @@ async function traiterObjet(p: ParametresPurge, objet: ObjetConservable, gels: r
 async function passerSociete(p: ParametresPurge, societeId: string, limite: string): Promise<void> {
   const objets = await p.ports.objets.lister(societeId);
   const gels = await p.ports.gels.lire(societeId);
-  const aConfirmer = (await p.ports.purges.listerEffaceesBase(societeId)).filter(
-    (x) => x.societeId === societeId && x.statut === 'effacee_base',
-  );
+  const aConfirmer = (await p.ports.purges.listerEffaceesBase(societeId)).filter((x) => x.societeId === societeId && x.statut === 'effacee_base');
   for (const objet of objets) {
     if (objet.societeId !== societeId) continue;
     const existante = await p.ports.purges.lire(societeId, objet.id);
     if (existante !== null && EFFACEES.includes(existante.statut)) continue;
     await traiterObjet(p, objet, gels, limite);
   }
-  if (aConfirmer.length === 0) return;
-  const plusAncienne = await p.ports.sauvegardes.plusAncienneLe(societeId);
+  const plusAncienne = aConfirmer.length === 0 ? null : await p.ports.sauvegardes.plusAncienneLe(societeId);
   if (plusAncienne === null) return;
   for (const purge of aConfirmer) {
     if (purge.preuve !== undefined && comparerDates(plusAncienne, purge.preuve.effaceBaseLe) > 0) {
