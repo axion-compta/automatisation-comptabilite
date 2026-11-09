@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { EtatLigne, ReponseComptesBancaires, ReponseLignesBancaires } from '../../../../../packages/contrat/src/domaines/banque.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { ETATS_LIGNE, etatLigne } from '../../../../../packages/textes/src/banque/mots.js';
@@ -9,6 +9,7 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterDateAffiche, formaterMontantAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { AJustifier, useNombreDemandes } from './AJustifier.js';
 import { Couverture } from './Couverture.js';
 import { Explication } from './Explication.js';
 import './e12.css';
@@ -49,6 +50,19 @@ export function Ecran() {
   const [compte, setCompte] = useState('');
   const [decalage, setDecalage] = useState(0);
   const [ouverte, setOuverte] = useState<string | null>(null);
+  const [onglet, setOnglet] = useState<'lignes' | 'justifier'>('lignes');
+  const [ids, setIds] = useState<string[] | null>(null);
+  const onglets = useRef(new Map<string, HTMLButtonElement>());
+  const nbDemandes = useNombreDemandes();
+  function auClavier(e: KeyboardEvent) {
+    const ordre = ['lignes', 'justifier'] as const;
+    const i = ordre.indexOf(onglet);
+    const k = { ArrowRight: (i + 1) % 2, ArrowLeft: (i + 1) % 2, Home: 0, End: 1 }[e.key];
+    if (k === undefined) return;
+    e.preventDefault();
+    setOnglet(ordre[k]!);
+    onglets.current.get(ordre[k]!)?.focus();
+  }
   const boutons = useRef(new Map<string, HTMLButtonElement>());
   function fermer() {
     const id = ouverte;
@@ -98,16 +112,24 @@ export function Ecran() {
               aria-label={remplir(e12.tableau.pourquoiLigne, { libelle: l.libelle })} onClick={() => setOuverte(l.id)}>{e12.tableau.pourquoi}</button>
           ) },
         ]}
-        lignes={d.body}
+        lignes={ids ? d.body.filter((l) => ids.includes(l.id)) : d.body}
         cleDeLigne={(l) => l.id}
-        pagination={{ decalage: d.decalage, limite: LIMITE, total: d.total, libellePrecedent: e12.pagination.precedent, libelleSuivant: e12.pagination.suivant, surPage: setDecalage,
-          resume: (debut, fin, total) => remplir(e12.pagination.resume, { debut, fin, total }) }}
+        {...(ids ? {} : { pagination: { decalage: d.decalage, limite: LIMITE, total: d.total, libellePrecedent: e12.pagination.precedent, libelleSuivant: e12.pagination.suivant, surPage: setDecalage,
+          resume: (debut, fin, total) => remplir(e12.pagination.resume, { debut, fin, total }) } })}
       />
     );
   }
   return (
     <section aria-labelledby="e12-titre">
       <h1 id="e12-titre">{e12.titre}</h1>
+      <div role="tablist" aria-label={e12.onglets.liste} onKeyDown={auClavier}>
+        {([['lignes', e12.onglets.lignes], ['justifier', e12.onglets.aJustifier.replace('{nombre}', String(nbDemandes ?? 0))]] as const).map(([cle, texte]) => (
+          <button key={cle} type="button" role="tab" id={'e12-onglet-' + cle} aria-selected={onglet === cle} aria-controls="e12-panneau" tabIndex={onglet === cle ? 0 : -1}
+            ref={(b) => void (b ? onglets.current.set(cle, b) : onglets.current.delete(cle))} onClick={() => setOnglet(cle)}>{texte}</button>
+        ))}
+      </div>
+      <div role="tabpanel" id="e12-panneau" aria-labelledby={'e12-onglet-' + onglet}>
+      {onglet === 'justifier' ? <AJustifier surVoirLignes={(l) => (setIds(l), setOnglet('lignes'))} /> : <>
       {blocComptes}
       {(compte || comptes.donnees?.body[0]?.id) && <Couverture compteId={compte || comptes.donnees?.body[0]?.id || ''} />}
       <div className="e12-filtres">
@@ -130,8 +152,11 @@ export function Ecran() {
           </select>
         </label>
       </div>
+      {ids && <p role="status">{e12.aJustifier.filtreActif} <button type="button" onClick={() => setIds(null)}>{e12.aJustifier.retirerFiltre}</button></p>}
       <div aria-live="polite">{blocLignes}</div>
       {ouverte !== null && <Explication ligneId={ouverte} surFermeture={fermer} />}
+      </>}
+      </div>
     </section>
   );
 }

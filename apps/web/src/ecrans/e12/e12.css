@@ -11,3 +11,6 @@
 .e12-frise-mois { border: 1px solid var(--couleur-bordure); padding: var(--espace-s); display: flex; flex-direction: column; gap: var(--espace-xs); }
 @media (min-width: 640px) { .e12-frise { grid-template-columns: repeat(12, 1fr); } }
 .e12-frise-texte { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[role='tablist'] { display: flex; gap: var(--espace-s); margin: var(--espace-m) 0; } [role='tab'][aria-selected='true'] { font-weight: bold; border-bottom: 2px solid currentColor; }
+.e12-demandes { padding: 0; list-style: none; } .e12-demande { border: 1px solid var(--couleur-bordure); padding: var(--espace-m); margin: var(--espace-m) 0; }
+.e12-reponses { display: flex; flex-wrap: wrap; gap: var(--espace-s); margin: var(--espace-s) 0; } .e12-reponses [aria-disabled='true'] { opacity: 0.6; cursor: not-allowed; }
