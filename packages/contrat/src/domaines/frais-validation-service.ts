@@ -19,9 +19,7 @@ import { conflitBanque } from './frais-actions-service.js';
 export type CodeValidation = 'FRAIS_INCONNU' | 'ENTREE_INVALIDE' | 'CLE_REUTILISEE' | 'FRAIS_PAYE_SOCIETE' | 'JUSTIFICATIF_MANQUANT' | 'BAREME_A_VERIFIER' | 'REMBOURSEMENT_SUPERIEUR' | 'RECAPITULATIF_A_CONFIRMER';
 export class ErreurValidation extends Error {
   override name = 'ErreurValidation';
-  constructor(readonly code: CodeValidation, readonly totalCentimes?: number) {
-    super(code);
-  }
+  constructor(readonly code: CodeValidation, readonly totalCentimes?: number) { super(code); }
 }
 /** Réglages lus dans la configuration du serveur (jamais écrits dans le contrat). */
 export interface ConfigValidation {
@@ -55,8 +53,7 @@ export function creerServiceFraisValidation(jeu: JeuFrais, config: ConfigValidat
   const parametre = (cle: string, date: string) => jeu.parametres.find((p) => p.cle === cle && p.effet_debut <= date && (p.effet_fin === null || date < p.effet_fin));
   /** Montant du trajet : barème de l'année, cumul des trajets précédents ; barème non validé = refus. */
   const montantTrajet = (f: FraisFictif): Centimes => {
-    const bareme = parametre(CLE_BAREME, f.dateDepense);
-    const majoration = parametre(CLE_MAJORATION, f.dateDepense);
+    const [bareme, majoration] = [parametre(CLE_BAREME, f.dateDepense), parametre(CLE_MAJORATION, f.dateDepense)];
     if (bareme?.statut !== 'valide' || majoration?.statut !== 'valide') return refuser('BAREME_A_VERIFIER');
     const annee = f.dateDepense.slice(0, ANNEE);
     const lignes = jeu.trajets.flatMap((t) => {
@@ -85,14 +82,10 @@ export function creerServiceFraisValidation(jeu: JeuFrais, config: ConfigValidat
     const tva = traiterTvaFrais({ nature: f.categorieDepense ?? '', tvaLue: centimes(f.tva), ticketAuNomDeLaPersonne: false, justificatifPerdu: f.justificatifPerdu, estIk: false }, undefined);
     return { frais: f, ecriture: proposerEcritureDepense(noyau(f), tva, config.comptes, entete), montant: centimes(f.montantTtc - f.partPersoTtc) };
   };
-  const vue = (e: Ecriture, fraisId: string): EcritureProposee => ({
-    id: e.id, fraisId, date: e.date, statut: 'propose',
-    lignes: e.lignes.map((l) => ({ compte: l.compte, libelle: l.libelle, debitCentimes: l.debit, creditCentimes: l.credit })),
-  });
+  const vue = (e: Ecriture, fraisId: string): EcritureProposee => ({ id: e.id, fraisId, date: e.date, statut: 'propose',
+    lignes: e.lignes.map((l) => ({ compte: l.compte, libelle: l.libelle, debitCentimes: l.debit, creditCentimes: l.credit })) });
   return {
-    proposer(id: string, cle: string): EcritureProposee {
-      return unefois(`proposer|${cle}`, id, () => vue(construire(id).ecriture, id));
-    },
+    proposer: (id: string, cle: string): EcritureProposee => unefois(`proposer|${cle}`, id, () => vue(construire(id).ecriture, id)),
     /** `personne` vient de `X-Personne` (obligatoire). Tout est contrôlé avant la première écriture. */
     valider(corps: z.infer<typeof CorpsValidation>, personne: string, cle: string): z.infer<typeof ValidationFrais>[] {
       return unefois(`valider|${personne}|${cle}`, JSON.stringify(corps), () => {
