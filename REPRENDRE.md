@@ -51,7 +51,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Durée réelle : premier commit de code de L13-T00 le 08/11/2026 à 04:57 (+01:00, #659) ; dernière fusion relevée le 08/11/2026 à 09:21 (#768), soit environ 4 h 24 min ; fiches du lot posées la veille à 14:13 (#120).
 - Nombre de PR du lot, délai médian de fusion (sensible, non sensible) : non mesuré (pas de gh dans cette session).
 - PR revenues en `a-corriger` et raisons : non mesuré.
-- Score Stryker du noyau à la fin : non mesuré.
+- Score Stryker du noyau à la fin : 86,67 % (09/11/2026, bloc du lot 02).
 - Aucune date de livraison annoncée.
 
 ## Lot 12
@@ -77,7 +77,7 @@ Mesures sans IA, relevées le 07/11/2026 :
   - T39 : routes d'écriture du juridique ; identité et double facteur de la console (D29).
   - T40 : routes TVA (refus 403, « payé », « sous réserve ») ; identité et rôles de la console (D29).
   - T41 : archive datée des rapports avec empreinte ; stockage chez l'hébergeur (D42).
-- Mesures sans IA : les relevés du 08/11/2026 sont périmés (fusions faites depuis). Nombre de PR fusionnées et délais médians : non mesuré (à refaire, fiches et créations de fiche séparées) ; `pilotage/calibrage.csv` : en-tête seul ; score Stryker du noyau sur main : non mesuré.
+- Mesures sans IA : les relevés du 08/11/2026 sont périmés (fusions faites depuis). Nombre de PR fusionnées et délais médians : non mesuré (à refaire, fiches et créations de fiche séparées) ; `pilotage/calibrage.csv` : en-tête seul ; score Stryker du noyau sur main : 86,67 %.
 - Aucune date de livraison annoncée.
 
 ## Lot 02
@@ -86,6 +86,6 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Banc de rapprochement (L02-T33, 3 graines) : 0 faux lien en `RAPPROCHEE` ; rappel 49/120 = 40,8 %, sous la cible de 90 % : fiche de suivi à ouvrir, banc non ajusté au moteur.
 - Banc de profils : aucun résultat chiffré dans le dépôt ; L02-T50 porte les vues d'exemple, et le jeu de 10 relevés fictifs avec profils est celui de L02-T61, lu par L02-T20.
 - Mesures PR (API REST, journal L02-T06) : 79 PR fusionnées pour 70 fiches ; médiane ouverture à fusion 33,9 min (51 sensibles), 30,9 min (28 non sensibles).
-- Échecs CI et score Stryker du noyau : non mesurés (voir le journal).
+- Échecs CI : 0 contrôle en échec sur 711 au dernier commit des 79 PR (check-runs) ; 7 runs de workflow en échec sur 6 branches. Stryker du noyau : 86,67 % (`npx stryker run`, main 69605cb).
 - Prochaines étapes : L02-T68, puis la fiche de suivi du rappel du banc de rapprochement ; Will relit les PR sensibles.
 - Aucune date de livraison annoncée.
