@@ -1,0 +1,3 @@
+.axion-discussion, .axion-discussion__fil, .axion-discussion__saisie { display: flex; flex-direction: column; gap: var(--espace-2); font-family: var(--police-texte); color: var(--couleur-texte); }
+.axion-discussion__fil { overflow-y: auto; }
+.axion-discussion__outils { display: flex; gap: var(--espace-1); }
