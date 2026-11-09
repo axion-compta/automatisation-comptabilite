@@ -3,7 +3,6 @@ import { ReponseActionAlerte } from '../../../../packages/contrat/src/domaines/a
 import { ReponseNotification, ReponseToutLire } from '../../../../packages/contrat/src/domaines/notifications.js';
 import { ErreurEcriture, ErreurLecture, ecrire, nouvelleCle, type CodeLecture } from '../api.js';
 import { relireApresAction } from './interrogation.js';
-
 export type ActionAlerte = 'reporter' | 'ignorer' | 'annuler';
 export type CorpsAction = { jours?: number; motif?: string; version: number };
 const CODES: Record<number, CodeLecture> = { 403: 'acces_refuse', 404: 'introuvable', 409: 'conflit', 423: 'verrouille' };
