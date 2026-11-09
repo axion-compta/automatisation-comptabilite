@@ -37,6 +37,7 @@ export const FraisDetail = FraisResume.extend({
   pieceId: z.string().optional(),
   motifSansJustificatif: z.string().optional(),
   partPersoTtcCentimes: Centimes,
+  ligneBanqueId: z.string().optional(),
   version: z.number().int().min(1),
 });
 export type FraisDetail = z.infer<typeof FraisDetail>;

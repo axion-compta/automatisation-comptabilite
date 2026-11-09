@@ -19,6 +19,7 @@ import { suiteChange } from './suite-change.js';
 import { suiteSante } from './suite-sante.js';
 import { suiteTresorerie } from './suite-tresorerie.js';
 import { suiteBloquants } from './suite-bloquants.js';
+import { suiteSources } from './suite-sources.js';
 import { suiteJuridique } from './suite-juridique.js';
 import { creerHandlersJuridique } from '../domaines/juridique.js';
 import { creerServiceJuridique } from '../../../contrat/src/domaines/juridique-service.js';
@@ -151,6 +152,8 @@ suiteTresorerie('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteTresorerie('faux serveur (MSW)', cibleFaux);
 suiteBloquants('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteBloquants('faux serveur (MSW)', cibleFaux);
+suiteSources('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteSources('faux serveur (MSW)', cibleFaux);
 
 // Le vrai serveur ne sert que la SARL par défaut (app.ts hors périmètre) : la SCI passe par la procédure du serveur, appelée directement.
 const SIREN_SCI = genererJuridique().obligations[1]!.societeSiren;
