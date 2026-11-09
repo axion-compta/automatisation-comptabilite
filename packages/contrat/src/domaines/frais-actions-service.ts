@@ -60,6 +60,8 @@ export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours
   };
   const baremeValide = (date: string): boolean =>
     jeu.parametres.some((p) => p.cle === CLE_BAREME && p.statut === 'valide' && p.effet_debut <= date && (p.effet_fin === null || date < p.effet_fin));
+  const statutTrajet = (f: Frais, t: Trajet, vehicule: Vehicule): StatutFrais =>
+    admissibilite(t, vehicule).etat === 'calculable' && baremeValide(f.dateDepense) && manquants(f, { trajet: t, vehicule }).length === 0 ? 'propose' : 'a_completer';
   const vehiculePour = (id: string, personne: string, trajet: Trajet): Vehicule => {
     const v: VehiculeFrais & { carteGrisePieceId?: string } = jeu.vehicules.find((x) => x.id === id) ?? refuser('ENTREE_INVALIDE');
     if (v.personneId !== personne) refuser('PERSONNE_DIFFERENTE');
@@ -86,10 +88,9 @@ export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours
         } else {
           const t: Trajet = { fraisId: id, vehiculeId: corps.vehiculeId, depart: corps.depart, arrivee: corps.arrivee, motif: corps.motif, kmSaisisDixiemes: lireKmDixiemes(corps.kmTexte), allerRetour: corps.allerRetour === true };
           const vehicule = vehiculePour(corps.vehiculeId, personne, t);
-          const pret = admissibilite(t, vehicule).etat === 'calculable' && baremeValide(corps.date);
           // Indemnité kilométrique d'un véhicule personnel : pas de ticket ni de ligne bancaire, donc hors determinerPayeur.
           const b: Frais = { ...base, libelle: `${corps.depart} - ${corps.arrivee}`, payeur: 'personne' };
-          f = passer(b, pret && manquants(b, { trajet: t, vehicule }).length === 0 ? 'propose' : 'a_completer');
+          f = passer(b, statutTrajet(b, t, vehicule));
           trajetNouveau = t;
         }
         verifierInvariants(f);
@@ -109,6 +110,7 @@ export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours
         let f = noyau(courant);
         const position = jeu.frais.indexOf(courant);
         let vehicule: { t: Trajet; id: string } | undefined;
+        let suivantTrajet: StatutFrais | undefined;
         if (corps.partPersoTtcCentimes !== undefined) {
           if (corps.partPersoTtcCentimes > f.montantTtc) refuser('ENTREE_INVALIDE');
           f = { ...f, partPersoTtc: centimes(corps.partPersoTtcCentimes) };
@@ -122,16 +124,18 @@ export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours
         }
         if (corps.vehiculeId !== undefined) {
           const t = jeu.trajets.find((x) => x.fraisId === id) ?? refuser('ENTREE_INVALIDE');
-          vehiculePour(corps.vehiculeId, personne, t);
+          const v = vehiculePour(corps.vehiculeId, personne, t);
           vehicule = { t, id: corps.vehiculeId };
+          suivantTrajet = statutTrajet(f, { ...t, vehiculeId: corps.vehiculeId }, v);
         }
         let suivant = { ...f, version: f.version + 1 };
         if (corps.declaration !== undefined && f.nature === 'depense') {
           const r = payeur(f, corps.declaration);
           if (r.statut === f.statut) suivant = { ...avecPayeur(f, r), version: f.version + 1 };
           else if (peutPasser(f.statut, r.statut)) suivant = passer(avecPayeur(f, r), r.statut);
-          else if (peutPasser(f.statut, 'a_completer' as StatutFrais)) suivant = passer(f, 'a_completer');
+          else if (peutPasser(f.statut, 'a_completer')) suivant = passer(f, 'a_completer');
         }
+        if (suivantTrajet !== undefined && suivantTrajet !== f.statut && peutPasser(f.statut, suivantTrajet)) suivant = passer(f, suivantTrajet);
         verifierInvariants(suivant);
         if (vehicule !== undefined) vehicule.t.vehiculeId = vehicule.id;
         jeu.frais[position] = fictif(suivant);

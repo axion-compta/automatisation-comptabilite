@@ -189,6 +189,34 @@ describe('serveur : créer et compléter un frais', () => {
     expect(s.creer(trajet({ vehiculeId: 'VEH-04' }) as never, PER, cle()).statut).toBe('a_completer');
   });
 
+  it('trajet-complement-vehicule-recalcule-statut', () => {
+    for (const veh of ['VEH-04', 'VEH-02']) {
+      const jeu = jeuSurMesure();
+      const s = nouveauService(jeu);
+      const t = s.creer(trajet() as never, PER, cle());
+      expect(t.statut).toBe('propose');
+      expect(s.completer(t.id, { vehiculeId: veh }, 1, PER, cle()).statut).toBe('a_completer');
+    }
+  });
+
+  it('trajet-location-avec-carte-grise-a-completer', () => {
+    const jeu = jeuSurMesure();
+    Object.assign(jeu.vehicules[3] as object, { carteGrisePieceId: 'PIE-CG4' });
+    expect(nouveauService(jeu).creer(trajet({ vehiculeId: 'VEH-04' }) as never, PER, cle()).statut).toBe('a_completer');
+  });
+
+  it('trajet-sans-carte-grise-a-completer', () => {
+    expect(nouveauService(genererFrais()).creer(trajet() as never, PER, cle()).statut).toBe('a_completer');
+  });
+
+  it('ligne-d-un-frais-refuse-redevient-utilisable', () => {
+    const jeu = jeuSurMesure();
+    jeu.frais.push({ ...(jeu.frais.find((f) => f.id === 'FRA-004') as FraisFictif), id: 'FRA-098', statut: 'refuse', ligneBanqueId: 'LIB-002' });
+    const r = nouveauService(jeu).creer(depense({ date: '2025-04-08', montantTtcCentimes: 5200 }) as never, PER, cle());
+    expect(r.payeur).toBe('societe');
+    expect(ligneDe(jeu, r.id)).toBe('LIB-002');
+  });
+
   it('completer-doublon-piece-409', async () => {
     const { creer, completer } = nouvelle();
     const id = (await creer(depense())).json().body.id;
