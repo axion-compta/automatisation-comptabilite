@@ -16,6 +16,7 @@ import { creerHandlersTva } from './domaines/tva.js';
 import { creerHandlersChange } from './domaines/change.js';
 import { creerHandlersSante } from './domaines/sante.js';
 import { creerHandlersJuridique } from './domaines/juridique.js';
+import { creerHandlersProfil } from './domaines/profil.js';
 import { creerHandlersTresorerie } from './domaines/tresorerie.js';
 import { creerHandlersBloquants } from './domaines/bloquants.js';
 import { creerHandlersSources } from './domaines/sources.js';
@@ -141,6 +142,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersChange(base, attendre),
     ...creerHandlersSante(base, attendre),
     ...creerHandlersJuridique(base, attendre),
+    ...creerHandlersProfil(base, attendre),
     ...creerHandlersTresorerie(base, attendre),
     ...creerHandlersBloquants(base, attendre),
     ...creerHandlersSources(base, attendre),
