@@ -1,5 +1,5 @@
 // Files de traitement des pièces (5 étapes) : écrites contre une prise ServiceFiles ; la vraie file de la console se branchera plus tard.
-import { appliquerTransition, ETAPES, cleTache, type Etape } from '../../../../../packages/noyau/src/pieces/etats.js';
+import { appliquerTransition, prochaineRelance, ETAPES, cleTache, type Etape } from '../../../../../packages/noyau/src/pieces/etats.js';
 import { etapeAntivirus, etapeEntree, type ContexteEntree } from '../etape-entree.js';
 import { etapeClassement, type ContexteClassement } from '../etape-classement.js';
 import { etapeLecture, type ContexteLecture, type JournalTaches, type ResultatLecture } from '../etape-lecture.js';
@@ -103,13 +103,21 @@ export const executeurAntivirus = (ctx: ContexteEntree): Executeur => async (id)
   if (r.etat === 'en_erreur' && r.prochaineRelanceA !== undefined && r.prochaineRelanceA !== 'abandon') return { relanceA: r.prochaineRelanceA };
   return r.etat === 'quarantaine' ? { pieces: [id] } : { fin: true };
 };
-export const executeurPreparation = (ctx: ContextePreparation & Pick<ContexteEntree, 'depot'>, preparations: JournalTaches<ResultatPreparation>): Executeur => async (id) => {
+export const executeurPreparation = (ctx: ContextePreparation & Pick<ContexteEntree, 'depot' | 'horloge'>, preparations: JournalTaches<ResultatPreparation>, reprise: { delaisRelanceMinutes: number[] }): Executeur => async (id) => {
   const piece = await ctx.depot.parId(id);
   if (piece === null) return { fin: true };
   const prep = await etapePreparation(piece, ctx);
-  if (prep.etat === 'en_erreur') return { fin: true };
+  if (prep.etat === 'en_erreur') {
+    // Comme l'antivirus : la pièce passe en erreur et la tâche est relancée ; abandon seulement après le dernier délai, état enregistré.
+    const tentatives = (piece.tentatives ?? 0) + 1;
+    const delai = prochaineRelance(tentatives - 1, reprise.delaisRelanceMinutes);
+    const prochaineRelanceA = delai === 'abandon' ? delai : new Date(Date.parse(ctx.horloge.maintenant()) + delai * MS_PAR_MINUTE).toISOString();
+    const etat = piece.etat === 'en_erreur' ? piece.etat : appliquerTransition(piece.etat, 'en_erreur');
+    await ctx.depot.enregistrer({ ...piece, etat, tentatives, prochaineRelanceA, code: prep.motifs[0] ?? 'preparation_impossible' });
+    return delai === 'abandon' ? { fin: true } : { relanceA: prochaineRelanceA };
+  }
   await preparations.ecrire(id, prep);
-  if (piece.etat === 'quarantaine') await ctx.depot.enregistrer({ ...piece, etat: appliquerTransition(piece.etat, 'preparee') });
+  if (piece.etat === 'quarantaine' || piece.etat === 'en_erreur') await ctx.depot.enregistrer({ ...piece, etat: appliquerTransition(piece.etat, 'preparee') });
   return { pieces: [id] };
 };
 export const executeurLecture = (ctx: ContexteLecture, preparations: JournalTaches<ResultatPreparation>, lectures: JournalTaches<ResultatLecture>, reprise: { delaiIaMinutes: number }, horloge: Horloge): Executeur => async (id) => {

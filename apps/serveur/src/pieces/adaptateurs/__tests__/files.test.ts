@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { ETAPES } from '../../../../../../packages/noyau/src/pieces/etats.js';
-import { FilesMemoire, NOMS_FILES, executeurAntivirus, prioriteDe, traiterUne, type ContexteFiles, type Executeur, type Priorite, type ReglagePriorite } from '../files.js';
+import { FilesMemoire, NOMS_FILES, executeurAntivirus, executeurClassement, executeurEntree, executeurLecture, executeurPreparation, prioriteDe, traiterUne, type ContexteFiles, type Executeur, type Priorite, type ReglagePriorite } from '../files.js';
 import { AntivirusMemoire, DepotMemoire, HorlogeFixe, StockageMemoire } from '../../ports-memoire.js';
 import { etapeEntree, sha256Hex, type ContexteEntree } from '../../etape-entree.js';
+import type { ContexteLecture, ResultatLecture } from '../../etape-lecture.js';
+import type { ContexteClassement } from '../../etape-classement.js';
+import type { ResultatPreparation } from '../../etape-preparation.js';
+import type { PieceEnregistree } from '../../ports.js';
 
 const T0 = '2026-11-09T08:00:00.000Z';
 type Appels = Record<string, string[]>;
@@ -106,5 +110,89 @@ describe('files de traitement', () => {
     const piece = await depot.parId('p-1');
     expect(piece).toMatchObject({ etat: 'en_erreur', tentatives: 1 });
     await expect(service.prendre(NOMS_FILES.antivirus, String(piece?.prochaineRelanceA))).resolves.toMatchObject({ pieceId: 'p-1' });
+  });
+});
+
+const journal = <T,>(): { lire(c: string): Promise<T | undefined>; ecrire(c: string, v: T): Promise<void>; m: Map<string, T> } => {
+  const m = new Map<string, T>();
+  return { m, lire: async (c) => m.get(c), ecrire: async (c, v) => void m.set(c, v) };
+};
+const prepOk: ResultatPreparation = { etat: 'preparee', texteTransmissible: null, texteCache: false, sensible: true, motifs: [] };
+const piece = (extra: Partial<PieceEnregistree> = {}): PieceEnregistree => ({ id: 'p-1', societeId: 'soc-fictive', sha256: 'a'.repeat(64), etat: 'quarantaine', typeReel: 'pdf', ...extra });
+
+describe('branchement des exécuteurs sur les étapes', () => {
+  it('entree : nominal, rejeu journalisé sans relire la source, source absente', async () => {
+    const depot = new DepotMemoire();
+    const entree: ContexteEntree = {
+      societeId: 'soc-fictive', nouvelId: () => 'p-1', stockage: new StockageMemoire(), depot, horloge: new HorlogeFixe(T0), antivirus: new AntivirusMemoire(), decompresser: () => new Uint8Array(),
+      reglage: { archive: { ratioMax: 100, totalMaxOctets: 1_000_000, nombreMax: 50 }, image: { coteMax: 5000, pixelsMax: 10_000_000 }, limites: { tailleMaxOctets: 1_000_000, pagesMaxFileNormale: 10, pagesMaxModele: 10 }, delaisRelanceMinutes: [5] },
+    };
+    const faits = journal<string[]>();
+    let lectures = 0;
+    const source = { lire: async (id: string) => { lectures += 1; return id === 'depot-1' ? new TextEncoder().encode('%PDF-1.7 Facture fictive') : null; } };
+    const exec = executeurEntree(entree, source, faits);
+    expect(await exec('depot-1')).toEqual({ pieces: ['p-1'] });
+    expect(faits.m.get('depot-1')).toEqual(['p-1']);
+    expect(await exec('depot-1')).toEqual({ pieces: ['p-1'] });
+    expect([lectures, depot.nombre()]).toEqual([1, 1]);
+    expect(await exec('depot-absent')).toEqual({ fin: true });
+  });
+  it('preparation : erreur = pièce en_erreur et relance, abandon après le dernier délai, reprise réussie', async () => {
+    const depot = new DepotMemoire();
+    const stockage = new StockageMemoire();
+    const extracteur = { extraire: async () => ({ elements: [{ texte: 'Facture fictive', page: 1, x: 1, y: 1, largeur: 100, hauteur: 12, taillePolice: 12, couleur: [0, 0, 0], couleurFond: [255, 255, 255], calqueVisible: true, annotationCachee: false }], pages: [{ numero: 1, largeur: 600, hauteur: 800 }], nbPages: 1 }) };
+    const preparations = journal<ResultatPreparation>();
+    const ctx = { depot, stockage, extracteur, horloge: new HorlogeFixe(T0), reglage: { seuilNettete: 100, texteCache: { ecartCouleurMax: 30, taillePoliceMin: 4 } } };
+    const exec = executeurPreparation(ctx, preparations, { delaisRelanceMinutes: [5] });
+    expect(await exec('inconnue')).toEqual({ fin: true });
+    await depot.enregistrer(piece({ cle: 'originaux/absent' }));
+    const relance = new Date(Date.parse(T0) + 5 * 60_000).toISOString();
+    expect(await exec('p-1')).toEqual({ relanceA: relance });
+    expect(await depot.parId('p-1')).toMatchObject({ etat: 'en_erreur', tentatives: 1, prochaineRelanceA: relance, code: 'original_introuvable' });
+    expect(preparations.m.size).toBe(0);
+    expect(await exec('p-1')).toEqual({ fin: true });
+    expect(await depot.parId('p-1')).toMatchObject({ etat: 'en_erreur', tentatives: 2, prochaineRelanceA: 'abandon' });
+    await stockage.deposerSiAbsent('originaux/absent', new TextEncoder().encode('%PDF-1.7 Facture fictive'));
+    await depot.enregistrer(piece({ cle: 'originaux/absent', etat: 'en_erreur', tentatives: 1 }));
+    expect(await exec('p-1')).toEqual({ pieces: ['p-1'] });
+    expect(await depot.parId('p-1')).toMatchObject({ etat: 'preparee' });
+    expect(preparations.m.get('p-1')?.etat).toBe('preparee');
+  });
+  it('lecture : sans préparation fin, IA indisponible relancée, nominal journalisé', async () => {
+    const depot = new DepotMemoire();
+    await depot.enregistrer(piece({ etat: 'preparee' }));
+    const preparations = journal<ResultatPreparation>();
+    const resultats = journal<ResultatLecture>();
+    let panne = true;
+    const lecture: ContexteLecture = {
+      depot, journal: journal<ResultatLecture>(), suiviDepense: { microCentimes: 0 },
+      modele: { estimer: () => 0, completer: async () => { if (panne) throw new Error('indisponible'); return { sortie: '{}', coutMicroCentimes: 1 }; } },
+      reglage: { versionLecteur: 'v1', versionInvite: 1, plafondMicroCentimes: 1000, convention: { decimal: ',', ordreDate: 'JMA' }, bareme: { xml: 95, accordTextePdf: 90, accordOcr: 80, aSeul: 60, visionSeule: 50, echec: 0 }, seuils: { sur: 85, douteux: 40 }, arithmetique: { toleranceParTaux: 1, tolerancePieceMax: 2, toleranceParLigne: 1, toleranceLignesMax: 2, tauxConnusPdb: [1234] } },
+    };
+    const exec = executeurLecture(lecture, preparations, resultats, { delaiIaMinutes: 10 }, new HorlogeFixe(T0));
+    expect(await exec('p-1')).toEqual({ fin: true });
+    await preparations.ecrire('p-1', { ...prepOk, texteTransmissible: 'Facture fictive' });
+    expect(await exec('p-1')).toEqual({ relanceA: new Date(Date.parse(T0) + 10 * 60_000).toISOString() });
+    expect(resultats.m.size).toBe(0);
+    panne = false;
+    expect(await exec('p-1')).toEqual({ pieces: ['p-1'] });
+    expect([...resultats.m.keys()]).toEqual(['p-1:lecture:v1']);
+  });
+  it('classement : sans lecture fin sans effet, avec lecture enregistre la pièce comparée', async () => {
+    const depot = new DepotMemoire();
+    await depot.enregistrer(piece({ etat: 'a_verifier' }));
+    const lectures = journal<ResultatLecture>();
+    const vus: string[] = [];
+    const ctx: ContexteClassement = {
+      depot, horloge: new HorlogeFixe(T0), doublons: { autres: async () => [], enregistrer: async (_s, p) => void vus.push(p.id) },
+      propositions: { creerSiAbsente: async () => 'creee' }, reglage: { distanceImageMax: 0, journal: 'ACH', comptes: { charge: '606000', tvaDeductible: '445660', fournisseur: '401000' } },
+    };
+    const exec = executeurClassement(ctx, lectures, 'v1');
+    expect(await exec('p-1')).toEqual({ fin: true });
+    expect(vus).toEqual([]);
+    await lectures.ecrire('p-1:lecture:v1', { etat: 'a_verifier', motifs: ['sensible'], champs: [], parTaux: [], nombreDeNumeros: 0, texte: 'x', sensible: true });
+    expect(await exec('p-1')).toEqual({ fin: true });
+    expect(vus).toEqual(['p-1']);
+    expect(await exec('absente')).toEqual({ fin: true });
   });
 });
