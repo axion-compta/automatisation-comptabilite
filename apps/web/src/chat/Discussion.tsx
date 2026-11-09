@@ -5,6 +5,7 @@ import { Bouton } from '../../../../packages/ui/src/composants/Bouton.js';
 import type { EtatCarteAction } from '../../../../packages/ui/src/composants/CarteAction.js';
 import { ToastAnnulation } from '../../../../packages/ui/src/composants/ToastAnnulation.js';
 import { annulerProposition, appliquerProposition, arreterTour, ecouterTour, ErreurLecture, lirePourquoi, nouvelleCle } from '../api.js';
+import type { Evenement } from '../../../../packages/contrat/src/chat/evenements.js';
 import { analyser, COMMANDES } from '../commandes/barre-oblique.js';
 import { arreter, envoyer, ETAT_INITIAL, reduire, type EtatConversation } from './etat.js';
 import { MessageDiscussion, type ReponsePourquoi } from './Message.js';
@@ -12,9 +13,11 @@ import './discussion.css';
 
 export type DiscussionProps = { societe?: string; onOuvrirVue: () => void; dureeAnnulationMs?: number };
 const ERREUR_PAR_STATUT: Record<number, keyof typeof e25.erreurs> = { 403: 'acteur_non_humain', 409: 'proposition_expiree', 423: 'niveau_ferme' };
+const SOCIETE_DEFAUT = 'societe_fictive';
 const sansModele = (code?: string) => code === 'ia_indisponible' || code?.startsWith('budget_') === true;
 
 export function Discussion({ societe, onOuvrirVue, dureeAnnulationMs = 0 }: DiscussionProps) {
+  const soc = societe ?? SOCIETE_DEFAUT;
   const [etat, setEtat] = useState<EtatConversation>(ETAT_INITIAL);
   const [saisie, setSaisie] = useState('');
   const [alerte, setAlerte] = useState('');
@@ -38,7 +41,7 @@ export function Discussion({ societe, onOuvrirVue, dureeAnnulationMs = 0 }: Disc
     let dernierId = 0;
     try {
       for (let essai = 0; essai < 2; essai++) {
-        const r = await ecouterTour(demande, { surEvenement: (ev) => setEtat((e) => reduire(e, ev)), signal: controle.signal, ...(essai > 0 ? { dernierId } : {}) });
+        const r = await ecouterTour(soc, demande, { surEvenement: (ev: Evenement) => setEtat((e) => reduire(e, ev)), signal: controle.signal, ...(essai > 0 ? { dernierId } : {}) });
         dernierId = r.dernierId;
         if (r.fin !== 'coupe') break;
       }
@@ -56,10 +59,10 @@ export function Discussion({ societe, onOuvrirVue, dureeAnnulationMs = 0 }: Disc
   }
   function stop() {
     const c = cours.current;
-    if (c) { c.controle.abort(); setEtat(arreter); void arreterTour(c.messageId).catch(() => undefined); }
+    if (c) { c.controle.abort(); setEtat(arreter); void arreterTour(soc, c.messageId).catch(() => undefined); }
   }
   async function appliquer(id: string) {
-    await appliquerProposition(id, nouvelleCle()).then(
+    await appliquerProposition(soc, id, nouvelleCle()).then(
       () => (setEtats((s) => ({ ...s, [id]: 'appliquee' })), setToast(id)),
       (e: unknown) => setAlerte(e25.erreurs[(e instanceof ErreurLecture && ERREUR_PAR_STATUT[e.statut]) || 'hors_schema'].message),
     );
@@ -67,13 +70,13 @@ export function Discussion({ societe, onOuvrirVue, dureeAnnulationMs = 0 }: Disc
   async function annulerToast() {
     const id = toast;
     setToast(null);
-    if (id !== null) await annulerProposition(id, nouvelleCle()).then(() => setEtats((s) => ({ ...s, [id]: 'expiree' })), () => setAlerte(e25.erreurs.annulation_expiree.message));
+    if (id !== null) await annulerProposition(soc, id, nouvelleCle()).then(() => setEtats((s) => ({ ...s, [id]: 'expiree' })), () => setAlerte(e25.erreurs.annulation_expiree.message));
   }
   const surTouche = (e: KeyboardEvent) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), soumettre());
   const actions = {
     etats, pourquoi, enCours, onOuvrirVue,
     onAppliquer: (id: string) => void appliquer(id),
-    onPourquoi: (id: string) => void lirePourquoi(id).then((r) => setPourquoi((p) => ({ ...p, [id]: r })), () => setAlerte(e25.pourquoi.nonDisponible)),
+    onPourquoi: (id: string) => void lirePourquoi(soc, id).then((r) => setPourquoi((p) => ({ ...p, [id]: r })), () => setAlerte(e25.pourquoi.nonDisponible)),
     onChoix: (code: string) => void lancer(code, true),
     onRegenerer: () => void lancer(dernierTexte.current, false),
     onCopier: (t: string) => void navigator.clipboard?.writeText(t).catch(() => undefined),
