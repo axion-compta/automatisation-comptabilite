@@ -14,6 +14,7 @@ import { creerHandlersBanque } from './domaines/banque.js';
 import { creerHandlersPrincipes } from './domaines/principes.js';
 import { creerHandlersTva } from './domaines/tva.js';
 import { creerHandlersChange } from './domaines/change.js';
+import { creerHandlersFec } from './domaines/fec.js';
 import { creerHandlersSante } from './domaines/sante.js';
 import { creerHandlersJuridique } from './domaines/juridique.js';
 import { creerHandlersProfil } from './domaines/profil.js';
@@ -140,6 +141,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersPrincipes(base, attendre),
     ...creerHandlersTva(base, attendre),
     ...creerHandlersChange(base, attendre),
+    ...creerHandlersFec(base, attendre),
     ...creerHandlersSante(base, attendre),
     ...creerHandlersJuridique(base, attendre),
     ...creerHandlersProfil(base, attendre),
