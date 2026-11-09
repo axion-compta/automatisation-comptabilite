@@ -22,6 +22,7 @@ import { creerHandlersProfil } from './domaines/profil.js';
 import { creerHandlersTresorerie } from './domaines/tresorerie.js';
 import { creerHandlersBloquants } from './domaines/bloquants.js';
 import { creerHandlersSources } from './domaines/sources.js';
+import { creerHandlersEcheances } from './domaines/echeances.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 import type { OptionsAbonnementFaux } from './domaines/options-abonnement.js';
@@ -150,6 +151,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersTresorerie(base, attendre),
     ...creerHandlersBloquants(base, attendre),
     ...creerHandlersSources(base, attendre),
+    ...creerHandlersEcheances(base, attendre),
     ...[handlersAcces, handlersVolume, handlersPalier, handlersFinContrat, handlersAcceptations].flatMap((f) => f(abonnement)),
   ];
 }
