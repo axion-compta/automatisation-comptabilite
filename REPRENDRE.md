@@ -79,3 +79,13 @@ Mesures sans IA, relevées le 07/11/2026 :
   - T41 : archive datée des rapports avec empreinte ; stockage chez l'hébergeur (D42).
 - Mesures sans IA : les relevés du 08/11/2026 sont périmés (fusions faites depuis). Nombre de PR fusionnées et délais médians : non mesuré (à refaire, fiches et créations de fiche séparées) ; `pilotage/calibrage.csv` : en-tête seul ; score Stryker du noyau sur main : non mesuré.
 - Aucune date de livraison annoncée.
+
+## Lot 02
+- Fiches : 71 au total (T00 à T70) ; 69 `statut: fait` avec L02-T06, en-têtes lus sur main au 09/11/2026 ; les 23 dépendances de L02-T06 sont faites.
+- Écart à la fiche : T62 à T67 et T69 sont faites, plus bloquées. Restent L02-T68 (écran d'import, `a_faire`, non sensible) et L02-T70 (connexion bancaire, ABANDONNÉE par Will, D63 : ne jamais planifier).
+- Banc de rapprochement (L02-T33, 3 graines) : 0 faux lien en `RAPPROCHEE` ; rappel 49/120 = 40,8 %, sous la cible de 90 % : fiche de suivi à ouvrir, banc non ajusté au moteur.
+- Banc de profils : aucun résultat chiffré dans le dépôt ; L02-T50 porte les vues d'exemple, et le jeu de 10 relevés fictifs avec profils est celui de L02-T61, lu par L02-T20.
+- Mesures PR (API REST, journal L02-T06) : 79 PR fusionnées pour 70 fiches ; médiane ouverture à fusion 33,9 min (51 sensibles), 30,9 min (28 non sensibles).
+- Échecs CI et score Stryker du noyau : non mesurés (voir le journal).
+- Prochaines étapes : L02-T68, puis la fiche de suivi du rappel du banc de rapprochement ; Will relit les PR sensibles.
+- Aucune date de livraison annoncée.
