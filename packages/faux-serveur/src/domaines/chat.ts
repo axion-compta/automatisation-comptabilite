@@ -3,8 +3,10 @@ import { encoderEvenement } from '../../../contrat/src/chat/flux.js';
 import type { Evenement } from '../../../contrat/src/chat/evenements.js';
 import { DemandeEnvoi } from '../../../contrat/src/domaines/chat.js';
 import { EnTeteEcriture } from '../../../contrat/src/schemas.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import { genererChat } from '../../../donnees-fictives/src/chat.js';
 
+const PREFIXE = PREFIXE_ROUTES_SOCIETE.replace('{s}', ':s');
 export interface OptionsChatFaux {
   /** Scénario « coupure » : le flux s'arrête après N événements (l'en-tête x-coupure le décide aussi, par requête). */
   coupureApres?: number;
@@ -36,7 +38,7 @@ export function creerHandlersChat(base: string, attendreReseau: () => Promise<vo
   }
 
   return [
-    http.post(base + '/chat/messages', async ({ request }) => {
+    http.post(base + PREFIXE + '/chat/messages', async ({ request }) => {
       await attendreReseau();
       const entete = EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined });
       const corps = DemandeEnvoi.safeParse(await request.json().catch(() => undefined));
@@ -57,7 +59,7 @@ export function creerHandlersChat(base: string, attendreReseau: () => Promise<vo
       return new HttpResponse(corpsFlux, { headers: { 'content-type': 'text/event-stream' } });
     }),
 
-    http.post(base + '/chat/tours/:id/arreter', async ({ request, params }) => {
+    http.post(base + PREFIXE + '/chat/tours/:id/arreter', async ({ request, params }) => {
       await attendreReseau();
       if (!EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined }).success) return erreur('BAD_REQUEST', 400, false);
       const id = String(params['id']);
