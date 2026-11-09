@@ -5,7 +5,7 @@ SHA relu : 486141ef680a30a0dd1b958db1886cb59e550152
 
 ## Contrôles faits
 - Fichiers modifiés : les 8 font partie des `fichiers_autorises`. `Coque.tsx` gagne une ligne de montage et une ligne d'import, ce qui respecte le piège de la fiche. `coque.test.tsx` n'est pas modifié. `.github/` et les gardes ne sont pas touchés. Aucune dépendance n'est ajoutée.
-- Taille : 209 lignes ajoutées et 1 supprimée, soit 210 pour 280 au plus (aucune ligne « - - »).
+- Taille : 210 lignes ajoutées et 1 supprimée, soit 211 pour 280 au plus (aucune ligne « - - »).
 - Tests : `bandeau-acces.test.tsx`, `liens.test.ts` et `coque.test.tsx` passent en entier (20 sur 20). Les tests existants de la coque restent verts.
 - Mutations, toutes annulées ensuite :
   - gravité `attention` limitée à SUSPENDU → `gravite-attention-pour-suspendu-et-resilie` rougit ;
