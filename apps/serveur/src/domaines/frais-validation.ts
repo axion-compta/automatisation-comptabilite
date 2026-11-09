@@ -2,7 +2,12 @@ import { implement } from '@orpc/server';
 import { contrat } from '../../../../packages/contrat/src/routes.js';
 import { creerServiceFraisValidation, ErreurValidation, type ConfigValidation } from '../../../../packages/contrat/src/domaines/frais-validation-service.js';
 /** Entier lu dans l'environnement (un seul endroit), sinon valeur d'essai fictive. */
-const reglage = (nom: string, essai: string): number => Number(process.env[nom] ?? essai);
+const reglage = (nom: string, essai: string): number => {
+  const brut = process.env[nom] ?? essai;
+  const n = /^\d+$/.test(brut) ? Number(brut) : Number.NaN;
+  if (!Number.isSafeInteger(n)) throw new Error(`Réglage ${nom} invalide : entier positif ou nul attendu`);
+  return n;
+};
 const ANNEES_ESSAI = [2025, 2026];
 /** Réglages d'essai fictifs : en production, ils viennent de la configuration datée du serveur. */
 export function configEssai(): ConfigValidation {

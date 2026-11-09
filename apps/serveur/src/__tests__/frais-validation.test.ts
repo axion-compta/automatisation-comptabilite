@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { genererFrais, type JeuFrais } from '../../../../packages/donnees-fictives/src/frais.js';
 import { creerServiceFraisValidation, ErreurValidation } from '../../../../packages/contrat/src/domaines/frais-validation-service.js';
 import { creerApp } from '../app.js';
@@ -116,5 +116,17 @@ describe('serveur : proposer, valider un lot, préparer un remboursement', () =>
     for (const montantCentimes of ['NaN', 1.5, -1, 0, null]) {
       expect((await post('/remboursements', { personneId: PER, fraisIds: ['FRA-003'], montantCentimes })).statusCode).toBe(400);
     }
+  });
+  it('reglage-invalide-refuse-au-demarrage', () => {
+    for (const nom of ['FRAIS_SEUIL_LOT_NOMBRE', 'FRAIS_SEUIL_LOT_MONTANT', 'FRAIS_DELAI_ANNULATION_MS']) {
+      for (const v of ['cinq', '1 000', '1.5', '-1', '', '1e3']) {
+        vi.stubEnv(nom, v);
+        expect(() => configEssai(), nom + '=' + v).toThrow(nom);
+        vi.unstubAllEnvs();
+      }
+    }
+    vi.stubEnv('FRAIS_SEUIL_LOT_NOMBRE', '0');
+    expect(configEssai().seuilLotNombre).toBe(0);
+    vi.unstubAllEnvs();
   });
 });
