@@ -117,17 +117,17 @@ describe('isolation : masquage des pièces sensibles', () => {
   it('sans compta-pieces-sensibles : exclue de la recherche, masquée ailleurs', () => {
     expect(masquer(SESSIONS.lecteur, lignes, 'recherche').map((e) => e.id)).toEqual(['p1']);
     for (const mode of ['alerte', 'export'] as const) {
-      expect(masquer(SESSIONS.lecteur, lignes, mode)[1]).toEqual({ id: 'p2', libelle: TEXTE_MASQUE, sensible: true });
+      expect(masquer(SESSIONS.lecteur, lignes, mode)[1] ?? null).toEqual({ id: 'p2', libelle: TEXTE_MASQUE, sensible: true });
     }
   });
   it('avec la permission : tout visible ; l’entrée n’est jamais modifiée', () => {
     expect(masquer(SESSIONS.admin, lignes, 'recherche')).toEqual(lignes);
     masquer(SESSIONS.lecteur, lignes, 'export');
-    expect(lignes[1].libelle).toBe('Bulletin fictif');
+    expect(lignes[1]?.libelle).toBe('Bulletin fictif');
   });
   it('appliqué à chaque lecture : la perte de permission masque aussitôt', () => {
-    expect(masquer(SESSIONS.admin, lignes, 'alerte')[1].libelle).toBe('Bulletin fictif');
-    expect(masquer({ ...SESSIONS.admin, permissions: ['compta-lire'] }, lignes, 'alerte')[1].libelle).toBe(TEXTE_MASQUE);
+    expect(masquer(SESSIONS.admin, lignes, 'alerte')[1]?.libelle).toBe('Bulletin fictif');
+    expect(masquer({ ...SESSIONS.admin, permissions: ['compta-lire'] }, lignes, 'alerte')[1]?.libelle).toBe(TEXTE_MASQUE);
   });
   it('liste vide', () => expect(masquer(SESSIONS.lecteur, [], 'recherche')).toEqual([]));
 });

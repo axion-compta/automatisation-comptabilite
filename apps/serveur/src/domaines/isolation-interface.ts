@@ -38,9 +38,9 @@ const PERMISSION_REQUISE = { reporter: 'compta-valider', ignorer: 'compta-valide
 
 /** Société prise dans le chemin selon PREFIXE_ROUTES_SOCIETE ; null si le chemin n'a pas ce préfixe. */
 export function societeDuChemin(chemin: string): string | null {
-  const [avant] = PREFIXE_ROUTES_SOCIETE.split('{s}');
+  const avant = PREFIXE_ROUTES_SOCIETE.slice(0, PREFIXE_ROUTES_SOCIETE.indexOf('{s}'));
   if (!chemin.startsWith(avant)) return null;
-  const id = chemin.slice(avant.length).split('/')[0];
+  const id = chemin.slice(avant.length).split('/', 1).join('');
   return id === '' ? null : id;
 }
 
