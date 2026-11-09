@@ -116,6 +116,15 @@ describe('securite/autoriser', () => {
     expect(autoriser(ctx('comptable', { demande5: true }), 'deposer')).toEqual({ permis: true });
   });
 
+  it('gravite-bloquant-ne-change-que-lever-majeur', () => {
+    const sansValider = ctx('administrateur', { permissions: TOUTES.filter((p) => p !== 'compta-valider') });
+    expect(autoriser(sansValider, 'valider', { gravite: 'bloquant' })).toEqual(refuse('role_insuffisant'));
+    const mode = { id: 'u', actionsRetirees: ['lever_bloquant'] as Action[], raison: 'arret_urgence' as const };
+    const admin = ctx('administrateur', { mode });
+    expect(autoriser(admin, 'lever_majeur', { gravite: 'bloquant' })).toEqual(refuse('arret_urgence'));
+    expect(autoriser(admin, 'lever_majeur', { gravite: 'majeur' })).toEqual({ permis: true });
+  });
+
   it('separation-et-gravite-invalides', () => {
     const sansSep = { ...ctx('utilisateur') } as Partial<ContexteAutorisation>;
     delete sansSep.separationTaches;
