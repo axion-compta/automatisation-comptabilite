@@ -72,7 +72,7 @@ function lignes<T extends { id: string }>(verifier: (l: T) => void = () => undef
 
 const simple = <T extends { id: string }>(v?: (l: T) => void): Lignes<T> => { const t = lignes<T>(v); return { ajouter: t.ajouter, lister: t.lister }; };
 
-export function creerDepotsInterfaceMemoire(_options: { nouvelId: () => string }): DepotsInterfaceTransverse {
+export function creerDepotsInterfaceMemoire(options: { nouvelId: () => string }): DepotsInterfaceTransverse {
   const a = lignes<Alerte>();
   const doublonActif = (s: string, l: Alerte): boolean =>
     actif(l.etat) && a.lister(s).some((x) => x.id !== l.id && actif(x.etat) && x.cleDedoublonnage === l.cleDedoublonnage);
@@ -90,7 +90,7 @@ export function creerDepotsInterfaceMemoire(_options: { nouvelId: () => string }
     alertes: {
       ajouter(s, l) {
         if (doublonActif(s, l)) throw new ErreurDepot('doublon');
-        a.ajouter(s, l);
+        a.ajouter(s, l.id === '' ? { ...l, id: options.nouvelId() } : l);
       },
       lire: a.lire,
       lister: a.lister,
