@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EtatLigne, ReponseComptesBancaires, ReponseLignesBancaires } from '../../../../../packages/contrat/src/domaines/banque.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { ETATS_LIGNE, etatLigne } from '../../../../../packages/textes/src/banque/mots.js';
@@ -9,6 +9,7 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterDateAffiche, formaterMontantAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { Explication } from './Explication.js';
 import './e12.css';
 const LIMITE = 20;
 type Etat = (typeof ETATS_LIGNE)[number];
@@ -46,6 +47,13 @@ export function Ecran() {
   const [etat, setEtat] = useState<Etat | undefined>(() => etatDepuisUrl(window.location.search));
   const [compte, setCompte] = useState('');
   const [decalage, setDecalage] = useState(0);
+  const [ouverte, setOuverte] = useState<string | null>(null);
+  const boutons = useRef(new Map<string, HTMLButtonElement>());
+  function fermer() {
+    const id = ouverte;
+    setOuverte(null);
+    if (id !== null) setTimeout(() => boutons.current.get(id)?.focus());
+  }
   const comptes = useLecture('/banque/comptes', ReponseComptesBancaires);
   const lignes = useLecture(cheminLignes(etat, compte, decalage), ReponseLignesBancaires);
   function choisirEtat(valeur: string) {
@@ -84,6 +92,10 @@ export function Ecran() {
           { cle: 'libelle', entete: e12.tableau.libelle, rendu: (l) => l.libelle },
           { cle: 'montant', entete: e12.tableau.montant, alignement: 'droite', rendu: (l) => montant(l.montantCentimes) },
           { cle: 'etat', entete: e12.tableau.etat, rendu: (l) => <Pastille etat={PASTILLE[l.etat]} libelle={etatLigne(l.etat)} /> },
+          { cle: 'pourquoi', entete: e12.tableau.pourquoi, rendu: (l) => (
+            <button type="button" ref={(b) => void (b ? boutons.current.set(l.id, b) : boutons.current.delete(l.id))} aria-expanded={ouverte === l.id}
+              aria-label={remplir(e12.tableau.pourquoiLigne, { libelle: l.libelle })} onClick={() => setOuverte(l.id)}>{e12.tableau.pourquoi}</button>
+          ) },
         ]}
         lignes={d.body}
         cleDeLigne={(l) => l.id}
@@ -117,6 +129,7 @@ export function Ecran() {
         </label>
       </div>
       <div aria-live="polite">{blocLignes}</div>
+      {ouverte !== null && <Explication ligneId={ouverte} surFermeture={fermer} />}
     </section>
   );
 }
