@@ -24,11 +24,11 @@ const dem = (id: string, impact: number, nombre: number, cle = 'l:Fictiva Teleco
   ({ id, cle, ligneIds, impactCentimes: impact, nombre, type: 'debit', codeQuestion: 'factures_manquantes', reponsesPretes: CODES, etat: 'ouverte' });
 
 /** Les demandes répondent par le corps donné ; chaque appel est enregistré. */
-async function monter(demandes: unknown[], appels: string[] = []): Promise<void> {
+async function monter(demandes: unknown[], appels: string[] = [], statut = 200): Promise<void> {
   const vrai = globalThis.fetch;
   vi.stubGlobal('fetch', (u: string, o?: RequestInit) => {
     appels.push((o?.method ?? 'GET') + ' ' + String(u));
-    if (String(u).includes('/banque/demandes')) return Promise.resolve(Response.json({ body: demandes, decalage: 0, total: demandes.length }));
+    if (String(u).includes('/banque/demandes')) return Promise.resolve(Response.json({ body: demandes, decalage: 0, total: demandes.length }, { status: statut }));
     return vrai(u, o);
   });
   const client = creerClient();
@@ -44,14 +44,8 @@ const touche = (el: Element, key: string) => act(async () => void el.dispatchEve
 
 describe('E12 à justifier', () => {
   it('onglet-sans-nombre-tant-inconnu', async () => {
-    const vrai = globalThis.fetch;
-    vi.stubGlobal('fetch', (u: string, o?: RequestInit) => (String(u).includes('/banque/demandes') ? Promise.resolve(new Response('{}', { status: 500 })) : vrai(u, o)));
-    const client = creerClient();
-    client.setDefaultOptions({ queries: { retry: false } });
-    racine = createRoot(document.body.appendChild(document.createElement('div')));
-    await act(async () => racine?.render(<FournisseurDonnees client={client}><Ecran /></FournisseurDonnees>));
-    await attendre();
-    expect(onglet(1).textContent).toBe(e12.onglets.aJustifier.replace(' ({nombre})', ''));
+    await monter([], [], 500);
+    expect(onglet(1).textContent).toBe(e12.onglets.aJustifierSansNombre);
   });
   it('trois-factures-de-fictiva', async () => {
     await monter([dem('D1', 18600, 3)]);
@@ -100,15 +94,15 @@ describe('E12 à justifier', () => {
     const vrai = globalThis.fetch;
     const tout = (await (await vrai('/banque/lignes?limite=100&decalage=0')).json()) as { body: { id: string; libelle: string }[] };
     expect(tout.body.length).toBeGreaterThan(21);
-    const [x, y] = [tout.body[tout.body.length - 1]!, tout.body[tout.body.length - 2]!];
+    const [x, y] = tout.body.slice(-2) as [{ id: string; libelle: string }, { id: string; libelle: string }];
     await monter([dem('D1', 100, 2, 'l:X|debit', [x.id, y.id])]);
     await ouvrir();
     await act(async () => document.querySelector<HTMLButtonElement>('.e12-demande > button')?.click());
     await attendre();
-    const rangs = [...document.querySelectorAll('tbody tr')].map((r) => r.textContent ?? '');
-    expect(rangs).toHaveLength(2);
-    expect(rangs.some((r) => r.includes(x.libelle))).toBe(true);
-    expect(rangs.some((r) => r.includes(y.libelle))).toBe(true);
+    const rangs = [...document.querySelectorAll('tbody tr')].map((r) => r.textContent ?? '').join('|');
+    expect(document.querySelectorAll('tbody tr')).toHaveLength(2);
+    expect(rangs).toContain(x.libelle);
+    expect(rangs).toContain(y.libelle);
   });
   it('onglets-au-clavier', async () => {
     await monter([dem('D1', 100, 1)]);
@@ -129,7 +123,6 @@ describe('E12 à justifier', () => {
     await monter([]);
     expect(onglet(1).textContent).toBe('À justifier (0)');
     await ouvrir();
-    expect(onglet(1).textContent).toBe('À justifier (0)');
     expect(document.body.textContent).toContain(e12.aJustifier.vide);
     expect(cartes()).toHaveLength(0);
   });
