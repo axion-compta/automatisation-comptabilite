@@ -1,3 +1,4 @@
+import { useId, useState } from 'react';
 import { ReponseDeclarationTva, type DeclarationTva } from '../../../../../packages/contrat/src/domaines/tva.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { mentionDocument } from '../../../../../packages/textes/src/documents/declarations.js';
@@ -5,7 +6,6 @@ import { e19 } from '../../../../../packages/textes/src/ecrans/e19.js';
 import { BandeauDocument } from '../../../../../packages/ui/src/composants/BandeauDocument.js';
 import { EtatChargement, EtatErreur } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Montant } from '../../../../../packages/ui/src/composants/Montant.js';
-import { Provenance } from '../../../../../packages/ui/src/composants/Provenance.js';
 import { useLecture } from '../../donnees/lecture.js';
 
 const t = e19.declaration;
@@ -17,6 +17,32 @@ export const texteControle = (r: string): string => (r === 'ok' ? t.resultats.ok
 
 /** Identifiant de la déclaration d'une période (convention du jeu fictif : PERxxx → DECxxx). */
 export const idDeclaration = (periodeId: string): string => 'DEC' + periodeId.slice(3);
+
+/** « D'où vient ce montant ? » : le contrat ne donne pas le montant par écriture, donc aucun montant par ligne (le total de la case est affiché une fois, à côté). */
+function SourcesCase({ sources }: { sources: { ecritureId: string }[] }) {
+  const [ouvert, setOuvert] = useState(false);
+  const idListe = useId();
+  return (
+    <div className="axion-provenance">
+      <button type="button" className="axion-provenance__bouton" aria-expanded={ouvert} aria-controls={idListe} onClick={() => setOuvert((o) => !o)}>
+        {t.provenance}
+      </button>
+      <div id={idListe} hidden={!ouvert}>
+        {sources.length === 0 ? (
+          <p className="axion-provenance__vide">{t.provenanceVide}</p>
+        ) : (
+          <ul className="axion-provenance__liste">
+            {sources.map((s) => (
+              <li key={s.ecritureId} className="axion-provenance__source">
+                <span className="axion-provenance__libelle">{t.ecriture + ' ' + s.ecritureId}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function VueDeclaration({ declaration: d }: { declaration: DeclarationVue }) {
   const validee = d.validePar !== null && d.valideLe !== null;
@@ -35,11 +61,7 @@ export function VueDeclaration({ declaration: d }: { declaration: DeclarationVue
             {cases.map((c) => (
               <li key={c.code} data-case={c.code}>
                 <span>{t.libellesCases[c.code] ?? c.code}</span> <Montant centimes={centimes(c.montantCentimes)} />
-                <Provenance
-                  bouton={t.provenance}
-                  vide={t.provenanceVide}
-                  sources={c.sources.map((s) => ({ ecritureId: s.ecritureId, libelle: t.ecriture + ' ' + s.ecritureId, montant: c.montantCentimes }))}
-                />
+                <SourcesCase sources={c.sources} />
               </li>
             ))}
           </ul>

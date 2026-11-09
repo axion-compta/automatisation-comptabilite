@@ -74,7 +74,7 @@ describe('E19 déclaration', () => {
     expect(document.body.textContent).toMatch(/Validé par .+ le \d\d\/\d\d\/\d{4}/);
     expect(document.querySelector('[data-filigrane]')?.getAttribute('data-filigrane')).toBe('aucun');
   });
-  it('provenance-liste-les-ecritures', async () => {
+  it('provenance-liste-les-ecritures', () => {
     rendre({ ...base, cases: [
       { code: 'X01', montantCentimes: 1500, baseCentimes: null, sources: [{ ecritureId: 'ECR1', ligneIndex: 0 }, { ecritureId: 'ECR2', ligneIndex: 1 }] },
       { code: 'ZZZ', montantCentimes: 0, baseCentimes: null, sources: [] },
@@ -85,10 +85,13 @@ describe('E19 déclaration', () => {
     expect(x01.textContent).toContain(e19.declaration.libellesCases['X01']);
     expect(x01.querySelectorAll('.axion-provenance__source')).toHaveLength(2);
     expect(x01.textContent).toContain(e19.declaration.ecriture + ' ECR1');
+    const total = x01.querySelector('span:nth-of-type(2)')?.textContent ?? '';
+    expect(total).toMatch(/15/);
+    expect(x01.textContent?.split(total).length).toBe(2);
+    for (const s of x01.querySelectorAll('.axion-provenance__source')) expect(s.textContent).not.toContain(total);
     const y = document.querySelector('[data-case=Y99]')!;
     expect(y.querySelector('span')?.textContent).toBe('Y99');
     expect(y.textContent).toContain(e19.declaration.provenanceVide);
-    await monter();
   });
   it('impossible-jamais-affiche-ok', () => {
     rendre({ ...base, controles: [{ regleId: 'R1', resultat: 'ok' }, { regleId: 'R2', resultat: 'ecart' }, { regleId: 'R3', resultat: 'IMPOSSIBLE' }, { regleId: 'R4', resultat: '' }] });
