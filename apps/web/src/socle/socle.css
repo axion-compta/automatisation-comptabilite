@@ -101,3 +101,8 @@
   .colonne-discussion { display: none; }
   .m04-plein-ecran { position: fixed; inset: 0; z-index: 1; overflow: auto; padding: var(--espace-m); background: var(--couleur-fond); }
 }
+/* Compteurs du menu et bouton de la cloche. */
+.coque-cloche { position: fixed; top: var(--espace-s); right: var(--espace-s); z-index: 1; box-sizing: border-box; min-width: var(--cible-min); min-height: var(--cible-min); font: inherit; }
+.compteur { display: inline-flex; gap: var(--espace-s); margin-inline-start: var(--espace-s); font-size: var(--taille-texte); }
+.compteur__nombre { min-width: var(--cible-min); text-align: center; border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); }
+.compteur__alerte { font-weight: var(--graisse-forte); }
