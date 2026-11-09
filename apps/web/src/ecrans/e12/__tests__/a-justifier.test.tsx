@@ -43,6 +43,16 @@ const cartes = () => [...document.querySelectorAll('.e12-demande')];
 const touche = (el: Element, key: string) => act(async () => void el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true })));
 
 describe('E12 à justifier', () => {
+  it('onglet-sans-nombre-tant-inconnu', async () => {
+    const vrai = globalThis.fetch;
+    vi.stubGlobal('fetch', (u: string, o?: RequestInit) => (String(u).includes('/banque/demandes') ? Promise.resolve(new Response('{}', { status: 500 })) : vrai(u, o)));
+    const client = creerClient();
+    client.setDefaultOptions({ queries: { retry: false } });
+    racine = createRoot(document.body.appendChild(document.createElement('div')));
+    await act(async () => racine?.render(<FournisseurDonnees client={client}><Ecran /></FournisseurDonnees>));
+    await attendre();
+    expect(onglet(1).textContent).toBe(e12.onglets.aJustifier.replace(' ({nombre})', ''));
+  });
   it('trois-factures-de-fictiva', async () => {
     await monter([dem('D1', 18600, 3)]);
     expect(onglet(1).textContent).toBe('À justifier (1)');
@@ -86,6 +96,20 @@ describe('E12 à justifier', () => {
     await act(async () => [...document.querySelectorAll('button')].find((x) => x.textContent === e12.aJustifier.retirerFiltre)?.click());
     expect(document.querySelectorAll('tbody tr')).toHaveLength(avant);
   });
+  it('voir-les-lignes-hors-premiere-page', async () => {
+    const vrai = globalThis.fetch;
+    const tout = (await (await vrai('/banque/lignes?limite=100&decalage=0')).json()) as { body: { id: string; libelle: string }[] };
+    expect(tout.body.length).toBeGreaterThan(21);
+    const [x, y] = [tout.body[tout.body.length - 1]!, tout.body[tout.body.length - 2]!];
+    await monter([dem('D1', 100, 2, 'l:X|debit', [x.id, y.id])]);
+    await ouvrir();
+    await act(async () => document.querySelector<HTMLButtonElement>('.e12-demande > button')?.click());
+    await attendre();
+    const rangs = [...document.querySelectorAll('tbody tr')].map((r) => r.textContent ?? '');
+    expect(rangs).toHaveLength(2);
+    expect(rangs.some((r) => r.includes(x.libelle))).toBe(true);
+    expect(rangs.some((r) => r.includes(y.libelle))).toBe(true);
+  });
   it('onglets-au-clavier', async () => {
     await monter([dem('D1', 100, 1)]);
     expect(document.querySelector('[role=tablist]')).not.toBeNull();
@@ -105,6 +129,7 @@ describe('E12 à justifier', () => {
     await monter([]);
     expect(onglet(1).textContent).toBe('À justifier (0)');
     await ouvrir();
+    expect(onglet(1).textContent).toBe('À justifier (0)');
     expect(document.body.textContent).toContain(e12.aJustifier.vide);
     expect(cartes()).toHaveLength(0);
   });

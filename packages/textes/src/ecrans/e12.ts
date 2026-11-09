@@ -41,7 +41,7 @@ export const e12 = {
     ecart: 'Écart constaté : {montant}.',
     erreur: 'Impossible de charger la couverture de vos relevés.',
   },
-  onglets: { liste: 'Sections de Ma banque', lignes: 'Mes lignes', aJustifier: 'À justifier ({nombre})' },
+  onglets: { liste: 'Sections de Ma banque', lignes: 'Mes lignes', aJustifier: 'À justifier ({nombre})', aJustifierSansNombre: 'À justifier' },
   aJustifier: {
     liste: 'Demandes à justifier',
     voirLignes: 'Voir les lignes',
