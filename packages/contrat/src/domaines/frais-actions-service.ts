@@ -10,7 +10,7 @@ import type { CompletementFrais, NouveauFrais } from './frais-actions.js';
 import type { FraisDetail } from './frais.js';
 import { creerServiceFrais } from './frais-service.js';
 
-export type CodeActions = 'FRAIS_INCONNU' | 'VERSION_PERIMEE' | 'FRAIS_VALIDE' | 'DOUBLON_PIECE' | 'VEHICULE_SOCIETE' | 'PERSONNE_DIFFERENTE' | 'CLE_REUTILISEE' | 'ENTREE_INVALIDE';
+export type CodeActions = 'FRAIS_INCONNU' | 'VERSION_PERIMEE' | 'FRAIS_VALIDE' | 'TRANSITION_INTERDITE' | 'DOUBLON_PIECE' | 'VEHICULE_SOCIETE' | 'PERSONNE_DIFFERENTE' | 'CLE_REUTILISEE' | 'ENTREE_INVALIDE';
 
 export class ErreurActions extends Error {
   override name = 'ErreurActions';
@@ -29,6 +29,26 @@ const fige = (s: string): boolean => s === 'valide' || (TRANSITIONS.valide as re
 const refuser = (code: CodeActions): never => { throw new ErreurActions(code); };
 const noyau = (f: FraisFictif): Frais => ({ ...f, montantTtc: centimes(f.montantTtc), tva: centimes(f.tva), partPersoTtc: centimes(f.partPersoTtc) }) as unknown as Frais;
 const fictif = (f: Frais): FraisFictif => Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined)) as unknown as FraisFictif;
+/** Lignes de banque encore libres pour le frais `id` : on retire celles déjà rattachées à un autre frais non refusé. */
+const lignesLibres = (jeu: JeuFrais, id: string) => {
+  const prises = new Set(jeu.frais.filter((x) => x.id !== id && x.statut !== 'refuse' && x.ligneBanqueId !== undefined).map((x) => x.ligneBanqueId));
+  return jeu.lignesBanque.filter((l) => !prises.has(l.id)).map((l) => ({ id: l.id, date: l.date, montant: centimes(Math.abs(l.montantCentimes)), sens: l.montantCentimes < 0 ? ('debit' as const) : ('credit' as const), libelle: l.libelle, compte: l.carteId }));
+};
+const rejouer = (jeu: JeuFrais, f: Frais, declaration: 'personne' | 'societe' | undefined, releveImporte: boolean, fenetreJours: number): ResultatPayeur =>
+  determinerPayeur({
+    ticket: { montantTtc: f.montantTtc, date: f.dateDepense },
+    ...(declaration === undefined ? {} : { declaration }),
+    lignes: lignesLibres(jeu, f.id),
+    cartesSociete: jeu.cartesSociete.map((c) => c.id),
+    releveImporte,
+    fenetreJours,
+  });
+/** Relecture bancaire pure : id de la ligne d'une carte société qui correspond encore au frais, sinon `undefined`. N'écrit rien. */
+export function conflitBanque(jeu: JeuFrais, id: string): string | undefined {
+  const f = jeu.frais.find((x) => x.id === id);
+  return f === undefined ? undefined : rejouer(jeu, noyau(f), undefined, RELEVE_ESSAI, FENETRE_ESSAI.jours).ligneBanqueId;
+}
+
 /** Service en mémoire (par instance) : création et complément d'un frais. Toute décision vient du noyau. */
 export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours?: number; releveImporte?: boolean } = {}) {
   const jeu = options.jeu ?? genererFrais();
@@ -47,15 +67,7 @@ export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours
     try { return calcul(); } catch (e) { throw e instanceof ErreurFrais ? new ErreurActions(e.code === 'doublon_piece' ? 'DOUBLON_PIECE' : 'ENTREE_INVALIDE') : e; }
   };
   const payeur = (f: Frais, declaration: 'personne' | 'societe' | undefined): ResultatPayeur => {
-    const prises = new Set(jeu.frais.filter((x) => x.id !== f.id && x.statut !== 'refuse' && x.ligneBanqueId !== undefined).map((x) => x.ligneBanqueId));
-    const r = determinerPayeur({
-      ticket: { montantTtc: f.montantTtc, date: f.dateDepense },
-      ...(declaration === undefined ? {} : { declaration }),
-      lignes: jeu.lignesBanque.filter((l) => !prises.has(l.id)).map((l) => ({ id: l.id, date: l.date, montant: centimes(Math.abs(l.montantCentimes)), sens: l.montantCentimes < 0 ? ('debit' as const) : ('credit' as const), libelle: l.libelle, compte: l.carteId })),
-      cartesSociete: jeu.cartesSociete.map((c) => c.id),
-      releveImporte,
-      fenetreJours,
-    });
+    const r = rejouer(jeu, f, declaration, releveImporte, fenetreJours);
     return r.statut === 'propose' && manquants(f).length > 0 ? { ...r, statut: 'a_completer' } : r;
   };
   const baremeValide = (date: string): boolean =>
@@ -134,6 +146,7 @@ export function creerServiceFraisActions(options: { jeu?: JeuFrais; fenetreJours
           if (r.statut === f.statut) suivant = { ...avecPayeur(f, r), version: f.version + 1 };
           else if (peutPasser(f.statut, r.statut)) suivant = passer(avecPayeur(f, r), r.statut);
           else if (peutPasser(f.statut, 'a_completer')) suivant = passer(f, 'a_completer');
+          else refuser('TRANSITION_INTERDITE');
         }
         if (suivantTrajet !== undefined && suivantTrajet !== f.statut && peutPasser(f.statut, suivantTrajet)) suivant = passer(f, suivantTrajet);
         verifierInvariants(suivant);
