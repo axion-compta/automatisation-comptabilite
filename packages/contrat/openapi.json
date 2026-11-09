@@ -2742,6 +2742,51 @@
         }
       }
     },
+    "/personnes/recherche": {
+      "get": {
+        "operationId": "rechercherPersonne",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "nom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iban",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "422": {
+            "description": "Refusé"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
     "/echeances": {
       "get": {
         "operationId": "listerEcheances",
