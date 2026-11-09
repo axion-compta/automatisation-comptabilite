@@ -53,6 +53,7 @@ import { implementerAcceptations } from './domaines/acceptations.js';
 import { routesCapacites } from './domaines/capacites.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import type { OptionsExploitation } from './domaines/options-exploitation.js';
+import { corpsEtatAcces, creerGardeAcces, STATUT_ETAT_ACCES } from './garde-acces.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
 
 type Service = ReturnType<typeof creerService>;
@@ -155,8 +156,11 @@ export function creerApp(service?: Service, options: { abonnement?: OptionsAbonn
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
+  const garde = creerGardeAcces({ horloge: options.abonnement?.horloge ?? (() => new Date(Date.now()).toISOString()), scenario: options.abonnement?.scenario });
   app.addContentTypeParser('*', (_req, _payload, done) => done(null, undefined));
   app.all('/*', async (request, reply) => {
+    const refus = garde(request.method, request.url.split('?')[0] ?? '');
+    if (refus) return reply.status(STATUT_ETAT_ACCES).send(corpsEtatAcces(refus));
     const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session: options.session?.(request.headers) } });
     if (!matched) reply.status(404).send({ code: 'INTROUVABLE', status: 404 });
   });
