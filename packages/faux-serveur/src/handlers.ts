@@ -22,6 +22,12 @@ import { creerHandlersBloquants } from './domaines/bloquants.js';
 import { creerHandlersSources } from './domaines/sources.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
+import type { OptionsAbonnementFaux } from './domaines/options-abonnement.js';
+import { handlersAcces } from './domaines/acces.js';
+import { handlersVolume } from './domaines/volume.js';
+import { handlersPalier } from './domaines/palier.js';
+import { handlersFinContrat } from './domaines/fin-contrat.js';
+import { handlersAcceptations } from './domaines/acceptations.js';
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -41,6 +47,10 @@ export type OptionsFauxServeur = {
   chat?: OptionsChatFaux;
   /** Propositions du chat : acteur, horloge et durées injectés (scénarios « compte de service », « horloge avancée »). */
   propositions?: OptionsPropositionsFaux;
+  /** Abonnement : scénario simulé par défaut (l'en-tête x-scenario-abonnement l'emporte). */
+  scenarioAbonnement?: string;
+  /** Abonnement : horloge injectée (horodatage ISO). */
+  horloge?: () => string;
 };
 
 const MESSAGES: Record<403 | 423, string> = {
@@ -61,6 +71,13 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
   const base = options.base ?? '';
   const attendre = async () => {
     if (options.latenceMs && options.latenceMs > 0) await delay(options.latenceMs);
+  };
+
+  const abonnement: OptionsAbonnementFaux = {
+    base,
+    horloge: options.horloge ?? (() => new Date().toISOString()),
+    scenarioParDefaut: options.scenarioAbonnement ?? null,
+    attendre,
   };
 
   const refus = (panne: Panne, versionActuelle = 1) =>
@@ -129,5 +146,6 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersTresorerie(base, attendre),
     ...creerHandlersBloquants(base, attendre),
     ...creerHandlersSources(base, attendre),
+    ...[handlersAcces, handlersVolume, handlersPalier, handlersFinContrat, handlersAcceptations].flatMap((f) => f(abonnement)),
   ];
 }
