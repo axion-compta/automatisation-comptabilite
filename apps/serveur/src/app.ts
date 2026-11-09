@@ -29,6 +29,7 @@ import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
 import { routesParametres } from './domaines/parametres.js';
 import { routesFrais } from './domaines/frais.js';
+import { routesFraisActions } from './domaines/frais-actions.js';
 import { routesVehiculesBareme } from './domaines/vehicules-bareme.js';
 import { routesSante } from './domaines/sante.js';
 import { implementerPersonnes } from './domaines/personnes.js';
@@ -113,6 +114,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     identite: routesIdentite(),
     change: routesChange(),
     frais: routesFrais(),
+    fraisActions: routesFraisActions(),
     vehiculesBareme: routesVehiculesBareme(),
     sante: routesSante(),
     santeExploitation: implementerSanteExploitation(os, options.exploitation ?? {}),
