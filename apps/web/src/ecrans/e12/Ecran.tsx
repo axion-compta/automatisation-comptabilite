@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useRef, useState, type KeyboardEvent } from 'react';
+import { lire } from '../../api.js';
 import { EtatLigne, ReponseComptesBancaires, ReponseLignesBancaires } from '../../../../../packages/contrat/src/domaines/banque.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { ETATS_LIGNE, etatLigne } from '../../../../../packages/textes/src/banque/mots.js';
@@ -9,10 +11,12 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterDateAffiche, formaterMontantAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { AJustifier, useNombreDemandes } from './AJustifier.js';
 import { Couverture } from './Couverture.js';
 import { Explication } from './Explication.js';
 import './e12.css';
 const LIMITE = 20;
+const PAGE_MAX = 100;
 type Etat = (typeof ETATS_LIGNE)[number];
 // Aucun « ok » implicite : une ligne rapprochée reste en attente.
 const PASTILLE: Record<Etat, EtatPastille> = {
@@ -36,6 +40,15 @@ export function etatDepuisUrl(recherche: string): Etat | undefined {
   const r = EtatLigne.safeParse(brut);
   return r.success ? r.data : undefined;
 }
+/** Toutes les lignes (page par page, sans filtre) pour retrouver celles d'une demande où qu'elles soient. */
+async function toutesLesLignes(signal: AbortSignal) {
+  const out: (typeof ReponseLignesBancaires._output)['body'] = [];
+  for (let d = 0; ; d += PAGE_MAX) {
+    const r = await lire('/banque/lignes?limite=' + PAGE_MAX + '&decalage=' + d, ReponseLignesBancaires, signal);
+    out.push(...r.body);
+    if (r.body.length === 0 || d + PAGE_MAX >= r.total) return out;
+  }
+}
 type Lecture = { etat: string; erreur?: { code: string } };
 /** Chargement, erreur ou vide d'une lecture ; null quand les données sont prêtes. */
 function etatDe(l: Lecture, vide: string) {
@@ -49,12 +62,26 @@ export function Ecran() {
   const [compte, setCompte] = useState('');
   const [decalage, setDecalage] = useState(0);
   const [ouverte, setOuverte] = useState<string | null>(null);
+  const [onglet, setOnglet] = useState<'lignes' | 'justifier'>('lignes');
+  const [ids, setIds] = useState<string[] | null>(null);
+  const onglets = useRef(new Map<string, HTMLButtonElement>());
+  const nbDemandes = useNombreDemandes();
+  function auClavier(e: KeyboardEvent) {
+    const ordre = ['lignes', 'justifier'] as const;
+    const i = ordre.indexOf(onglet);
+    const k = { ArrowRight: (i + 1) % 2, ArrowLeft: (i + 1) % 2, Home: 0, End: 1 }[e.key];
+    if (k === undefined) return;
+    e.preventDefault();
+    setOnglet(ordre[k]!);
+    onglets.current.get(ordre[k]!)?.focus();
+  }
   const boutons = useRef(new Map<string, HTMLButtonElement>());
   function fermer() {
     const id = ouverte;
     setOuverte(null);
     if (id !== null) setTimeout(() => boutons.current.get(id)?.focus());
   }
+  const demande = useQuery({ queryKey: ['lecture', 'e12-demande', ids], enabled: ids !== null, queryFn: ({ signal }) => toutesLesLignes(signal) });
   const comptes = useLecture('/banque/comptes', ReponseComptesBancaires);
   const lignes = useLecture(cheminLignes(etat, compte, decalage), ReponseLignesBancaires);
   function choisirEtat(valeur: string) {
@@ -82,9 +109,9 @@ export function Ecran() {
       </ul>
     );
   }
-  let blocLignes = etatDe(lignes, e12.etats.videLignes);
-  if (!blocLignes && lignes.donnees) {
-    const d = lignes.donnees;
+  let blocLignes = ids ? etatDe({ etat: demande.isError ? 'erreur' : demande.data ? 'pret' : 'chargement' }, '') : etatDe(lignes, e12.etats.videLignes);
+  const d = ids ? (demande.data ? { body: demande.data.filter((l) => ids.includes(l.id)), decalage: 0, total: ids.length } : undefined) : lignes.donnees;
+  if (!blocLignes && d) {
     blocLignes = (
       <Tableau
         legende={e12.tableau.legende}
@@ -100,14 +127,22 @@ export function Ecran() {
         ]}
         lignes={d.body}
         cleDeLigne={(l) => l.id}
-        pagination={{ decalage: d.decalage, limite: LIMITE, total: d.total, libellePrecedent: e12.pagination.precedent, libelleSuivant: e12.pagination.suivant, surPage: setDecalage,
-          resume: (debut, fin, total) => remplir(e12.pagination.resume, { debut, fin, total }) }}
+        {...(ids ? {} : { pagination: { decalage: d.decalage, limite: LIMITE, total: d.total, libellePrecedent: e12.pagination.precedent, libelleSuivant: e12.pagination.suivant, surPage: setDecalage,
+          resume: (debut, fin, total) => remplir(e12.pagination.resume, { debut, fin, total }) } })}
       />
     );
   }
   return (
     <section aria-labelledby="e12-titre">
       <h1 id="e12-titre">{e12.titre}</h1>
+      <div role="tablist" aria-label={e12.onglets.liste} onKeyDown={auClavier}>
+        {([['lignes', e12.onglets.lignes], ['justifier', nbDemandes === undefined ? e12.onglets.aJustifierSansNombre : e12.onglets.aJustifier.replace('{nombre}', String(nbDemandes))]] as const).map(([cle, texte]) => (
+          <button key={cle} type="button" role="tab" id={'e12-onglet-' + cle} aria-selected={onglet === cle} aria-controls="e12-panneau" tabIndex={onglet === cle ? 0 : -1}
+            ref={(b) => void (b ? onglets.current.set(cle, b) : onglets.current.delete(cle))} onClick={() => setOnglet(cle)}>{texte}</button>
+        ))}
+      </div>
+      <div role="tabpanel" id="e12-panneau" aria-labelledby={'e12-onglet-' + onglet}>
+      {onglet === 'justifier' ? <AJustifier surVoirLignes={(l) => (setIds(l), setOnglet('lignes'))} /> : <>
       {blocComptes}
       {(compte || comptes.donnees?.body[0]?.id) && <Couverture compteId={compte || comptes.donnees?.body[0]?.id || ''} />}
       <div className="e12-filtres">
@@ -130,8 +165,11 @@ export function Ecran() {
           </select>
         </label>
       </div>
+      {ids && <p role="status">{e12.aJustifier.filtreActif} <button type="button" onClick={() => setIds(null)}>{e12.aJustifier.retirerFiltre}</button></p>}
       <div aria-live="polite">{blocLignes}</div>
       {ouverte !== null && <Explication ligneId={ouverte} surFermeture={fermer} />}
+      </>}
+      </div>
     </section>
   );
 }
