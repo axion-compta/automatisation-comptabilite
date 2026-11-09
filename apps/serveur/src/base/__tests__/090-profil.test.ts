@@ -39,8 +39,9 @@ describe('090-profil.sql', () => {
   it('refuse UPDATE et DELETE de champ_profil et parametre_lecture par un déclencheur', () => {
     expect(sql).toContain("RAISE EXCEPTION 'ajout_seul'");
     for (const t of ['champ_profil', 'parametre_lecture']) {
-      expect(sql, t).toMatch(new RegExp(`CREATE TRIGGER ${t}_ajout_seul BEFORE UPDATE OR DELETE ON a_compta\\.${t}\\s+FOR EACH ROW EXECUTE FUNCTION a_compta\\.refuser_modification\\(\\)`));
+      expect(sql, t).toMatch(new RegExp(`CREATE OR REPLACE TRIGGER ${t}_ajout_seul BEFORE UPDATE OR DELETE ON a_compta\\.${t}\\s+FOR EACH ROW EXECUTE FUNCTION a_compta\\.refuser_modification\\(\\)`));
     }
+    expect(code).not.toMatch(/\bDROP\b/i);
     expect(sql).not.toContain('regime_imposition_societe_ajout_seul');
   });
 });

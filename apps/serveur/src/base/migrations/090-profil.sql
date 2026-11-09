@@ -77,9 +77,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS champ_profil_ajout_seul ON a_compta.champ_profil;
-CREATE TRIGGER champ_profil_ajout_seul BEFORE UPDATE OR DELETE ON a_compta.champ_profil
+CREATE OR REPLACE TRIGGER champ_profil_ajout_seul BEFORE UPDATE OR DELETE ON a_compta.champ_profil
   FOR EACH ROW EXECUTE FUNCTION a_compta.refuser_modification();
-DROP TRIGGER IF EXISTS parametre_lecture_ajout_seul ON a_compta.parametre_lecture;
-CREATE TRIGGER parametre_lecture_ajout_seul BEFORE UPDATE OR DELETE ON a_compta.parametre_lecture
+CREATE OR REPLACE TRIGGER parametre_lecture_ajout_seul BEFORE UPDATE OR DELETE ON a_compta.parametre_lecture
   FOR EACH ROW EXECUTE FUNCTION a_compta.refuser_modification();

@@ -25,6 +25,7 @@ describe('depot-profil', () => {
     d.champs.ajouter(A, champ(), '2026-01-02');
     d.lectures.ajouter(A, lecture());
     for (const depot of [d.champs, d.lectures]) expect(code(() => depot.modifier(A, 'x'))).toBe('ajout_seul');
+    expect(() => d.champs.modifier(A, 'x')).toThrow(ErreurDepotProfil);
     expect(d.champs.lire(A, 'denomination', '2026-06-01')?.valeur).toBe('Atelier Fictif');
     expect(d.lectures.lister(A, 'cle-fictive')[0]?.valeurLue).toBe('x');
   });
