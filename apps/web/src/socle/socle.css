@@ -93,3 +93,11 @@
   box-sizing: border-box; min-width: var(--cible-min); min-height: var(--cible-min);
 }
 .coque-principal li > a, .coque-principal td a { display: inline-flex; align-items: center; }
+/* Colonne de droite (bureau) : visible au-dessus de 720 px (var(--rupture-mobile)), masquée en dessous (M04 la remplace). */
+.colonne-discussion { order: 1; width: 360px; padding: var(--espace-m); border-left: 1px solid var(--couleur-bordure); background: var(--couleur-surface); }
+.colonne-discussion[data-replie='oui'] { width: auto; }
+.colonne-bascule, .m04-retour { box-sizing: border-box; min-width: var(--cible-min); min-height: var(--cible-min); font: inherit; }
+@media (max-width: 719px) {
+  .colonne-discussion { display: none; }
+  .m04-plein-ecran { position: fixed; inset: 0; z-index: 1; overflow: auto; padding: var(--espace-m); background: var(--couleur-fond); }
+}
