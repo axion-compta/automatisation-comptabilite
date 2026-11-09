@@ -4,6 +4,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { demarrerNoeud } from '../../../../../../packages/faux-serveur/src/noeud.js';
+import { STATUTS_FRAIS } from '../../../../../../packages/contrat/src/domaines/frais.js';
+import { e17LibellesStatuts } from '../../../../../../packages/textes/src/ecrans/e17-libelles-statuts.js';
 import { e12 } from '../../../../../../packages/textes/src/ecrans/e12.js';
 import { e17Frais } from '../../../../../../packages/textes/src/ecrans/e17-frais.js';
 import { e17 } from '../../../../../../packages/textes/src/ecrans/e17.js';
@@ -117,5 +119,16 @@ describe('E17', () => {
     const cellules = [...document.querySelectorAll('tbody tr')[0]!.querySelectorAll('td')];
     expect(cellules.map((c) => c.getAttribute('data-entete'))).toEqual(attendus);
     expect(cellules[2]!.getAttribute('data-entete')).not.toBe(e17.totaux.aRembourser);
+  });
+  it.each(STATUTS_FRAIS)('etat-non-vide-%s', async (statut) => {
+    simuler([ligne('F1', { statut })]);
+    await monter();
+    expect(document.querySelectorAll('tbody tr')[0]!.querySelectorAll('td')[3]!.textContent?.trim()).toBeTruthy();
+  });
+  it.each(Object.entries(e17LibellesStatuts))('etat-libelle-%s', async (statut, libelle) => {
+    expect(libelle.trim()).not.toBe('');
+    simuler([ligne('F1', { statut })]);
+    await monter();
+    expect(document.querySelectorAll('tbody tr')[0]!.querySelectorAll('td')[3]!.textContent).toContain(libelle);
   });
 });

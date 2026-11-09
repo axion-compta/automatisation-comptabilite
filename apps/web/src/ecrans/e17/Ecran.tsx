@@ -3,6 +3,7 @@ import { ReponseFrais, type FraisResume } from '../../../../../packages/contrat/
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { e12 } from '../../../../../packages/textes/src/ecrans/e12.js';
 import { e17 } from '../../../../../packages/textes/src/ecrans/e17.js';
+import { e17LibellesStatuts } from '../../../../../packages/textes/src/ecrans/e17-libelles-statuts.js';
 import { e17Frais } from '../../../../../packages/textes/src/ecrans/e17-frais.js';
 import { fr } from '../../../../../packages/textes/src/fr.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
@@ -24,6 +25,9 @@ const STATUTS: Record<string, { etat: EtatPastille; mot: string }> = {
   valide: { etat: 'ok', mot: e17.statuts.valide },
   rembourse: { etat: 'ok', mot: e17.statuts.rembourse },
   en_compte_courant: { etat: 'ok', mot: e17.statuts.enCompteCourant },
+  brouillon: { etat: 'attente', mot: e17LibellesStatuts.brouillon },
+  refuse: { etat: 'bloque', mot: e17LibellesStatuts.refuse },
+  perso: { etat: 'bloque', mot: e17LibellesStatuts.perso },
 };
 
 /** Une phrase : ce qui manque, dans l'ordre reçu. */
