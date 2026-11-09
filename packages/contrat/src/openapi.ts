@@ -12,7 +12,7 @@ interface Def {
   errors: Record<string, { status: number }>;
 }
 
-const DESCRIPTIONS: Record<number, string> = { 403: 'Interdit', 409: 'Conflit de version', 422: 'Refusé', 423: 'Fermé' };
+const DESCRIPTIONS: Record<number, string> = { 403: 'Interdit', 409: 'Conflit de version', 412: 'Version périmée', 422: 'Refusé', 423: 'Fermé' };
 
 function definitions(): Def[] {
   return Object.values({ ...contrat, ...contratChat }).flatMap((domaine) => Object.values(domaine)).map((r) => {
@@ -57,6 +57,7 @@ export function genererOpenapi(): object {
     const s = forme(d.inputSchema).shape;
     const parametres: unknown[] = [];
     if (s['headers']) parametres.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 8, maxLength: 128 } });
+    for (const nom of ['if-match', 'x-personne']) if (s['headers'] && nom in forme(s['headers']).shape) parametres.push({ name: nom, in: 'header', required: true, schema: { type: 'string' } });
     if (d.method === 'GET') {
       parametres.push(...parametresRequete(s['query']));
     }

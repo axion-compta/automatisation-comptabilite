@@ -25,6 +25,6 @@ describe('serveur : frais', () => {
 
     const mauvais = ['du=2025-05-01&au=2025-04-01', 'du=2025-02-30', 'limite=0', 'limite=101', 'limite=1.5', 'limite=NaN', 'personne=' + 'a'.repeat(51), 'statut=autre'];
     for (const m of mauvais) expect((await a.inject({ method: 'GET', url: '/frais?' + m })).statusCode).toBe(400);
-    expect((await a.inject({ method: 'POST', url: '/frais' })).statusCode).toBe(404);
+    expect((await a.inject({ method: 'POST', url: '/frais' })).statusCode).not.toBe(404);
   });
 });

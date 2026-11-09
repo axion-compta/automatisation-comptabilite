@@ -12,5 +12,6 @@ export function implementerPersonnes(os: ReturnType<typeof implement<typeof cont
     listerDemandes: os.personnes.listerDemandes.handler(bouchon),
     enregistrerDemande: os.personnes.enregistrerDemande.handler(bouchon),
     traiterDemande: os.personnes.traiterDemande.handler(bouchon),
+    rechercherPersonne: os.personnes.rechercherPersonne.handler(bouchon),
   };
 }
