@@ -50,6 +50,7 @@ import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/
 import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
 import { implementerFinContrat } from './domaines/fin-contrat.js';
 import { implementerAcceptations } from './domaines/acceptations.js';
+import { routesCapacites } from './domaines/capacites.js';
 import type { OptionsAbonnement } from './domaines/options-abonnement.js';
 import type { OptionsExploitation } from './domaines/options-exploitation.js';
 import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
@@ -68,7 +69,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; controlesActions?: ServiceControlesActions } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; controlesActions?: ServiceControlesActions; securite?: OptionsSecurite } = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -136,6 +137,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     pieces: routesPieces(),
     tresorerie: routesTresorerie(),
     fournisseurs: routesFournisseurs(),
+    capacites: routesCapacites(options),
     finContrat: implementerFinContrat(os, options.abonnement ?? {}),
     acceptations: implementerAcceptations(os, options.abonnement ?? {}),
     abonnement: {
