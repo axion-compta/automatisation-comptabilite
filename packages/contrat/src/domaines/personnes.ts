@@ -60,4 +60,13 @@ export const traiterDemande = oc
   .input(z.object({ headers: EnTeteEcriture, params: z.object({ id: z.string().min(1) }), body: CorpsTraiterDemande }))
   .output(sortie);
 
-export const personnes = { listerDemandes, enregistrerDemande, traiterDemande };
+export const RequeteRecherche = z.strictObject({ nom: z.string().optional(), email: z.string().optional(), iban: z.string().optional() });
+const Trouvaille = z.strictObject({ source: z.string().min(1), id: z.string().min(1), par: z.string().min(1) });
+
+export const rechercherPersonne = oc
+  .route({ method: 'GET', path: '/personnes/recherche', inputStructure: 'detailed', operationId: 'rechercherPersonne', tags: ['acces:compte'] })
+  .errors({ ...reglage, RECHERCHE_VIDE: { status: 422 }, RECHERCHE_TROP_COURTE: { status: 422 } })
+  .input(z.object({ query: RequeteRecherche }))
+  .output(z.object({ body: z.array(Trouvaille) }));
+
+export const personnes = { listerDemandes, enregistrerDemande, traiterDemande, rechercherPersonne };

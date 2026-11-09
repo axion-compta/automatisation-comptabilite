@@ -2221,6 +2221,161 @@
             "description": "Introuvable"
           }
         }
+      },
+      "post": {
+        "operationId": "creerFrais",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "x-personne",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "const": "depense"
+                      },
+                      "personneId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "libelle": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "montantTtcCentimes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "pieceId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "declaration": {
+                        "type": "string",
+                        "enum": [
+                          "personne",
+                          "societe"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "personneId",
+                      "date",
+                      "libelle",
+                      "montantTtcCentimes"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "const": "trajet"
+                      },
+                      "personneId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "depart": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "arrivee": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "motif": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "vehiculeId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "kmTexte": {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      "allerRetour": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "personneId",
+                      "date",
+                      "depart",
+                      "arrivee",
+                      "motif",
+                      "vehiculeId",
+                      "kmTexte"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
       }
     },
     "/frais/{id}": {
@@ -2243,6 +2398,107 @@
           },
           "404": {
             "description": "Introuvable"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "completerFrais",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "if-match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-personne",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "declaration": {
+                    "type": "string",
+                    "enum": [
+                      "personne",
+                      "societe"
+                    ]
+                  },
+                  "motifSansJustificatif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "partPersoTtcCentimes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "vehiculeId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "pieceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "412": {
+            "description": "Version périmée"
           }
         }
       }
@@ -2476,6 +2732,51 @@
           },
           "409": {
             "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/personnes/recherche": {
+      "get": {
+        "operationId": "rechercherPersonne",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "nom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iban",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "422": {
             "description": "Refusé"

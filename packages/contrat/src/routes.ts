@@ -33,6 +33,7 @@ import { change } from './domaines/change.js';
 import { identite } from './domaines/identite.js';
 import { regimes } from './domaines/regimes.js';
 import { frais } from './domaines/frais.js';
+import { fraisActions } from './domaines/frais-actions.js';
 import { personnes } from './domaines/personnes.js';
 import { vehiculesBareme } from './domaines/vehicules-bareme.js';
 import { sante } from './domaines/sante.js';
@@ -98,6 +99,7 @@ export const contrat = {
   identite,
   change,
   frais,
+  fraisActions,
   sante,
   vehiculesBareme,
   santeExploitation,
