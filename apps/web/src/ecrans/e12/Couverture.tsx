@@ -23,7 +23,7 @@ function Bandeau({ trous }: { trous: TrouReleve[] }) {
     <div className="e12-bandeau" role="status">
       {trous.map((t) => (
         <p key={t.id}>
-          {alerteReleveManquant(moisDuTrou(t).join(e12.couverture.separateur))}
+          {alerteReleveManquant(moisDuTrou(t).join(e12.couverture.separateur + ' '))}
           {t.ecartCentimes === undefined ? '' : ' ' + e12.couverture.ecart.replace('{montant}', formaterMontantAffiche(centimes(t.ecartCentimes)))}
         </p>
       ))}

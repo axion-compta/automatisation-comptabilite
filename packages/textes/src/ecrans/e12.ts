@@ -37,7 +37,7 @@ export const e12 = {
     ligne: '{mois} {annee} : {etat}',
     etats: { couvert: 'Couvert', manquant: 'Manquant', partiel: 'Partiel' },
     mois: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
-    separateur: ', ',
+    separateur: ',',
     ecart: 'Écart constaté : {montant}.',
     erreur: 'Impossible de charger la couverture de vos relevés.',
   },
