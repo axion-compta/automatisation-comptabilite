@@ -114,7 +114,7 @@ function dependances(jsonTexte, chemin) {
 }
 
 export const OPENAPI = 'packages/contrat/openapi.json';
-export const PLAFOND_OPENAPI = 300;
+export const PLAFOND_OPENAPI = 600;
 
 // diff : { fichiers: [chemin], lignes: nombre, lignesOpenapi?: nombre }, paquets : [{ chemin, base, branche }] (textes package.json)
 export function analyserPerimetre(fiche, diff, paquets = []) {

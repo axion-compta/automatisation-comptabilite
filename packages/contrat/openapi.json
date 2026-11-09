@@ -1622,6 +1622,314 @@
         }
       }
     },
+    "/profil/champs/{cle}": {
+      "post": {
+        "operationId": "ajouterValeurChamp",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "cle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "valeur": {
+                    "$ref": "#/$defs/__schema0"
+                  },
+                  "origine": {
+                    "type": "string",
+                    "enum": [
+                      "saisie_personne",
+                      "document"
+                    ]
+                  },
+                  "effetDebut": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "valeur",
+                  "origine"
+                ],
+                "additionalProperties": false,
+                "$defs": {
+                  "__schema0": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/profil/champs/{cle}/confirmer": {
+      "post": {
+        "operationId": "confirmerChamp",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "cle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "effetDebut": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "effetDebut"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/profil/changements/apercu": {
+      "post": {
+        "operationId": "apercuChangement",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "cle": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "valeur": {
+                    "$ref": "#/$defs/__schema0"
+                  },
+                  "effetDebut": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "motif": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "cle",
+                  "valeur",
+                  "effetDebut",
+                  "motif"
+                ],
+                "additionalProperties": false,
+                "$defs": {
+                  "__schema0": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/profil/changements": {
+      "post": {
+        "operationId": "confirmerChangement",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "apercuId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "apercuId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
     "/exercices/{exercice}/fec/historique": {
       "get": {
         "operationId": "listerHistoriqueFec",
@@ -1731,6 +2039,121 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/controles/{trace}/ecarter": {
+      "post": {
+        "operationId": "ecarterControle",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "trace",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "motif": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "motif"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
+    "/controles/reverifier": {
+      "post": {
+        "operationId": "reverifierControles",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "exercice": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "exercice"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"
@@ -1913,6 +2336,161 @@
             "description": "Introuvable"
           }
         }
+      },
+      "post": {
+        "operationId": "creerFrais",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "x-personne",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "const": "depense"
+                      },
+                      "personneId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "libelle": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "montantTtcCentimes": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "pieceId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "declaration": {
+                        "type": "string",
+                        "enum": [
+                          "personne",
+                          "societe"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "personneId",
+                      "date",
+                      "libelle",
+                      "montantTtcCentimes"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "nature": {
+                        "type": "string",
+                        "const": "trajet"
+                      },
+                      "personneId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "depart": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "arrivee": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "motif": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "vehiculeId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                      },
+                      "kmTexte": {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      "allerRetour": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "nature",
+                      "personneId",
+                      "date",
+                      "depart",
+                      "arrivee",
+                      "motif",
+                      "vehiculeId",
+                      "kmTexte"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
       }
     },
     "/frais/{id}": {
@@ -1937,6 +2515,107 @@
             "description": "Introuvable"
           }
         }
+      },
+      "patch": {
+        "operationId": "completerFrais",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "if-match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-personne",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "declaration": {
+                    "type": "string",
+                    "enum": [
+                      "personne",
+                      "societe"
+                    ]
+                  },
+                  "motifSansJustificatif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "partPersoTtcCentimes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "vehiculeId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "pieceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "412": {
+            "description": "Version périmée"
+          }
+        }
       }
     },
     "/controles/sante": {
@@ -1946,6 +2625,279 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/vehicules": {
+      "get": {
+        "operationId": "listerVehicules",
+        "parameters": [
+          {
+            "name": "personne",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/parametres/bareme_ik_voiture": {
+      "get": {
+        "operationId": "lireBaremeIk",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/sante": {
+      "get": {
+        "operationId": "lireSanteExploitation",
+        "tags": [
+          "acces:lecture"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/personnes/demandes": {
+      "get": {
+        "operationId": "listerDemandesPersonnes",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "enregistrerDemande",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "acces",
+                      "rectification",
+                      "effacement",
+                      "limitation",
+                      "portabilite",
+                      "opposition"
+                    ]
+                  },
+                  "recue_le": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": [
+                  "type",
+                  "recue_le"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/personnes/demandes/{id}/traitement": {
+      "post": {
+        "operationId": "traiterDemande",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "issue": {
+                    "type": "string",
+                    "enum": [
+                      "acces_produit",
+                      "portabilite_produite",
+                      "rectifiee",
+                      "a_effacer",
+                      "limitee",
+                      "refus_conservation",
+                      "refus_gel",
+                      "renvoi_societe"
+                    ]
+                  },
+                  "motif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "inclure_autres_personnes": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "issue"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          },
+          "503": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/personnes/recherche": {
+      "get": {
+        "operationId": "rechercherPersonne",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "nom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iban",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "422": {
+            "description": "Refusé"
+          },
+          "503": {
+            "description": "Introuvable"
           }
         }
       }
@@ -2058,6 +3010,223 @@
               "type": "string",
               "format": "date",
               "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/sources/etat": {
+      "get": {
+        "operationId": "lireEtatSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ventes": {
+      "get": {
+        "operationId": "listerVentes",
+        "parameters": [
+          {
+            "name": "etat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "client",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "mois",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "decalage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ventes/{id}": {
+      "get": {
+        "operationId": "lireVente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/pieces": {
+      "get": {
+        "operationId": "listerPieces",
+        "parameters": [
+          {
+            "name": "fournisseur",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "du",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "montantMin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "montantMax",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "etat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "decalage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/pieces/{id}": {
+      "get": {
+        "operationId": "lirePiece",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -2191,7 +3360,245 @@
         }
       }
     },
-    "/chat/messages": {
+    "/fin-contrat": {
+      "get": {
+        "operationId": "lireFinContrat",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/fin-contrat/accuse": {
+      "post": {
+        "operationId": "accuserReception",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "manifeste_empreinte": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "manifeste_empreinte"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "409": {
+            "description": "Conflit de version"
+          },
+          "422": {
+            "description": "Refusé"
+          }
+        }
+      }
+    },
+    "/fin-contrat/gel": {
+      "post": {
+        "operationId": "poserGel",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "motif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "motif"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/fin-contrat/gel/levee": {
+      "post": {
+        "operationId": "leverGel",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "motif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "motif"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/documents-contractuels/a-accepter": {
+      "get": {
+        "operationId": "listerDocumentsAAccepter",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/acceptations": {
+      "post": {
+        "operationId": "enregistrerAcceptation",
+        "tags": [
+          "acces:compte"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "type",
+                  "version"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Créé"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/api/compta/v1/societes/{s}/chat/messages": {
       "post": {
         "operationId": "posterMessageChat",
         "tags": [
@@ -2206,6 +3613,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -2285,11 +3701,17 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           }
         }
       }
     },
-    "/chat/tours/{id}/arreter": {
+    "/api/compta/v1/societes/{s}/chat/tours/{id}/arreter": {
       "post": {
         "operationId": "arreterTour",
         "parameters": [
@@ -2304,29 +3726,14 @@
             }
           },
           {
-            "name": "id",
+            "name": "s",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "minLength": 1
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
           },
-          "404": {
-            "description": "Introuvable"
-          }
-        }
-      }
-    },
-    "/chat/propositions/{id}": {
-      "get": {
-        "operationId": "lireProposition",
-        "parameters": [
           {
             "name": "id",
             "in": "path",
@@ -2341,13 +3748,68 @@
           "200": {
             "description": "OK"
           },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           }
         }
       }
     },
-    "/chat/propositions/{id}/appliquer": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}": {
+      "get": {
+        "operationId": "lireProposition",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          }
+        }
+      }
+    },
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/appliquer": {
       "post": {
         "operationId": "appliquerProposition",
         "parameters": [
@@ -2362,6 +3824,15 @@
             }
           },
           {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
             "name": "id",
             "in": "path",
             "required": true,
@@ -2374,6 +3845,9 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
           },
           "403": {
             "description": "Interdit"
@@ -2390,7 +3864,7 @@
         }
       }
     },
-    "/chat/propositions/{id}/annuler": {
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/annuler": {
       "post": {
         "operationId": "annulerProposition",
         "parameters": [
@@ -2405,32 +3879,14 @@
             }
           },
           {
-            "name": "id",
+            "name": "s",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "minLength": 1
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
           },
-          "404": {
-            "description": "Introuvable"
-          },
-          "409": {
-            "description": "Conflit de version"
-          }
-        }
-      }
-    },
-    "/chat/propositions/{id}/pourquoi": {
-      "get": {
-        "operationId": "pourquoiProposition",
-        "parameters": [
           {
             "name": "id",
             "in": "path",
@@ -2444,6 +3900,64 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
+          },
+          "404": {
+            "description": "Introuvable"
+          },
+          "409": {
+            "description": "Conflit de version"
+          }
+        }
+      }
+    },
+    "/api/compta/v1/societes/{s}/chat/propositions/{id}/pourquoi": {
+      "get": {
+        "operationId": "pourquoiProposition",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"

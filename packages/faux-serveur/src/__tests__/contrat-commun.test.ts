@@ -16,7 +16,13 @@ import { suiteCalendrier } from './suite-calendrier.js';
 import { suiteNotifications } from './suite-notifications.js';
 import { suiteTva } from './suite-tva.js';
 import { suiteChange } from './suite-change.js';
+import { suiteFrais } from './suite-frais.js';
+import { suiteFec } from './suite-fec.js';
 import { suiteSante } from './suite-sante.js';
+import { suiteProfil } from './suite-profil.js';
+import { suiteTresorerie } from './suite-tresorerie.js';
+import { suiteBloquants } from './suite-bloquants.js';
+import { suiteSources } from './suite-sources.js';
 import { suiteJuridique } from './suite-juridique.js';
 import { creerHandlersJuridique } from '../domaines/juridique.js';
 import { creerServiceJuridique } from '../../../contrat/src/domaines/juridique-service.js';
@@ -143,8 +149,21 @@ suiteTva('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteTva('faux serveur (MSW)', cibleFaux);
 suiteChange('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteChange('faux serveur (MSW)', cibleFaux);
+suiteFrais('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteFrais('faux serveur (MSW)', cibleFaux);
+suiteFec('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteFec('faux serveur (MSW)', cibleFaux);
 suiteSante('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteSante('faux serveur (MSW)', cibleFaux);
+suiteTresorerie('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteTresorerie('faux serveur (MSW)', cibleFaux);
+suiteBloquants('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteBloquants('faux serveur (MSW)', cibleFaux);
+suiteSources('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteSources('faux serveur (MSW)', cibleFaux);
+
+suiteProfil('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteProfil('faux serveur (MSW)', cibleFaux);
 
 // Le vrai serveur ne sert que la SARL par défaut (app.ts hors périmètre) : la SCI passe par la procédure du serveur, appelée directement.
 const SIREN_SCI = genererJuridique().obligations[1]!.societeSiren;
