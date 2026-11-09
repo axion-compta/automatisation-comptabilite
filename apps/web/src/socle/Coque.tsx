@@ -7,6 +7,7 @@ import { Palette } from '../commandes/Palette.js';
 import { FournisseurDonnees } from '../donnees/lecture.js';
 import { BandeauAcces } from './BandeauAcces.js';
 import { BarreMobile } from './BarreMobile.js';
+import { PorteAcceptation } from './PorteAcceptation.js';
 import { MENU_BUREAU, estActive } from './menu.js';
 import './socle.css';
 
@@ -28,7 +29,7 @@ export function Coque() {
       <div className="coque">
         <BandeauAcces />
         <main className="coque-principal">
-          <Outlet />
+          <PorteAcceptation><Outlet /></PorteAcceptation>
         </main>
         {pathname !== CHEMIN_DISCUSSION && pathname !== CHEMIN_ESSAI && (
           <aside className="colonne-discussion" data-replie={replie ? 'oui' : 'non'}>
