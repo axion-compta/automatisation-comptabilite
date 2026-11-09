@@ -24,9 +24,12 @@ export function autoriser(contexte: ContexteAutorisation, action: Action, objet?
   if (contexte === null || typeof contexte !== 'object' || !estRole(contexte.role) || !estAction(action)) {
     throw new ErreurSecurite('argument_invalide');
   }
-  if (!Array.isArray(contexte.permissions) || typeof contexte.demande5 !== 'boolean') {
+  if (!Array.isArray(contexte.permissions) || typeof contexte.demande5 !== 'boolean'
+    || typeof contexte.separationTaches !== 'boolean') {
     throw new ErreurSecurite('argument_invalide');
   }
+  const g: unknown = objet?.gravite;
+  if (g !== undefined && g !== 'majeur' && g !== 'bloquant') throw new ErreurSecurite('argument_invalide');
   const { role } = contexte;
   const effective: Action = action === 'lever_majeur' && objet?.gravite === 'bloquant' ? 'lever_bloquant' : action;
   const refusRole: Raison = role === 'lecture' ? 'role_lecture' : 'role_insuffisant';

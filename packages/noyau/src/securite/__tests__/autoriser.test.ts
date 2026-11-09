@@ -107,6 +107,26 @@ describe('securite/autoriser', () => {
     }
   });
 
+  it('permission-de-l-action-effective-et-demande5-verrouillees', () => {
+    const sans = TOUTES.filter((p) => p !== 'compta-lever-bloquant');
+    const admin = ctx('administrateur', { permissions: sans });
+    expect(autoriser(admin, 'lever_majeur', { gravite: 'bloquant' })).toEqual(refuse('role_insuffisant'));
+    expect(autoriser(admin, 'lever_majeur', { gravite: 'majeur' })).toEqual({ permis: true });
+    expect(autoriser(ctx('comptable', { demande5: false }), 'deposer')).toEqual(refuse('role_insuffisant'));
+    expect(autoriser(ctx('comptable', { demande5: true }), 'deposer')).toEqual({ permis: true });
+  });
+
+  it('separation-et-gravite-invalides', () => {
+    const sansSep = { ...ctx('utilisateur') } as Partial<ContexteAutorisation>;
+    delete sansSep.separationTaches;
+    for (const c of [sansSep, { ...ctx('utilisateur'), separationTaches: null }]) {
+      expect(() => autoriser(c as ContexteAutorisation, 'valider')).toThrow(ErreurSecurite);
+    }
+    for (const gravite of ['Bloquant', 'MAJEUR', '', null, 1]) {
+      expect(() => autoriser(ctx('utilisateur'), 'lever_majeur', { gravite } as never)).toThrow(ErreurSecurite);
+    }
+  });
+
   it('entree-non-modifiee', () => {
     const c = ctx('utilisateur', { separationTaches: true });
     const o = { auteurId: 'p-1', gravite: 'majeur' as const };
