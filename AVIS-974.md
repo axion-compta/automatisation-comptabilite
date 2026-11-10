@@ -1,19 +1,19 @@
 VERDICT: A CORRIGER
-SHA relu: f50c90092ad111f93d4e492656a3d32eb0f7399f
+SHA relu: 0c81f8b5ac82c5fb462371d56121c32b9c063a69
 
-PR 974, fiche L07-T19 (domaine demande de palier), relecture Opus locale. CI : gardes, tests et verifier sont ROUGES.
+PR 974, fiche L07-T19 (domaine demande de palier). Seconde relecture Opus locale, après la correction 0c81f8b5. CI : tests VERTS ; gardes et verifier ROUGES.
 
-Défauts :
-1. Test existant cassé : apps/serveur/src/__tests__/abonnement-branchement.test.ts:24, cas `trois-routes-branchees`. Ce test poste `code_demande: 'palier-b'`. Avec le vrai service, ce palier est inconnu : la route répond 404 PALIER_INCONNU et l'assertion `not.toBe(404)` échoue (« expected 404 not to be 404 »). Ce fichier n'est pas dans fichiers_autorises. Correction : amender la fiche (pilotage) pour autoriser ce fichier, puis y remplacer 'palier-b' par un palier fictif valide ('compta-2'), aux lignes 24 et 36 si le second cas l'exige.
-2. garde:portes ROUGE : « lot back-end de l'écran e53 sans porte "maquette validée" sur origin/main (pilotage/portes/e53.json) ». Une fiche qui dépend de L07-T19 autorise apps/web/src/ecrans/e53/. Ce blocage ne vient pas du code de l'auteur. Il attend la validation de la maquette E53 par Will (porte datée et nommée). Ne pas fusionner avant.
+Défauts de l'avis précédent (SHA f50c9009) :
+1. Test existant cassé (abonnement-branchement.test.ts, 'palier-b'). CORRIGÉ sur le fond. Les lignes 24 et 36 postent 'compta-2', un palier fictif valide et supérieur à compta-1. `trois-routes-branchees` vérifie donc à nouveau la route réelle : ni 404, ni 400. La CI tests est verte.
+2. garde:portes ROUGE (porte « maquette validée » e53 absente sur main). NON LEVÉ. Ce n'est pas du ressort de l'auteur : il faut que Will valide la maquette E53 (pilotage/portes/e53.json sur main).
 
-Vérifié (code correct) :
-- Périmètre : 8 fichiers, tous autorisés. 257 lignes, pour 280 permises. Ni handlers.ts, ni app.ts, ni le contrat ne sont touchés.
-- Codes traduits : accord_manquant, palier_inconnu, palier_identique et palier_non_superieur deviennent ACCORD_MANQUANT, PALIER_INCONNU, PALIER_IDENTIQUE et PALIER_NON_SUPERIEUR. Les statuts sont ceux du contrat : 422, 404, 422, 422. Toute autre ErreurAbonnement est relancée (500), jamais avalée.
-- Idempotence : seules les réponses réussies sont gardées par clé, comme `packages/contrat/src/service.ts` (rejeux). Même clé avec un autre corps : première réponse.
-- Le palier en vigueur n'est jamais modifié. Auteur fictif personne-fictive-1. Un état par serveur, et par scénario côté faux.
-- Les 7 tests nommés sont présents, sur les deux cibles. Le cas « accord 'true' » donne 400.
-- Aucun prix, aucun montant, aucun nom réel.
+Nouveau défaut :
+3. garde:perimetre ROUGE : « fichier hors liste : apps/serveur/src/__tests__/abonnement-branchement.test.ts ». La garde lit la fiche sur origin/main, jamais sur la branche (outils/gardes/perimetre.mjs, lignes 2 et 202). L'amendement de pilotage/fiches/L07-T19.md, fait DANS la PR, ne compte donc pas. Le contenu de l'amendement est légitime : il ajoute un seul fichier, celui que l'avis précédent demandait d'autoriser. Correction : passer l'amendement de fichiers_autorises par une PR de pilotage fusionnée sur main AVANT, comme #969 (L00-T67). Puis relancer la CI de la PR 974. Aucune autre correction de code n'est demandée.
+
+Vérifié :
+- Le commit de correction ne touche que le test de branchement (2 lignes) et la fiche (1 ligne). Le code relu au premier avis n'a pas changé.
+- Périmètre au sens de la fiche amendée : 9 fichiers, tous listés. Taille sous les 280 lignes.
+- Journal : 4 lignes, il commence par « # Journal L07-T19 ».
 
 Remarques (non bloquantes) :
-- `palier-inferieur-ou-identique-422` ne joue que le cas identique : le jeu fictif part toujours de compta-1. Le journal le signale ; le cas inférieur est couvert dans le noyau.
+- `palier-inferieur-ou-identique-422` ne joue toujours que le cas identique. C'est signalé au journal, et le cas inférieur est couvert dans le noyau.
