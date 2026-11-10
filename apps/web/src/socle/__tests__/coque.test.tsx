@@ -214,3 +214,33 @@ describe('coque et porte d’acceptation', () => {
     }
   });
 });
+
+describe('coque : menu mémorisé et palette', () => {
+  const CLE = 'axion.preferences.v1';
+  afterEach(() => localStorage.clear());
+
+  it('menu-reduit-memorise', async () => {
+    const h = await afficher('/');
+    const groupe = h.querySelector('.menu-groupe') as HTMLElement;
+    expect(groupe.getAttribute('data-etat')).toBe('ouvert');
+    const b = h.querySelector('.menu-reduire') as HTMLButtonElement;
+    expect(b.textContent).toBe(socle.navigation.reduire);
+    cliquer(b);
+    expect(groupe.getAttribute('data-etat')).toBe('reduit');
+    expect(JSON.parse(localStorage.getItem(CLE) ?? '{}').bureau.menu_etat).toBe('reduit');
+    expect(b.textContent).toBe(socle.navigation.agrandir);
+  });
+
+  it('palette-ctrl-k-toujours-active', async () => {
+    localStorage.setItem(CLE, JSON.stringify({ bureau: { raccourcis: { actifs: false, remap: {} } } }));
+    await afficher('/');
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+});
