@@ -1,19 +1,15 @@
-VERDICT: A CORRIGER
-SHA relu: 14c2c0ab1ed6c76bc3a92284f07b6cab60ecfcc5
+VERDICT: OK
+SHA relu: 2397d538d45e8a04e63bc9040574765e631740f5
 
-PR 971, fiche L03-T07 (sortie du lot 03 : REPRENDRE.md et mesures), relecture Opus locale.
+PR 971, fiche L03-T07 (sortie du lot 03 : REPRENDRE.md et mesures). Seconde relecture Opus locale, après la correction 2397d538.
 
-Défaut :
-- REPRENDRE.md, section « Lot 03 », ligne « Fiches : 59 (T00 à T58) ; 57 `statut: fait` avec L03-T07 ». Le compte est faux. Sur la branche, les en-têtes des 59 fiches L03 donnent 58 `statut: fait` (L03-T07 compris) et 1 `a_faire` (L03-T58). La fiche exige des chiffres mesurés. Correction : écrire « 58 `statut: fait` avec L03-T07 ».
+Défaut de l'avis précédent (SHA 14c2c0ab) :
+- REPRENDRE.md, section « Lot 03 » : « 57 `statut: fait` » est devenu « 58 `statut: fait` avec L03-T07 ». CORRIGÉ. Recompté sur la tête de branche : 58 fiches L03 en `statut: fait`, 1 en `a_faire` (L03-T58). Sur main 63b8250 : 57 en `fait`, plus L03-T07 en `a_faire`. Le compte est donc juste après fusion.
 
-Vérifié :
-- Périmètre : 3 fichiers, tous dans fichiers_autorises (REPRENDRE.md, la fiche, le journal). Le diff fait 22 lignes, pour 60 permises.
-- Section « Lot 03 » : 13 lignes, pour 25 au plus. Elle dit ce qui existe, ce qui reste et ce qui est bloqué. Elle signale l'écart : T52 à T57 sont faites.
-- 65 PR fusionnées au titre L03-T : recompté avec `gh pr list --state merged`, c'est exact.
-- Le FEC n'est pas déclaré accepté (J7). Aucune date de livraison. Aucun prix, aucun nom réel, aucun mot interdit.
-- Journal : 7 lignes, il commence par « # Journal L03-T07 ».
-- CI : 9 contrôles verts.
+Régressions recherchées :
+- Le commit de correction ne change qu'une ligne de REPRENDRE.md. Rien d'autre ne bouge.
+- Périmètre : 3 fichiers, tous dans fichiers_autorises (REPRENDRE.md, la fiche, le journal). Diff de 24 lignes, pour 60 permises.
+- CI au SHA relu : 9 contrôles verts (gardes, tests, verifier compris).
 
-Remarques (non bloquantes) :
-- Médianes 16,0 et 31,9 min : non recalculées ici.
-- Stryker 86,67 % (195 tués, 30 survivants) sur main 3217534 : c'est le même chiffre que celui du lot 02 (main 69605cb). C'est plausible, mais à confirmer si la mesure a bien été relancée.
+Remarques (non bloquantes, reprises de l'avis précédent) :
+- Médianes 16,0 et 31,9 min et Stryker 86,67 % : non recalculés ici.
