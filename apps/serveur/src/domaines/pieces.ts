@@ -1,4 +1,4 @@
-import { implement, ORPCError } from '@orpc/server';
+import { implement } from '@orpc/server';
 import { detailPiece, listerPiecesService } from '../../../../packages/contrat/src/domaines/pieces-service.js';
 import { contrat } from '../../../../packages/contrat/src/routes.js';
 
