@@ -69,7 +69,7 @@ type Contexte = { valeurs: Valeurs; ecrire: (cle: string, valeur: unknown) => vo
 const Ctx = createContext<Contexte | null>(null);
 
 /** Profil serveur = référence ; copie locale et file d'écritures rejouées en silence quand le serveur revient. */
-export function FournisseurPreferences({ children }: { children: ReactNode }) {
+function FournisseurRacine({ children }: { children: ReactNode }) {
   const appareil = useMemo(appareilCourant, []);
   const [valeurs, setValeurs] = useState<Valeurs>(() => copieLocale(appareil));
   const enCours = useRef(false);
@@ -130,6 +130,11 @@ export function FournisseurPreferences({ children }: { children: ReactNode }) {
   );
   const contexte = useMemo(() => ({ valeurs, ecrire }), [valeurs, ecrire]);
   return <Ctx.Provider value={contexte}>{children}</Ctx.Provider>;
+}
+
+/** Un fournisseur imbriqué réutilise celui du parent : un seul état, une seule copie locale, une seule file. */
+export function FournisseurPreferences({ children }: { children: ReactNode }) {
+  return useContext(Ctx) ? <>{children}</> : <FournisseurRacine>{children}</FournisseurRacine>;
 }
 
 /** Lit une préférence et donne la fonction qui l'écrit (appliquée tout de suite, envoyée en arrière-plan). */
