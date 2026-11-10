@@ -91,7 +91,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Aucune date de livraison annoncée.
 
 ## Lot 03
-- Fiches : 59 (T00 à T58) ; 57 `statut: fait` avec L03-T07, en-têtes lus sur main (3217534) ; reste L03-T58 (explication d'un montant, `a_faire`, sensible, débloquée par D43 et J3a).
+- Fiches : 59 (T00 à T58) ; 58 `statut: fait` avec L03-T07, en-têtes lus sur main (3217534) ; reste L03-T58 (explication d'un montant, `a_faire`, sensible, débloquée par D43 et J3a).
 - Écart à la fiche T07 : T52 à T57 sont faites, plus bloquées ; elles sont écrites contre des interfaces et un faux serveur (D29 au 21/11/2026, D42, D43, J3a, aucune mise en production avant J10).
 - FEC : fichier complet en octets, lecture et contrôles, banc de 11 jeux, rapport, import ; catalogue de règles (19, source `a_sourcer`).
 - TVA : régime, périodes, périodicité, exigibilité, traitement, totaux ; formulaire, report, pas-à-pas, contrôles de déclaration ; échéances.
