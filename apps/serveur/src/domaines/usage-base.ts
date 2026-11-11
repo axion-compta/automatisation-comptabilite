@@ -2,10 +2,9 @@
 // Données pseudonymisées ; secret propre à chaque client ; aucune suppression réelle (marquage seulement).
 import { pseudonyme, validerEvenements, type EvenementUsage } from '../../../../packages/noyau/src/usage/usage.js';
 
-// Réglages d'interface (pas des valeurs légales).
 const MOIS_MIN = 1;
 const MOIS_MAX = 120;
-const DUREE_MAX_MS = 3_600_000;
+const UNE_HEURE_MS = 3_600_000;
 
 /** Ligne écrite : liste blanche des champs, rien d'autre. */
 export type LigneUsage = {
@@ -87,7 +86,7 @@ export function creerDepotUsage(options: OptionsDepot): DepotUsage {
     ecrire(societeId, personneId, evenements) {
       const secret = secretDe(societeId);
       if (secret === undefined) throw new Error('secret du client absent');
-      const { acceptes } = validerEvenements(evenements, { dureeMaxMs: DUREE_MAX_MS });
+      const { acceptes } = validerEvenements(evenements, { dureeMaxMs: UNE_HEURE_MS });
       const p = pseudonyme(personneId, secret);
       const t = maintenant();
       for (const e of acceptes as EvenementUsage[]) {
