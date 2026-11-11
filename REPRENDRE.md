@@ -38,7 +38,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Test `regle-eslint` de `packages/noyau` : peut dépasser 5 s en local, sans lien avec P0.
 
 ## Prochaine commande
-`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`. Pour le lot 05, ne reprendre aucune fiche à `bloque_par` (section « Lot 05 »).
+`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`. Pour le lot 05, ne reprendre aucune fiche à `bloque_par` (section « Lot 05 »). Lot 07 : plus de fiche libre sans décision de Will (section « Lot 07 »).
 
 ## Pièges
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
@@ -64,6 +64,21 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Écart à la fiche : elle annonçait 8 fiches bloquées (T48 à T55) ; T51 à T55 sont déjà faites, il n'en reste que 3.
 - Écarts à la spec gardés : identifiants suffixés (K11M, K12H, K13S, T03A, T12M, T18M) ; vocabulaire du CSV et du code (gravité B/M, `bloque`, `declencheurs`).
 - PR du lot (lignes, durée de CI, corrections après relecture) : non mesuré (pas de gh dans cette session) ; `pilotage/calibrage.csv` ne contient que l'en-tête, rien n'y est ajouté.
+- Aucune date de livraison annoncée.
+
+## Lot 07, abonnement et console
+- Existe : noyau `packages/noyau/src/abonnement/` (états, transitions, garde, file et reprise, compteur, seuils, prévision, quota, paliers, fin de contrat, gel, documents) ; 9 routes du contrat avec serveur en mémoire et faux serveur ; garde d'état sur toutes les routes ; bandeau, E53, E50 section fin de contrat, porte d'acceptation.
+- Cas T-ABO : les 16 sont des `it` de `packages/noyau/src/abonnement/__tests__/scenarios.test.ts`, nommés `T-ABO-1` à `T-ABO-16`.
+- T-ABO-1 à 2 : pause, puis reprise. T-ABO-3 : 6 états × 2 exports. T-ABO-4 : 4 transitions. T-ABO-5 : version périmée. T-ABO-6 : 5 états non actifs.
+- T-ABO-7 à 11 : seuils, modes continuer et attente, relectures et doublon, plafond technique d'IA. T-ABO-12 : palier supérieur avec accord.
+- T-ABO-13 : refus d'empreinte invalide testé ; le manifeste vérifié à 100 % est un `it.todo`, en attente du lot 05. T-ABO-14 à 16 : accusé, gel, remise sans accusé.
+- Reste bloqué : les fiches L07-T33 à L07-T40 n'existent pas dans `pilotage/fiches/` (seules T00 à T32 et T41 à T44 s'y trouvent) ; la cause de chacune n'est donc pas lisible dans le dépôt. Causes annoncées par L07-T32 pour l'ensemble, une ligne par fiche :
+  - L07-T33 : cause non lue (fiche absente) ; l'une de : hébergement, fournisseurs d'IA, réponse de la console, identité.
+  - L07-T34 : idem. L07-T35 : idem. L07-T36 : idem.
+  - L07-T37 : idem. L07-T38 : idem. L07-T39 : idem. L07-T40 : idem.
+- Fiches : 37 au total ; 36 `statut: fait` avant cette PR (T00 à T31 et T41 à T44), T32 devient faite avec elle. Relevé `avancement.mjs` avec cette fiche : « Lot 07 : 37/37 ».
+- Mesures PR (API REST, sans IA, relevé du 11/11/2026) : 41 PR fusionnées pour ces 36 fiches ; médiane ouverture à fusion 30,2 min (17 PR de fiches sensibles), 54,3 min (24 PR de fiches non sensibles). `pilotage/calibrage.csv` : en-tête seul, non utilisé.
+- Score Stryker du noyau après le lot : non mesuré (dernière mesure connue : 86,67 %, lot 05, main 01c4579).
 - Aucune date de livraison annoncée.
 
 ## Lot 14
