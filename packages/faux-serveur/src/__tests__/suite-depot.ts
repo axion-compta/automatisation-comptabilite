@@ -4,6 +4,8 @@ export type RetourDepot = { status: number; json: unknown };
 /** Une cible du dépôt : le serveur en mémoire ou le faux serveur. `cle` absente = pas d'en-tête idempotency-key. */
 export type CibleDepot = () => Promise<{
   deposer: (fichiers: string[], cle: string | undefined) => Promise<RetourDepot>;
+  /** Un seul fichier sous le nom de partie donné (même corps multipart sur les deux cibles). */
+  deposerNomme: (nomPartie: string, contenu: string, cle: string | undefined) => Promise<RetourDepot>;
   etat: (id: string) => Promise<RetourDepot>;
   relancer: (id: string, cle: string | undefined) => Promise<RetourDepot>;
   fermer: () => Promise<void>;
@@ -24,6 +26,11 @@ export function suiteDepot(nom: string, cible: CibleDepot): void {
         await c.fermer();
       }
     };
+
+    it('un-fichier-sous-le-nom-fichiers-sans-crochets-refuse-400', avec(async (c) => {
+      expect((await c.deposerNomme('fichiers', '%PDF-1.4 fictif A', 'cle-fictive-090')).status).toBe(400);
+      expect((await c.deposerNomme('fichiers[0]', '%PDF-1.4 fictif A', 'cle-fictive-091')).status).toBe(200);
+    }));
 
     it('trois-fichiers-trois-recues-dans-lordre', avec(async (c) => {
       const r = await c.deposer(['%PDF-1.4 fictif A', '%PDF-1.4 fictif B', '%PDF-1.4 fictif C'], 'cle-fictive-001');
