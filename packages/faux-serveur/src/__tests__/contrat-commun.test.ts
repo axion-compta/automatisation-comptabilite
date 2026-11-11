@@ -18,6 +18,9 @@ import { suiteTva } from './suite-tva.js';
 import { suiteChange } from './suite-change.js';
 import { suiteFrais } from './suite-frais.js';
 import { suiteVehiculesBareme } from './suite-vehicules-bareme.js';
+import { suiteCapacites, type CibleCapacites } from './suite-capacites.js';
+import { contexteDePersonne } from '../domaines/capacites.js';
+import type { ContexteAutorisation } from '../../../noyau/src/securite/autoriser.js';
 import { suiteFec } from './suite-fec.js';
 import { suiteSante } from './suite-sante.js';
 import { suiteProfil } from './suite-profil.js';
@@ -167,6 +170,27 @@ suiteSources('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteSources('faux serveur (MSW)', cibleFaux);
 suiteEcheances('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteEcheances('faux serveur (MSW)', cibleFaux);
+
+// Capacités : le vrai serveur reçoit la session par option, le faux le rôle par l'en-tête x-scenario-role.
+const cibleCapacitesVrai: CibleCapacites = async (role) => {
+  const session = role === undefined ? undefined : (contexteDePersonne(role) ?? ({ role, permissions: [], demande5: false, separationTaches: false, personneId: role } as unknown as ContexteAutorisation));
+  const app = creerApp(undefined, { securite: session ? { session } : {} });
+  const appeler: Appeler = async (methode, chemin) => {
+    const r = await app.inject({ method: methode as 'GET', url: chemin });
+    return { status: r.statusCode, json: r.json() };
+  };
+  return { appeler, fermer: () => app.close() };
+};
+const cibleCapacitesFaux: CibleCapacites = async (role) => {
+  serveur.use(...creerHandlers({ base: H }));
+  const appeler: Appeler = async (methode, chemin) => {
+    const r = await fetch(H + chemin, { method: methode, ...(role === undefined ? {} : { headers: { 'x-scenario-role': role } }) });
+    return { status: r.status, json: await r.json() };
+  };
+  return { appeler, fermer: async () => serveur.resetHandlers() };
+};
+suiteCapacites('vrai serveur (Fastify + oRPC)', cibleCapacitesVrai, false);
+suiteCapacites('faux serveur (MSW)', cibleCapacitesFaux, true);
 
 suiteProfil('vrai serveur (Fastify + oRPC)', cibleVrai);
 suiteProfil('faux serveur (MSW)', cibleFaux);
