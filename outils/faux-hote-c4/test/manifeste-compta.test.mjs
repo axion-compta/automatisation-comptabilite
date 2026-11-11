@@ -108,6 +108,36 @@ describe('manifeste C4 de la compta', () => {
     expect(validerManifeste(profond).join()).toMatch(/cle de montant/);
   });
 
+  it('commercial-montant-dans-les-chaines', () => {
+    const ev = COMMERCIAL_COMPTA.evenementsConsommation;
+    const variantes = [
+      { evenementsConsommation: [{ code: 'c', champs: ['prixUnitaire'] }] },
+      { evenementsConsommation: [{ code: 'tarif_ia', champs: ev[0].champs }] },
+      { modesArrivee: ['installation_axion', 'stripe'] },
+      { operationsMiseEnService: ['creerEspace', 'margeAjoutee'] },
+    ];
+    for (const v of variantes) {
+      const mal = { ...MANIFESTE_COMPTA, commercial: { ...COMMERCIAL_COMPTA, ...v } };
+      expect(validerManifeste(mal).join()).toMatch(/cle de montant/);
+    }
+  });
+
+  it('commercial-bloc-strict', () => {
+    const a = { ...MANIFESTE_COMPTA, commercial: { ...COMMERCIAL_COMPTA, remise: 5 } };
+    expect(validerManifeste(a).join()).toMatch(/cle inconnue/);
+    const ev = [{ ...COMMERCIAL_COMPTA.evenementsConsommation[0], extra: 1 }];
+    const b = { ...MANIFESTE_COMPTA, commercial: { ...COMMERCIAL_COMPTA, evenementsConsommation: ev } };
+    expect(validerManifeste(b).join()).toMatch(/cle inconnue/);
+  });
+
+  it('commercial-gele-en-profondeur', () => {
+    const { commercial } = defineAutomation(MANIFESTE_COMPTA);
+    expect(Object.isFrozen(commercial)).toBe(true);
+    expect(Object.isFrozen(commercial.modesArrivee)).toBe(true);
+    expect(Object.isFrozen(commercial.evenementsConsommation)).toBe(true);
+    expect(Object.isFrozen(commercial.evenementsConsommation[0].champs)).toBe(true);
+  });
+
   it('commercial-interrupteur-ferme', () => {
     expect(MANIFESTE_COMPTA.actif).toBe(false);
     expect(defineAutomation(MANIFESTE_COMPTA).actif).toBe(false);
