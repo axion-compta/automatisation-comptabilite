@@ -123,6 +123,6 @@ describe('E24 détail d’une vente', () => {
     expect(tauxEnTexte(0)).toBe('0 %');
     expect(tauxEnTexte(-1)).toBe('taux illisible');
     expect(tauxEnTexte(12.5)).toBe('taux illisible');
-    expect(tauxEnTexte(Number.NaN)).toBe('taux illisible');
+    for (const x of [Number.NaN, Infinity, -Infinity]) expect(tauxEnTexte(x)).toBe('taux illisible');
   });
 });

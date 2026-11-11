@@ -4,7 +4,6 @@ export const e24Vente = {
   chargement: 'Chargement de la vente…',
   erreur: 'La vente ne se charge pas. Réessayez dans un instant.',
   champs: { client: 'Client', dateFacture: 'Date de facture', echeance: 'Échéance', total: 'Total TTC', resteDu: 'Reste dû' },
-  colonnes: { libelle: 'Libellé', quantite: 'Quantité', total: 'Total TTC' },
   ecritureColonnes: { compte: 'Compte', debit: 'Débit', credit: 'Crédit' },
   aucuneCarte: 'Aucun point à relire.',
   aucuneEcriture: 'Aucune écriture proposée pour le moment.',
