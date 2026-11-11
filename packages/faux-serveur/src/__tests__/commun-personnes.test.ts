@@ -52,8 +52,7 @@ describe('refus sans source (service)', () => {
     const service = creerServicePersonnes({ horloge: HORLOGE, dateReference: '2026-11-09', ...REGLAGES_FICTIFS, regles: [], gel: () => true, concernes: { 'dem-1': { nom: 'Camille Exemple' } } });
     const demande = service.enregistrer('cle-enreg-0001', { type: 'effacement', recue_le: '2026-11-09' });
     const corps = { issue: 'refus_gel' as const, motif: 'Motif fictif.' };
-    const erreur = (): unknown => { try { service.traiter('cle-gel-0001', demande.id, corps); } catch (e) { return e; } return null; };
-    expect(erreur()).toMatchObject({ message: 'SOURCE_MANQUANTE' });
+    expect(() => service.traiter('cle-gel-0001', demande.id, corps)).toThrow('SOURCE_MANQUANTE');
     expect(service.traiter('cle-gel-0002', demande.id, { ...corps, source: 'Source fictive.' }).etat).toBe('refusee');
   });
 });

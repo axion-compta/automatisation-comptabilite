@@ -32,12 +32,11 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
 
     it('enregistrer-puis-lister', () =>
       avec(true, async (c) => {
-        const r = await c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }, 'cle-enregistrer-1');
-        expect(r.status).toBe(201);
+        const poster = () => c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }, 'cle-enregistrer-1');
+        const r = await poster();
         const d = corpsDe<Demande>(r);
-        expect(d).toMatchObject({ etat: 'recue', issue: null });
-        const rejeu = await c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }, 'cle-enregistrer-1');
-        expect(corpsDe<Demande>(rejeu).id).toBe(d.id);
+        expect([r.status, d.etat, d.issue]).toEqual([201, 'recue', null]);
+        expect(corpsDe<Demande>(await poster()).id).toBe(d.id);
         const l = corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'));
         expect(l).toHaveLength(7);
         expect(l.filter((x) => x.id === d.id)).toHaveLength(1);
@@ -46,19 +45,16 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
     it('rechercher-par-nom', () =>
       avec(true, async (c) => {
         const r = await c.appeler('GET', '/personnes/recherche?nom=' + encodeURIComponent('Camille Exemple'));
-        expect(r.status).toBe(200);
         const t = corpsDe<{ source: string; id: string; par: string }[]>(r);
+        expect(r.status).toBe(200);
         expect(t.filter((x) => x.source === 'pieces')).toHaveLength(12);
         expect(t.every((x) => x.par === 'nom')).toBe(true);
       }));
 
     it('recherche-vide-422', () =>
       avec(true, async (c) => {
-        const r = await c.appeler('GET', '/personnes/recherche');
-        expect(r.status).toBe(422);
-        expect(codeDe(r)).toBe('RECHERCHE_VIDE');
-        const court = await c.appeler('GET', '/personnes/recherche?nom=ab');
-        expect([court.status, codeDe(court)]).toEqual([422, 'RECHERCHE_TROP_COURTE']);
+        const [vide, court] = [await c.appeler('GET', '/personnes/recherche'), await c.appeler('GET', '/personnes/recherche?nom=ab')];
+        expect([vide, court].map((r) => [r.status, codeDe(r)])).toEqual([[422, 'RECHERCHE_VIDE'], [422, 'RECHERCHE_TROP_COURTE']]);
       }));
 
     it('traiter-refus-sans-source-422', () =>
@@ -77,17 +73,15 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         const cree = corpsDe<Demande>(await c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }, 'cle-acces-0001'));
         const chemin = `/personnes/demandes/${cree.id}/traitement`;
         const un = await c.appeler('POST', chemin, { issue: 'renvoi_societe' }, 'cle-traiter-01');
-        expect(un.status).toBe(200);
-        expect(corpsDe<Demande>(un).etat).toBe('transmise_a_la_societe');
+        expect([un.status, corpsDe<Demande>(un).etat]).toEqual([200, 'transmise_a_la_societe']);
         const deux = await c.appeler('POST', chemin, { issue: 'renvoi_societe' }, 'cle-traiter-02');
         expect([deux.status, codeDe(deux)]).toEqual([409, 'DEJA_TRAITEE']);
       }));
 
     it('entrees-invalides-400', () =>
       avec(true, async (c) => {
-        const ok = { type: 'acces', recue_le: '2026-11-09' };
         const reponses = [
-          await c.appeler('POST', '/personnes/demandes', ok),
+          await c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }),
           await c.appeler('POST', '/personnes/demandes', { type: 'inconnu', recue_le: '2026-11-09' }, 'cle-invalide-1'),
           await c.appeler('POST', '/personnes/demandes/dem_1/traitement', {}, 'cle-invalide-2'),
           await c.appeler('GET', '/personnes/recherche?inconnu=1'),
