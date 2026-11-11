@@ -29,13 +29,14 @@ export function creerDepotEnMemoire(pieces: PieceDeposee[], reglage: ReglageLimi
   }
 
   return {
-    /** Résultats dans l'ordre des fichiers ; même clé d'idempotence = même réponse, rien de plus n'est stocké. */
+    /** Résultats dans l'ordre des fichiers ; même clé ET mêmes octets = même réponse, rien de plus n'est stocké. */
     async deposer(cle: string, fichiers: Uint8Array[], canal: string): Promise<ResultatDepot[]> {
-      const deja = rejeux.get(cle);
-      if (deja !== undefined) return deja;
+      const rejeu = `${cle}|${(await Promise.all(fichiers.map(empreinteSha256))).join(',')}`;
+      const deja = rejeux.get(rejeu);
+      //M
       const resultats: ResultatDepot[] = [];
       for (const octets of fichiers) resultats.push(await traiter(octets, canal));
-      rejeux.set(cle, resultats);
+      rejeux.set(rejeu, resultats);
       return resultats;
     },
     etat(id: string): EtatPiece | undefined {

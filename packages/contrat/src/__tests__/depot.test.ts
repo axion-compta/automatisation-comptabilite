@@ -28,6 +28,21 @@ describe('dépôt de pièces (contrat et service en mémoire)', () => {
     expect(second[0]).toEqual({ statut: 'deja_recue', id: (premier[0] as { id: string }).id, recueLe: '2026-01-05T10:00:00.000Z' });
   });
 
+  it('meme-cle-meme-reponse', async () => {
+    const { pieces, service } = nouveau();
+    const premier = await service.deposer('cle-000001', [pdf(1)], 'api');
+    expect(await service.deposer('cle-000001', [pdf(1)], 'api')).toEqual(premier);
+    expect(pieces).toHaveLength(1);
+  });
+
+  it('meme-cle-autres-fichiers-stockes', async () => {
+    const { pieces, service } = nouveau();
+    await service.deposer('cle-000001', [pdf(1)], 'api');
+    const r = await service.deposer('cle-000001', [pdf(2)], 'api');
+    expect(r[0]).toMatchObject({ statut: 'recue' });
+    expect(pieces).toHaveLength(2);
+  });
+
   it('executable-refuse-type-refuse', async () => {
     const { pieces, service } = nouveau();
     const exe = new Uint8Array([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0xff, 0xfe]);
