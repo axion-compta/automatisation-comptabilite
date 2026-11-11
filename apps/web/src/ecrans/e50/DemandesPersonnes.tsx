@@ -50,7 +50,6 @@ const colonnes = (ouvrir: (d: DemandeVue, el: HTMLElement) => void): ColonneTabl
   },
 ];
 
-/** Formulaire court : enregistrer une demande reçue. */
 function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) {
   const [type, setType] = useState<string>(TYPES_DROIT_PERSONNE[0]);
   const [date, setDate] = useState('');
@@ -68,7 +67,7 @@ function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) 
       setErreur(false);
       surEnregistree();
     } catch (err) {
-      if (err instanceof ErreurEcriture && err.statut >= 400 && err.statut < 500) cle.current = nouvelleCle();
+      if (err instanceof ErreurEcriture && err.statut < 500) cle.current = nouvelleCle();
       setErreur(true);
     }
     enCours.current = false;
@@ -79,9 +78,7 @@ function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) 
       <label>
         {L.type}
         <select name="type" value={type} onChange={(e) => setType(e.target.value)} style={{ minHeight: 24 }}>
-          {TYPES_DROIT_PERSONNE.map((x) => (
-            <option key={x} value={x}>{t.types[x]}</option>
-          ))}
+          {TYPES_DROIT_PERSONNE.map((x) => <option key={x} value={x}>{t.types[x]}</option>)}
         </select>
       </label>
       <label>
@@ -101,11 +98,7 @@ export function DemandesPersonnes() {
   const [ouverte, setOuverte] = useState<DemandeVue | null>(null);
   const origine = useRef<HTMLElement | null>(null);
   const relire = () => client.invalidateQueries({ queryKey: ['lecture', ROUTE] });
-  const fermer = () => {
-    setOuverte(null);
-    const el = origine.current;
-    setTimeout(() => el?.isConnected && el.focus(), 0);
-  };
+  const fermer = () => (setOuverte(null), setTimeout(() => origine.current?.isConnected && origine.current.focus(), 0));
   let contenu;
   if (lecture.etat === 'erreur') contenu = <EtatErreur message={t.erreurs.reglageAbsent} />;
   else if (!lecture.donnees) contenu = <EtatChargement libelle={t.titre} />;

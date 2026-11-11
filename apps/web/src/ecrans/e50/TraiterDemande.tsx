@@ -10,13 +10,10 @@ const t = e50Personnes;
 const Reponse = z.object({ body: DemandeVue });
 const REFUS = ['refus_conservation', 'refus_gel'];
 const CODES: Record<string, string> = {
-  DEJA_TRAITEE: t.erreurs.dejaTraitee,
-  TRANSITION_INTERDITE: t.erreurs.transitionInterdite,
-  ISSUE_NON_PERMISE: t.erreurs.issueNonPermise,
-  MOTIF_MANQUANT: t.erreurs.motifManquant,
-  SOURCE_MANQUANTE: t.erreurs.sourceManquante,
+  DEJA_TRAITEE: t.erreurs.dejaTraitee, TRANSITION_INTERDITE: t.erreurs.transitionInterdite, ISSUE_NON_PERMISE: t.erreurs.issueNonPermise,
+  MOTIF_MANQUANT: t.erreurs.motifManquant, SOURCE_MANQUANTE: t.erreurs.sourceManquante,
 };
-const ERREUR_GENERALE = t.erreurs.reglageAbsent;
+const MIN = { minHeight: 24 };
 
 type Props = { demande: DemandeVue; surFerme: () => void; surTraitee: () => void };
 
@@ -33,47 +30,36 @@ export function TraiterDemande({ demande, surFerme, surTraitee }: Props) {
   const cle = useRef(nouvelleCle());
   const premier = useRef<HTMLSelectElement>(null);
   useEffect(() => premier.current?.focus(), []);
-
   const refus = REFUS.includes(issue);
   const avecAutres = demande.type === 'acces' || demande.type === 'portabilite';
-
   async function valider(e: FormEvent) {
     e.preventDefault();
     if (enCours.current) return;
-    const manques: string[] = [];
-    if (refus && motif.trim() === '') manques.push(t.erreurs.motifManquant);
-    if (refus && source.trim() === '') manques.push(t.erreurs.sourceManquante);
+    const manques = [...(refus && !motif.trim() ? [t.erreurs.motifManquant] : []), ...(refus && !source.trim() ? [t.erreurs.sourceManquante] : [])];
     setErreurs(manques);
     if (manques.length > 0) return;
     enCours.current = true;
     setEnvoi(true);
-    const corps = {
-      issue,
-      ...(refus ? { motif: motif.trim(), source: source.trim() } : {}),
-      ...(avecAutres ? { inclure_autres_personnes: autres } : {}),
-    };
+    const corps = { issue, ...(refus ? { motif: motif.trim(), source: source.trim() } : {}), ...(avecAutres ? { inclure_autres_personnes: autres } : {}) };
     try {
       await ecrire('POST', `/personnes/demandes/${encodeURIComponent(demande.id)}/traitement`, corps, Reponse, cle.current);
       surTraitee();
     } catch (err) {
-      const connue = err instanceof ErreurEcriture ? CODES[err.code] : undefined;
-      if (err instanceof ErreurEcriture && err.statut >= 400 && err.statut < 500) cle.current = nouvelleCle();
-      setErreurs([connue ?? ERREUR_GENERALE]);
+      const e4 = err instanceof ErreurEcriture ? err : null;
+      if (e4 && e4.statut >= 400 && e4.statut < 500) cle.current = nouvelleCle();
+      setErreurs([(e4 && CODES[e4.code]) || t.erreurs.reglageAbsent]);
       enCours.current = false;
       setEnvoi(false);
     }
   }
-
   return (
     <form aria-labelledby="e50-traiter" onSubmit={valider} onKeyDown={(e) => e.key === 'Escape' && surFerme()}>
       <h3 id="e50-traiter">{t.traiter.titre}</h3>
       <p>{t.types[demande.type]}</p>
       <label>
         {t.traiter.issue}
-        <select ref={premier} name="issue" value={issue} onChange={(e) => setIssue(e.target.value)} style={{ minHeight: 24 }}>
-          {issues.map((i) => (
-            <option key={i} value={i}>{t.issues[i]}</option>
-          ))}
+        <select ref={premier} name="issue" value={issue} onChange={(e) => setIssue(e.target.value)} style={MIN}>
+          {issues.map((i) => <option key={i} value={i}>{t.issues[i]}</option>)}
         </select>
       </label>
       {issue === 'a_effacer' ? <p>{t.aEffacerExplication}</p> : null}
@@ -81,11 +67,11 @@ export function TraiterDemande({ demande, surFerme, surTraitee }: Props) {
         <>
           <label>
             {t.traiter.motif}
-            <input name="motif" type="text" autoComplete="off" value={motif} onChange={(e) => setMotif(e.target.value)} style={{ minHeight: 24 }} />
+            <input name="motif" type="text" autoComplete="off" value={motif} onChange={(e) => setMotif(e.target.value)} style={MIN} />
           </label>
           <label>
             {t.traiter.source}
-            <input name="source" type="text" autoComplete="off" value={source} onChange={(e) => setSource(e.target.value)} style={{ minHeight: 24 }} />
+            <input name="source" type="text" autoComplete="off" value={source} onChange={(e) => setSource(e.target.value)} style={MIN} />
           </label>
         </>
       ) : null}
@@ -98,9 +84,7 @@ export function TraiterDemande({ demande, surFerme, surTraitee }: Props) {
       ) : null}
       {erreurs.length > 0 ? (
         <ul role="alert">
-          {erreurs.map((m) => (
-            <li key={m}>{m}</li>
-          ))}
+          {erreurs.map((m) => <li key={m}>{m}</li>)}
         </ul>
       ) : null}
       <Bouton type="submit" desactive={envoi}>{t.traiter.valider}</Bouton>
