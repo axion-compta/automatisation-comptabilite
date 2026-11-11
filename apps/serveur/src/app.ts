@@ -55,6 +55,7 @@ import { implementerModules } from './registres/index.js';
 import type { OptionsApp, OptionsModules, OptionsRouteur } from './registres/types.js';
 import { corpsEtatAcces, creerGardeAcces, STATUT_ETAT_ACCES } from './garde-acces.js';
 import { brancherSecurite } from './securite/index.js';
+import { sessionDeRequete, versSessionRoute } from './securite/jeton.js';
 
 type Service = ReturnType<typeof creerService>;
 
@@ -162,7 +163,9 @@ export function creerApp(service?: Service, options: OptionsApp = {}): FastifyIn
   app.all('/*', async (request, reply) => {
     const refus = garde(request.method, request.url.split('?')[0] ?? '');
     if (refus) return reply.status(STATUT_ETAT_ACCES).send(corpsEtatAcces(refus));
-    const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session: options.session?.(request.headers) } });
+    const verifiee = sessionDeRequete(request);
+    const session = options.session?.(request.headers) ?? (verifiee ? versSessionRoute(verifiee) : undefined);
+    const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session } });
     if (!matched) reply.status(404).send({ code: 'INTROUVABLE', status: 404 });
   });
   return app;
