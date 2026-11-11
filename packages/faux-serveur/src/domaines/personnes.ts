@@ -3,10 +3,7 @@ import { creerServicePersonnes, ErreurPersonnes } from '../../../contrat/src/dom
 import type { RegleConservation } from '../../../noyau/src/conservation/regles.js';
 import { erreurExploitation, type OptionsExploitationFaux } from './options-exploitation.js';
 
-/**
- * Personnes : même service que le serveur en mémoire, état gardé par appel de `handlersPersonnes` (donc par `creerHandlers`).
- * La recherche est déclarée avant les routes `/personnes/demandes/{id}/…`.
- */
+/** Personnes : même service que le serveur, état par `creerHandlers` ; recherche déclarée avant `/demandes/{id}/…`. */
 export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler[] => {
   const reglages = options.reglagesPersonnes;
   const service = reglages === undefined ? null : creerServicePersonnes({

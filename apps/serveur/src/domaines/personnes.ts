@@ -4,10 +4,7 @@ import { creerServicePersonnes, ErreurPersonnes } from '../../../../packages/con
 import type { RegleConservation } from '../../../../packages/noyau/src/conservation/regles.js';
 import type { OptionsExploitation } from './options-exploitation.js';
 
-/**
- * Demandes des personnes : le service du contrat, en mémoire, une instance par `creerApp`.
- * Sans `reglagesPersonnes` (aucune valeur légale par défaut), le service n'est pas créé et chaque route répond 503 REGLAGE_ABSENT.
- */
+/** Demandes des personnes : service en mémoire, une instance par `creerApp` ; sans `reglagesPersonnes`, 503 REGLAGE_ABSENT. */
 export function implementerPersonnes(os: ReturnType<typeof implement<typeof contrat>>, options: OptionsExploitation) {
   const horloge = options.horloge ?? (() => new Date().toISOString());
   const reglages = options.reglagesPersonnes;
@@ -18,7 +15,6 @@ export function implementerPersonnes(os: ReturnType<typeof implement<typeof cont
     joursRappel: reglages.joursRappel,
     regles: (options.reglesConservation ?? []) as readonly RegleConservation[],
   });
-  /** Exécute l'appel ; une erreur du service devient l'erreur déclarée au contrat du même code. */
   const appeler = <T>(errors: Record<string, () => Error>, f: (s: NonNullable<typeof service>) => T): T => {
     if (service === null) throw errors['REGLAGE_ABSENT']!();
     try {
@@ -34,10 +30,10 @@ export function implementerPersonnes(os: ReturnType<typeof implement<typeof cont
       body: appeler(errors, (s) => s.enregistrer(input.headers['idempotency-key'], input.body)),
     })),
     traiterDemande: os.personnes.traiterDemande.handler(({ input, errors }) => ({
-      body: appeler(errors, (s) => s.traiter(input.headers['idempotency-key'], input.params.id, input.body)),
+      body: appeler(errors, (s) => s.traiter(input.headers['idempotency-key'], input.params.id, input.body as Parameters<typeof s.traiter>[2])),
     })),
     rechercherPersonne: os.personnes.rechercherPersonne.handler(({ input, errors }) => ({
-      body: appeler(errors, (s) => s.rechercher(input.query)),
+      body: appeler(errors, (s) => s.rechercher(input.query as Parameters<typeof s.rechercher>[0])),
     })),
   };
 }
