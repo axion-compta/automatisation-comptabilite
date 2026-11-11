@@ -155,11 +155,11 @@ Relevé du 11/11/2026 sur main à jour (en-têtes de fiches, API de recherche de
 - Fiches : 70 (T00 à T69) ; 65 `statut: fait` avant cette PR, 66 avec L15-T05. Restent `a_faire` : T62, T63, T67, T68.
 - Bloquées ou en attente (motif lu dans chaque fiche sur main) :
   - T62 (résoudre une alerte en un clic) : fiche débloquée, non faite, aucune PR ouverte.
-  - T63 (envoi du résumé) : PR #1047 ouverte ; point P2, aucun fournisseur d'e-mail choisi ; écrite contre une interface d'envoi et un faux.
+  - T63 (envoi du résumé) : code fusionné (PR #1047), fiche encore `statut: a_faire` sur main (statut à passer à `fait`) ; point P2, aucun fournisseur d'e-mail choisi ; écrite contre une interface d'envoi et un faux.
   - T64 (index de recherche en base) : faite (PR #1043).
   - T67 (chat en 4 états) : `bloque_par` : `Coque.tsx` et `coque.test.tsx` sont dans les `fichiers_autorises` de L06-T45 (lot 06) ; ordre à fixer par Will.
   - T68 (banc des 111 cas) : à faire, dépend de T62 et T63 (T64 à T66 faites) ; les seuils de performance sont des HYPOTHÈSES.
-- Les PR #1022 (T65), #1032 (L00-T83) et #1043 (T64) sont fusionnées ; motifs relus sur main (f77e2dd).
+- Les PR #1022 (T65), #1032 (L00-T83), #1043 (T64) et #1047 (T63) sont fusionnées ; motifs relus sur main (f77e2dd).
 - Mesures sans IA (API de recherche, titres contenant « L15- », fusionnées) : 75 PR pour 64 fiches distinctes, du 07/11/2026 13:17 UTC au 11/11/2026 17:57 UTC.
 - Délai médian ouverture à fusion : 39,6 min pour les 75 PR ; 65,3 min pour 29 PR de fiches sensibles ; 39,4 min pour 39 PR de fiches non sensibles ; 7 PR sans fiche reconnue (créations de fiches).
 - `pilotage/calibrage.csv` : en-tête seul, non utilisé. Jetons par fiche, score Stryker, durée de CI : non mesurés ici.
