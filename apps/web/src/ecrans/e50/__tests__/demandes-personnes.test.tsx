@@ -8,6 +8,7 @@ import { demarrerNoeud } from '../../../../../../packages/faux-serveur/src/noeud
 import { e50Personnes as t } from '../../../../../../packages/textes/src/ecrans/e50-personnes.js';
 import { FournisseurDonnees, creerClient } from '../../../donnees/lecture.js';
 import { DemandesPersonnes } from '../DemandesPersonnes.js';
+import { e50 } from '../../../../../../packages/textes/src/ecrans/e50.js';
 import { Ecran } from '../Ecran.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -107,6 +108,32 @@ describe('écran E50, demandes des personnes', () => {
     expect(location.href).toBe(avant);
     expect(location.href).not.toMatch(/Camille|exemple/i);
     expect(h.textContent).toMatch(/Pièces/);
+  });
+
+  it('erreur-de-lecture-message-selon-le-statut', async () => {
+    for (const [statut, attendu, exclu] of [[500, e50.etats.erreur, t.erreurs.reglageAbsent], [503, t.erreurs.reglageAbsent, e50.etats.erreur]] as const) {
+      vi.stubGlobal('fetch', async () => new Response('{}', { status: statut, headers: { 'content-type': 'application/json' } }));
+      const hote = document.body.appendChild(document.createElement('div'));
+      racine = createRoot(hote);
+      await act(async () => racine?.render(<FournisseurDonnees client={creerClient()}><DemandesPersonnes /></FournisseurDonnees>));
+      await act(async () => void (await new Promise((r) => setTimeout(r, 700))));
+      expect(hote.textContent).toContain(attendu);
+      expect(hote.textContent).not.toContain(exclu);
+      expect(lignes(hote)).toHaveLength(0);
+      act(() => racine?.unmount());
+      hote.remove();
+    }
+  });
+
+  it('recherche-en-erreur-message-selon-le-statut', async () => {
+    const h = await monter();
+    await saisir('nom', 'Camille Exemple');
+    vi.stubGlobal('fetch', async () => new Response('{}', { status: 500, headers: { 'content-type': 'application/json' } }));
+    await rechercher();
+    expect(h.textContent).toContain(e50.etats.erreur);
+    vi.stubGlobal('fetch', async () => new Response('{}', { status: 503, headers: { 'content-type': 'application/json' } }));
+    await rechercher();
+    expect(h.textContent).toContain(t.erreurs.reglageAbsent);
   });
 
   it('cles-de-texte-egales-aux-constantes', () => {
