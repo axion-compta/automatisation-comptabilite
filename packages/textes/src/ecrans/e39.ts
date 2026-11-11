@@ -17,10 +17,7 @@ export const e39 = {
     a_commissaire_aux_comptes: 'Commissaire aux comptes',
   },
   boutons: { valider: 'Tout est juste, je valide', voirSource: 'Voir la source' },
-  contradiction: {
-    consigne: 'Deux valeurs différentes ont été trouvées : choisissez la bonne.',
-    choix: 'Choisir cette valeur',
-  },
+  contradiction: { consigne: 'Deux valeurs différentes ont été trouvées : choisissez la bonne.' },
   blocage: { titre: "Je ne peux pas continuer pour l'instant" },
   chargement: 'Chargement du récapitulatif…',
   vide: "Aucune information à relire pour le moment.",

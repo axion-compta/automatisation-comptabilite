@@ -35,7 +35,7 @@ async function monter(): Promise<HTMLElement> {
 const groupes = (h: HTMLElement) => [...h.querySelectorAll('[role=group]')];
 const valider = (h: HTMLElement) => [...h.querySelectorAll('button')].find((b) => b.textContent === e39.boutons.valider)!;
 const cliquer = async (b: Element) => {
-  await act(async () => b.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  await act(async () => void b.dispatchEvent(new MouseEvent('click', { bubbles: true })));
   await pause(400);
 };
 

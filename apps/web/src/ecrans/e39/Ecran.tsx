@@ -60,8 +60,7 @@ export function Ecran() {
 
   const conflits = contradictions(p.champs);
   const manque = [...conflits.keys()].some((k) => choix[k] === undefined);
-  const enTete = p.champs.filter(aConfirmer);
-  const reste = p.champs.filter((c) => !aConfirmer(c));
+  const lignes = [...p.champs.filter(aConfirmer), ...p.champs.filter((c) => !aConfirmer(c))].filter((c) => !conflits.has(c.cle));
   const jour = new Date().toISOString().slice(0, 10);
 
   async function valider(): Promise<void> {
@@ -105,7 +104,7 @@ export function Ecran() {
           ))}
         </fieldset>
       ))}
-      {[...enTete.filter((c) => !conflits.has(c.cle)), ...reste].map((c) => (
+      {lignes.map((c) => (
         <Ligne key={c.cle + ':' + texte(c.valeur)} champ={c} />
       ))}
       <button type="button" disabled={manque} onClick={() => void valider()}>
