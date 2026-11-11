@@ -51,7 +51,7 @@ export function Indicateurs({ mois }: { mois: string }) {
         <Indicateur libelle={t.indicateurs.factureMois} montant={centimes(d.chiffreAffaires.montantCentimes)} href={lien(moisLu)} {...prov} />
         <Indicateur libelle={t.indicateurs.resteAEncaisser} montant={centimes(d.aEncaisser.montantCentimes)} href={lien(moisLu, 'a_encaisser')} {...prov} />
         <Indicateur libelle={t.indicateurs.enRetard} montant={centimes(d.enRetard.montantCentimes)} href={lien(moisLu, 'en_retard')} {...prov} />
-        <div>{t.clientsEnRetard.replace('{n}', String(d.enRetard.clients))}</div>
+        <div>{t.clientsEnRetard} : {d.enRetard.clients}</div>
         <Indicateur
           libelle={t.indicateurs.tvaCollectee}
           montant={'nonCalculee' in d.tvaCollectee ? null : centimes(d.tvaCollectee.montantCentimes)}

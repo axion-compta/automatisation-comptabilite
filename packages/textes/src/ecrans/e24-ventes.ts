@@ -37,7 +37,7 @@ export const e24Ventes = {
     tvaEnAttente: 'TVA en attente',
   },
   tvaNonCalculee: 'non calculée : régime à confirmer',
-  clientsEnRetard: 'clients concernés : {n}',
+  clientsEnRetard: 'clients concernés',
   avecPropositions: 'Avec les propositions',
   chargementIndicateurs: 'Calcul de vos indicateurs…',
   erreurIndicateurs: 'Les indicateurs ne se chargent pas. Réessayez dans un instant.',

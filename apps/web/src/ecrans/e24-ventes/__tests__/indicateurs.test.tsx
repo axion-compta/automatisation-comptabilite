@@ -54,7 +54,7 @@ describe('E24 indicateurs', () => {
     for (const l of [t.indicateurs.factureMois, t.indicateurs.resteAEncaisser, t.indicateurs.enRetard, t.indicateurs.tvaCollectee, t.indicateurs.tvaEnAttente]) expect(texte()).toContain(l);
     expect(texte()).toMatch(/1\s?234,00/);
     expect(texte()).toMatch(/246,80/);
-    expect(texte()).toContain(t.clientsEnRetard.replace('{n}', '2'));
+    expect(texte()).toContain(`${t.clientsEnRetard} : 2`);
   });
   it('regime-a-confirmer-bandeau-et-aucun-montant', async () => {
     simuler(() => rempli({ tvaCollectee: { nonCalculee: 'regime_a_confirmer' } }));
