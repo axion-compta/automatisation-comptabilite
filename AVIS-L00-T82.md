@@ -1,19 +1,19 @@
 VERDICT: OK
 
-PR #1030 (L00-T82), SHA relu : 532cadc8a69f4a914c96397eca67ebd24c4ce55a (avis précédent OK au SHA 151a587335eabe3762c2063cb842f1738d650564).
+PR #1030 (L00-T82), SHA relu : 84af788b76276e44be2c395ccdafa6de084fc59d (avis précédent OK au SHA 532cadc8a69f4a914c96397eca67ebd24c4ce55a).
 
-Relecture du delta depuis l'avis (un seul commit, 532cadc8) :
-- `pilotage/fiches/L00-T82.md` seulement : `depend_de` passe à `["L00-T75", "L00-T77"]` et une ligne de piège explique la dépendance (même fichier de test que L00-T77). Fichier autorisé.
-- La fiche de la branche est désormais identique à celle de main (PR #1029 fusionnée) à `statut: fait` près.
-- Aucun autre fichier changé ; portes, `.gitkeep`, test et journal identiques au SHA relu.
+Relecture du commit de merge 84af788b (parents 532cadc8 et 91ff4669 = origin/main) :
+- `git diff 91ff4669 84af788b` : 17 fichiers, 43 ajouts, 2 suppressions, uniquement les fichiers de la fiche. Le merge n'annule rien de main.
+- `outils/gardes/test/portes.test.mjs` : une seule ligne diffère de main, la liste des écrans attendus du test `portes-du-depot-valides`. Elle garde les six écrans de main, e07 compris (`e07`, `e44`, `e50`, `e53`, `n03`, `n04`), et ajoute les sept écrans de la fiche. Avant et après le merge : 12 tests et 31 `assert.` dans le fichier. Aucune assertion retirée ni assouplie.
+- `pilotage/fiches/L00-T82.md` : identique à main, sauf `statut: a_faire` → `statut: fait`. `depend_de` vaut `["L00-T75", "L00-T77"]`.
 
 Contrôles sur la tête :
-- Fichiers modifiés : tous dans `fichiers_autorises`. Taille : 79 + 1 = 80 lignes, limite 80.
-- `node --test outils/gardes/test/portes.test.mjs` : 27 passent ; `node outils/gardes/portes.mjs` : vert (18 portes).
-- Mutation : suppression de `pilotage/portes/e38.json` → 1 test rouge ; annulée.
-- Journal : 6 lignes. Aucun mot interdit, aucun prix, données fictives.
+- Fichiers modifiés (`git diff origin/main...HEAD`) : 17, tous dans `fichiers_autorises`. Taille : 80 lignes ajoutées ou supprimées, pour une limite de 80.
+- Les sept portes ont exactement les trois champs `ecran`, `date: 2026-11-11` et `valideur: Will`, et le nom de chaque fichier égale son champ `ecran`. Les sept `.gitkeep` sont présents.
+- `node --test outils/gardes/test/portes.test.mjs` : 27 tests passent, 0 échoue. `node outils/gardes/portes.mjs` : vert (19 portes, dont e07).
+- Mutations, chacune annulée ensuite : suppression de `pilotage/portes/e24-vente.json` → 1 test rouge ; suppression de `pilotage/portes/e07.json` → 1 test rouge (e07 reste protégée) ; `valideur` de e39 changé en un autre nom → 1 test rouge.
+- Journal : 6 lignes, commence par `# Journal L00-T82`. Aucun mot interdit, aucun prix, données fictives.
 
-Remarques (non bloquantes pour le contenu relu) :
-- La PR est en conflit avec main (`mergeable_state: dirty`) : `outils/gardes/test/portes.test.mjs` (même ligne que L00-T77, fusionnée en adcb8e07) et `pilotage/fiches/L00-T82.md` (add/add). La résolution doit garder e07 dans la liste attendue et la fiche de main avec `statut: fait`. Ce merge déplacera la tête : nouvelle relecture du delta nécessaire avant fusion.
-- L00-T77 est fusionnée sur main : la dépendance ajoutée est satisfaite ; `garde:termine` devrait passer après mise à jour depuis main.
-- Sensible : fusion par Will seul.
+Remarques :
+- Sensible : la fusion revient à Will seul, après une CI verte.
+- La garde périmètre de la PR d'exécution reste rouge tant que la PR de la fiche n'est pas fusionnée. Le journal le note.
