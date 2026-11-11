@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { genererRgpd } from '../../../donnees-fictives/src/rgpd.js';
 import type { RegleConservation } from '../../../noyau/src/conservation/regles.js';
-import { creerServicePersonnes, ErreurPersonnes, type OptionsPersonnes } from '../domaines/personnes-service.js';
+import { readFileSync } from 'node:fs';
+import { creerServicePersonnes, empreintePure, ErreurPersonnes, type OptionsPersonnes } from '../domaines/personnes-service.js';
 
 const REF = '2026-11-09';
 // Réglages inventés pour les tests : ni délai ni durée réels.
@@ -117,5 +118,21 @@ describe('service des demandes des personnes', () => {
     expect(s.traiter('t', 'dem_6', { issue: 'limitee' })).toEqual(t);
     expect(s.journal()).toHaveLength(2);
     expect(s.lister().filter((x) => x.id.startsWith('dem-'))).toHaveLength(1);
+  });
+
+  it('empreinte-pure-sans-node-crypto', () => {
+    const source = readFileSync(new URL('../domaines/personnes-service.ts', import.meta.url), 'utf8');
+    expect(source).not.toMatch(/node:crypto|from 'crypto'/);
+    expect(empreintePure('dem_1|limitee')).toMatch(/^[0-9a-f]{64}$/);
+    expect(empreintePure('dem_1|limitee')).toBe(empreintePure('dem_1|limitee'));
+    expect(empreintePure('dem_1|limitee')).not.toBe(empreintePure('dem_2|limitee'));
+    expect(empreintePure('')).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('empreinte-injectee-utilisee-pour-le-traitement', () => {
+    const vues: string[] = [];
+    const s = creer({ empreinte: (t) => { vues.push(t); return 'a'.repeat(64); } });
+    s.traiter('t', 'dem_6', { issue: 'limitee' });
+    expect(vues).toEqual(['dem_6|limitee']);
   });
 });

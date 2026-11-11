@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { genererRgpd, type JeuRgpd } from '../../../donnees-fictives/src/rgpd.js';
 import { conserverJusquAu, type RegleConservation } from '../../../noyau/src/conservation/regles.js';
 import { aRappeler, changerEtat, enRetard, nouvelleDemande, TRANSITIONS } from '../../../noyau/src/rgpd/demandes.js';
@@ -37,6 +36,8 @@ export interface OptionsPersonnes {
   /** Pour une demande d'effacement : critère des personnes concernées, par id de demande. */
   concernes?: Readonly<Record<string, Critere>>;
   gel?: (source: string, id: string) => boolean;
+  /** Fonction d'empreinte injectée (le serveur Node peut fournir SHA-256) ; par défaut `empreintePure`. */
+  empreinte?: (texte: string) => string;
 }
 
 const ACTEUR_ESSAI = 'agent_exemple';
@@ -49,7 +50,16 @@ const MAPPAGE: Readonly<Record<string, CodePersonnes>> = {
   recherche_trop_courte: 'RECHERCHE_TROP_COURTE',
 };
 const comparer = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-const empreinte = (t: string): string => createHash('sha256').update(t).digest('hex');
+/** Empreinte pure fictive de 64 caractères hexadécimaux (huit voies FNV-1a) : aucun module Node, donc sûre dans le navigateur. */
+export function empreintePure(t: string): string {
+  let hex = '';
+  for (let voie = 0; voie < 8; voie++) {
+    let h = (0x811c9dc5 ^ Math.imul(voie + 1, 0x9e3779b1)) >>> 0;
+    for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 0x01000193) >>> 0;
+    hex += h.toString(16).padStart(8, '0');
+  }
+  return hex;
+}
 
 function traduire(e: unknown): Error {
   if (e instanceof ErreurPersonnes) return e;
@@ -148,7 +158,7 @@ export function creerServicePersonnes(options: OptionsPersonnes) {
         const refus = corps.issue === 'refus_conservation' || corps.issue === 'refus_gel';
         const vers: EtatDemande = corps.issue === 'renvoi_societe' ? 'transmise_a_la_societe' : refus ? 'refusee' : 'traitee';
         const base = vers === 'transmise_a_la_societe' || d.etat !== 'recue' ? d : changerEtat(d, 'en_cours', { par: ACTEUR_ESSAI, le }).demande;
-        const o: Parameters<typeof changerEtat>[2] = { par: ACTEUR_ESSAI, le, issue: corps.issue, fichierEmpreinte: empreinte(`${id}|${corps.issue}`) };
+        const o: Parameters<typeof changerEtat>[2] = { par: ACTEUR_ESSAI, le, issue: corps.issue, fichierEmpreinte: (options.empreinte ?? empreintePure)(`${id}|${corps.issue}`) };
         if (corps.motif !== undefined) o.motif = corps.motif;
         if (source !== undefined) o.source = source;
         const r = changerEtat(base, vers, o);
