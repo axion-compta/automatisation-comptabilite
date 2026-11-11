@@ -14,7 +14,6 @@ export interface PortInstantanes {
   periodesDeclarees(societeId: string): Promise<readonly Periode[]>;
 }
 export interface PortVus {
-  /** Dernière version vue pour l'objet, ou 0 ; `dejaVu` répond pour un identifiant d'événement. */
   derniereVersion(societeId: string, objetId: string): Promise<number>;
   noter(e: Enveloppe): Promise<void>;
   dejaVu(societeId: string, id: string): Promise<boolean>;

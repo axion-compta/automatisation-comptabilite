@@ -57,15 +57,8 @@ export function inscrireTravailHoraire(
     nom: NOM_TRAVAIL_HORAIRE,
     rythme: { chaque: 'heure', minute: 0 },
     async executer(passage) {
-      let echecs = 0;
-      for (const societeId of await o.societes()) {
-        try {
-          await o.evaluateur.evaluer(societeId, passage.prevuLe);
-        } catch {
-          echecs += 1;
-        }
-      }
-      if (echecs > 0) throw new Error('societes_en_echec');
+      const sorties = await Promise.allSettled([...(await o.societes())].map((s) => o.evaluateur.evaluer(s, passage.prevuLe)));
+      if (sorties.some((x) => x.status === 'rejected')) throw new Error('societes_en_echec');
     },
   });
 }

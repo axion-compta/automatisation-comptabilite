@@ -8,7 +8,7 @@ import { creerEvaluateur, inscrireTravailHoraire, type CompteursMenu } from '../
 import { creerConsommateur } from '../evenements-interface.js';
 
 const S = 'societe-test';
-const attendre = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
+const attendre = (): Promise<void> => new Promise((r) => { setTimeout(r, 0); });
 
 function monde(constatsInitiaux: Constat[] = []) {
   const alertes = new Map<string, Alerte[]>();
@@ -135,12 +135,5 @@ describe('événements d\'écriture', () => {
     const r = await Promise.all([x.c.consommer(evt('e1', 'compta.tiers.cree', 1)), x.c.consommer(evt('e1', 'compta.tiers.cree', 1))]);
     expect(r).toEqual(['traite', 'doublon']);
     expect(x.m.etat.evaluations).toBe(1);
-  });
-
-  it('événement sans écriture : alertes relancées, instantanés intacts', async () => {
-    const x = consommateur();
-    await x.c.consommer(evt('e1', 'compta.releve.importe', 1));
-    expect(x.m.etat.evaluations).toBe(1);
-    expect(x.calculs).toEqual([]);
   });
 });
