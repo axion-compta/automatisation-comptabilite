@@ -13,11 +13,7 @@ const codeDe = (r: ReponsePersonnes): unknown => (r.json as { code?: unknown }).
 export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
   const avec = async <T>(avecReglage: boolean, f: (c: Awaited<ReturnType<CiblePersonnes>>) => Promise<T>): Promise<T> => {
     const c = await cible(avecReglage);
-    try {
-      return await f(c);
-    } finally {
-      await c.fermer();
-    }
+    try { return await f(c); } finally { await c.fermer(); }
   };
   describe('suite demandes des personnes : ' + nom, () => {
     it('lister-les-six-demandes', () =>
@@ -28,7 +24,6 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         expect(l.map((d) => d.id)).toEqual(['dem_1', 'dem_3', 'dem_4', 'dem_2', 'dem_5', 'dem_6']);
         expect(l.map((d) => d.echeance)).toEqual([...l.map((d) => d.echeance)].sort());
       }));
-
     it('enregistrer-puis-lister', () =>
       avec(true, async (c) => {
         const poster = () => c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }, 'cle-enregistrer-1');
@@ -39,7 +34,6 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         const l = corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'));
         expect([l.length, l.filter((x) => x.id === d.id).length]).toEqual([7, 1]);
       }));
-
     it('rechercher-par-nom', () =>
       avec(true, async (c) => {
         const r = await c.appeler('GET', '/personnes/recherche?nom=' + encodeURIComponent('Camille Exemple'));
@@ -48,23 +42,19 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         expect(t.filter((x) => x.source === 'pieces')).toHaveLength(12);
         expect(t.every((x) => x.par === 'nom')).toBe(true);
       }));
-
     it('recherche-vide-422', () =>
       avec(true, async (c) => {
-        const [vide, court] = [await c.appeler('GET', '/personnes/recherche'), await c.appeler('GET', '/personnes/recherche?nom=ab')];
-        expect([vide, court].map((r) => [r.status, codeDe(r)])).toEqual([[422, 'RECHERCHE_VIDE'], [422, 'RECHERCHE_TROP_COURTE']]);
+        const rs = [await c.appeler('GET', '/personnes/recherche'), await c.appeler('GET', '/personnes/recherche?nom=ab')];
+        expect(rs.map((r) => [r.status, codeDe(r)])).toEqual([[422, 'RECHERCHE_VIDE'], [422, 'RECHERCHE_TROP_COURTE']]);
       }));
-
     it('traiter-refus-sans-source-422', () =>
       avec(true, async (c) => {
         const cree = corpsDe<Demande>(await c.appeler('POST', '/personnes/demandes', { type: 'effacement', recue_le: '2026-11-09' }, 'cle-effacement-1'));
         // Aucune personne concernée n'est rattachée : le refus n'est pas permis (422 exact). La règle « source manquante » est prouvée sur le service (commun-personnes.test.ts).
         const r = await c.appeler('POST', `/personnes/demandes/${cree.id}/traitement`, { issue: 'refus_conservation', motif: 'Motif fictif.' }, 'cle-refus-0001');
-        expect(r.status).toBe(422);
-        expect(codeDe(r)).toBe('ISSUE_NON_PERMISE');
+        expect([r.status, codeDe(r)]).toEqual([422, 'ISSUE_NON_PERMISE']);
         expect(corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes')).find((d) => d.id === cree.id)?.etat).toBe('recue');
       }));
-
     it('traiter-deux-fois-409', () =>
       avec(true, async (c) => {
         const cree = corpsDe<Demande>(await c.appeler('POST', '/personnes/demandes', { type: 'acces', recue_le: '2026-11-09' }, 'cle-acces-0001'));
@@ -74,7 +64,6 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         const deux = await c.appeler('POST', chemin, { issue: 'renvoi_societe' }, 'cle-traiter-02');
         expect([deux.status, codeDe(deux)]).toEqual([409, 'DEJA_TRAITEE']);
       }));
-
     it('entrees-invalides-400', () =>
       avec(true, async (c) => {
         const reponses = [
@@ -86,7 +75,6 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         expect(reponses.map((r) => [r.status, codeDe(r)])).toEqual(Array(4).fill([400, 'BAD_REQUEST']));
         expect(corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'))).toHaveLength(6);
       }));
-
     it('sans-reglage-503', () =>
       avec(false, async (c) => {
         for (const [m, p, corps] of [

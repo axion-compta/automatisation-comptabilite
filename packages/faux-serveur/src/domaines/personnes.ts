@@ -8,15 +8,18 @@ import { erreurExploitation, type OptionsExploitationFaux } from './options-expl
 /** Personnes : même service que le serveur, état par `creerHandlers` ; recherche déclarée avant `/demandes/{id}/…`. */
 export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler[] => {
   const reglages = options.reglagesPersonnes;
-  const service = reglages === undefined ? null : creerServicePersonnes({
+  type Service = ReturnType<typeof creerServicePersonnes>;
+  let cache: Service | undefined; // créé à la première requête : en mode simulé, monter les handlers ne génère pas le jeu (node:crypto)
+  const service = (): Service | null => reglages === undefined ? null : (cache ??= creerServicePersonnes({
     horloge: options.horloge, dateReference: options.dateReference, moisReponse: reglages.moisReponse, joursRappel: reglages.joursRappel,
     regles: (options.reglesConservation ?? []) as readonly RegleConservation[],
-  });
-  const repondre = async (statutSucces: number, f: (s: NonNullable<typeof service>) => unknown) => {
+  }));
+  const repondre = async (statutSucces: number, f: (s: Service) => unknown) => {
     await options.attendre();
-    if (service === null) return erreurExploitation('REGLAGE_ABSENT', 503);
+    const s = service();
+    if (s === null) return erreurExploitation('REGLAGE_ABSENT', 503);
     try {
-      return HttpResponse.json({ body: f(service) }, { status: statutSucces });
+      return HttpResponse.json({ body: f(s) }, { status: statutSucces });
     } catch (e) {
       if (e instanceof ErreurPersonnes) return erreurExploitation(e.code, e.status);
       throw e;
@@ -30,15 +33,15 @@ export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler
   return [
     http.get(options.base + '/personnes/recherche', ({ request }) => {
       const q = RequeteRecherche.safeParse(Object.fromEntries(new URL(request.url).searchParams));
-      return q.success ? repondre(200, (s) => s.rechercher(q.data as Parameters<NonNullable<typeof service>['rechercher']>[0])) : refuse();
+      return q.success ? repondre(200, (s) => s.rechercher(q.data as Parameters<Service['rechercher']>[0])) : refuse();
     }),
     http.get(options.base + '/personnes/demandes', () => repondre(200, (s) => s.lister())),
     http.post(options.base + '/personnes/demandes', async ({ request }) => {
-      const e = await entree<Parameters<NonNullable<typeof service>['enregistrer']>[1]>(request, CorpsEnregistrerDemande);
+      const e = await entree<Parameters<Service['enregistrer']>[1]>(request, CorpsEnregistrerDemande);
       return e === null ? refuse() : repondre(201, (s) => s.enregistrer(e.cle, e.corps));
     }),
     http.post(options.base + '/personnes/demandes/:id/traitement', async ({ request, params }) => {
-      const e = await entree<Parameters<NonNullable<typeof service>['traiter']>[2]>(request, CorpsTraiterDemande);
+      const e = await entree<Parameters<Service['traiter']>[2]>(request, CorpsTraiterDemande);
       return e === null ? refuse() : repondre(200, (s) => s.traiter(e.cle, String(params['id']), e.corps));
     }),
   ];

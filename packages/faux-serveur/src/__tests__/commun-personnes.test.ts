@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { setupServer } from 'msw/node';
 import { creerApp } from '../../../../apps/serveur/src/app.js';
 import { creerServicePersonnes } from '../../../contrat/src/domaines/personnes-service.js';
@@ -6,6 +6,7 @@ import { creerHandlers } from '../handlers.js';
 import { handlersPersonnes } from '../domaines/personnes.js';
 import { suitePersonnes, type CiblePersonnes } from './suite-personnes.js';
 
+vi.mock('../../../contrat/src/domaines/personnes-service.js', async (o) => { const m = await o<Record<string, never>>(); return { ...m, creerServicePersonnes: vi.fn(m['creerServicePersonnes']) }; }); // espion
 const H = 'http://exemple.fr';
 const HORLOGE = () => '2026-11-09T10:00:00Z';
 const REGLAGES_FICTIFS = { moisReponse: 2, joursRappel: 3 }; // inventés : ni délai ni durée réels
@@ -24,7 +25,6 @@ const cibleVrai: CiblePersonnes = async (avecReglage) => {
     fermer: () => app.close(),
   };
 };
-
 const cibleFaux: CiblePersonnes = async (avecReglage) => {
   // Sans réglage : `handlersPersonnes` est monté sans `reglagesPersonnes`, pour exécuter son chemin 503.
   serveur.use(...(avecReglage ? creerHandlers({ base: H, horloge: HORLOGE, dateReferenceExploitation: '2026-11-09' }) : handlersPersonnes({ base: H, horloge: HORLOGE, dateReference: '2026-11-09', attendre: async () => {} })));
@@ -56,4 +56,11 @@ describe('demandes des personnes : état par instance', () => {
     await a.fermer();
     expect(await taille(await cibleFaux(true))).toBe(6);
   });
+});
+it('service-cree-a-la-premiere-requete-seulement', async () => { // le jeu RGPD (node:crypto) n'est pas généré au montage des handlers
+  vi.mocked(creerServicePersonnes).mockClear();
+  const c = await cibleFaux(true);
+  expect(creerServicePersonnes).not.toHaveBeenCalled();
+  await c.appeler('GET', '/personnes/demandes');
+  expect(creerServicePersonnes).toHaveBeenCalledTimes(1);
 });
