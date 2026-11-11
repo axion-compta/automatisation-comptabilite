@@ -60,10 +60,12 @@ export function creerServiceVentes(jeu: JeuVentes = genererVentes()) {
       debitCentimes: debit ? montant : 0,
       creditCentimes: debit ? 0 : montant,
     });
+    // Le tiers prend la somme des lignes HT et de la TVA : l'écriture reste équilibrée même si le TTC du jeu s'en écarte.
+    const total = p.lignes.reduce((s, l) => s + l.htCentimes, 0) + p.tvaCentimes;
     return {
       statut: p.statutEcriture,
       lignes: [
-        ligne('411000', p.ttcCentimes, !avoir),
+        ligne('411000', total, !avoir),
         ...p.lignes.map((l) => ligne(l.compteProduit, l.htCentimes, avoir)),
         ligne('445710', p.tvaCentimes, avoir),
       ],

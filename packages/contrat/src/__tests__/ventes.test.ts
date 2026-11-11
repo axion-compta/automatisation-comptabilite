@@ -30,6 +30,11 @@ describe('service ventes', () => {
     expect(r.total).toBeGreaterThan(0);
     expect(r.body.every((v) => v.etat === 'en_retard')).toBe(true);
     expect(r.body.every((v) => (v.joursDeRetard ?? 0) > 0)).toBe(true);
+    for (const v of r.body) {
+      const p = societe.pieces.find((x) => x.id === v.id)!;
+      const jours = Math.round((Date.parse(`${jeu.dateReference}T00:00:00Z`) - Date.parse(`${p.echeance}T00:00:00Z`)) / 86400000);
+      expect(v.joursDeRetard, v.id).toBe(jours);
+    }
     expect(tout.body.filter((v) => v.etat !== 'en_retard').every((v) => v.joursDeRetard === undefined)).toBe(true);
     expect(service.lister({ etat: 'inconnu' }).total).toBe(0);
   });
@@ -79,6 +84,19 @@ describe('service ventes', () => {
     expect(debit).toBe(credit);
     const avecCarte = societe.pieces.find((x) => x.cartes.length > 0)!;
     expect(service.lire(avecCarte.id)?.cartes.map((c) => c.code)).toEqual(avecCarte.cartes);
+  });
+
+  it('ecritures-equilibrees-sur-toutes-les-pieces', () => {
+    let nb = 0;
+    for (const p of societe.pieces) {
+      const e = service.lire(p.id)?.ecriture;
+      if (!e) continue;
+      nb++;
+      const debit = e.lignes.reduce((s, l) => s + l.debitCentimes, 0);
+      const credit = e.lignes.reduce((s, l) => s + l.creditCentimes, 0);
+      expect(debit, p.id).toBe(credit);
+    }
+    expect(nb).toBeGreaterThan(0);
   });
 
   it('vente-inconnue-404', () => {
