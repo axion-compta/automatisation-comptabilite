@@ -1,16 +1,26 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
-import { configEssai } from '../../../../apps/serveur/src/domaines/frais-validation.js';
 import { genererFrais } from '../../../donnees-fictives/src/frais.js';
 import { CompletementFrais, NouveauFrais } from '../../../contrat/src/domaines/frais-actions.js';
 import { creerServiceFraisActions, ErreurActions } from '../../../contrat/src/domaines/frais-actions-service.js';
 import { CorpsRemboursement, CorpsValidation } from '../../../contrat/src/domaines/frais-validation.js';
-import { creerServiceFraisValidation, ErreurValidation } from '../../../contrat/src/domaines/frais-validation-service.js';
+import { creerServiceFraisValidation, ErreurValidation, type ConfigValidation } from '../../../contrat/src/domaines/frais-validation-service.js';
 import { CleIdempotence } from '../../../contrat/src/schemas.js';
 import type { ContexteFaux } from '../registres/types.js';
 
 const STATUTS: Record<string, number> = { PERSONNE_DIFFERENTE: 403, FRAIS_INCONNU: 404, VERSION_PERIMEE: 412, ENTREE_INVALIDE: 400 };
 const VERSION = /^[1-9]\d{0,8}$/;
 const PERSONNE = /^.{1,50}$/;
+
+/** Réglages d'essai fictifs, les mêmes que ceux du serveur en mémoire ; rien n'est lu dans l'environnement (le navigateur n'en a pas). */
+const configEssai = (): ConfigValidation => ({
+  comptes: { chargeParNature: { repas_affaires: '625700', carburant: '606100', parking: '625100' }, chargeIk: '625110', tvaDeductible: '445660', comptePersonne: '467000', banque: '512000' },
+  journal: 'OD',
+  periodes: [2025, 2026].map((a) => ({ debut: `${a}-01-01`, fin: `${a}-12-31`, ouverte: true })),
+  seuilLotNombre: 5,
+  seuilLotMontantCentimes: 100000,
+  delaiAnnulationMs: 60000,
+  maintenant: () => Date.now(),
+});
 
 /** Cinq routes d'écriture des frais : mêmes services que le vrai serveur, état en mémoire propre à chaque instance. */
 export function handlersFraisActions(ctx: ContexteFaux): HttpHandler[] {
