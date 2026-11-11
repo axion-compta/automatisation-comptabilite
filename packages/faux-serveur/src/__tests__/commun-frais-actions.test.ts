@@ -34,15 +34,15 @@ suiteFraisActions('faux serveur (MSW)', faux);
 
 describe('faux serveur : état par instance', () => {
   it('etat-par-instance', async () => {
-    const entetes = { 'idempotency-key': 'cle-instance-01', 'x-personne': 'PER-01' };
+    const entetesAvec = (cle: string) => ({ 'idempotency-key': cle, 'x-personne': 'PER-01' });
     const corps = { nature: 'depense', personneId: 'PER-01', date: '2025-06-10', libelle: 'Achat fictif', montantTtcCentimes: 1234 };
-    const creer = async () => {
+    const creer = async (cle: string) => {
       serveur.resetHandlers();
       serveur.use(...creerHandlers({ base: H }));
-      return (await demarrer()('POST', '/frais', entetes, corps)).json as { body: { id: string } };
+      return (await demarrer()('POST', '/frais', entetesAvec(cle), corps)).json as { body: { id: string } };
     };
-    const un = await creer();
-    const deux = await creer();
+    const un = await creer('cle-instance-01');
+    const deux = await creer('cle-instance-02');
     expect(deux.body.id).toBe(un.body.id);
   });
 });
