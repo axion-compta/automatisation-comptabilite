@@ -38,4 +38,6 @@ export const e24Ventes = {
   aucuneVenteMois: 'aucune vente ce mois-ci',
   provisoire: 'provisoire',
   avoirLie: 'avoir de {montant} lié',
+  legende: 'Liste de vos factures de vente',
+  colonnes: { numero: 'Numéro', client: 'Client', date: 'Date', ttc: 'Total TTC', resteDu: 'Reste dû', etat: 'État', action: 'Action' },
 } as const;
