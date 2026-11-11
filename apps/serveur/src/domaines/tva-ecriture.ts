@@ -3,7 +3,6 @@ import type { contrat } from '../../../../packages/contrat/src/routes.js';
 import { deductionPreparee, demanderInclureSousReserve, ErreurSousReserve, passerEnSousReserve, type LigneTvaAchat } from '../../../../packages/noyau/src/tva/sous-reserve.js';
 import { deplacerPiece, ErreurRattachement, type Rattachement } from '../../../../packages/noyau/src/tva/rattachement.js';
 import { carteTva } from '../../../../packages/noyau/src/tva/rappel-paiement.js';
-
 export type Acteur = { type: 'personne' | 'ia'; id: string; role: string };
 /** Fourni plus tard par la console (D29). Aucun en-tête de requête ne choisit l'acteur. */
 export interface PortSession { lire(): { acteur: Acteur } | undefined }
@@ -13,23 +12,20 @@ export interface PortJournal { ecrire(ligne: LigneJournal): void }
 /** État FICTIF en mémoire. */
 export type EtatTva = { lignes: LigneTvaAchat[]; rattachements: Rattachement[]; periodesDeposees: string[] };
 export type Ports = { session: PortSession; journal: PortJournal; horloge: () => string; etat: EtatTva };
-
 type Code = 'NON_AUTHENTIFIE' | 'REGLAGE_VERROUILLE' | 'ACTEUR_NON_HUMAIN' | 'OBJET_INCONNU' | 'PERIODE_BLOQUEE' | 'TRANSITION_INTERDITE' | 'PERIODE_DEPOSEE' | 'MOIS_IDENTIQUE' | 'DEJA_FAIT';
 export type Resultat = { ok: unknown } | { erreur: Code };
-
 /** Service par défaut : aucune session, tout est refusé en 401. */
 export const sessionAbsente: PortSession = { lire: () => undefined };
 const journalNul: PortJournal = { ecrire: () => undefined };
 const jourSysteme = (): string => new Date().toISOString().slice(0, 10);
-
 export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
   const { session, journal, horloge } = { session: sessionAbsente, journal: journalNul, horloge: jourSysteme, ...ports };
   const source = ports.etat ?? { lignes: [], rattachements: [], periodesDeposees: [] };
-  const etat: EtatTva = { lignes: source.lignes.map((l) => ({ ...l })), rattachements: source.rattachements.map((r) => ({ ...r })), periodesDeposees: [...source.periodesDeposees] };
+  const copie = (e: EtatTva): EtatTva => ({ lignes: e.lignes.map((l) => ({ ...l })), rattachements: e.rattachements.map((r) => ({ ...r })), periodesDeposees: [...e.periodesDeposees] });
+  const etat = copie(source);
   const traites = new Set<string>();
   const rejeux = new Map<string, { empreinte: string; resultat: Resultat }>();
   const refusVus = new Set<string>();
-
   /** Session, rejeu de la même clé, objet déjà traité, règle propre à l'effet, puis une ligne de journal. */
   function agir(cle: string, empreinte: string, unique: boolean, regle: (a: Acteur, le: string) => { reponse: unknown; ligne: { type: LigneJournal['type']; [detail: string]: unknown } } | { erreur: Code }): Resultat {
     const s = session.lire();
@@ -46,12 +42,9 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
     journal.ecrire({ ...r.ligne, par: s.acteur.id, le });
     return resultat;
   }
-
   const mois = (piece: string) => etat.rattachements.find((r) => r.pieceId === piece)?.mois;
-
   return {
-    etat: (): EtatTva => ({ lignes: etat.lignes.map((l) => ({ ...l })), rattachements: etat.rattachements.map((r) => ({ ...r })), periodesDeposees: [...etat.periodesDeposees] }),
-
+    etat: (): EtatTva => copie(etat),
     /** Refus pour tout rôle ; une ligne de refus par tentative de clé nouvelle ; rien n'est modifié. */
     modifierInclureSousReserve(cle: string): Resultat {
       const s = session.lire();
@@ -63,7 +56,6 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
       }
       return { erreur: 'REGLAGE_VERROUILLE' };
     },
-
     cocherTvaPayee: (cle: string, exercice: string, periode: string): Resultat =>
       agir(cle, ['payee', exercice, periode].join('|'), true, (a, le) => {
         if (!etat.rattachements.some((r) => r.mois === periode) && !etat.periodesDeposees.includes(periode)) return { erreur: 'OBJET_INCONNU' };
@@ -72,7 +64,6 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
         if (carte.etat !== 'payee') return { erreur: 'PERIODE_BLOQUEE' };
         return { reponse: carte, ligne: { type: 'tva_payee_cochee', periode, origine: 'coche' } };
       }),
-
     passerLigneEnSousReserve: (cle: string, exercice: string, ligne: string, motif: string): Resultat =>
       agir(cle, ['sous-reserve', exercice, ligne].join('|'), true, (a, le) => {
         const l = etat.lignes.find((x) => x.id === ligne);
@@ -87,7 +78,6 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
           throw e;
         }
       }),
-
     modifierRattachement: (cle: string, exercice: string, piece: string, nouveauMois: string): Resultat =>
       agir(cle, ['rattachement', exercice, piece, nouveauMois].join('|'), false, (a, le) => {
         try {
@@ -102,22 +92,18 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
           throw e;
         }
       }),
-
     /** Pour les tests : la déduction préparée de l'état courant. */
     deduction: () => deductionPreparee(etat.lignes),
   };
 }
 export type ServiceEcritureTva = ReturnType<typeof creerServiceEcritureTva>;
-
 type Erreurs = Record<string, () => Error>;
 type Entree = { params: Record<string, string>; headers: Record<string, string>; body: Record<string, string> };
 type Os = ReturnType<typeof implement<typeof contrat.tva>>;
-
 const issue = (r: Resultat, errors: Erreurs) => {
   if ('ok' in r) return { body: r.ok };
   throw (errors[r.erreur] as () => Error)();
 };
-
 export function implementerEcritureTva(os: Os, service: ServiceEcritureTva) {
   const lier = (f: (cle: string, i: Entree) => Resultat) => (({ input, errors }: { input: Entree; errors: Erreurs }) => issue(f(input.headers['idempotency-key'] as string, input), errors)) as never;
   return {
