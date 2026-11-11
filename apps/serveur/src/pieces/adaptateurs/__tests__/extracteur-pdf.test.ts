@@ -56,8 +56,8 @@ describe('ExtracteurPdf', () => {
     expect(melange.map((e) => e.texte)).toEqual(['Total cache fin', 'Ligne2']);
     expect(melange[0]!.couleur).toEqual([255, 255, 255]);
     expect(melange[1]!.couleur).toEqual([0, 0, 0]);
-    const invisible = (await new ExtracteurPdf().extraire(fabriquer({ textes: [], brut: 'BT /F1 12 Tf 3 Tr 50 700 Td (invisible) Tj ET\nBT /F1 12 Tf 0 Tr 50 650 Td (visible) Tj ET' }))).elements;
-    expect(invisible.map((e) => [e.texte, e.couleur])).toEqual([['invisible', [255, 255, 255]], ['visible', [0, 0, 0]]]);
+    const invisible = (await new ExtracteurPdf().extraire(fabriquer({ textes: [], brut: 'BT /F1 12 Tf 3 Tr 50 700 Td (invisible) Tj ET\nBT /F1 12 Tf 7 Tr 50 600 Td (clip) Tj ET\nBT /F1 12 Tf 0 Tr 50 650 Td (visible) Tj ET' }))).elements;
+    expect(invisible.map((e) => [e.texte, e.couleur])).toEqual([['invisible', [255, 255, 255]], ['clip', [255, 255, 255]], ['visible', [0, 0, 0]]]);
     const calques = (await new ExtracteurPdf().extraire(fabriquer({
       textes: [], catalogue: '/OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] /Order [6 0 R] >> >>', extras: ['<< /Type /OCG /Name (calque) >>'],
       brut: '/OC /OC1 BDC BT /F1 12 Tf 50 700 Td (Cache) Tj ET EMC\nBT /F1 12 Tf 50 650 Td (Dehors) Tj ET',

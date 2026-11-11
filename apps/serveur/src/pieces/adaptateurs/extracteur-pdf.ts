@@ -49,7 +49,7 @@ async function affichagesDeTexte(page: pdfjs.PDFPageProxy, calques: { isVisible(
     else if ((op === OPS.showText || op === OPS.showSpacedText) && a) {
       const glyphes = Array.isArray(a[0]) ? (a[0] as { unicode?: unknown }[]) : [];
       const texte = glyphes.map((g) => (typeof g?.unicode === 'string' ? g.unicode : '')).join('');
-      sortie.push({ texte, couleur: courante, invisible: rendu === 3, calqueMasque: marques.some(Boolean) });
+      sortie.push({ texte, couleur: courante, invisible: rendu === 3 || rendu === 7, calqueMasque: marques.some(Boolean) });
     }
   });
   return sortie;
