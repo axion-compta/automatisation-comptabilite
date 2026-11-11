@@ -9,10 +9,7 @@ import { erreurExploitation, type OptionsExploitationFaux } from './options-expl
 export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler[] => {
   const reglages = options.reglagesPersonnes;
   const service = reglages === undefined ? null : creerServicePersonnes({
-    horloge: options.horloge,
-    dateReference: options.dateReference,
-    moisReponse: reglages.moisReponse,
-    joursRappel: reglages.joursRappel,
+    horloge: options.horloge, dateReference: options.dateReference, moisReponse: reglages.moisReponse, joursRappel: reglages.joursRappel,
     regles: (options.reglesConservation ?? []) as readonly RegleConservation[],
   });
   const repondre = async (statutSucces: number, f: (s: NonNullable<typeof service>) => unknown) => {
