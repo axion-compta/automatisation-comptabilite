@@ -1,11 +1,13 @@
 import { implement } from '@orpc/server';
 import { contrat } from '../../../../packages/contrat/src/routes.js';
 import { creerServiceTva, type ServiceTva } from '../../../../packages/contrat/src/domaines/tva-service.js';
+import { creerServiceEcritureTva, implementerEcritureTva, type ServiceEcritureTva } from './tva-ecriture.js';
 
 /** Routes de la TVA (lecture seule), branchées sur le service en mémoire. */
-export function routesTva(service: ServiceTva = creerServiceTva()) {
+export function routesTva(service: ServiceTva = creerServiceTva(), ecriture: ServiceEcritureTva = creerServiceEcritureTva()) {
   const os = implement(contrat.tva);
   return {
+    ...implementerEcritureTva(os, ecriture),
     listerPeriodesTva: os.listerPeriodesTva.handler(({ input, errors }) => {
       const r = service.periodes(input.params.exercice, input.query);
       if (!r) throw errors.EXERCICE_INCONNU();
