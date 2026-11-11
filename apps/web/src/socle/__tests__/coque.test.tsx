@@ -10,6 +10,7 @@ import { ouvrirPalette } from '../../commandes/Palette.js';
 import { socle } from '../../../../../packages/textes/src/ecrans/socle.js';
 import { BARRE_MOBILE, LIBELLES_MENU, MENU_BUREAU, MENU_PLUS } from '../menu.js';
 import { route as routeM04 } from '../../ecrans/m04/route.js';
+import { ContexteBailSupport, type BailSupportAffiche } from '../Coque.js';
 import { creerRouteur } from '../routeur.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -21,13 +22,13 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-async function afficher(url: string): Promise<HTMLElement> {
+async function afficher(url: string, bail: BailSupportAffiche | null = null): Promise<HTMLElement> {
   const routeur = creerRouteur([routeM04], createMemoryHistory({ initialEntries: [url] }));
   const hote = document.createElement('div');
   document.body.append(hote);
   racine = createRoot(hote);
   await act(async () => {
-    racine?.render(<RouterProvider router={routeur} />);
+    racine?.render(<ContexteBailSupport.Provider value={bail}><RouterProvider router={routeur} /></ContexteBailSupport.Provider>);
   });
   return hote;
 }
@@ -242,5 +243,21 @@ describe('coque : menu mémorisé et palette', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
     });
     expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+});
+
+describe('coque et bail de support', () => {
+  const sel = '.axion-bandeau-support';
+  it('bandeau-visible-pendant-le-bail', async () => {
+    const h = await afficher('/', { actif: true, texte: 'Texte fictif : le support lit votre dossier.' });
+    const b = h.querySelectorAll(sel);
+    expect(b).toHaveLength(1);
+    expect(b[0]?.textContent).toBe('Texte fictif : le support lit votre dossier.');
+  });
+  it('bandeau-absent-sans-bail-ou-bail-echu', async () => {
+    expect((await afficher('/')).querySelector(sel)).toBeNull();
+    act(() => racine?.unmount());
+    document.body.innerHTML = '';
+    expect((await afficher('/', { actif: false, texte: 'Texte fictif' })).querySelector(sel)).toBeNull();
   });
 });
