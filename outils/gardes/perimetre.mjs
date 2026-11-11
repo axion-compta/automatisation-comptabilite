@@ -115,6 +115,9 @@ function dependances(jsonTexte, chemin) {
 
 export const OPENAPI = 'packages/contrat/openapi.json';
 export const PLAFOND_OPENAPI = 600;
+const FRAGMENT_OPENAPI = /^packages\/contrat\/openapi\/lot-\d\d\/openapi\.json$/;
+// openapi.json du socle ou fragment par lot : comptés ensemble, plafond total.
+export const estOpenapi = (chemin) => chemin === OPENAPI || FRAGMENT_OPENAPI.test(chemin);
 
 // diff : { fichiers: [chemin], lignes: nombre, lignesOpenapi?: nombre }, paquets : [{ chemin, base, branche }] (textes package.json)
 export function analyserPerimetre(fiche, diff, paquets = []) {
@@ -234,7 +237,7 @@ export function collecter(git, env = {}, outils = {}) {
     // « - - » : git ne sait pas compter (binaire) ; plutôt que 0 ligne, rouge explicite.
     if (a === '-' || d === '-') erreurs.push(`fichier binaire non comptable : ${reste.join('\t')}`);
     const k = (parseInt(a, 10) || 0) + (parseInt(d, 10) || 0);
-    if (reste.join('\t') === OPENAPI) lignesOpenapi += k;
+    if (estOpenapi(reste.join('\t'))) lignesOpenapi += k;
     else autres += k;
   }
   let exempte = false;

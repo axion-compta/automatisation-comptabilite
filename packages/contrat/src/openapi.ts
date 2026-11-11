@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { contrat, contratChat } from './routes.js';
+import { contrat, contratChat, contratSocle } from './routes.js';
+import { REGISTRES } from './registres/index.js';
 
 type Sch = z.ZodType;
 interface Def {
@@ -14,8 +15,12 @@ interface Def {
 
 const DESCRIPTIONS: Record<number, string> = { 403: 'Interdit', 409: 'Conflit de version', 412: 'Version périmée', 422: 'Refusé', 423: 'Fermé' };
 
-function definitions(): Def[] {
-  return Object.values({ ...contrat, ...contratChat }).flatMap((domaine) => Object.values(domaine)).map((r) => {
+/** Source de routes : domaines nommés, chacun un objet de routes. */
+export type Source = Record<string, Record<string, unknown>>;
+const complet = (): Source => ({ ...contrat, ...contratChat }) as Source;
+
+function definitions(source: Source = complet()): Def[] {
+  return Object.values(source).flatMap((domaine) => Object.values(domaine)).map((r) => {
     const d = (r as unknown as { '~orpc': { route: { method: string; path: string; operationId: string; tags?: string[]; successStatus?: number }; inputSchema: Sch; errorMap: Record<string, { status: number }> } })['~orpc'];
     return { ...d.route, inputSchema: d.inputSchema, errors: d.errorMap ?? {} };
   });
@@ -24,13 +29,13 @@ function definitions(): Def[] {
 const forme = (s: Sch): { shape: Record<string, Sch> } => s as unknown as { shape: Record<string, Sch> };
 
 /** Routes qui lisent en POST (le texte est dans le corps) : seule exemption d'Idempotency-Key. */
-export function routesLectureParPost(): string[] {
-  return definitions().filter((d) => d.tags?.includes('lecture-par-post')).map((d) => d.operationId);
+export function routesLectureParPost(source?: Source): string[] {
+  return definitions(source).filter((d) => d.tags?.includes('lecture-par-post')).map((d) => d.operationId);
 }
 
 /** Une route d'écriture (hors GET) sans en-tête Idempotency-Key est une anomalie. */
-export function routesEcritureSansEnTete(): string[] {
-  return definitions()
+export function routesEcritureSansEnTete(source?: Source): string[] {
+  return definitions(source)
     .filter((d) => d.method !== 'GET' && !d.tags?.includes('lecture-par-post'))
     .filter((d) => {
       const h = forme(d.inputSchema).shape['headers'];
@@ -52,8 +57,45 @@ export function parametresRequete(schema: Sch | undefined): unknown[] {
 
 /** Document OpenAPI 3.1 déterministe (clés triées par construction). */
 export function genererOpenapi(): object {
-  const paths: Record<string, Record<string, unknown>> = {};
-  for (const d of definitions()) {
+  return document(definitions({ ...contratSocle, ...contratChat } as Source));
+}
+
+type Paths = Record<string, Record<string, unknown>>;
+
+/** Document OpenAPI d'un seul lot (registre du lot). */
+export function genererOpenapiLot(nn: string): object {
+  return document(definitions({ ...(REGISTRES[nn] as Source | undefined) }));
+}
+
+/** Socle, chat et tous les lots : fusion par chemin puis par méthode ; une méthode en double est une erreur. */
+export function genererOpenapiComplet(): object {
+  return fusionnerOpenapi([genererOpenapi(), ...Object.keys(REGISTRES).sort().map(genererOpenapiLot)]);
+}
+
+/** Document OpenAPI d'une source quelconque (utile aux tests et aux fragments). */
+export function genererOpenapiDe(source: Source): object {
+  return document(definitions(source));
+}
+
+/** Fusion par chemin puis par méthode ; une méthode en double sur un chemin est une erreur. */
+export function fusionnerOpenapi(documents: object[]): object {
+  const docs = documents as Array<{ paths: Paths }>;
+  const paths: Paths = {};
+  for (const doc of docs) {
+    for (const [chemin, ops] of Object.entries(doc.paths)) {
+      for (const [methode, op] of Object.entries(ops)) {
+        const cible = (paths[chemin] ??= {});
+        if (methode in cible) throw new Error(`OpenAPI : méthode en double ${methode.toUpperCase()} ${chemin}`);
+        cible[methode] = op;
+      }
+    }
+  }
+  return { openapi: '3.1.0', info: { title: 'Contrat Axion', version: '0.0.0' }, paths: Object.fromEntries(Object.entries(paths).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) };
+}
+
+function document(defs: Def[]): object {
+  const paths: Paths = {};
+  for (const d of defs) {
     const s = forme(d.inputSchema).shape;
     const parametres: unknown[] = [];
     if (s['headers']) parametres.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 8, maxLength: 128 } });
