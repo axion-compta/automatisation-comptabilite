@@ -9,7 +9,6 @@ export type CiblePersonnes = (avecReglage: boolean) => Promise<{
 type Demande = { id: string; etat: string; echeance: string };
 const corpsDe = <T>(r: ReponsePersonnes): T => (r.json as { body: T }).body;
 const codeDe = (r: ReponsePersonnes): unknown => (r.json as { code?: unknown }).code;
-
 /** Suite commune « demandes des personnes » : jouée sur le serveur en mémoire et sur le faux serveur. */
 export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
   const avec = async <T>(avecReglage: boolean, f: (c: Awaited<ReturnType<CiblePersonnes>>) => Promise<T>): Promise<T> => {
