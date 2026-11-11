@@ -11,11 +11,12 @@ const L: LibellesDictee = { dicter: 'L-dicter', envoyer: 'L-envoyer', zone: 'L-z
 let racine: Root | null = null;
 afterEach(() => (act(() => racine?.unmount()), (document.body.innerHTML = '')));
 
-const monter = (dureeMs: number, textes: string[], recapitulatifLu = false) => {
+const monter = (dureeMs: number, textes: string[], recapitulatifLu = false, capturePanne = false) => {
   const segments: Array<{ octets: Uint8Array; dureeMs: number }> = [];
   const envoyer = vi.fn();
   const faux = creerFauxTranscription(textes);
   const capturer = async () => {
+    if (capturePanne) throw new Error('micro_indisponible');
     const s = { octets: Uint8Array.from([9, 9]), dureeMs };
     segments.push(s);
     return s;
@@ -34,6 +35,14 @@ const saisir = (div: HTMLElement, valeur: string) => act(() => {
 });
 
 describe('Dictee', () => {
+  it('capture-en-panne : message d’erreur affiché, rien envoyé', async () => {
+    const { div, envoyer } = monter(1000, ['x'], false, true);
+    await cliquer(bouton(div, L.dicter));
+    expect(div.querySelector('[role=status]')?.textContent).toBe(L.erreur);
+    expect(zone(div).value).toBe('');
+    expect(envoyer).not.toHaveBeenCalled();
+  });
+
   it('transcription-editable : normalisée, nombres surlignés, modifiable avant envoi', async () => {
     const { div, envoyer } = monter(3000, ['payé 12.50 euros']);
     await cliquer(bouton(div, L.dicter));

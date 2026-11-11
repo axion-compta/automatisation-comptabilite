@@ -31,6 +31,12 @@ describe('transcription', () => {
     expect(faux.appels()).toBe(0);
     expect([...s.octets]).toEqual([0, 0, 0, 0]);
     await expect(transcrire(faux, segment(0))).rejects.toBeInstanceOf(SegmentTropLong);
+    for (const duree of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, -1]) {
+      const invalide = segment(duree);
+      await expect(transcrire(faux, invalide)).rejects.toBeInstanceOf(SegmentTropLong);
+      expect(faux.appels()).toBe(0);
+      expect([...invalide.octets]).toEqual([0, 0, 0, 0]);
+    }
     await expect(transcrire(faux, segment(SEGMENT_MAX_MS))).resolves.toBe('x');
   });
 
