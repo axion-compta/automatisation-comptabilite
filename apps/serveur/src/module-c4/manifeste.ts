@@ -37,6 +37,16 @@ export function migrerCompta(): string[] {
   return ['CREATE SCHEMA IF NOT EXISTS a_compta'];
 }
 
+// Bloc commercial (D73, D74) : déclaratif, sans aucun montant ; la console gère le reste.
+export const COMMERCIAL_COMPTA = {
+  modesArrivee: ['installation_axion', 'libre_service'],
+  libreService: true,
+  operationsMiseEnService: ['creerEspace', 'inviter', 'suspendre', 'geler', 'supprimer'],
+  evenementsConsommation: [
+    { code: 'consommation_ia', champs: ['societe', 'agent', 'coutMicroCentimes', 'date'] },
+  ],
+};
+
 export const MANIFESTE_COMPTA = {
   code: CODE_MODULE,
   version: VERSION_MODULE,
@@ -45,6 +55,7 @@ export const MANIFESTE_COMPTA = {
   actionsAutomatiquesAutorisees: [] as string[],
   tablesAjoutSeul: [] as string[],
   actif: false,
+  commercial: COMMERCIAL_COMPTA,
   jeuEssai: JEU_ESSAI_COMPTA,
   migrer: migrerCompta,
 };
