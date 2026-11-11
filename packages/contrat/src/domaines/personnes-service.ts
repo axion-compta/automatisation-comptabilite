@@ -51,17 +51,16 @@ const MAPPAGE: Readonly<Record<string, CodePersonnes>> = {
 };
 const comparer = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 const PREMIERS: number[] = [];
-for (let p = 2; PREMIERS.length < 64; p++) if (PREMIERS.every((d) => p % d !== 0)) PREMIERS.push(p);
+for (let p = 2; PREMIERS.length < 64; p++) if (PREMIERS.every((d) => p % d)) PREMIERS.push(p);
 const frac = (x: number): number => Math.floor((x - Math.floor(x)) * 2 ** 32);
 const K = PREMIERS.map((p) => frac(Math.cbrt(p)));
 const rot = (x: number, n: number): number => (x >>> n) | (x << (32 - n));
 /** SHA-256 pur et synchrone (hexadécimal, 64 caractères) sur l'UTF-8 du texte : aucun module Node, donc sûr dans le navigateur. */
 export function empreintePure(t: string): string {
   const o = new TextEncoder().encode(t);
-  const m = new Uint8Array(Math.ceil((o.length + 9) / 64) * 64);
+  const m = new Uint8Array(Math.ceil((o.length + 9) / 64) * 64), v = new DataView(m.buffer);
   m.set(o);
   m[o.length] = 0x80;
-  const v = new DataView(m.buffer);
   v.setUint32(m.length - 4, (o.length * 8) >>> 0);
   v.setUint32(m.length - 8, Math.floor((o.length * 8) / 2 ** 32));
   const h = PREMIERS.slice(0, 8).map((p) => frac(Math.sqrt(p)));
@@ -74,8 +73,7 @@ export function empreintePure(t: string): string {
         w[i] = ((w[i - 16] as number) + (rot(x, 7) ^ rot(x, 18) ^ (x >>> 3)) + (w[i - 7] as number) + (rot(y, 17) ^ rot(y, 19) ^ (y >>> 10))) >>> 0;
       }
     }
-    const [a0, b0, c0, d0, e0, f0, g0, h0] = h as [number, number, number, number, number, number, number, number];
-    let [a, bb, c, d, e, f, g, hh] = [a0, b0, c0, d0, e0, f0, g0, h0];
+    let [a, bb, c, d, e, f, g, hh] = h as [number, number, number, number, number, number, number, number];
     for (let n = 0; n < 64; n++) {
       const t1 = (hh + (rot(e, 6) ^ rot(e, 11) ^ rot(e, 25)) + ((e & f) ^ (~e & g)) + (K[n] as number) + (w[n] as number)) >>> 0;
       const t2 = ((rot(a, 2) ^ rot(a, 13) ^ rot(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) >>> 0;
