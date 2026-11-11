@@ -7,15 +7,39 @@ import type { ContexteFaux } from '../registres/types.js';
 /** Erreur déclarée au contrat : `defined` vrai, comme sur le vrai serveur. */
 const declaree = (code: string, status: number) => HttpResponse.json({ defined: true, code, status, message: code }, { status });
 
-/** Parties `fichiers[0]`, `fichiers[1]`… dans l'ordre des indices, comme le vrai serveur (oRPC) ; tout autre nom est ignoré. */
-function fichiersIndexes(form: FormData | null): File[] {
+/** Plus grand indice accepté par la notation à crochets du vrai serveur (oRPC). */
+const INDICE_MAX = 9999;
+
+/**
+ * Lit les fichiers comme le vrai serveur (notation à crochets) :
+ * - `fichiers[0]`, `fichiers[1]`… : indices décimaux sans zéro de tête, chacun une fois, contigus depuis 0, sinon refus (null) ;
+ * - `fichiers[]` : ajoutés dans l'ordre d'arrivée, mais refus si mélangés à des indices ;
+ * - `fichiers` nu : accepté seulement s'il y a au moins deux parties, ajoutées à la suite ; tout autre nom est ignoré.
+ */
+function fichiersIndexes(form: FormData | null): File[] | null {
   if (form === null) return [];
-  const parties: { i: number; f: File }[] = [];
+  const indexes = new Map<number, File>();
+  const sansIndice: File[] = [];
+  const nus: File[] = [];
+  let doublon = false;
   for (const [nom, v] of form.entries()) {
-    const m = /^fichiers\[(\d+)\]$/.exec(nom);
-    if (m !== null && typeof v !== 'string') parties.push({ i: Number(m[1]), f: v });
+    if (typeof v === 'string') continue;
+    const m = /^fichiers\[(0|[1-9]\d*)?\]$/.exec(nom);
+    if (m === null) {
+      if (nom === 'fichiers') nus.push(v);
+    } else if (m[1] === undefined) sansIndice.push(v);
+    else {
+      const i = Number(m[1]);
+      if (indexes.has(i) || i > INDICE_MAX) doublon = true;
+      indexes.set(i, v);
+    }
   }
-  return parties.sort((a, b) => a.i - b.i).map((p) => p.f);
+  if (doublon || (indexes.size > 0 && sansIndice.length > 0)) return null;
+  const ordre = [...indexes.keys()].sort((a, b) => a - b);
+  if (ordre.some((i, rang) => i !== rang)) return null;
+  const tous = [...ordre.map((i) => indexes.get(i) as File), ...sansIndice, ...nus];
+  if (indexes.size === 0 && sansIndice.length === 0 && nus.length < 2) return [];
+  return tous;
 }
 
 /** Dépôt de pièces FICTIVES : même service que le vrai serveur, état en mémoire propre à chaque série de handlers. */
@@ -29,7 +53,7 @@ export function handlersDepot(ctx: ContexteFaux): HttpHandler[] {
       const form = await request.formData().catch(() => null);
       const canal = form?.get('canal');
       const fichiers = fichiersIndexes(form);
-      if (form === null || fichiers.length === 0 || typeof canal !== 'string' || !(CANAUX_DEPOT as readonly string[]).includes(canal)) return ctx.erreur('BAD_REQUEST', 400);
+      if (form === null || fichiers === null || fichiers.length === 0 || typeof canal !== 'string' || !(CANAUX_DEPOT as readonly string[]).includes(canal)) return ctx.erreur('BAD_REQUEST', 400);
       const octets = await Promise.all(fichiers.map(async (f) => new Uint8Array(await f.arrayBuffer())));
       const cle = request.headers.get('idempotency-key') ?? '';
       return Response.json({ body: { resultats: await service.deposer(cle, octets, canal) } });

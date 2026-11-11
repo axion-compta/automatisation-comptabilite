@@ -6,6 +6,8 @@ export type CibleDepot = () => Promise<{
   deposer: (fichiers: string[], cle: string | undefined) => Promise<RetourDepot>;
   /** Un seul fichier sous le nom de partie donné (même corps multipart sur les deux cibles). */
   deposerNomme: (nomPartie: string, contenu: string, cle: string | undefined) => Promise<RetourDepot>;
+  /** Plusieurs parties nommées librement (même corps multipart sur les deux cibles). */
+  deposerParties: (parties: { nom: string; contenu: string }[], cle: string | undefined) => Promise<RetourDepot>;
   etat: (id: string) => Promise<RetourDepot>;
   relancer: (id: string, cle: string | undefined) => Promise<RetourDepot>;
   fermer: () => Promise<void>;
@@ -13,6 +15,21 @@ export type CibleDepot = () => Promise<{
 
 type Cible = Awaited<ReturnType<CibleDepot>>;
 type Resultat = { statut: string; id?: string; code?: string; recueLe?: string };
+/** Statuts relevés sur le vrai serveur (oRPC, notation à crochets), dans l'ordre des cas. */
+const ATTENDU_CROCHETS = [
+  'indice-1-seul:400:',
+  'indices-creux:400:',
+  'indice-double:400:',
+  'zero-de-tete:400:',
+  'sans-indice:200:recue',
+  'sans-indice-deux:200:deja_recue,recue',
+  'indice-puis-sans-indice:400:',
+  'indice-puis-nom-nu:200:deja_recue,deja_recue',
+  'nom-nu-deux-fois:200:deja_recue,deja_recue',
+  'sans-indice-puis-indice:400:',
+  'indice-trop-grand:400:',
+  'indices-dans-le-desordre:200:deja_recue,deja_recue',
+];
 const resultats = (r: RetourDepot) => (r.json as { body: { resultats: Resultat[] } }).body.resultats;
 
 /** Suite commune du dépôt : écrite une fois, jouée sur le vrai serveur et sur le faux. Chaque test a sa propre cible (état neuf). */
@@ -30,6 +47,31 @@ export function suiteDepot(nom: string, cible: CibleDepot): void {
     it('un-fichier-sous-le-nom-fichiers-sans-crochets-refuse-400', avec(async (c) => {
       expect((await c.deposerNomme('fichiers', '%PDF-1.4 fictif A', 'cle-fictive-090')).status).toBe(400);
       expect((await c.deposerNomme('fichiers[0]', '%PDF-1.4 fictif A', 'cle-fictive-091')).status).toBe(200);
+    }));
+
+    it('notation-a-crochets-memes-statuts-vrai-et-faux', avec(async (c) => {
+      const A = '%PDF-1.4 fictif A';
+      const B = '%PDF-1.4 fictif B';
+      const cas: [string, { nom: string; contenu: string }[]][] = [
+        ['indice-1-seul', [{ nom: 'fichiers[1]', contenu: A }]],
+        ['indices-creux', [{ nom: 'fichiers[0]', contenu: A }, { nom: 'fichiers[2]', contenu: B }]],
+        ['indice-double', [{ nom: 'fichiers[0]', contenu: A }, { nom: 'fichiers[0]', contenu: B }]],
+        ['zero-de-tete', [{ nom: 'fichiers[01]', contenu: A }]],
+        ['sans-indice', [{ nom: 'fichiers[]', contenu: A }]],
+        ['sans-indice-deux', [{ nom: 'fichiers[]', contenu: A }, { nom: 'fichiers[]', contenu: B }]],
+        ['indice-puis-sans-indice', [{ nom: 'fichiers[0]', contenu: A }, { nom: 'fichiers[]', contenu: B }]],
+        ['indice-puis-nom-nu', [{ nom: 'fichiers[0]', contenu: A }, { nom: 'fichiers', contenu: B }]],
+        ['nom-nu-deux-fois', [{ nom: 'fichiers', contenu: A }, { nom: 'fichiers', contenu: B }]],
+        ['sans-indice-puis-indice', [{ nom: 'fichiers[]', contenu: A }, { nom: 'fichiers[0]', contenu: B }]],
+        ['indice-trop-grand', [{ nom: 'fichiers[10000]', contenu: A }]],
+        ['indices-dans-le-desordre', [{ nom: 'fichiers[1]', contenu: B }, { nom: 'fichiers[0]', contenu: A }]],
+      ];
+      const sorties: string[] = [];
+      for (const [i, [nom, parties]] of cas.entries()) {
+        const r = await c.deposerParties(parties, `cle-fictive-2${i}`);
+        sorties.push(`${nom}:${r.status}:${r.status === 200 ? resultats(r).map((x) => x.statut).join(',') : ''}`);
+      }
+      expect(sorties).toEqual(ATTENDU_CROCHETS);
     }));
 
     it('trois-fichiers-trois-recues-dans-lordre', avec(async (c) => {

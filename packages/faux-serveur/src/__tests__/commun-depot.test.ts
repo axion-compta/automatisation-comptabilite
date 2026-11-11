@@ -29,6 +29,7 @@ const cibleVrai: CibleDepot = async () => {
   return {
     deposer: (fichiers, cle) => poster(corpsIndexes(fichiers), cle),
     deposerNomme: (nom, contenu, cle) => poster(corpsMultipart([{ nom, contenu }]), cle),
+    deposerParties: (parties, cle) => poster(corpsMultipart(parties), cle),
     etat: async (id) => ret(await app.inject({ method: 'GET', url: `/pieces/${id}/etat` })),
     relancer: async (id, cle) => ret(await app.inject({ method: 'POST', url: `/pieces/${id}/relancer`, headers: entetes(cle) })),
     fermer: () => app.close(),
@@ -42,6 +43,7 @@ const cibleFaux: CibleDepot = async () => {
   return {
     deposer: (fichiers, cle) => poster(corpsIndexes(fichiers), cle),
     deposerNomme: (nom, contenu, cle) => poster(corpsMultipart([{ nom, contenu }]), cle),
+    deposerParties: (parties, cle) => poster(corpsMultipart(parties), cle),
     etat: async (id) => ret(await fetch(`${H}/pieces/${id}/etat`)),
     relancer: async (id, cle) => ret(await fetch(`${H}/pieces/${id}/relancer`, { method: 'POST', headers: entetes(cle) })),
     fermer: async () => serveur.resetHandlers(),
