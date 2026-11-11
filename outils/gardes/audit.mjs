@@ -1,5 +1,5 @@
 // garde:audit : aucune écriture dans les tables du journal hors de service-audit.ts (V3-PLA-030, V3-SEC-005).
-// Rouge si un fichier suivi (.ts, .tsx, .mts, .cts, .js, .mjs, .cjs, .sql) (hors service-audit.ts et tests) contient INSERT, UPDATE, DELETE, TRUNCATE ou DROP visant une table du journal.
+// Rouge si un fichier suivi (.ts, .tsx, .mts, .cts, .js, .mjs, .cjs, .sql) (hors service-audit.ts et tests) contient INSERT, UPDATE, DELETE, MERGE, COPY FROM, TRUNCATE ou DROP visant une table du journal.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 export const SERVICE = 'apps/serveur/src/securite/service-audit.ts';
 const TABLES = '(?:"?a_compta"?\\.)?"?(?:tete_journal|entree_journal)"?';
 const ECRITURE = new RegExp(
-  `\\b(?:insert\\s+into|update|delete\\s+from|truncate(?:\\s+table)?|drop\\s+table(?:\\s+if\\s+exists)?|alter\\s+table(?:\\s+only)?)\\s+(?:only\\s+)?${TABLES}(?![\\w"])`,
+  `\\b(?:insert\\s+into|update|delete\\s+from|truncate(?:\\s+table)?|drop\\s+table(?:\\s+if\\s+exists)?|alter\\s+table(?:\\s+only)?|merge\\s+into)\\s+(?:only\\s+)?${TABLES}(?![\\w"])|\\bcopy\\s+${TABLES}\\s*(?:\\([^)]*\\))?\\s*from\\b`,
   'i',
 );
 // Les noms de tables passés par constante sont aussi interdits hors du service (ils serviraient à écrire sans que la garde le voie).

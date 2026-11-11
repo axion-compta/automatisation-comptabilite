@@ -16,12 +16,19 @@ test('ecriture-hors-service-refusee-par-la-garde', () => {
     'INSERT INTO "a_compta"."tete_journal" (x) VALUES (1)',
     'UPDATE ONLY a_compta.tete_journal SET x = 1',
     'DELETE FROM ONLY "a_compta"."entree_journal"',
+    'MERGE INTO a_compta.tete_journal t USING x ON true WHEN MATCHED THEN UPDATE SET n = 1',
+    'COPY a_compta.entree_journal FROM STDIN',
+    'COPY a_compta.entree_journal (motif) FROM STDIN',
   ];
   for (const s of sqls) {
     const pb = analyserTexte('const q = `' + s + '`;', hors);
     assert.equal(pb.length, 1, s);
     assert.match(pb[0], /hors du service d'audit/);
   }
+});
+
+test('lecture-par-copy-to-permise', () => {
+  assert.deepEqual(analyserTexte('db.query(`COPY a_compta.tete_journal TO STDOUT`)', hors), []);
 });
 
 test('constantes-de-table-refusees-hors-service', () => {
