@@ -79,6 +79,18 @@ describe('explication d\'un montant de déclaration', () => {
     const numerique: CaseDeclaration = { ...CASE, code: '08' };
     expect(verif('La ligne 08 vaut 0808 euros, voir {{ref:e1.montant}}.', numerique)).toEqual({ ok: false, code: 'chiffre_hors_reference' });
     expect(verif('La ligne 08 vient de {{ref:e1.montant}}.', numerique)).toMatchObject({ ok: true });
+    const pointee: CaseDeclaration = { ...CASE, code: '3.1' };
+    expect(verif('La ligne 3.1 vaut 331 euros, voir {{ref:e1.montant}}.', pointee)).toEqual({ ok: false, code: 'chiffre_hors_reference' });
+    expect(verif('La ligne 3.1 vient de {{ref:e1.montant}}.', pointee)).toMatchObject({ ok: true });
+    expect(verif('La case X01 puis X01 encore, voir {{ref:e1.montant}}.')).toMatchObject({ ok: true });
+  });
+
+  it('montant-au-debit', () => {
+    const debit: Ecriture = { id: 'ecr-cedre', journal: 'HA', date: '2026-03-04', statut: 'valide', lignes: [{ compte: '445660', libelle: 'Achat fournitures', debit: centimes(4321), credit: centimes(0) }] };
+    const c: CaseDeclaration = { code: 'X03', montant: centimes(4321), sources: [{ ecritureId: 'ecr-cedre', ligneIndex: 0 }], aCalculer: false };
+    const p = preparerEntree(c, [debit], []);
+    expect(p.resultats.e1!.montant!.valeur).toBe(4321);
+    expect(p.etapes[0]!.montant).toBe(4321);
   });
 
   it('reference-inconnue-rejetee', () => {
@@ -90,6 +102,8 @@ describe('explication d\'un montant de déclaration', () => {
     expect(verif('La case X01 vaut {{ref:case.montant}}.')).toEqual({ ok: false, code: 'aucune_ecriture_citee' });
     expect(verif('   ')).toEqual({ ok: false, code: 'vide' });
     expect(verif('')).toEqual({ ok: false, code: 'vide' });
+    expect(verif(BON, CASE, BON.length)).toMatchObject({ ok: true });
+    expect(verif(BON, CASE, BON.length - 1)).toEqual({ ok: false, code: 'trop_long' });
     expect(verif(BON, CASE, 10)).toEqual({ ok: false, code: 'trop_long' });
     expect(verif(BON, CASE, Number.NaN)).toEqual({ ok: false, code: 'trop_long' });
   });
