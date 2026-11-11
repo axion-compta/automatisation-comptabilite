@@ -120,3 +120,17 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Mesures PR (API REST, sans IA, titres L05-T*) : 70 PR fusionnées pour 63 fiches ; médiane ouverture à fusion 24,2 min (33 PR de fiches sensibles), 25,3 min (37 PR de fiches non sensibles). `pilotage/calibrage.csv` : en-tête seul, non utilisé.
 - Stryker du noyau : 86,67 % (195 tués, 30 survivants, `npx stryker run` dans `packages/noyau`, main 01c4579). Échecs CI du lot : non mesuré.
 - Aucune date de livraison annoncée.
+
+## Lot 06 (partie sans décision)
+- Fiches planifiées T00 à T35 : 36, dont 35 `fait` (T03 incluse une fois cette PR fusionnée). Hypothèses recalées, aucune date annoncée.
+- PR fusionnées (droits, isolation, connexion, débit, arrêt, dates) : T00 #220, T01 #221, T02 #584, T04 #864 et #873, T05 #890, T06 #920, T07 #340, T08 #341, T09 #342, T10 #343, T11 #344.
+- PR (journal, signalements, IA, serveur) : T12 #500, T13 #501, T14 #581, T15 #612, T16 #345, T17 #346, T18 #347, T19 #348, T20 #502, T21 #349, T22 #222, T23 #350.
+- PR (serveur, contrat, front, scénarios) : T24 #503, T25 #416, T26 #504, T27 #427, T28 #946, T29 #984, T30 #385, T31 #509, T32 #476, T33 #1000, T34 #223, T35 #938.
+- Mesures PR (API REST, sans IA, relevé du 11/11/2026) : 36 PR pour 35 fiches ; médiane ouverture à fusion 26,2 min (28 PR de fiches sensibles), 14,8 min (8 PR de fiches non sensibles : T20, T22, T29 à T34).
+- Durée de la CI sur main (3 exécutions vertes de ci.yml du 11/11/2026) : 232, 193 et 368 s.
+- Stryker du noyau : 86,67 % à la dernière mesure (lot 02, main 01c4579) ; non remesuré ici (Node 22 dans cette session, le dépôt exige Node 24).
+- Vérifié ici : `node outils/gardes/fiches.mjs` sort en code 0 (906 fiches cohérentes). Test du contrat de L06-T01 : non lancé ici, il tourne en CI.
+- Cas de la spec rejoués par L06-T35 : C02, C04, C05, C06, C07, C09, C11, C12, C13, C14, C17, C19, C24, C25 ; T-ROL-1, T-ROL-2, T-ROL-3, T-ROL-5 ; T-CNX-2, T-CNX-3 ; T-ISO-3, T-ISO-5 ; T-JRN-1, T-JRN-3, T-JRN-6, T-JRN-7 ; T-SEC-3, T-SEC-7 ; T-SUP-2.
+- Cas non rejoués (vrai serveur, identité et base requis) : C01, C03, C10, C15, C16, C18, C20 à C23 ; T-CNX-1, T-CNX-4 à T-CNX-7 ; T-ISO-1, 2, 4, 6 ; T-JRN-2, 4, 5 ; T-SEC-1, 2, 4 à 6, 8 ; T-SUP-1, 3.
+- Bloqué, à `a_faire` : T36 à T42, T44 à T46 et T48 ; T47 dépend de T39. Décisions attendues : D29 (identité et schéma de la console), J3a, D42 (stockage et bases), D45 (T48 seulement). T43 est faite.
+- Écart à la fiche : la décision D43 n'est citée par aucune fiche T36 à T48 restante.
