@@ -24,7 +24,7 @@ import { routesProfilChangements } from './domaines/profil-changements.js';
 import { creerServiceProfilChangements } from '../../../packages/contrat/src/domaines/profil-changements-service.js';
 import { creerServiceProfilChamps } from '../../../packages/contrat/src/domaines/profil-champs-service.js';
 import { routesControles, routesFec } from './domaines/fec.js';
-import { routesControlesActions, type ContexteSession, type FournisseurSession, type ServiceControlesActions } from './domaines/controles-actions.js';
+import { routesControlesActions, type ContexteSession } from './domaines/controles-actions.js';
 import { routesChange } from './domaines/change.js';
 import { routesIdentite } from './domaines/identite.js';
 import { routesRegimes } from './domaines/regimes.js';
@@ -46,15 +46,15 @@ import { routesSources } from './domaines/sources.js';
 import { routesVentes } from './domaines/ventes.js';
 import { routesPieces } from './domaines/pieces.js';
 import { routesFournisseurs, routesTresorerie } from './domaines/tresorerie.js';
-import { creerServiceChat, implementerChat, type ServiceChat } from './domaines/chat.js';
-import { creerServicePropositions, implementerChatPropositions, type ServicePropositions } from './domaines/chat-propositions.js';
+import { creerServiceChat, implementerChat } from './domaines/chat.js';
+import { creerServicePropositions, implementerChatPropositions } from './domaines/chat-propositions.js';
 import { implementerFinContrat } from './domaines/fin-contrat.js';
 import { implementerAcceptations } from './domaines/acceptations.js';
 import { routesCapacites } from './domaines/capacites.js';
-import type { OptionsAbonnement } from './domaines/options-abonnement.js';
-import type { OptionsExploitation } from './domaines/options-exploitation.js';
+import { implementerModules } from './registres/index.js';
+import type { OptionsApp, OptionsModules, OptionsRouteur } from './registres/types.js';
 import { corpsEtatAcces, creerGardeAcces, STATUT_ETAT_ACCES } from './garde-acces.js';
-import { brancherSecurite, type OptionsSecurite } from './securite/index.js';
+import { brancherSecurite } from './securite/index.js';
 
 type Service = ReturnType<typeof creerService>;
 
@@ -70,7 +70,7 @@ export type Services = {
 };
 
 /** Routeur oRPC branché sur le service en mémoire du contrat (pas de base de données). */
-export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; controlesActions?: ServiceControlesActions; securite?: OptionsSecurite } = {}) {
+export function creerRouteur(service: Service = creerService(), services: Partial<Services> = {}, options: OptionsRouteur & OptionsModules = {}) {
   const s: Services = {
     tableauDeBord: services.tableauDeBord ?? {},
     alertes: services.alertes ?? {},
@@ -146,13 +146,14 @@ export function creerRouteur(service: Service = creerService(), services: Partia
       ...implementerVolume(os, options.abonnement ?? {}),
       ...implementerPalier(os, options.abonnement ?? {}),
     },
+    ...implementerModules(os, options),
   });
   const osChat = implement(contratChat);
   return { ...routeur, ...osChat.router({ chat: implementerChat(osChat, options.chat ?? creerServiceChat()), chatPropositions: implementerChatPropositions(osChat, options.propositions ?? creerServicePropositions()) }) };
 }
 
 /** Serveur Fastify neuf (état en mémoire propre à chaque appel). */
-export function creerApp(service?: Service, options: { abonnement?: OptionsAbonnement; exploitation?: OptionsExploitation; chat?: ServiceChat; propositions?: ServicePropositions; securite?: OptionsSecurite; controlesActions?: ServiceControlesActions; session?: FournisseurSession } = {}): FastifyInstance {
+export function creerApp(service?: Service, options: OptionsApp = {}): FastifyInstance {
   const app = Fastify();
   brancherSecurite(app, options.securite ?? {});
   const handler = new OpenAPIHandler(creerRouteur(service, {}, options));
