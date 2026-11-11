@@ -1,9 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { PortExperts, Perimetre } from './isolation-interface.js';
 
-/** Garde d'un fichier d'export : un jour. */
-export const GARDE_MS = 24 * 3600 * 1000;
-
 export type Acteur = {
   personneId: string; societeId: string;
   roles: readonly string[]; permissions: readonly string[];
@@ -16,7 +13,7 @@ export type FichierExport = {
   id: string; cle: string; societeId: string; demandeur: string; liste: string; perimetre: Perimetre;
   octets: Uint8Array; empreinte: string; empreinteFiltres: string; nbLignes: number; expireA: number; marqueExpire: boolean;
 };
-/** Prise de stockage (Union européenne). La console fournira le vrai service ; ici un faux en mémoire. */
+/** Prise destinée à un stockage dans l'Union européenne. La console fournira le vrai service ; ici un faux en mémoire. */
 export interface PortStockage {
   ecrire(f: FichierExport): Promise<void>;
   lire(cle: string): Promise<FichierExport | null>;
@@ -30,7 +27,8 @@ export type EntreeJournal = {
 export interface PortJournal { ajouter(e: EntreeJournal): Promise<void> }
 export type Dependances = {
   stockage: PortStockage; experts: PortExperts; journal: PortJournal; maintenantMs: () => number;
-  identifiant?: () => string;
+  /** Durée de garde d'un fichier, en ms : entier strictement positif, réglé au branchement. */
+  gardeMs: number; identifiant?: () => string;
 };
 export type Reponse = { statut: number; entetes: Record<string, string>; corps: Uint8Array | { code: string; id?: string } };
 
@@ -60,6 +58,7 @@ export function creerStockageMemoire(): PortStockage {
 }
 
 export function creerServiceExportsFichiers(d: Dependances) {
+  if (!Number.isSafeInteger(d.gardeMs) || d.gardeMs <= 0) throw new RangeError('gardeMs invalide');
   const identifiant = d.identifiant ?? randomUUID;
   const trace = (f: FichierExport, e: EntreeJournal['evenement'], qui: string, code?: number) =>
     d.journal.ajouter({ evenement: e, qui, liste: f.liste, empreinteFiltres: f.empreinteFiltres, nbLignes: f.nbLignes, empreinteFichier: f.empreinte, ...(code ? { code } : {}) });
@@ -84,7 +83,7 @@ export function creerServiceExportsFichiers(d: Dependances) {
       const f: FichierExport = {
         id, cle: cleExport(a.societeId, id), societeId: a.societeId, demandeur: a.personneId, liste: q.liste,
         perimetre: q.perimetre, octets, empreinte: sha(octets), empreinteFiltres: empreinteFiltres(q.filtres), nbLignes,
-        expireA: d.maintenantMs() + GARDE_MS, marqueExpire: false,
+        expireA: d.maintenantMs() + d.gardeMs, marqueExpire: false,
       };
       await d.stockage.ecrire(f);
       await trace(f, 'export_cree', a.personneId);

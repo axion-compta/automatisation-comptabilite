@@ -1,17 +1,18 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
-  GARDE_MS, cleExport, creerServiceExportsFichiers, creerStockageMemoire, empreinteFiltres,
+  cleExport, creerServiceExportsFichiers, creerStockageMemoire, empreinteFiltres,
   type Acteur, type EntreeJournal,
 } from '../domaines/exports-fichiers.js';
 import type { AccesExpert } from '../domaines/isolation-interface.js';
 
 const OCTETS = new TextEncoder().encode('code;nom\r\nC1;Cliente fictive\r\n');
 const FILTRES = { type: 'client', texte: 'Dupuis Fictif' };
+const GARDE = 90_000; // valeur propre au test : la garde est un paramètre
 const compta: Acteur = { personneId: 'p-alice', societeId: 's-1', roles: ['gestionnaire'], permissions: ['compta-lire', 'compta-exporter'] };
 const expert: Acteur = { personneId: 'p-expert', societeId: 's-1', roles: ['invite_externe'], permissions: ['compta-lire', 'compta-exporter'] };
 
-function monde(acces: AccesExpert | null = { etat: 'actif', perimetre: ['journaux'] }) {
+function monde(acces: AccesExpert | null = { etat: 'actif', perimetre: ['journaux'] }, gardeMs: number = GARDE) {
   let t = 1_000_000;
   const journal: EntreeJournal[] = [];
   let ids = 0;
@@ -19,7 +20,7 @@ function monde(acces: AccesExpert | null = { etat: 'actif', perimetre: ['journau
   const stockage = creerStockageMemoire();
   const service = creerServiceExportsFichiers({
     stockage, journal: { ajouter: async (e) => { journal.push(e); } },
-    experts: { lire: async () => etat.acces }, maintenantMs: () => t, identifiant: () => `exp-${++ids}`,
+    experts: { lire: async () => etat.acces }, maintenantMs: () => t, gardeMs, identifiant: () => `exp-${++ids}`,
   });
   const demande = { liste: 'listerEcritures', perimetre: 'journaux' as const, filtres: FILTRES, produire: async () => ({ octets: OCTETS, nbLignes: 1 }) };
   return { service, journal, stockage, etat, demande, avancer: (ms: number) => { t += ms; } };
@@ -42,10 +43,27 @@ describe('exports en tâche : téléchargement revérifié', () => {
     const { service, stockage, demande } = monde();
     await service.demander(compta, demande);
     expect(cleExport('s-1', 'exp-1')).toBe('compta/s-1/exports/exp-1');
-    expect(await stockage.lire('compta/s-1/exports/exp-1')).not.toBeNull();
+    expect((await stockage.lire('compta/s-1/exports/exp-1'))?.expireA).toBe(1_000_000 + GARDE);
   });
 
-  it('expert révoqué refusé au téléchargement (403), même avec un fichier déjà prêt', async () => {
+  it('la garde est un paramètre : échéance = maintenant + gardeMs, valeurs invalides refusées', async () => {
+    const m = monde(undefined, 5_000);
+    await m.service.demander(compta, m.demande);
+    expect((await m.stockage.lire('compta/s-1/exports/exp-1'))?.expireA).toBe(1_005_000);
+    for (const v of [Number.NaN, Infinity, -Infinity, 1.5, 0, -1]) expect(() => monde(undefined, v)).toThrow();
+  });
+
+  it("marqué expiré avant l'échéance : 410 à l'état et au téléchargement, aucun octet servi", async () => {
+    const m = monde();
+    await m.service.demander(compta, m.demande);
+    await m.stockage.marquerExpire('compta/s-1/exports/exp-1');
+    for (const r of [await m.service.etat(compta, 'exp-1'), await m.service.telecharger(compta, 'exp-1')]) {
+      expect(r.statut).toBe(410);
+      expect(r.corps).not.toBeInstanceOf(Uint8Array);
+    }
+  });
+
+  it("expert révoqué refusé (403) au téléchargement et à l'état, refus journalisé", async () => {
     const m = monde();
     await m.service.demander(expert, m.demande);
     expect((await m.service.telecharger(expert, 'exp-1')).statut).toBe(200);
@@ -53,6 +71,8 @@ describe('exports en tâche : téléchargement revérifié', () => {
     const r = await m.service.telecharger(expert, 'exp-1');
     expect(r.statut).toBe(403);
     expect(r.corps).not.toBeInstanceOf(Uint8Array);
+    expect(m.journal.at(-1)).toMatchObject({ evenement: 'export_refuse', code: 403, qui: 'p-expert' });
+    expect((await m.service.etat(expert, 'exp-1')).statut).toBe(403);
   });
 
   it('expert expiré, absent ou hors périmètre : 403', async () => {
@@ -87,7 +107,7 @@ describe('exports en tâche : téléchargement revérifié', () => {
   it('fichier expiré : 410, jamais servi, même sans passage de la tâche de marquage', async () => {
     const m = monde();
     await m.service.demander(compta, m.demande);
-    m.avancer(GARDE_MS - 1);
+    m.avancer(GARDE - 1);
     expect((await m.service.telecharger(compta, 'exp-1')).statut).toBe(200);
     m.avancer(1);
     const r = await m.service.telecharger(compta, 'exp-1');
@@ -100,7 +120,7 @@ describe('exports en tâche : téléchargement revérifié', () => {
     const m = monde();
     await m.service.demander(compta, m.demande);
     expect(await m.service.expirer()).toBe(0);
-    m.avancer(GARDE_MS);
+    m.avancer(GARDE);
     expect(await m.service.expirer()).toBe(1);
     expect(await m.service.expirer()).toBe(0);
     expect((await m.stockage.lire('compta/s-1/exports/exp-1'))?.marqueExpire).toBe(true);
@@ -118,19 +138,11 @@ describe('exports en tâche : téléchargement revérifié', () => {
     expect(empreinteFiltres({ texte: 'Dupuis Fictif', type: 'client' })).toBe(empreinteFiltres(FILTRES));
   });
 
-  it('un refus est journalisé avec son code', async () => {
-    const m = monde();
-    await m.service.demander(expert, m.demande);
-    m.etat.acces = { etat: 'revoque', perimetre: ['journaux'] };
-    await m.service.telecharger(expert, 'exp-1');
-    expect(m.journal.at(-1)).toMatchObject({ evenement: 'export_refuse', code: 403, qui: 'p-expert' });
-  });
-
   it("l'empreinte des filtres survit à un autre service sur le même stockage", async () => {
     const m = monde();
     await m.service.demander(compta, m.demande);
     const j2: EntreeJournal[] = [];
-    const autre = creerServiceExportsFichiers({ stockage: m.stockage, journal: { ajouter: async (e) => { j2.push(e); } }, experts: { lire: async () => null }, maintenantMs: () => 1_000_000 });
+    const autre = creerServiceExportsFichiers({ stockage: m.stockage, journal: { ajouter: async (e) => { j2.push(e); } }, experts: { lire: async () => null }, maintenantMs: () => 1_000_000, gardeMs: GARDE });
     await autre.telecharger(compta, 'exp-1');
     expect(j2[0]).toMatchObject({ evenement: 'export_telecharge', empreinteFiltres: empreinteFiltres(FILTRES) });
   });
@@ -144,12 +156,5 @@ describe('exports en tâche : téléchargement revérifié', () => {
     expect((await m.service.demander(expert, demande)).statut).toBe(403);
     expect(appels).toBe(0);
     expect(await m.stockage.lister()).toEqual([]);
-  });
-
-  it("l'état d'une tâche est refusé (403) à un expert révoqué", async () => {
-    const m = monde();
-    await m.service.demander(expert, m.demande);
-    m.etat.acces = { etat: 'revoque', perimetre: ['journaux'] };
-    expect((await m.service.etat(expert, 'exp-1')).statut).toBe(403);
   });
 });
