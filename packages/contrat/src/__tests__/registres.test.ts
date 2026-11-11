@@ -2,7 +2,7 @@ import { oc } from '@orpc/contract';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { contratChat, contratSocle } from '../routes.js';
-import { fusionnerOpenapi, genererOpenapiDe, routesEcritureSansEnTete, type Source } from '../openapi.js';
+import { fusionnerOpenapi, genererOpenapi, genererOpenapiComplet, genererOpenapiDe, routesEcritureSansEnTete, type Source } from '../openapi.js';
 import { REGISTRES, contratModules } from '../registres/index.js';
 
 const lecture = (operationId: string, path: `/${string}`) =>
@@ -36,6 +36,12 @@ describe('registres par lot', () => {
     const ops = operations(genererOpenapiDe(source));
     expect(new Set(ops.map((o) => o.id)).size).toBe(ops.length);
     expect(new Set(ops.map((o) => `${o.methode} ${o.chemin}`)).size).toBe(ops.length);
+  });
+
+  it('genererOpenapi() = socle + chat seulement, et le document complet ne lève pas de doublon', () => {
+    const ids = (src: Source) => operations(genererOpenapiDe(src)).map((o) => o.id).sort();
+    expect(operations(genererOpenapi()).map((o) => o.id).sort()).toEqual(ids({ ...contratSocle, ...contratChat } as Source));
+    expect(() => genererOpenapiComplet()).not.toThrow();
   });
 
   it('un module ajoute POST à côté du GET du socle : les deux restent', () => {

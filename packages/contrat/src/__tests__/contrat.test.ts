@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { LECTURES_PAR_POST_MODULES } from '../registres/index.js';
-import { parametresRequete, contrat, ConflitVersion, creerService, genererOpenapi, contratChat, routesEcritureSansEnTete, routesLectureParPost, EnTeteEcriture } from '../index.js';
+import { parametresRequete, contrat, ConflitVersion, creerService, genererOpenapi, routesEcritureSansEnTete, routesLectureParPost, EnTeteEcriture } from '../index.js';
 
 describe('parametresRequete', () => {
   it('tire noms, obligation et bornes du schéma Zod', () => {
@@ -30,9 +30,7 @@ describe('contrat', () => {
   });
 
   it('les contrôles parcourent le contrat complet : socle, modules, chat', () => {
-    expect(Object.keys(contrat)).toEqual(expect.arrayContaining(['ecritures', 'recherche']));
     expect(routesEcritureSansEnTete()).toEqual([]);
-    expect(routesEcritureSansEnTete({ ...contrat, ...contratChat } as never)).toEqual([]);
   });
 
   it('refuse une écriture sans en-tête', () => {

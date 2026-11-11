@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { contrat, contratChat } from './routes.js';
+import { contrat, contratChat, contratSocle } from './routes.js';
 import { REGISTRES } from './registres/index.js';
 
 type Sch = z.ZodType;
@@ -57,7 +57,7 @@ export function parametresRequete(schema: Sch | undefined): unknown[] {
 
 /** Document OpenAPI 3.1 déterministe (clés triées par construction). */
 export function genererOpenapi(): object {
-  return document(definitions(({ ...contrat, ...contratChat }) as Source));
+  return document(definitions({ ...contratSocle, ...contratChat } as Source));
 }
 
 type Paths = Record<string, Record<string, unknown>>;
