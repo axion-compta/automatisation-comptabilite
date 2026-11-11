@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-// Fiche L09-T43 : écran E39 « Voici ce que j'ai compris » (faux serveur).
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,8 +39,7 @@ const cliquer = async (b: Element) => {
 };
 
 type Corps = { body: { champs: { cle: string; valeur: unknown; statut: string }[]; blocages: string[] } };
-type Appel = { url: string; cle: string | null };
-/** Enveloppe le fetch : journalise les écritures, peut transformer le profil lu ou refuser une écriture. */
+type Appel = { url: string; cle: string | null; corps?: string };
 function espion(o: { profil?: (b: Corps) => unknown; refuser?: (url: string, n: number) => boolean } = {}): Appel[] {
   const appels: Appel[] = [];
   const reel = globalThis.fetch;
@@ -50,7 +48,7 @@ function espion(o: { profil?: (b: Corps) => unknown; refuser?: (url: string, n: 
     const ecriture = init?.method === 'POST';
     if (ecriture) {
       const cle = new Headers(init?.headers).get('idempotency-key');
-      appels.push({ url, cle });
+      appels.push({ url, cle, corps: String(init?.body) });
       if (o.refuser?.(url, appels.length)) return Response.json({ code: 'RIEN_A_CONFIRMER' }, { status: 409 });
     }
     const r = await reel(entree, init);
@@ -118,6 +116,9 @@ describe('écran E39', () => {
     expect(radios).toHaveLength(2);
     await act(async () => radios[1]!.click());
     expect(valider(h).disabled).toBe(false);
+    await cliquer(valider(h));
+    const valeur = appels.find((a) => a.url.endsWith('/champs/regime_tva'));
+    expect(JSON.parse(valeur!.corps!).valeur).toBe('autre valeur');
   });
 
   it('blocage-sans-validation', async () => {
@@ -129,11 +130,16 @@ describe('écran E39', () => {
   });
 
   it('refus-arrete-et-informe', async () => {
-    const appels = espion({ refuser: (url, n) => n === 1 && url.endsWith('/confirmer') });
+    const appels = espion({
+      profil: (r) => ({ body: { ...r.body, champs: [...r.body.champs, { ...r.body.champs[0]!, cle: 'siren', statut: 'a_confirmer' }] } }),
+      refuser: (url, n) => n === 2 && url.endsWith('/confirmer'),
+    });
     const h = await monter();
     await cliquer(valider(h));
-    expect(appels).toHaveLength(1);
+    await pause(400);
+    expect(appels).toHaveLength(2);
     expect(h.querySelector('[role=alert]')?.textContent).toContain(e39.refus);
+    expect(h.textContent).not.toContain("Rien d'autre");
     expect(h.textContent).not.toContain(e39.valide);
   });
 });

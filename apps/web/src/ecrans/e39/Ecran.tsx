@@ -23,14 +23,12 @@ function Ligne({ champ }: { champ: ChampProfilV1 }) {
   return <ChampSource intitule={intitule(champ.cle)} valeur={texte(champ.valeur)} statut={champ.statut} confiance={champ.confiance} source={source} libelles={libelles} />;
 }
 
-/** Clés ayant deux valeurs (ou plus) à confirmer en même temps : jamais devinées. */
 function contradictions(champs: readonly ChampProfilV1[]): Map<string, ChampProfilV1[]> {
   const parCle = new Map<string, ChampProfilV1[]>();
   for (const c of champs.filter(aConfirmer)) parCle.set(c.cle, [...(parCle.get(c.cle) ?? []), c]);
   return new Map([...parCle].filter(([, v]) => v.length > 1));
 }
 
-/** E39 : récapitulatif du profil, une seule validation. */
 export function Ecran() {
   const profil = useLecture<z.infer<typeof ReponseProfil>>('/profil', schemaProfil);
   const client = useQueryClient();
@@ -42,21 +40,17 @@ export function Ecran() {
   if (profil.etat === 'erreur') return <EtatErreur message={e39.erreur} />;
   if (profil.etat === 'chargement' || !profil.donnees) return <EtatChargement libelle={e39.chargement} />;
   const p: Profil = profil.donnees.body;
-  if (p.champs.length === 0) return <EtatVide titre={e39.vide} />;
-
   if (p.blocages.length > 0) {
     return (
       <section>
         <h1>{e39.titre}</h1>
         <h2>{e39.blocage.titre}</h2>
-        <ul role="alert">
-          {p.blocages.map((b) => (
-            <li key={b}>{profilCodes.phraseDeCode('blocages', b)}</li>
-          ))}
-        </ul>
+        <ul role="alert">{p.blocages.map((b) => <li key={b}>{profilCodes.phraseDeCode('blocages', b)}</li>)}</ul>
       </section>
     );
   }
+
+  if (p.champs.length === 0) return <EtatVide titre={e39.vide} />;
 
   const conflits = contradictions(p.champs);
   const manque = [...conflits.keys()].some((k) => choix[k] === undefined);
@@ -104,9 +98,7 @@ export function Ecran() {
           ))}
         </fieldset>
       ))}
-      {lignes.map((c) => (
-        <Ligne key={c.cle + ':' + texte(c.valeur)} champ={c} />
-      ))}
+      {lignes.map((c) => <Ligne key={c.cle + ':' + texte(c.valeur)} champ={c} />)}
       <button type="button" disabled={manque} onClick={() => void valider()}>
         {e39.boutons.valider}
       </button>

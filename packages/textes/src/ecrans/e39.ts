@@ -22,6 +22,6 @@ export const e39 = {
   chargement: 'Chargement du récapitulatif…',
   vide: "Aucune information à relire pour le moment.",
   erreur: 'Le récapitulatif ne peut pas être affiché pour le moment.',
-  refus: "La validation s'est arrêtée : une information n'a pas pu être confirmée. Rien d'autre n'a été confirmé ; vous pouvez réessayer.",
+  refus: "La validation s'est arrêtée : une information n'a pas pu être confirmée. Les informations précédentes ont pu être confirmées ; réessayer ne les doublera pas.",
   valide: 'Merci, votre profil est confirmé.',
 } as const;
