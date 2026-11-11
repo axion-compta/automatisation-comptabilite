@@ -1,6 +1,7 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
 import { QueryProfil, ReponseProfil } from '../../../contrat/src/domaines/profil.js';
-import { creerServiceProfil } from '../../../contrat/src/domaines/profil-service.js';
+import { creerServiceProfilChamps } from '../../../contrat/src/domaines/profil-champs-service.js';
+import { creerHandlersProfilEcriture } from './profil-ecriture.js';
 import { ReponseRegimesImposition, ReponseRegimesTva } from '../../../contrat/src/domaines/regimes.js';
 import { creerServiceRegimes } from '../../../contrat/src/domaines/regimes-service.js';
 import { QueryParametre, ReponseParametre } from '../../../contrat/src/domaines/parametres.js';
@@ -24,7 +25,7 @@ const query = (url: string) => {
 
 /** Lectures du profil, des régimes, des paramètres et de l'identité pour Lemoine Rénovation (fictive), construites par les services du contrat. */
 export function creerHandlersProfil(base = '', attendre: () => Promise<void> = async () => undefined): HttpHandler[] {
-  const profil = creerServiceProfil(SOCIETE);
+  const champs = creerServiceProfilChamps(SOCIETE);
   const regimes = creerServiceRegimes(SOCIETE);
   const parametres = creerServiceParametres();
   const identite = creerServiceIdentite();
@@ -40,8 +41,9 @@ export function creerHandlersProfil(base = '', attendre: () => Promise<void> = a
       const q = query(request.url);
       const p = q === null ? null : QueryProfil.safeParse(q);
       if (!p?.success) return requete400();
-      return HttpResponse.json(ReponseProfil.parse({ body: profil.lire(p.data.au, aujourdhui()) }));
+      return HttpResponse.json(ReponseProfil.parse({ body: champs.lire(p.data.au, aujourdhui()) }));
     }),
+    ...creerHandlersProfilEcriture(base, attendre, champs),
     lecture('/profil/regimes/tva', () => HttpResponse.json(ReponseRegimesTva.parse({ body: regimes.listerTva() }))),
     lecture('/profil/regimes/imposition', () => HttpResponse.json(ReponseRegimesImposition.parse({ body: regimes.listerImposition() }))),
     lecture('/parametres', (request) => {
