@@ -64,10 +64,10 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
     it('traiter-refus-sans-source-422', () =>
       avec(true, async (c) => {
         const cree = corpsDe<Demande>(await c.appeler('POST', '/personnes/demandes', { type: 'effacement', recue_le: '2026-11-09' }, 'cle-effacement-1'));
-        // Aucune personne concernée n'est rattachée à la demande : un refus de conservation sans source est rejeté (422), l'état ne change pas.
+        // Aucune personne concernée n'est rattachée : le refus n'est pas permis (422 exact). La règle « source manquante » est prouvée sur le service (commun-personnes.test.ts).
         const r = await c.appeler('POST', `/personnes/demandes/${cree.id}/traitement`, { issue: 'refus_conservation', motif: 'Motif fictif.' }, 'cle-refus-0001');
         expect(r.status).toBe(422);
-        expect(['ISSUE_NON_PERMISE', 'SOURCE_MANQUANTE']).toContain(codeDe(r));
+        expect(codeDe(r)).toBe('ISSUE_NON_PERMISE');
         const l = corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'));
         expect(l.find((d) => d.id === cree.id)?.etat).toBe('recue');
       }));
@@ -81,6 +81,19 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         expect(corpsDe<Demande>(un).etat).toBe('transmise_a_la_societe');
         const deux = await c.appeler('POST', chemin, { issue: 'renvoi_societe' }, 'cle-traiter-02');
         expect([deux.status, codeDe(deux)]).toEqual([409, 'DEJA_TRAITEE']);
+      }));
+
+    it('entrees-invalides-400', () =>
+      avec(true, async (c) => {
+        const ok = { type: 'acces', recue_le: '2026-11-09' };
+        const reponses = [
+          await c.appeler('POST', '/personnes/demandes', ok),
+          await c.appeler('POST', '/personnes/demandes', { type: 'inconnu', recue_le: '2026-11-09' }, 'cle-invalide-1'),
+          await c.appeler('POST', '/personnes/demandes/dem_1/traitement', {}, 'cle-invalide-2'),
+          await c.appeler('GET', '/personnes/recherche?inconnu=1'),
+        ];
+        expect(reponses.map((r) => [r.status, codeDe(r)])).toEqual(Array(4).fill([400, 'BAD_REQUEST']));
+        expect(corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'))).toHaveLength(6);
       }));
 
     it('sans-reglage-503', () =>

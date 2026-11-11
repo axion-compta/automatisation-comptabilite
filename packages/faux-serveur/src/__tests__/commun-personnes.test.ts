@@ -1,7 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { setupServer } from 'msw/node';
 import { creerApp } from '../../../../apps/serveur/src/app.js';
+import { creerServicePersonnes } from '../../../contrat/src/domaines/personnes-service.js';
 import { creerHandlers } from '../handlers.js';
+import { handlersPersonnes } from '../domaines/personnes.js';
 import { suitePersonnes, type CiblePersonnes } from './suite-personnes.js';
 
 const H = 'http://exemple.fr';
@@ -28,8 +30,10 @@ const cibleVrai: CiblePersonnes = async (avecReglage) => {
   };
 };
 
-const cibleFaux: CiblePersonnes = async () => {
-  serveur.use(...creerHandlers({ base: H, horloge: HORLOGE, dateReferenceExploitation: '2026-11-09' }));
+const cibleFaux: CiblePersonnes = async (avecReglage) => {
+  // Sans réglage : on monte directement `handlersPersonnes` sans `reglagesPersonnes`, pour exécuter son chemin 503.
+  const options = { base: H, horloge: HORLOGE, dateReference: '2026-11-09', attendre: async () => {} };
+  serveur.use(...(avecReglage ? creerHandlers({ base: H, horloge: HORLOGE, dateReferenceExploitation: '2026-11-09' }) : handlersPersonnes(options)));
   return {
     appeler: async (methode, chemin, corps, cle) => {
       const r = await fetch(H + chemin, { method: methode, headers: entetes(cle), ...(corps === undefined ? {} : { body: JSON.stringify(corps) }) });
@@ -40,8 +44,19 @@ const cibleFaux: CiblePersonnes = async () => {
 };
 
 suitePersonnes('serveur en mémoire (Fastify + oRPC)', cibleVrai);
-// Le faux serveur a toujours des réglages fictifs : le test « sans-reglage-503 » n'a de sens que côté serveur en mémoire.
-suitePersonnes('faux serveur (MSW)', async (avecReglage) => (avecReglage ? cibleFaux(true) : cibleVrai(false)));
+suitePersonnes('faux serveur (MSW)', cibleFaux);
+
+describe('refus sans source (service)', () => {
+  // Les options des deux serveurs n'exposent ni `concernes` ni `gel` : la règle se prouve sur le service, avec un gel fictif.
+  it('refus-gel-sans-source-source-manquante', () => {
+    const service = creerServicePersonnes({ horloge: HORLOGE, dateReference: '2026-11-09', ...REGLAGES_FICTIFS, regles: [], gel: () => true, concernes: { 'dem-1': { nom: 'Camille Exemple' } } });
+    const demande = service.enregistrer('cle-enreg-0001', { type: 'effacement', recue_le: '2026-11-09' });
+    const corps = { issue: 'refus_gel' as const, motif: 'Motif fictif.' };
+    const erreur = (): unknown => { try { service.traiter('cle-gel-0001', demande.id, corps); } catch (e) { return e; } return null; };
+    expect(erreur()).toMatchObject({ message: 'SOURCE_MANQUANTE' });
+    expect(service.traiter('cle-gel-0002', demande.id, { ...corps, source: 'Source fictive.' }).etat).toBe('refusee');
+  });
+});
 
 describe('demandes des personnes : état par instance', () => {
   it('etat-propre-a-chaque-instance', async () => {
