@@ -50,15 +50,40 @@ const MAPPAGE: Readonly<Record<string, CodePersonnes>> = {
   recherche_trop_courte: 'RECHERCHE_TROP_COURTE',
 };
 const comparer = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-/** Empreinte pure fictive de 64 caractères hexadécimaux (huit voies FNV-1a) : aucun module Node, donc sûre dans le navigateur. */
+const PREMIERS: number[] = [];
+for (let p = 2; PREMIERS.length < 64; p++) if (PREMIERS.every((d) => p % d !== 0)) PREMIERS.push(p);
+const frac = (x: number): number => Math.floor((x - Math.floor(x)) * 2 ** 32);
+const K = PREMIERS.map((p) => frac(Math.cbrt(p)));
+const rot = (x: number, n: number): number => (x >>> n) | (x << (32 - n));
+/** SHA-256 pur et synchrone (hexadécimal, 64 caractères) sur l'UTF-8 du texte : aucun module Node, donc sûr dans le navigateur. */
 export function empreintePure(t: string): string {
-  let hex = '';
-  for (let voie = 0; voie < 8; voie++) {
-    let h = (0x811c9dc5 ^ Math.imul(voie + 1, 0x9e3779b1)) >>> 0;
-    for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 0x01000193) >>> 0;
-    hex += h.toString(16).padStart(8, '0');
+  const o = new TextEncoder().encode(t);
+  const m = new Uint8Array(Math.ceil((o.length + 9) / 64) * 64);
+  m.set(o);
+  m[o.length] = 0x80;
+  const v = new DataView(m.buffer);
+  v.setUint32(m.length - 4, (o.length * 8) >>> 0);
+  v.setUint32(m.length - 8, Math.floor((o.length * 8) / 2 ** 32));
+  const h = PREMIERS.slice(0, 8).map((p) => frac(Math.sqrt(p)));
+  const w = new Array<number>(64).fill(0);
+  for (let b = 0; b < m.length; b += 64) {
+    for (let i = 0; i < 64; i++) {
+      if (i < 16) w[i] = v.getUint32(b + i * 4);
+      else {
+        const x = w[i - 15] as number, y = w[i - 2] as number;
+        w[i] = ((w[i - 16] as number) + (rot(x, 7) ^ rot(x, 18) ^ (x >>> 3)) + (w[i - 7] as number) + (rot(y, 17) ^ rot(y, 19) ^ (y >>> 10))) >>> 0;
+      }
+    }
+    const [a0, b0, c0, d0, e0, f0, g0, h0] = h as [number, number, number, number, number, number, number, number];
+    let [a, bb, c, d, e, f, g, hh] = [a0, b0, c0, d0, e0, f0, g0, h0];
+    for (let n = 0; n < 64; n++) {
+      const t1 = (hh + (rot(e, 6) ^ rot(e, 11) ^ rot(e, 25)) + ((e & f) ^ (~e & g)) + (K[n] as number) + (w[n] as number)) >>> 0;
+      const t2 = ((rot(a, 2) ^ rot(a, 13) ^ rot(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) >>> 0;
+      hh = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = bb; bb = a; a = (t1 + t2) >>> 0;
+    }
+    [a, bb, c, d, e, f, g, hh].forEach((x, n) => { h[n] = ((h[n] as number) + x) >>> 0; });
   }
-  return hex;
+  return h.map((x) => x.toString(16).padStart(8, '0')).join('');
 }
 
 function traduire(e: unknown): Error {
