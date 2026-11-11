@@ -61,18 +61,11 @@ function Detail({ v }: { v: VenteDetail }) {
       </section>
       <section aria-label={t.sections.lignes}>
         <h2>{t.sections.lignes}</h2>
-        <ul>
-          {v.lignes.map((l, i) => (
-            <li key={i}>{l.libelle} · {l.quantite} · <Montant centimes={centimes(l.ttcCentimes)} /></li>
-          ))}
-        </ul>
+        <ul>{v.lignes.map((l, i) => <li key={i}>{l.libelle} · {l.quantite} · <Montant centimes={centimes(l.ttcCentimes)} /></li>)}</ul>
       </section>
       <section aria-label={t.sections.controles}>
         <h2>{t.sections.controles}</h2>
-        {v.cartes.length === 0 ? <p>{t.aucuneCarte}</p> : v.cartes.map((c, i) => {
-          const x = texteCarte(c, v);
-          return <article key={i}><h3>{x.titre}</h3><p>{x.detail}</p></article>;
-        })}
+        {v.cartes.length === 0 ? <p>{t.aucuneCarte}</p> : v.cartes.map((c, i) => <article key={i}><h3>{texteCarte(c, v).titre}</h3><p>{texteCarte(c, v).detail}</p></article>)}
       </section>
       <section aria-label={t.sections.ecriture}>
         <h2>{t.sections.ecriture}</h2>
@@ -80,14 +73,10 @@ function Detail({ v }: { v: VenteDetail }) {
           <>
             <p>{t.prepareParIa}</p>
             <table>
-              <thead><tr><th>{t.ecritureColonnes.compte}</th><th>{t.ecritureColonnes.debit}</th><th>{t.ecritureColonnes.credit}</th></tr></thead>
+              <thead><tr>{Object.values(t.ecritureColonnes).map((c) => <th key={c}>{c}</th>)}</tr></thead>
               <tbody>
                 {v.ecriture.lignes.map((l, i) => (
-                  <tr key={i}>
-                    <td>{l.compte}</td>
-                    <td><Montant centimes={centimes(l.debitCentimes)} /></td>
-                    <td><Montant centimes={centimes(l.creditCentimes)} /></td>
-                  </tr>
+                  <tr key={i}><td>{l.compte}</td><td><Montant centimes={centimes(l.debitCentimes)} /></td><td><Montant centimes={centimes(l.creditCentimes)} /></td></tr>
                 ))}
               </tbody>
             </table>
@@ -103,13 +92,7 @@ function Detail({ v }: { v: VenteDetail }) {
       <section aria-label={t.sections.avoirsLies}>
         <h2>{t.sections.avoirsLies}</h2>
         {v.avoirsLies.length === 0 ? <p>{t.aucunAvoir}</p> : (
-          <ul>
-            {v.avoirsLies.map((a) => (
-              <li key={a.id}>
-                <a href={CHEMIN_VENTE + encodeURIComponent(a.id)}>{e24Ventes.avoirLie.replace('{montant}', formaterMontantAffiche(centimes(a.ttcCentimes)))}</a>
-              </li>
-            ))}
-          </ul>
+          <ul>{v.avoirsLies.map((a) => <li key={a.id}><a href={CHEMIN_VENTE + encodeURIComponent(a.id)}>{e24Ventes.avoirLie.replace('{montant}', formaterMontantAffiche(centimes(a.ttcCentimes)))}</a></li>)}</ul>
         )}
       </section>
     </>
