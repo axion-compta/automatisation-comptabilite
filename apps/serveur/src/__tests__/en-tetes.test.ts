@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
+import { genererOpenapiComplet } from '../../../../packages/contrat/src/openapi.js';
 import { creerApp } from '../app.js';
 
 const MARQUEUR = 'ECHO-INTERDIT-7Q';
@@ -15,7 +15,7 @@ const neuf = (securite: Record<string, unknown> = {}) => {
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()));
 });
-const contrat = JSON.parse(readFileSync(new URL('../../../../packages/contrat/openapi.json', import.meta.url), 'utf8')) as {
+const contrat = genererOpenapiComplet() as {
   paths: Record<string, Record<string, unknown>>;
 };
 const six = (h: Record<string, unknown>) => SIX.forEach((n) => expect(h[n], n).toBeTypeOf('string'));

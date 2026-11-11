@@ -1,0 +1,4 @@
+.n08-formulaire { display: flex; gap: 0.5rem; align-items: end; flex-wrap: wrap; }
+.n08-formulaire label { display: block; }
+.n08-groupe ul { list-style: none; padding: 0; margin: 0 0 1rem; }
+.n08-groupe mark { background: var(--couleur-bordure); color: inherit; }

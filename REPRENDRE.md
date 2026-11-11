@@ -38,7 +38,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Test `regle-eslint` de `packages/noyau` : peut dépasser 5 s en local, sans lien avec P0.
 
 ## Prochaine commande
-`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
+`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`. Pour le lot 05, ne reprendre aucune fiche à `bloque_par` (section « Lot 05 »).
 
 ## Pièges
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
@@ -102,3 +102,35 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Reste : L03-T58 ; fiches de suite à créer (adaptateurs réels de purge et de sauvegardes ; route du webhook des factures reçues et rattrapage planifié) après la console du 21/11/2026 et J10 ; aucun contact avec une plateforme agréée sans l'accord de Will.
 - Le FEC n'est PAS déclaré accepté par l'outil officiel : le passage dans Test Compta Demat (J7) n'est pas fait.
 - Aucune date de livraison annoncée.
+
+## Lot 05, chat et agents
+- Fiches : 69 (T00 à T68) ; 63 `statut: fait` avec L05-T55 (en-têtes lus sur main, 01c4579). Restent `a_faire` : T60, T62, T64, T66, T67. Écart à la fiche T55 : T56 à T59, T61, T63 et T65 sont faites, seules 5 fiches sont bloquées.
+- Existe : noyau du chat (`packages/noyau/src/chat/`), agents (`agents/`), voix (`voix/`) ; contrat (`packages/contrat/src/chat/`) ; serveur en mémoire avec modèle simulé (`apps/serveur/src/chat/`) ; faux serveur ; composants et panneau de discussion (`apps/web/src/chat/`, coque T53) ; garde des outils du chat (`outils/gardes/outils-chat.mjs`).
+- Rejoués par L05-T42 (`apps/serveur/src/chat/__tests__/`, un `it` par cas, port de test, zéro réseau) : 9 T-CHT (3, 4, 9, 10, 13, 14, 15, 16, 17) et 12 A2 (01, 02, 04, 06, 07, 08, 10, 16, 17, 18, 22, 30).
+- Attendent une décision de Will (énoncé dans la spec privée) : T-CHT-1, 2, 5, 6, 19, 20 ; A2-03, 09, 20, 21, 27, 28.
+- Attendent le branchement dans le serveur en mémoire (règle déjà testée dans le noyau) : T-CHT-7 et A2-25 (T12), T-CHT-8 (T11), A2-11 à 15 et A2-26 (T16), A2-19 (T23), A2-24 (T22), A2-29 (T02, T47).
+- Rejoués ailleurs : T-CHT-12 (T40), T-CHT-11 (T50), T-CHT-18 (T31), A2-06 côté écran (T44, T52). Attendent une fiche bloquée : A2-05 voix (T60), A2-23 réseau (T59, adaptateur réel).
+- Fiches bloquées :
+  - T60 voix : hébergeur de transcription (D42) et Q3, décisions en attente.
+  - T62 recherche plein texte : base réelle (J3a) et T56.
+  - T64 banc des modèles réels : fournisseurs d'IA de l'UE (D43) et adaptateur réel de T59.
+  - T66 effacement à l'échéance : action de la console (D29), durée de conservation (D45), T56.
+  - T67 revue de sécurité du niveau I : Q11, T58, T59, T60 ; approbation écrite de Will.
+  - T56 à T59, T61, T63, T65 : faites, plus bloquées.
+- Mesures PR (API REST, sans IA, titres L05-T*) : 70 PR fusionnées pour 63 fiches ; médiane ouverture à fusion 24,2 min (33 PR de fiches sensibles), 25,3 min (37 PR de fiches non sensibles). `pilotage/calibrage.csv` : en-tête seul, non utilisé.
+- Stryker du noyau : 86,67 % (195 tués, 30 survivants, `npx stryker run` dans `packages/noyau`, main 01c4579). Échecs CI du lot : non mesuré.
+- Aucune date de livraison annoncée.
+
+## Lot 06 (partie sans décision)
+- Fiches planifiées T00 à T35 : 36, dont 35 `fait` (T03 incluse une fois cette PR fusionnée). Hypothèses recalées, aucune date annoncée.
+- PR fusionnées (droits, isolation, connexion, débit, arrêt, dates) : T00 #220, T01 #221, T02 #584, T04 #864 et #873, T05 #890, T06 #920, T07 #340, T08 #341, T09 #342, T10 #343, T11 #344.
+- PR (journal, signalements, IA, serveur) : T12 #500, T13 #501, T14 #581, T15 #612, T16 #345, T17 #346, T18 #347, T19 #348, T20 #502, T21 #349, T22 #222, T23 #350.
+- PR (serveur, contrat, front, scénarios) : T24 #503, T25 #416, T26 #504, T27 #427, T28 #946, T29 #984, T30 #385, T31 #509, T32 #476, T33 #1000, T34 #223, T35 #938.
+- Mesures PR (API REST, sans IA, relevé du 11/11/2026) : 36 PR pour 35 fiches ; médiane ouverture à fusion 26,2 min (28 PR de fiches sensibles), 14,8 min (8 PR de fiches non sensibles : T20, T22, T29 à T34).
+- Durée de la CI sur main (3 exécutions vertes de ci.yml du 11/11/2026) : 232, 193 et 368 s.
+- Stryker du noyau : 86,67 % à la dernière mesure (lot 02, main 01c4579) ; non remesuré ici (Node 22 dans cette session, le dépôt exige Node 24).
+- Vérifié ici : `node outils/gardes/fiches.mjs` sort en code 0 (906 fiches cohérentes). Test du contrat de L06-T01 : non lancé ici, il tourne en CI.
+- Cas de la spec rejoués par L06-T35 : C02, C04, C05, C06, C07, C09, C11, C12, C13, C14, C17, C19, C24, C25 ; T-ROL-1, T-ROL-2, T-ROL-3, T-ROL-5 ; T-CNX-2, T-CNX-3 ; T-ISO-3, T-ISO-5 ; T-JRN-1, T-JRN-3, T-JRN-6, T-JRN-7 ; T-SEC-3, T-SEC-7 ; T-SUP-2.
+- Cas non rejoués (vrai serveur, identité et base requis) : C01, C03, C10, C15, C16, C18, C20 à C23 ; T-CNX-1, T-CNX-4 à T-CNX-7 ; T-ISO-1, 2, 4, 6 ; T-JRN-2, 4, 5 ; T-SEC-1, 2, 4 à 6, 8 ; T-SUP-1, 3.
+- Bloqué, à `a_faire` : T36 à T42, T44 à T46 et T48 ; T47 dépend de T39. Décisions attendues : D29 (identité et schéma de la console), J3a, D42 (stockage et bases), D45 (T48 seulement). T43 est faite.
+- Écart à la fiche : la décision D43 n'est citée par aucune fiche T36 à T48 restante.

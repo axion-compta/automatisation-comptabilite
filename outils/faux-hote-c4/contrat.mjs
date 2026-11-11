@@ -14,6 +14,40 @@ function tablesCreees(m) {
 export const MAX_PERMISSIONS = 50;
 export const MIN_CAS = 20;
 
+const CLES_MONTANT = /prix|price|tarif|marge|montant|stripe|devise|euro/i;
+const listeTextes = (l) => Array.isArray(l) && l.length > 0 && l.every((x) => typeof x === 'string' && x.trim() !== '') && sansDoublon(l);
+
+function cleMontant(v) {
+  if (typeof v === 'string') return CLES_MONTANT.test(v);
+  if (Array.isArray(v)) return v.some(cleMontant);
+  if (v === null || typeof v !== 'object') return false;
+  return Object.keys(v).some((k) => CLES_MONTANT.test(k) || cleMontant(v[k]));
+}
+
+function gelerProfond(v) {
+  if (v !== null && typeof v === 'object') Object.values(v).forEach(gelerProfond);
+  return Object.freeze(v);
+}
+
+// Bloc commercial facultatif (D74) : absent = accepte ; present = strict : cles connues seulement, aucune cle ni chaine de montant.
+function validerCommercial(c) {
+  if (c === null || typeof c !== 'object' || Array.isArray(c)) return ['bloc commercial mal forme'];
+  const e = [];
+  if (cleMontant(c)) e.push('bloc commercial : cle de montant interdite');
+  const connues = ['modesArrivee', 'libreService', 'operationsMiseEnService', 'evenementsConsommation'];
+  if (Object.keys(c).some((k) => !connues.includes(k))) e.push('bloc commercial : cle inconnue');
+  if (!listeTextes(c.modesArrivee)) e.push('bloc commercial : modes d arrivee mal formes');
+  if (typeof c.libreService !== 'boolean') e.push('bloc commercial : libre service doit etre un booleen');
+  if (!listeTextes(c.operationsMiseEnService)) e.push('bloc commercial : operations de mise en service mal formees');
+  const ev = c.evenementsConsommation;
+  if (!(Array.isArray(ev) && ev.length > 0 && ev.every((x) => x && typeof x.code === 'string' && x.code !== '' && listeTextes(x.champs)))) {
+    e.push('bloc commercial : evenements de consommation mal formes');
+  } else if (ev.some((x) => Object.keys(x).some((k) => k !== 'code' && k !== 'champs'))) {
+    e.push('bloc commercial : cle inconnue dans un evenement');
+  }
+  return e;
+}
+
 export function validerManifeste(m) {
   const erreurs = [];
   if (m === null || typeof m !== 'object') return ['manifeste absent'];
@@ -38,6 +72,7 @@ export function validerManifeste(m) {
   if (typeof m.migrer !== 'function') erreurs.push('fonction migrer manquante');
   if (m.actif !== false) erreurs.push('interrupteur actif doit etre ferme (false) par defaut');
   if (m.contrat !== undefined && m.contrat !== VERSION_CONTRAT) erreurs.push('version de contrat inconnue');
+  if (m.commercial !== undefined) erreurs.push(...validerCommercial(m.commercial));
   const a = m.actionsAutomatiquesAutorisees;
   if (a !== undefined && !(Array.isArray(a) && a.every((x) => typeof x === 'string' && x.trim() !== '') && sansDoublon(a))) {
     erreurs.push('actions automatiques mal formees');
@@ -62,6 +97,7 @@ export function defineAutomation(manifeste) {
     permissions: Object.freeze([...manifeste.permissions]),
     actionsAutomatiquesAutorisees: Object.freeze([...(manifeste.actionsAutomatiquesAutorisees ?? [])]),
     tablesAjoutSeul: Object.freeze([...(manifeste.tablesAjoutSeul ?? [])]),
+    commercial: manifeste.commercial === undefined ? undefined : gelerProfond(JSON.parse(JSON.stringify(manifeste.commercial))),
     jeuEssai: Object.freeze(manifeste.jeuEssai.map((c) => Object.freeze({ ...c }))),
   });
 }

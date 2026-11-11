@@ -11,7 +11,7 @@ describe('serveur : ventes branchées sur un bouchon', () => {
     const a = creerApp();
     apps.push(a);
     expect((await a.inject({ method: 'GET', url: '/ventes' })).statusCode).not.toBe(404);
-    expect((await a.inject({ method: 'GET', url: '/ventes/v1' })).statusCode).not.toBe(404);
+    expect((await a.inject({ method: 'GET', url: '/ventes/VP-1-038' })).statusCode).not.toBe(404);
     expect((await a.inject({ method: 'GET', url: '/ventes?mois=2026-13' })).statusCode).toBe(400);
     expect((await a.inject({ method: 'POST', url: '/ventes' })).statusCode).toBe(404);
   });

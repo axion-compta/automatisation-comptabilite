@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { CHEMINS_BACK_END, VALIDEURS, ecransDeLaFiche, evaluer, validerPorte } from '../portes.mjs';
 
-const AUJ = '2026-11-10';
+const AUJ = '2026-11-11';
 const porte = (o = {}) => JSON.stringify({ ecran: 'x01', date: '2026-11-05', valideur: 'Will', ...o });
 const fiche = (id, autorises, dep = []) =>
   `---\nid: ${id}\ndepend_de: ${JSON.stringify(dep)}\nfichiers_autorises: ${JSON.stringify(autorises)}\n---\n`;
@@ -148,6 +148,6 @@ test('portes-du-depot-valides', () => {
   const r = evaluer({ git: () => null, env: {}, aujourdhui: AUJ, portesDuDepot: () => portes, ecranExiste: (c) => existsSync(`apps/web/src/ecrans/${c}`) });
   assert.deepEqual(r.pb, []);
   assert.ok(r.msg.includes(`${noms.length} porte(s)`));
-  for (const e of ['e44', 'e53', 'n03', 'n04']) assert.ok(noms.includes(`${e}.json`), e);
+  for (const e of ['e44', 'e50', 'e53', 'n03', 'n04']) assert.ok(noms.includes(`${e}.json`), e);
   assert.deepEqual(VALIDEURS, ['Will']);
 });
