@@ -96,11 +96,11 @@ describe('serveur : écritures de la TVA', () => {
     const { journal, routes } = monter();
     await refuse(appel(routes.passerLigneEnSousReserve, reserve('ligne-fictive-1', 's3')), 'TRANSITION_INTERDITE', 409);
     await refuse(appel(routes.passerLigneEnSousReserve, reserve('ligne-inconnue', 's4')), 'OBJET_INCONNU', 404);
+    await expect(appel(routes.passerLigneEnSousReserve, reserve('', 's6'))).rejects.toMatchObject({ status: 400 });
     expect(journal).toHaveLength(0);
   });
   it('sous-reserve-motif-vide-400', async () => {
-    const a = creerApp();
-    apps.push(a);
+    const a = creerApp(); apps.push(a);
     const url = `/exercices/${E}/tva/lignes/ligne-fictive-2/sous-reserve`;
     for (const payload of [{ motif: '' }, { motif: '   ' }, { motif: 'ok', en_trop: 1 }]) expect((await a.inject({ method: 'POST', url, headers: cle('s5'), payload })).statusCode).toBe(400);
     expect((await a.inject({ method: 'POST', url, payload: { motif: 'ok' } })).statusCode).toBe(400);
@@ -119,12 +119,12 @@ describe('serveur : écritures de la TVA', () => {
     const avant = service.etat();
     await refuse(appel(routes.modifierRattachement, rattacher('piece-fictive-1', 'm3', '2026-12')), 'PERIODE_DEPOSEE', 409);
     await refuse(appel(routes.modifierRattachement, rattacher('piece-inconnue', 'm4', '2027-02')), 'OBJET_INCONNU', 404);
+    await expect(appel(routes.modifierRattachement, rattacher('', 'm5', '2027-02'))).rejects.toMatchObject({ status: 400 });
     expect(service.etat()).toEqual(avant);
     expect(journal).toHaveLength(0);
   });
   it('serveur-par-defaut-refuse-401', async () => {
-    const a = creerApp();
-    apps.push(a);
+    const a = creerApp(); apps.push(a);
     const base = `/exercices/${E}/tva`;
     const mv = (n: string, payload: object, url = `${base}/pieces/piece-fictive-1/rattachement`) => a.inject({ method: 'PUT', url, headers: cle(n), payload });
     const essais = [
