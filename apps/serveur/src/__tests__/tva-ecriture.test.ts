@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { call } from '@orpc/server';
 import { creerApp } from '../app.js';
+import { deductionPreparee } from '../../../../packages/noyau/src/tva/sous-reserve.js';
 import { routesTva } from '../domaines/tva.js';
 import { creerServiceEcritureTva, type Acteur, type EtatTva, type LigneJournal } from '../domaines/tva-ecriture.js';
-
 const appel = <I>(proc: unknown, input: I) => call(proc as Parameters<typeof call>[0], input, { context: {} });
 const cle = (n: string) => ({ 'idempotency-key': `cle-essai-${n}` });
 const E = 'exercice-fictif';
@@ -12,27 +12,23 @@ const payee = (periode: string, k: string) => ({ params: { exercice: E, periode 
 const reserve = (ligne: string, k: string, motif = 'essai') => ({ params: { exercice: E, ligne }, headers: cle(k), body: { motif } });
 const rattacher = (piece: string, k: string, nouveau_mois: string) => ({ params: { exercice: E, piece }, headers: cle(k), body: { nouveau_mois } });
 const refuse = (p: Promise<unknown>, code: string, status: number) => expect(p).rejects.toMatchObject({ code, status });
-
 const L = (n: number, certitude: 'solide' | 'en_doute', tvaCentimes: number) => ({ id: `ligne-fictive-${n}`, pieceId: `piece-fictive-${n}`, tvaCentimes, certitude });
 const R = (n: number, mois: string) => ({ pieceId: `piece-fictive-${n}`, mois });
 const etatFictif = (): EtatTva => ({ lignes: [L(1, 'solide', 100), L(2, 'en_doute', 50), L(3, 'solide', 70)], rattachements: [R(1, '2027-01'), R(2, '2027-01'), R(3, '2027-03'), R(4, '2026-12')], periodesDeposees: ['2026-12'] });
-
 function monter(acteur: Acteur | undefined = { type: 'personne', id: 'personne-fictive-1', role: 'comptable' }) {
   const courant = { acteur };
   const journal: LigneJournal[] = [];
   const service = creerServiceEcritureTva({ session: { lire: () => (courant.acteur ? { acteur: courant.acteur } : undefined) }, journal: { ecrire: (l) => journal.push(l) }, horloge: () => '2027-02-10', etat: etatFictif() });
   return { courant, journal, service, routes: routesTva(undefined, service) };
 }
-
 const apps: Array<ReturnType<typeof creerApp>> = [];
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()));
 });
-
 describe('serveur : écritures de la TVA', () => {
   it('t1-reglage-refuse-quel-que-soit-le-role', async () => {
     const { courant, journal, service, routes } = monter();
-    const avant = service.deduction();
+    const avant = deductionPreparee(service.etat().lignes);
     const etatAvant = service.etat();
     let n = 0;
     for (const role of ['administrateur', 'comptable']) {
@@ -41,7 +37,7 @@ describe('serveur : écritures de la TVA', () => {
       expect(journal).toHaveLength(n);
       expect(journal[n - 1]).toMatchObject({ type: 'refus_reglage', par: `personne-fictive-${role}`, reglage: 'tva.inclure_sous_reserve' });
     }
-    expect(service.deduction()).toEqual(avant);
+    expect(deductionPreparee(service.etat().lignes)).toEqual(avant);
     expect(service.etat()).toEqual(etatAvant);
     expect(service.etat().lignes.filter((l) => l.certitude === 'sous_reserve')).toHaveLength(0);
   });
@@ -81,14 +77,14 @@ describe('serveur : écritures de la TVA', () => {
   });
   it('sous-reserve-par-une-personne-trace', async () => {
     const { journal, service, routes } = monter();
-    const avant = service.deduction();
+    const avant = deductionPreparee(service.etat().lignes);
     const r = (await appel(routes.passerLigneEnSousReserve, reserve(L2, 's1', 'justificatif attendu'))) as { body: { ligne: { certitude: string }; trace: unknown } };
     expect(r.body.ligne.certitude).toBe('sous_reserve');
     expect(r.body.trace).toEqual({ acteurId: 'personne-fictive-1', le: '2027-02-10', motif: 'justificatif attendu', pieceId: 'piece-fictive-2' });
     expect(journal).toHaveLength(1);
     expect(journal[0]).toMatchObject({ type: 'passage_sous_reserve', par: 'personne-fictive-1', ligne: 'ligne-fictive-2' });
     expect(avant).toEqual({ etat: 'bloquee', piecesEnDoute: 1 });
-    expect(service.deduction()).toEqual({ etat: 'preparee', centimes: 170 });
+    expect(deductionPreparee(service.etat().lignes)).toEqual({ etat: 'preparee', centimes: 170 });
   });
   it('sous-reserve-par-ia-403', async () => {
     const { courant, journal, routes } = monter();

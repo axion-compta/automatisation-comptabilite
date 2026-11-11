@@ -1,6 +1,6 @@
 import type { implement } from '@orpc/server';
 import type { contrat } from '../../../../packages/contrat/src/routes.js';
-import { deductionPreparee, demanderInclureSousReserve, ErreurSousReserve, passerEnSousReserve, type LigneTvaAchat } from '../../../../packages/noyau/src/tva/sous-reserve.js';
+import { demanderInclureSousReserve, ErreurSousReserve, passerEnSousReserve, type LigneTvaAchat } from '../../../../packages/noyau/src/tva/sous-reserve.js';
 import { deplacerPiece, ErreurRattachement, type Rattachement } from '../../../../packages/noyau/src/tva/rattachement.js';
 import { carteTva } from '../../../../packages/noyau/src/tva/rappel-paiement.js';
 export type Acteur = { type: 'personne' | 'ia'; id: string; role: string };
@@ -92,8 +92,6 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
           throw e;
         }
       }),
-    /** Pour les tests : la déduction préparée de l'état courant. */
-    deduction: () => deductionPreparee(etat.lignes),
   };
 }
 export type ServiceEcritureTva = ReturnType<typeof creerServiceEcritureTva>;
