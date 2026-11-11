@@ -34,7 +34,7 @@ export type ResultatExplication =
   | { sorte: 'ia'; segments: Segment[]; meta: Record<string, unknown> }
   | { sorte: 'sans_modele'; etapes: EtapeSource[] };
 
-const TENTATIVES = ['premiere', 'nouvel_essai'] as const;
+const ESSAIS_MAX = 2;
 const CHIFFRE = /\d/;
 const JETON = /\[(?:IBAN|CARTE|PERSONNE)_\d+\]/g;
 
@@ -84,7 +84,8 @@ export function verifierExplication(
   if (!(texte.length <= longueurMax)) return { ok: false, code: 'trop_long' };
   const brut = resoudre(texte, resultats);
   if (brut.some((s) => s.sorte === 'inconnu')) return { ok: false, code: 'reference_inconnue' };
-  const libre = (t: string): string => t.split(c.code).join(' ').replace(JETON, (j) => (table.has(j) ? ' ' : j));
+  const codeEntier = new RegExp(`(?<![\\p{L}\\p{N}])${c.code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'gu');
+  const libre = (t: string): string => t.replace(codeEntier, ' ').replace(JETON, (j) => (table.has(j) ? ' ' : j));
   if (brut.some((s) => s.sorte === 'texte' && CHIFFRE.test(libre(s.texte)))) return { ok: false, code: 'chiffre_hors_reference' };
   const citee = brut.some((s) => s.sorte === 'valeur' && s.source.type === 'ecriture');
   if (c.sources.length > 0 && !citee) return { ok: false, code: 'aucune_ecriture_citee' };
@@ -100,8 +101,7 @@ export async function expliquerCase(
   reglage: { longueurMax: number },
 ): Promise<ResultatExplication> {
   const { entree, resultats, table, etapes } = preparerEntree(c, ecritures, personnes);
-  for (const tentative of TENTATIVES) {
-    if (tentative === undefined) break;
+  for (let essai = 0; essai < ESSAIS_MAX; essai++) {
     try {
       const r = await port.completer(entree);
       const v = verifierExplication(r.texte, resultats, c, table, reglage.longueurMax);

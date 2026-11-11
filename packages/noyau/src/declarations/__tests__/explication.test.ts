@@ -76,6 +76,9 @@ describe('explication d\'un montant de déclaration', () => {
     for (const t of ['La case X01 vaut 1500 {{ref:e1.montant}}.', 'Voir X01b2 {{ref:e1.montant}}.', 'Environ {{12}} {{ref:e1.montant}}.', 'Case X01 {{ref:e1.montant}} en 2026.']) {
       expect(verif(t)).toEqual({ ok: false, code: 'chiffre_hors_reference' });
     }
+    const numerique: CaseDeclaration = { ...CASE, code: '08' };
+    expect(verif('La ligne 08 vaut 0808 euros, voir {{ref:e1.montant}}.', numerique)).toEqual({ ok: false, code: 'chiffre_hors_reference' });
+    expect(verif('La ligne 08 vient de {{ref:e1.montant}}.', numerique)).toMatchObject({ ok: true });
   });
 
   it('reference-inconnue-rejetee', () => {
