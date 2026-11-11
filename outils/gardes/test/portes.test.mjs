@@ -148,6 +148,6 @@ test('portes-du-depot-valides', () => {
   const r = evaluer({ git: () => null, env: {}, aujourdhui: AUJ, portesDuDepot: () => portes, ecranExiste: (c) => existsSync(`apps/web/src/ecrans/${c}`) });
   assert.deepEqual(r.pb, []);
   assert.ok(r.msg.includes(`${noms.length} porte(s)`));
-  for (const e of ['e03', 'e08', 'e24-vente', 'e24-ventes', 'e38', 'e39', 'e44', 'e44-client', 'e50', 'e53', 'n03', 'n04']) assert.ok(noms.includes(`${e}.json`), e);
+  for (const e of ['e03', 'e07', 'e08', 'e24-vente', 'e24-ventes', 'e38', 'e39', 'e44', 'e44-client', 'e50', 'e53', 'n03', 'n04']) assert.ok(noms.includes(`${e}.json`), e);
   assert.deepEqual(VALIDEURS, ['Will']);
 });
