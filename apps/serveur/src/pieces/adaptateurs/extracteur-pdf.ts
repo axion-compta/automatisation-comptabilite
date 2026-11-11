@@ -25,21 +25,65 @@ function lireCouleur(a: unknown[]): Couleur {
   return a.length >= 3 ? [octet(a[0]), octet(a[1]), octet(a[2])] : [octet(a[0]), octet(a[0]), octet(a[0])];
 }
 
-// Couleur de remplissage en vigueur à chaque affichage de texte, dans l'ordre du flux.
-async function couleursDeTexte(page: pdfjs.PDFPageProxy): Promise<Couleur[]> {
+// Un affichage de texte (opérateur showText) avec l'état graphique en vigueur.
+type Affichage = { texte: string; couleur: Couleur; invisible: boolean; calqueMasque: boolean };
+const sansBlancs = (t: string): string => t.replace(/\s+/g, '');
+const luminance = (c: Couleur): number => c[0] + c[1] + c[2];
+const taillePoliceAnnotation = 12; // valeur de repli, sans portée légale : sert seulement au filtre de taille
+
+// Affichages de texte dans l'ordre du flux : couleur, mode de rendu (3 = invisible) et calque optionnel.
+async function affichagesDeTexte(page: pdfjs.PDFPageProxy, calques: { isVisible(g: never): boolean }): Promise<Affichage[]> {
   const { OPS } = pdfjs;
   const liste = await page.getOperatorList();
-  const sortie: Couleur[] = [];
-  const pile: Couleur[] = [];
+  const sortie: Affichage[] = [];
+  const pile: { couleur: Couleur; rendu: number }[] = [];
+  const marques: boolean[] = [];
   let courante = NOIR;
+  let rendu = 0;
   liste.fnArray.forEach((op, i) => {
     const a = liste.argsArray[i] as unknown[] | undefined;
-    if (op === OPS.save) pile.push(courante);
-    else if (op === OPS.restore) courante = pile.pop() ?? NOIR;
+    if (op === OPS.save) pile.push({ couleur: courante, rendu });
+    else if (op === OPS.restore) ({ couleur: courante, rendu } = pile.pop() ?? { couleur: NOIR, rendu: 0 });
     else if ((op === OPS.setFillRGBColor || op === OPS.setFillGray) && a) courante = lireCouleur(a);
-    else if (op === OPS.showText || op === OPS.showSpacedText) sortie.push(courante);
+    else if (op === OPS.setTextRenderingMode && a) rendu = num(a[0]);
+    else if (op === OPS.beginMarkedContent) marques.push(false);
+    else if (op === OPS.beginMarkedContentProps) {
+      const props = a?.[1] as { type?: string } | undefined;
+      let visible = true;
+      if (a?.[0] === 'OC' && props && typeof props === 'object' && typeof props.type === 'string') {
+        try { visible = calques.isVisible(props as never); } catch { visible = false; }
+      }
+      marques.push(!visible);
+    } else if (op === OPS.endMarkedContent) marques.pop();
+    else if ((op === OPS.showText || op === OPS.showSpacedText) && a) {
+      const glyphes = Array.isArray(a[0]) ? (a[0] as unknown[]) : [];
+      const texte = glyphes.map((g) => (g && typeof g === 'object' && typeof (g as { unicode?: unknown }).unicode === 'string' ? (g as { unicode: string }).unicode : '')).join('');
+      sortie.push({ texte, couleur: courante, invisible: rendu === 3, calqueMasque: marques.some(Boolean) });
+    }
   });
   return sortie;
+}
+
+// pdf.js fusionne des affichages voisins en un seul élément : on rattache chaque élément aux affichages
+// qu'il recouvre (alignement sur les caractères hors blancs) et on retient le cas le plus défavorable
+// (couleur la plus claire, caché si un seul morceau l'est). Sans alignement sûr : pire cas de la page.
+function etatDesElements(affichages: Affichage[], textes: string[]): { couleur: Couleur; calqueMasque: boolean }[] {
+  const pire = (liste: Affichage[]) => {
+    let couleur = NOIR;
+    for (const x of liste) { const c = x.invisible ? BLANC : x.couleur; if (luminance(c) > luminance(couleur)) couleur = c; }
+    return { couleur, calqueMasque: liste.some((x) => x.calqueMasque) };
+  };
+  const proprietaire: Affichage[] = [];
+  for (const x of affichages) for (let k = 0; k < sansBlancs(x.texte).length; k++) proprietaire.push(x);
+  const total = textes.reduce((n, t) => n + sansBlancs(t).length, 0);
+  if (total !== proprietaire.length) return textes.map(() => pire(affichages));
+  let curseur = 0;
+  return textes.map((t) => {
+    const n = sansBlancs(t).length;
+    const morceau = proprietaire.slice(curseur, curseur + n);
+    curseur += n;
+    return pire([...new Set(morceau)]);
+  });
 }
 
 export class ExtracteurPdf implements Extracteur {
@@ -54,33 +98,27 @@ export class ExtracteurPdf implements Extracteur {
         const page = await doc.getPage(numero);
         const [x0 = 0, y0 = 0, x1 = 0, y1 = 0] = page.view;
         pages.push({ numero, largeur: x1 - x0, hauteur: y1 - y0 });
-        const couleurs = await couleursDeTexte(page);
-        const contenu = await page.getTextContent({ includeMarkedContent: true });
-        const calqueMasque: boolean[] = [];
-        let rang = 0;
-        for (const it of contenu.items as unknown as Record<string, unknown>[]) {
-          if (it.type === 'beginMarkedContentProps') {
-            calqueMasque.push(it.tag === 'OC' && typeof it.id === 'string' && calques.isVisible({ type: 'OCG', id: it.id.replace(/^.*_/, '') } as never) === false);
-          } else if (it.type === 'beginMarkedContent') calqueMasque.push(false);
-          else if (it.type === 'endMarkedContent') calqueMasque.pop();
-          else if (typeof it.str === 'string') {
-            const t = (it.transform as number[] | undefined) ?? [];
-            if (it.str === '') continue; // marque de fin de ligne : ne correspond à aucun affichage de texte
-            const couleur = couleurs[rang++] ?? NOIR;
-            if (it.str.trim() === '') continue;
-            elements.push({
-              texte: it.str, page: numero, x: num(t[4]), y: num(t[5]), largeur: num(it.width), hauteur: num(it.height),
-              taillePolice: Math.hypot(num(t[0]), num(t[1])), couleur, couleurFond: BLANC, calqueVisible: !calqueMasque.some(Boolean), annotationCachee: false,
-            });
-          }
-        }
+        const affichages = await affichagesDeTexte(page, calques);
+        const contenu = await page.getTextContent();
+        const items = (contenu.items as unknown as Record<string, unknown>[]).filter((it) => typeof it.str === 'string' && it.str !== '');
+        const etats = etatDesElements(affichages, items.map((it) => it.str as string));
+        items.forEach((it, k) => {
+          const str = it.str as string;
+          if (str.trim() === '') return;
+          const t = (it.transform as number[] | undefined) ?? [];
+          const etat = etats[k]!;
+          elements.push({
+            texte: str, page: numero, x: num(t[4]), y: num(t[5]), largeur: num(it.width), hauteur: num(it.height),
+            taillePolice: Math.hypot(num(t[0]), num(t[1])), couleur: etat.couleur, couleurFond: BLANC, calqueVisible: !etat.calqueMasque, annotationCachee: false,
+          });
+        });
         for (const an of await page.getAnnotations()) {
           const texte = typeof an.contentsObj?.str === 'string' ? an.contentsObj.str : typeof an.fieldValue === 'string' ? an.fieldValue : '';
           if (texte.trim() === '' || !Array.isArray(an.rect)) continue;
           const [ax = 0, ay = 0, bx = 0, by = 0] = an.rect as number[];
           elements.push({
             texte, page: numero, x: Math.min(ax, bx), y: Math.min(ay, by), largeur: Math.abs(bx - ax), hauteur: Math.abs(by - ay),
-            taillePolice: 12, couleur: NOIR, couleurFond: BLANC, calqueVisible: true, annotationCachee: ((num(an.annotationFlags) & 0b100010) !== 0) || an.hidden === true,
+            taillePolice: taillePoliceAnnotation, couleur: NOIR, couleurFond: BLANC, calqueVisible: true, annotationCachee: ((num(an.annotationFlags) & 0b100010) !== 0) || an.hidden === true,
           });
         }
       }

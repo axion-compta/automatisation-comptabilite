@@ -8,17 +8,17 @@ vi.mock('pdfjs-dist/legacy/build/pdf.mjs', async (original) => {
 const { ExtracteurPdf } = await import('../extracteur-pdf.js');
 
 type Texte = { x: number; y: number; s: string; couleur?: string; taille?: number };
-type Piece = { textes: Texte[]; catalogue?: string; extras?: string[]; annots?: string };
+type Piece = { textes: Texte[]; catalogue?: string; extras?: string[]; annots?: string; brut?: string };
 const flux = (contenu: string): string => `<< /Length ${contenu.length} >>\nstream\n${contenu}\nendstream`;
 
 // Objets : 1 catalogue, 2 pages, 3 police, 4 page, 5 contenu, puis les extras (6, 7, ...).
-function fabriquer({ textes, catalogue = '', extras = [], annots = '' }: Piece): Uint8Array {
-  const contenu = textes.map((t) => `BT ${t.couleur ?? '0 0 0'} rg /F1 ${t.taille ?? 12} Tf ${t.x} ${t.y} Td (${t.s}) Tj ET`).join('\n');
+function fabriquer({ textes, catalogue = '', extras = [], annots = '', brut }: Piece): Uint8Array {
+  const contenu = brut ?? textes.map((t) => `BT ${t.couleur ?? '0 0 0'} rg /F1 ${t.taille ?? 12} Tf ${t.x} ${t.y} Td (${t.s}) Tj ET`).join('\n');
   const objets = [
     `<< /Type /Catalog /Pages 2 0 R ${catalogue} >>`,
     '<< /Type /Pages /Kids [4 0 R] /Count 1 >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 800] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R ${annots} >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 800] /Resources << /Font << /F1 3 0 R >> /Properties << /OC1 6 0 R >> >> /Contents 5 0 R ${annots} >>`,
     flux(contenu),
     ...extras,
   ];
@@ -49,6 +49,25 @@ describe('ExtracteurPdf', () => {
     expect(a!.largeur).toBeGreaterThan(20);
     expect(a!.hauteur).toBeGreaterThan(5);
     expect(b).toMatchObject({ texte: 'Rouge', x: 60, y: 600, couleur: [255, 0, 0] });
+
+    // Textes cachés : couleurs mélangées dans une même ligne, mode de rendu invisible, calque désactivé, annotations.
+    const T = 'BT /F1 12 Tf 50 700 Td 0 0 0 rg (Total ) Tj 1 1 1 rg (cache) Tj 0 0 0 rg ( fin) Tj ET\nBT /F1 12 Tf 50 650 Td (Ligne2) Tj ET\n';
+    const melange = (await new ExtracteurPdf().extraire(fabriquer({ textes: [], brut: T }))).elements;
+    expect(melange.map((e) => e.texte)).toEqual(['Total cache fin', 'Ligne2']);
+    expect(melange[0]!.couleur).toEqual([255, 255, 255]);
+    expect(melange[1]!.couleur).toEqual([0, 0, 0]);
+    const invisible = (await new ExtracteurPdf().extraire(fabriquer({ textes: [], brut: 'BT /F1 12 Tf 3 Tr 50 700 Td (invisible) Tj ET\nBT /F1 12 Tf 0 Tr 50 650 Td (visible) Tj ET' }))).elements;
+    expect(invisible.map((e) => [e.texte, e.couleur])).toEqual([['invisible', [255, 255, 255]], ['visible', [0, 0, 0]]]);
+    const calques = (await new ExtracteurPdf().extraire(fabriquer({
+      textes: [], catalogue: '/OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] /Order [6 0 R] >> >>', extras: ['<< /Type /OCG /Name (calque) >>'],
+      brut: '/OC /OC1 BDC BT /F1 12 Tf 50 700 Td (Cache) Tj ET EMC\nBT /F1 12 Tf 50 650 Td (Dehors) Tj ET',
+    }))).elements;
+    expect(calques.map((e) => [e.texte, e.calqueVisible])).toEqual([['Cache', false], ['Dehors', true]]);
+    const ann = (await new ExtracteurPdf().extraire(fabriquer({
+      textes: [{ x: 50, y: 700, s: 'Corps' }], annots: '/Annots [6 0 R 7 0 R]',
+      extras: ['<< /Type /Annot /Subtype /Text /Rect [10 10 40 40] /Contents (note cachee) /F 2 >>', '<< /Type /Annot /Subtype /Text /Rect [10 50 40 80] /Contents (note visible) >>'],
+    }))).elements.filter((e) => e.texte.startsWith('note'));
+    expect(ann.map((e) => [e.texte, e.annotationCachee])).toEqual([['note cachee', true], ['note visible', false]]);
   });
 
   it('pdf-avec-javascript-non-execute', async () => {
