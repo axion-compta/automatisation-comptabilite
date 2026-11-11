@@ -1,0 +1,30 @@
+// Écran E39 « Voici ce que j'ai compris » : textes visibles. Vouvoiement.
+export const e39 = {
+  titre: "Voici ce que j'ai compris",
+  mention: 'Préparé par IA, à valider',
+  intro: 'Relisez chaque information ; une seule validation suffit pour tout confirmer.',
+  champs: {
+    denomination: "Nom de l'entreprise",
+    siren: 'Numéro SIREN',
+    forme: "Forme de l'entreprise",
+    exercice_debut: "Début de l'année comptable",
+    exercice_fin: "Fin de l'année comptable",
+    regime_tva: 'Régime de TVA',
+    regime_imposition: "Régime d'imposition",
+    tenue: 'Tenue de la comptabilité',
+    en_formation: 'Entreprise en formation',
+    code_postal_siege: 'Code postal du siège',
+    a_commissaire_aux_comptes: 'Commissaire aux comptes',
+  },
+  boutons: { valider: 'Tout est juste, je valide', voirSource: 'Voir la source' },
+  contradiction: {
+    consigne: 'Deux valeurs différentes ont été trouvées : choisissez la bonne.',
+    choix: 'Choisir cette valeur',
+  },
+  blocage: { titre: "Je ne peux pas continuer pour l'instant" },
+  chargement: 'Chargement du récapitulatif…',
+  vide: "Aucune information à relire pour le moment.",
+  erreur: 'Le récapitulatif ne peut pas être affiché pour le moment.',
+  refus: "La validation s'est arrêtée : une information n'a pas pu être confirmée. Rien d'autre n'a été confirmé ; vous pouvez réessayer.",
+  valide: 'Merci, votre profil est confirmé.',
+} as const;
