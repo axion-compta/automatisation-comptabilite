@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { DemandeVue } from '../../../../../packages/contrat/src/domaines/personnes.js';
+import { e50 } from '../../../../../packages/textes/src/ecrans/e50.js';
 import { e50Personnes } from '../../../../../packages/textes/src/ecrans/e50-personnes.js';
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import { Pastille } from '../../../../../packages/ui/src/composants/Pastille.js';
 import { Tableau, type ColonneTableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterDateAffiche } from '../../../../../packages/ui/src/format/affichage.js';
+import { ErreurLecture } from '../../api.js';
 import { useLecture } from '../../donnees/lecture.js';
 
 const t = e50Personnes;
@@ -40,7 +42,7 @@ const colonnes: ColonneTableau<DemandeVue>[] = [
 export function DemandesPersonnes() {
   const lecture = useLecture('/personnes/demandes', Reponse);
   let contenu;
-  if (lecture.etat === 'erreur') contenu = <EtatErreur message={t.erreurs.reglageAbsent} />;
+  if (lecture.etat === 'erreur') contenu = <EtatErreur message={lecture.erreur instanceof ErreurLecture && lecture.erreur.statut === 503 ? t.erreurs.reglageAbsent : e50.etats.erreur} />;
   else if (!lecture.donnees) contenu = <EtatChargement libelle={t.titre} />;
   else if (lecture.donnees.body.length === 0) contenu = <EtatVide titre={t.aucuneDemande} />;
   else contenu = <Tableau legende={t.titre} colonnes={colonnes} lignes={lecture.donnees.body} cleDeLigne={(d) => d.id} />;

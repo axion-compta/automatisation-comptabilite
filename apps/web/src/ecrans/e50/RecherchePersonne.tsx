@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { z } from 'zod';
+import { e50 } from '../../../../../packages/textes/src/ecrans/e50.js';
 import { e50Personnes } from '../../../../../packages/textes/src/ecrans/e50-personnes.js';
 import { lire, ErreurLecture } from '../../api.js';
 
@@ -28,7 +29,8 @@ export function RecherchePersonne() {
       setIssue(body.length === 0 ? { genre: 'message', texte: t.aucunResultat } : { genre: 'groupes', groupes: [...nombres] });
     } catch (e) {
       // 422 RECHERCHE_TROP_COURTE / RECHERCHE_VIDE : lire() le signale par le statut 422.
-      setIssue({ genre: 'message', texte: e instanceof ErreurLecture && e.statut === 422 ? t.tropCourt : e50Personnes.erreurs.reglageAbsent });
+      const statut = e instanceof ErreurLecture ? e.statut : 0;
+      setIssue({ genre: 'message', texte: statut === 422 ? t.tropCourt : statut === 503 ? e50Personnes.erreurs.reglageAbsent : e50.etats.erreur });
     } finally {
       setEnvoi(false);
     }
