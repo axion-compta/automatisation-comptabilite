@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { z } from 'zod';
 import { ReponseProfil, type ChampProfilV1 } from '../../../../../packages/contrat/src/domaines/profil.js';
 import { ReponseRegimesTva } from '../../../../../packages/contrat/src/domaines/regimes.js';
@@ -7,6 +8,7 @@ import { ChampSource } from '../../../../../packages/ui/src/composants/ChampSour
 import { EtatChargement, EtatErreur, EtatVide } from '../../../../../packages/ui/src/composants/Etats.js';
 import type { SchemaLecture } from '../../api.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { Modification } from './Modification.js';
 import { route as routeN03 } from '../n03/route.js';
 
 type Profil = z.infer<typeof ReponseProfil>;
@@ -72,6 +74,7 @@ function BlocTva({ profil, regimes }: { profil: Profil['body']; regimes: Regimes
 export function Ecran() {
   const profil = useLecture<Profil>('/profil', schemaProfil);
   const regimes = useLecture<Regimes>('/profil/regimes/tva', schemaRegimes);
+  const [edition, setEdition] = useState<string | null>(null);
   let contenu;
   if (profil.etat === 'erreur' || regimes.etat === 'erreur') contenu = <EtatErreur message={e45.erreur} />;
   else if (profil.etat === 'chargement' || regimes.etat === 'chargement') contenu = <EtatChargement libelle={e45.chargement} />;
@@ -81,9 +84,16 @@ export function Ecran() {
     contenu = (
       <>
         <Bandeau profil={p} />
-        {ordonner(p.champs).map((c) => (
-          <Ligne key={typeof c === 'string' ? c : c.cle} champ={c} />
-        ))}
+        {ordonner(p.champs).map((c) => {
+          const cle = typeof c === 'string' ? c : c.cle;
+          return (
+            <div key={cle}>
+              <Ligne champ={c} />
+              <button type="button" onClick={() => setEdition(cle)}>{e45.boutons.modifier}</button>
+              {edition === cle ? <Modification cle={cle} surFermer={() => setEdition(null)} /> : null}
+            </div>
+          );
+        })}
         <BlocTva profil={p} regimes={regimes.donnees.body} />
         <a href={routeN03.chemin}>{e45.annees}</a>
       </>
