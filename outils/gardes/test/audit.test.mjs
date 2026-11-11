@@ -13,12 +13,32 @@ test('ecriture-hors-service-refusee-par-la-garde', () => {
     'DROP TABLE a_compta.tete_journal',
     'ALTER TABLE a_compta.entree_journal DISABLE TRIGGER ALL',
     'insert\ninto a_compta.tete_journal',
+    'INSERT INTO "a_compta"."tete_journal" (x) VALUES (1)',
+    'UPDATE ONLY a_compta.tete_journal SET x = 1',
+    'DELETE FROM ONLY "a_compta"."entree_journal"',
   ];
   for (const s of sqls) {
     const pb = analyserTexte('const q = `' + s + '`;', hors);
     assert.equal(pb.length, 1, s);
     assert.match(pb[0], /hors du service d'audit/);
   }
+});
+
+test('constantes-de-table-refusees-hors-service', () => {
+  for (const s of ['INSERT INTO ${TABLE_TETE} (x) VALUES (1)', 'db.query(`DELETE FROM ${TABLE_ENTREES}`)']) {
+    const pb = analyserTexte(s, hors);
+    assert.equal(pb.length, 1, s);
+    assert.match(pb[0], /hors du service d'audit/);
+  }
+  assert.deepEqual(analyserTexte('const t = TABLE_TETE;', SERVICE), []);
+});
+
+test('toutes-les-extensions-sont-lues', () => {
+  for (const ext of ['ts', 'tsx', 'mts', 'cts', 'js', 'mjs', 'cjs', 'sql']) {
+    const pb = analyserTexte('DELETE FROM a_compta.tete_journal', `apps/serveur/src/x/ecrivain.${ext}`);
+    assert.equal(pb.length, 1, ext);
+  }
+  assert.deepEqual(analyserTexte('DELETE FROM a_compta.tete_journal', 'apps/serveur/src/x/ecrivain.test.mjs'), []);
 });
 
 test('vert : le service d’audit lui-même, les tests et les lectures', () => {
@@ -28,7 +48,7 @@ test('vert : le service d’audit lui-même, les tests et les lectures', () => {
   assert.deepEqual(analyserTexte(ecrit, 'apps/serveur/src/x.test.ts'), []);
   assert.deepEqual(analyserTexte('SELECT * FROM a_compta.tete_journal FOR UPDATE', hors), []);
   assert.deepEqual(analyserTexte('INSERT INTO a_compta.alerte_journal (x) VALUES (1)', hors), []);
-  assert.deepEqual(analyserTexte(ecrit, 'apps/serveur/src/base/migrations/092.sql'), []);
+  assert.deepEqual(analyserTexte('CREATE TABLE IF NOT EXISTS a_compta.tete_journal (x int)', 'apps/serveur/src/base/migrations/092.sql'), []);
 });
 
 test('le numéro de ligne est celui du début de l’ordre', () => {
