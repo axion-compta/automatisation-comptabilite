@@ -65,7 +65,9 @@ describe('données du barème kilométrique', () => {
         // taux en millièmes, fixe en centimes : tout en entiers, au centime près.
         const a = borne * (t1?.tauxMilliemes ?? 0) / 10;
         const b = borne * (t2?.tauxMilliemes ?? 0) / 10 + (t2?.fixeCentimes ?? 0);
-        expect({ cv: p.cleCv, centimes: a }).toEqual({ cv: p.cleCv, centimes: b });
+        // Écart de publication officiel (arrondis du barème, relevé 11/11/2026) : 2,00 EUR en 6 CV, nul ailleurs.
+        const ecartPublie = p.cleCv === 6 ? 200 : 0;
+        expect({ cv: p.cleCv, ecart: b - a }).toEqual({ cv: p.cleCv, ecart: ecartPublie });
       }
     }
   });
