@@ -6,7 +6,7 @@ export type CiblePersonnes = (avecReglage: boolean) => Promise<{
   fermer: () => Promise<void>;
 }>;
 
-type Demande = { id: string; etat: string; echeance: string };
+type Demande = { id: string; etat: string; echeance: string; issue: unknown };
 const corpsDe = <T>(r: ReponsePersonnes): T => (r.json as { body: T }).body;
 const codeDe = (r: ReponsePersonnes): unknown => (r.json as { code?: unknown }).code;
 /** Suite commune « demandes des personnes » : jouée sur le serveur en mémoire et sur le faux serveur. */

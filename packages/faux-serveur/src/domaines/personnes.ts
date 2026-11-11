@@ -22,7 +22,7 @@ export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler
       throw e;
     }
   };
-  const entree = async <T>(request: Request, schema: { safeParse: (v: unknown) => { success: boolean; data?: T } }) => {
+  const entree = async <T>(request: Request, schema: { safeParse: (v: unknown) => { success: boolean; data?: unknown } }) => {
     const [cle, c] = [EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined }), schema.safeParse(await request.json().catch(() => null))];
     return cle.success && c.success ? { cle: cle.data['idempotency-key'], corps: c.data as T } : null;
   };
@@ -30,7 +30,7 @@ export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler
   return [
     http.get(options.base + '/personnes/recherche', ({ request }) => {
       const q = RequeteRecherche.safeParse(Object.fromEntries(new URL(request.url).searchParams));
-      return q.success ? repondre(200, (s) => s.rechercher(q.data)) : refuse();
+      return q.success ? repondre(200, (s) => s.rechercher(q.data as Parameters<NonNullable<typeof service>['rechercher']>[0])) : refuse();
     }),
     http.get(options.base + '/personnes/demandes', () => repondre(200, (s) => s.lister())),
     http.post(options.base + '/personnes/demandes', async ({ request }) => {
