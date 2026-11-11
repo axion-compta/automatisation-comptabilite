@@ -10,7 +10,7 @@ SHA relus :
 - Fichiers : #1049 ne touche que `pilotage/fiches/L00-T84.md` ; #1050 ne touche que les 5 `fichiers_autorises`. Taille #1050 : 95 + 14 = 109 lignes (max 140).
 - `node outils/gardes/fiches.mjs` et `node scripts/verifier.mjs --gardes` verts sur les deux têtes ; les deux critères `git grep` rendent des lignes (2 et 5).
 - Mutations : `depend_de` de L09-T52 vers une fiche inconnue, ou retrait de la dépendance L09-T49, font rougir `garde:fiches` (fichiers partagés sans dépendance).
-- L10-T37 : seul `ventes-indicateurs.test.ts` est ajouté ; ligne 62 vérifiée sur main ; `toEqual` exact exigé, `toContain` et `arrayContaining` interdits. Aucune garantie retirée.
+- L10-T37 : seul `ventes-indicateurs.test.ts` est ajouté ; ligne 62 vérifiée sur main ; `toEqual` exact exigé, `toContain` et `arrayContaining` interdits. Aucune vérification retirée.
 - Les 7 tests nommés de l'ancienne L09-T49 sont tous repris (2 dans L09-T49, 5 dans L09-T52), plus `chemins-prefixes-dans-l-openapi`. Tests existants : « sans retirer ni affaiblir une assertion ».
 - Faits vérifiés sur main : `versSessionRoute` (`apps/serveur/src/securite/jeton.ts:105`) perd `societeId` ; `profil.test.ts` l. 77-78 du contrat ; `suite-profil.ts` joué par `contrat-commun.test.ts` ; L00-T81 fait ; L09-T52 libre ; notes `bloque/L10-T37` et `bloque/L09-T49` présentes.
 - Décisions : seules D42, D29 (09/11/2026) et J3a (07/11/2026), déjà dans l'ancienne fiche, sont citées ; aucune décision de Will inventée ; aucun `bloque_par` levé.
