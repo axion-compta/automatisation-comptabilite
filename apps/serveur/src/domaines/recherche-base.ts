@@ -1,27 +1,22 @@
-// Index de recherche en base (spec 15, RE-R1 a RE-R5). Interface, dépôt SQL paramétré et dépôt en mémoire.
-// Aucune base réelle ici : le dépôt SQL parle à un port ; le texte cherché n'est jamais journalisé.
-import { BORNES_Q, TYPES_RECHERCHE } from '../../../../packages/contrat/src/domaines/recherche.js';
+// Index de recherche (spec 15, RE-R1 à RE-R5) : dépôt SQL paramétré via un port, dépôt en mémoire ; texte cherché jamais journalisé.
+import { BORNES_LIMITE, BORNES_Q, TYPES_RECHERCHE } from '../../../../packages/contrat/src/domaines/recherche.js';
 import { correspondMot, lireRequete, normaliser } from '../../../../packages/noyau/src/recherche/requete.js';
 import type { Planificateur } from '../../../../packages/noyau/src/exploitation/planificateur.js';
-
 export type TypeIndex = (typeof TYPES_RECHERCHE)[number];
 export type EntreeBase = {
   type: TypeIndex; objetId: string; titre: string; texte: string; lien: string; date: string;
-  exerciceId: string | null; montantsCentimes: number[]; siren: string | null;
+  exerciceId: string | null; montantsCentimes: number[]; siren: string | null; sensible: boolean; // sensible : exclue de l'index
 };
 export type Cle = { type: TypeIndex; objetId: string };
 export type Coherence = { manquants: Cle[]; orphelins: Cle[] };
 export type Filtre = { typesAutorises: readonly TypeIndex[]; types?: readonly TypeIndex[]; limite?: number };
-
 export interface DepotRecherche {
   indexer(societeId: string, e: EntreeBase): Promise<void>;
-  /** Retire la ligne avant de rendre la main : une pièce devenue sensible n'est plus trouvée. */
   retirer(societeId: string, c: Cle): Promise<void>;
   chercher(societeId: string, q: string, f: Filtre): Promise<EntreeBase[]>;
   cles(societeId: string): Promise<Cle[]>;
 }
 export interface PortSql { executer(sql: string, params: readonly unknown[]): Promise<Record<string, unknown>[]> }
-
 export const SQL = {
   indexer: `INSERT INTO a_compta.index_recherche (societe_id, type, objet_id, titre, texte, lien, date_objet, exercice_id, montants_centimes, siren)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -35,42 +30,41 @@ export const SQL = {
       AND (vecteur @@ to_tsquery('french', a_compta.sans_accent($3)) OR $4::bigint = ANY(montants_centimes) OR siren = $5)
     ORDER BY ts_rank(vecteur, to_tsquery('french', a_compta.sans_accent($3))) DESC, objet_id LIMIT $6`,
 } as const;
-
-/** Mots réduits à des lettres et chiffres, liés par ET, dernier mot en préfixe : jamais de syntaxe libre vers la base. */
+/** Mots réduits à des lettres et chiffres (toute ponctuation sépare, comme to_tsvector), liés par ET, dernier mot en préfixe : jamais de syntaxe libre vers la base. */
 export function gabaritRequete(mots: readonly string[]): string {
-  const propres = mots.map((m) => m.replace(/[^\p{L}\p{N}]/gu, '')).filter((m) => m !== '');
+  const propres = mots.flatMap((m) => m.split(/[^\p{L}\p{N}]+/u)).filter((m) => m !== '');
   return propres.map((m, i) => (i === propres.length - 1 ? `${m}:*` : m)).join(' & ');
 }
-
+/** Limite entière bornée par le contrat ; NaN, Infinity et non-entiers ramenés au défaut. */
+export const limiteEffective = (l?: number): number =>
+  l === undefined || !Number.isInteger(l) ? BORNES_LIMITE.defaut : Math.min(BORNES_LIMITE.max, Math.max(BORNES_LIMITE.min, l));
 const lire = (q: string) => { const r = lireRequete(q, BORNES_Q); return { r, ts: gabaritRequete(r.mots) }; };
 const typesEffectifs = (f: Filtre): TypeIndex[] => f.typesAutorises.filter((t) => f.types === undefined || f.types.length === 0 || f.types.includes(t));
-
 export function creerDepotSql(port: PortSql): DepotRecherche {
   return {
     async indexer(s, e) {
-      await port.executer(SQL.indexer, [s, e.type, e.objetId, e.titre, e.texte, e.lien, e.date, e.exerciceId, e.montantsCentimes, e.siren]);
+      await (e.sensible ? port.executer(SQL.retirer, [s, e.type, e.objetId])
+        : port.executer(SQL.indexer, [s, e.type, e.objetId, e.titre, e.texte, e.lien, e.date, e.exerciceId, e.montantsCentimes, e.siren]));
     },
     async retirer(s, c) { await port.executer(SQL.retirer, [s, c.type, c.objetId]); },
     async cles(s) { return (await port.executer(SQL.cles, [s])).map((l) => ({ type: l.type as TypeIndex, objetId: String(l.objet_id) })); },
     async chercher(s, q, f) {
       const { r, ts } = lire(q);
-      const lignes = await port.executer(SQL.chercher, [s, typesEffectifs(f), ts, r.montantCentimes ?? null, r.siren ?? null, f.limite ?? 10]);
-      return lignes.map((l) => ({
-        type: l.type as TypeIndex, objetId: String(l.objet_id), titre: String(l.titre), texte: String(l.texte), lien: String(l.lien),
-        date: String(l.date_objet), exerciceId: (l.exercice_id as string | null) ?? null,
-        montantsCentimes: (l.montants_centimes as number[]).map(Number), siren: (l.siren as string | null) ?? null,
+      return (await port.executer(SQL.chercher, [s, typesEffectifs(f), ts, r.montantCentimes ?? null, r.siren ?? null, limiteEffective(f.limite)])).map((l) => ({
+        type: l.type as TypeIndex, objetId: String(l.objet_id), titre: String(l.titre), texte: String(l.texte), lien: String(l.lien), date: String(l.date_objet),
+        exerciceId: (l.exercice_id as string | null) ?? null,
+        montantsCentimes: (l.montants_centimes as number[]).map(Number), siren: (l.siren as string | null) ?? null, sensible: false,
       }));
     },
   };
 }
-
 /** Dépôt en mémoire derrière la même interface (faux serveur, tests). */
 export function creerDepotMemoire(): DepotRecherche {
   const lignes = new Map<string, Map<string, EntreeBase>>();
   const cle = (c: Cle): string => JSON.stringify([c.type, c.objetId]);
   const de = (s: string): Map<string, EntreeBase> => lignes.get(s) ?? lignes.set(s, new Map()).get(s) as Map<string, EntreeBase>;
   return {
-    async indexer(s, e) { de(s).set(cle(e), structuredClone(e)); },
+    async indexer(s, e) { if (e.sensible) de(s).delete(cle(e)); else de(s).set(cle(e), structuredClone(e)); },
     async retirer(s, c) { de(s).delete(cle(c)); },
     async cles(s) { return [...de(s).values()].map(({ type, objetId }) => ({ type, objetId })); },
     async chercher(s, q, f) {
@@ -83,33 +77,29 @@ export function creerDepotMemoire(): DepotRecherche {
         const titre = normaliser(e.titre);
         const texte = normaliser(e.texte);
         const note = r.mots.reduce((n, m, k) => n + (correspondMot(titre, m, k === dernier) ? 2 : 0), 0);
-        // Comme en base : tous les mots (ET), ou montant exact, ou SIREN.
         const tous = r.mots.every((m, k) => correspondMot(`${titre} ${texte}`, m, k === dernier));
         const exact = (r.montantCentimes !== undefined && e.montantsCentimes.includes(r.montantCentimes)) || (r.siren !== undefined && e.siren === r.siren);
         if (tous || exact) notes.push([note + (exact ? 3 : 0), structuredClone(e)]);
       }
-      return notes.sort((a, b) => b[0] - a[0] || a[1].objetId.localeCompare(b[1].objetId)).slice(0, f.limite ?? 10).map((n) => n[1]);
+      return notes.sort((a, b) => b[0] - a[0] || a[1].objetId.localeCompare(b[1].objetId)).slice(0, limiteEffective(f.limite)).map((n) => n[1]);
     },
   };
 }
-
 /** Reconstruction idempotente : même source, même index, sans doublon ni reste. */
 export async function reconstruire(depot: DepotRecherche, societeId: string, source: readonly EntreeBase[]): Promise<void> {
-  const voulues = new Set(source.map((e) => JSON.stringify([e.type, e.objetId])));
+  const voulues = new Set(source.filter((e) => !e.sensible).map((e) => JSON.stringify([e.type, e.objetId])));
   for (const c of await depot.cles(societeId)) if (!voulues.has(JSON.stringify([c.type, c.objetId]))) await depot.retirer(societeId, c);
   for (const e of source) await depot.indexer(societeId, e);
 }
-
 export async function controlerCoherence(depot: DepotRecherche, societeId: string, source: readonly EntreeBase[]): Promise<Coherence> {
   const ids = (l: readonly Cle[]): Map<string, Cle> => new Map(l.map((c) => [JSON.stringify([c.type, c.objetId]), { type: c.type, objetId: c.objetId }]));
-  const voulues = ids(source);
+  const voulues = ids(source.filter((e) => !e.sensible));
   const presentes = ids(await depot.cles(societeId));
   return {
     manquants: [...voulues].filter(([k]) => !presentes.has(k)).map(([, c]) => c),
     orphelins: [...presentes].filter(([k]) => !voulues.has(k)).map(([, c]) => c),
   };
 }
-
 /** Contrôle quotidien (UTC) ; seul le nombre d'écarts est transmis, jamais de texte. */
 export function inscrireControleQuotidien(
   planificateur: Planificateur, depot: DepotRecherche,

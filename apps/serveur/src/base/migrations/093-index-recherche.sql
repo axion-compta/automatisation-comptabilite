@@ -1,11 +1,9 @@
 -- Lot 15 : index de recherche (spec 15, RE-R1 a RE-R5). Ecrite et NON executee ici ; additive et rejouable.
 CREATE SCHEMA IF NOT EXISTS a_compta;
-CREATE EXTENSION IF NOT EXISTS unaccent;
-
--- unaccent n'est pas IMMUTABLE : enveloppe necessaire pour une colonne generee et un index.
+CREATE EXTENSION IF NOT EXISTS unaccent SCHEMA public;
+-- unaccent n'est pas IMMUTABLE : enveloppe pour la colonne generee et l'index.
 CREATE OR REPLACE FUNCTION a_compta.sans_accent(texte text) RETURNS text
   LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, texte) $$;
-
 CREATE TABLE IF NOT EXISTS a_compta.index_recherche (
   societe_id text NOT NULL,
   type text NOT NULL CHECK (type IN ('piece','ecriture','tiers','commentaire')),
@@ -24,7 +22,6 @@ CREATE TABLE IF NOT EXISTS a_compta.index_recherche (
   ) STORED,
   PRIMARY KEY (societe_id, type, objet_id)
 );
-
 CREATE INDEX IF NOT EXISTS index_recherche_vecteur ON a_compta.index_recherche USING GIN (vecteur);
 CREATE INDEX IF NOT EXISTS index_recherche_montants ON a_compta.index_recherche USING GIN (montants_centimes);
 CREATE INDEX IF NOT EXISTS index_recherche_siren ON a_compta.index_recherche (societe_id, siren) WHERE siren IS NOT NULL;
