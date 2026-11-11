@@ -23,7 +23,6 @@ export interface PieceDeposee {
   canal: string;
 }
 
-/** Ajoute une pièce déposée au stock en mémoire et la rend. */
 export function ajouterPieceDeposee(stock: PieceDeposee[], p: PieceDeposee): PieceDeposee {
   stock.push(p);
   return p;
