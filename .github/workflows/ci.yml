@@ -88,7 +88,7 @@ jobs:
 
   e2e:
     name: e2e
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -104,7 +104,12 @@ jobs:
       - name: E2E chromium seul (ignoré tant que apps/web n'a pas de configuration Playwright)
         run: |
           if [ -f apps/web/playwright.config.ts ]; then
-            pnpm --filter @axion/web exec playwright install --with-deps chromium
+            # Les miroirs apt sont parfois injoignables depuis les machines de CI : on borne l'essai,
+            # puis on installe Chromium sans paquets système. Les tests e2e restent exigés tels quels.
+            if ! timeout -k 10 180 pnpm --filter @axion/web exec playwright install --with-deps chromium; then
+              echo "::warning::Paquets système de Chromium non installés (miroirs apt injoignables) : essai sans eux."
+              pnpm --filter @axion/web exec playwright install chromium
+            fi
             pnpm --filter @axion/web run e2e
           else
             echo "Pas encore de configuration Playwright : étape ignorée."
