@@ -75,11 +75,18 @@ function Fiche({ p }: { p: PieceDetail }) {
   );
 }
 
+const SansFiche = ({ message }: { message: string }) => (
+  <>
+    <h1>{e08.titre}</h1>
+    <EtatErreur message={message} />
+  </>
+);
+
 function Lecture({ id }: { id: string }) {
   const lecture = useLecture('/pieces/' + encodeURIComponent(id), Reponse);
-  if (lecture.etat === 'chargement') return <EtatChargement libelle={e08.etats.chargement} />;
-  if (lecture.etat === 'erreur') return <EtatErreur message={lecture.erreur?.statut === 404 ? e08.etats.inconnue : e08.etats.erreur} />;
-  return lecture.donnees ? <Fiche p={lecture.donnees.body} /> : <EtatErreur message={e08.etats.inconnue} />;
+  if (lecture.etat === 'chargement') return <><h1>{e08.titre}</h1><EtatChargement libelle={e08.etats.chargement} /></>;
+  if (lecture.etat === 'erreur') return <SansFiche message={lecture.erreur?.statut === 404 ? e08.etats.inconnue : e08.etats.erreur} />;
+  return lecture.donnees ? <Fiche p={lecture.donnees.body} /> : <SansFiche message={e08.etats.inconnue} />;
 }
 
 /** Écran E08 : fiche d'une pièce lue par `GET /pieces/{id}`, identifiant dans le paramètre de recherche `id`. */
@@ -87,7 +94,7 @@ export function Ecran() {
   const id = new URLSearchParams(window.location.search).get('id') ?? '';
   return (
     <section>
-      {id === '' ? <EtatErreur message={e08.etats.inconnue} /> : <Lecture id={id} />}
+      {id === '' ? <SansFiche message={e08.etats.inconnue} /> : <Lecture id={id} />}
       <p>
         <a href={CHEMIN_LISTE}>{e08.retour}</a>
       </p>
