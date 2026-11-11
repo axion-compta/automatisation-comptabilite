@@ -7,7 +7,6 @@ import type { ContexteFaux } from '../registres/types.js';
 /** Erreur déclarée au contrat : `defined` vrai, comme sur le vrai serveur. */
 const declaree = (code: string, status: number) => HttpResponse.json({ defined: true, code, status, message: code }, { status });
 
-/** Plus grand indice accepté par la notation à crochets du vrai serveur (oRPC). */
 const INDICE_MAX = 9999;
 
 /**
