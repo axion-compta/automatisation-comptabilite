@@ -3,8 +3,7 @@ import { creerFauxPlanificateur } from '../../../../packages/noyau/src/exploitat
 import { creerFauxAlertes } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
 import { rapportOutilErreurs } from '../../../../packages/noyau/src/securite/signalements.js';
 import {
-  ErreurSignalement, TEXTES_SIGNALEMENT, dureeEnVigueur, enregistrerSignalement, inscrirePurgeSignalements,
-  purgerSignalements,
+  ErreurSignalement, TEXTES_SIGNALEMENT, dureeEnVigueur, enregistrerSignalement, inscrirePurgeSignalements, purgerSignalements,
   type AlerteSignalements, type LigneParametre, type Signalement,
 } from '../securite/signalements.js';
 
@@ -50,14 +49,10 @@ describe('signalements', () => {
     );
     expect(s.correlationId).toBe(rapport.correlation_id);
     expect(lignes).toHaveLength(1);
-    // aucune clé vers les écritures
-    expect(Object.keys(lignes[0] as object).sort()).toEqual(
-      ['correlationId', 'creeLe', 'etat', 'nature', 'personneId', 'signalementId', 'societeId'],
-    );
-    await expect(enregistrerSignalement(
-      p.depot, { societeId: 'societe-a', personneId: 'personne-1', nature: 'x', correlationId: 'inconnu' },
-      new Date(MAINTENANT), () => 'sig-2',
-    )).rejects.toBeInstanceOf(ErreurSignalement);
+    expect(Object.keys(lignes[0] as object).sort()).toEqual( // aucune clé vers les écritures
+      ['correlationId', 'creeLe', 'etat', 'nature', 'personneId', 'signalementId', 'societeId']);
+    await expect(enregistrerSignalement(p.depot, { societeId: 'societe-a', personneId: 'personne-1', nature: 'x', correlationId: 'inconnu' },
+      new Date(MAINTENANT), () => 'sig-2')).rejects.toBeInstanceOf(ErreurSignalement);
     expect(lignes).toHaveLength(1);
   });
 
@@ -65,8 +60,7 @@ describe('signalements', () => {
     const duree = NB_JOURS * JOUR_MS;
     const { p, lignes, recues } = monde(
       [sig('vieux', avant(duree + 1)), sig('limite', avant(duree)), sig('recent', avant(duree - 1)), sig('autre-societe', avant(duree * 2), 'societe-b')],
-      { 'societe-a': [ligneParam(NB_JOURS)], 'societe-b': [ligneParam(NB_JOURS * 4)] },
-    );
+      { 'societe-a': [ligneParam(NB_JOURS)], 'societe-b': [ligneParam(NB_JOURS * 4)] });
     expect(await purgerSignalements(p, MAINTENANT)).toBe(1);
     expect(lignes.map((s) => s.signalementId).sort()).toEqual(['autre-societe', 'limite', 'recent']);
     expect(recues).toEqual([]);
@@ -74,10 +68,7 @@ describe('signalements', () => {
 
   it('parametre-absent-aucune-purge', async () => {
     const vieux = sig('vieux', avant(1000 * JOUR_MS));
-    const { p, lignes, recues } = monde(
-      [vieux, sig('vieux-b', avant(1000 * JOUR_MS), 'societe-b')],
-      { 'societe-b': [ligneParam(null)] },
-    );
+    const { p, lignes, recues } = monde([vieux, sig('vieux-b', avant(1000 * JOUR_MS), 'societe-b')], { 'societe-b': [ligneParam(null)] });
     expect(await purgerSignalements(p, MAINTENANT)).toBe(0);
     expect(lignes).toHaveLength(2);
     expect(recues).toEqual([
@@ -87,12 +78,8 @@ describe('signalements', () => {
   });
 
   it('paramètre daté : futur, sans source ou ancien ignorés ; le plus récent en vigueur gagne', () => {
-    const lignes = [
-      ligneParam(NB_JOURS, { dateEffet: '2026-01-01' }),
-      ligneParam(NB_JOURS + 1, { dateEffet: '2026-03-01' }),
-      ligneParam(NB_JOURS + 2, { dateEffet: '2026-09-01' }),
-      ligneParam(NB_JOURS + 3, { dateEffet: '2026-04-01', source: '  ' }),
-    ];
+    const lignes = [ligneParam(NB_JOURS), ligneParam(NB_JOURS + 1, { dateEffet: '2026-03-01' }),
+      ligneParam(NB_JOURS + 2, { dateEffet: '2026-09-01' }), ligneParam(NB_JOURS + 3, { dateEffet: '2026-04-01', source: '  ' })];
     expect(dureeEnVigueur(lignes, '2026-06-15')).toBe(NB_JOURS + 1);
     expect(dureeEnVigueur(lignes, '2025-12-31')).toBeUndefined();
     expect(dureeEnVigueur([ligneParam(-1)], '2026-06-15')).toBeUndefined();
@@ -100,10 +87,8 @@ describe('signalements', () => {
   });
 
   it('durée infinie : aucune purge, alerte, les sociétés suivantes sont traitées', async () => {
-    const { p, lignes, recues } = monde(
-      [sig('vieux', avant(1000 * JOUR_MS)), sig('vieux-b', avant(1000 * JOUR_MS), 'societe-b')],
-      { 'societe-a': [ligneParam(Infinity)], 'societe-b': [ligneParam(NB_JOURS)] },
-    );
+    const { p, lignes, recues } = monde([sig('vieux', avant(1000 * JOUR_MS)), sig('vieux-b', avant(1000 * JOUR_MS), 'societe-b')],
+      { 'societe-a': [ligneParam(Infinity)], 'societe-b': [ligneParam(NB_JOURS)] });
     expect(await purgerSignalements(p, MAINTENANT)).toBe(1);
     expect(lignes.map((s) => s.signalementId)).toEqual(['vieux']);
     expect(recues).toEqual([{ code: 'parametre_signalements_absent', societeId: 'societe-a' }]);
@@ -113,17 +98,14 @@ describe('signalements', () => {
     for (const vide of ['', '   ']) {
       const { p, lignes } = monde([], {});
       const demande = { societeId: 'societe-a', personneId: 'personne-1', nature: 'affichage', correlationId: CORR, [champ]: vide };
-      await expect(enregistrerSignalement(p.depot, demande, new Date(MAINTENANT), () => 'sig-x'))
-        .rejects.toMatchObject({ code: 'champ_vide' });
+      await expect(enregistrerSignalement(p.depot, demande, new Date(MAINTENANT), () => 'sig-x')).rejects.toMatchObject({ code: 'champ_vide' });
       expect(lignes).toHaveLength(0);
     }
   });
 
   it('date illisible : jamais purgé, mais signalé par une alerte', async () => {
-    const { p, lignes, recues } = monde(
-      [sig('casse', 'pas-une-date'), sig('vieux', avant(NB_JOURS * JOUR_MS + 1))],
-      { 'societe-a': [ligneParam(NB_JOURS)], 'societe-b': [ligneParam(NB_JOURS)] },
-    );
+    const { p, lignes, recues } = monde([sig('casse', 'pas-une-date'), sig('vieux', avant(NB_JOURS * JOUR_MS + 1))],
+      { 'societe-a': [ligneParam(NB_JOURS)], 'societe-b': [ligneParam(NB_JOURS)] });
     expect(await purgerSignalements(p, MAINTENANT)).toBe(1);
     expect(lignes.map((s) => s.signalementId)).toEqual(['casse']);
     expect(recues).toEqual([{ code: 'signalements_illisibles', societeId: 'societe-a', nombre: 1 }]);

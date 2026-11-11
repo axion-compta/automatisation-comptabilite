@@ -1,6 +1,4 @@
-// Signalements : contenu propre à la compta, sans aucune clé vers les écritures (spec 06, point P8).
-// Purge quotidienne selon un paramètre daté et sourcé, vide par défaut : durée absente = rien n'est effacé, une alerte part.
-// Écrit contre des interfaces (dépôt, paramètre, alerte, planificateur) : rien de réel ici.
+// Signalements sans clé vers les écritures (spec 06, P8). Purge quotidienne selon un paramètre daté et sourcé ; absent = rien d'effacé, une alerte part.
 import type { Planificateur } from '../../../../packages/noyau/src/exploitation/planificateur.js';
 import type { PortAlerteExploitation } from '../../../../packages/noyau/src/exploitation/port-alerte.js';
 import { rapportOutilErreurs, signalementsAPurger } from '../../../../packages/noyau/src/securite/signalements.js';
@@ -9,18 +7,12 @@ const MS_PAR_JOUR = 24 * 60 * 60 * 1000;
 const LONGUEUR_DATE = 10;
 
 export interface Signalement {
-  societeId: string;
-  signalementId: string;
-  personneId: string;
-  nature: string;
-  etat: 'ouvert' | 'traite';
-  creeLe: string;
-  /** Même identifiant que celui de l'erreur rapportée. */
-  correlationId: string;
+  societeId: string; signalementId: string; personneId: string; nature: string;
+  etat: 'ouvert' | 'traite'; creeLe: string;
+  correlationId: string; // même identifiant que celui de l'erreur rapportée
 }
 export interface PortSignalements {
-  ajouter(s: Signalement): Promise<void>;
-  lister(societeId: string): Promise<readonly Signalement[]>;
+  ajouter(s: Signalement): Promise<void>; lister(societeId: string): Promise<readonly Signalement[]>;
   supprimer(societeId: string, ids: readonly string[]): Promise<void>;
 }
 /** Ligne du paramètre daté : `dureeJours` vide par défaut. */
@@ -32,18 +24,11 @@ export type AlerteSignalements =
 
 export class ErreurSignalement extends Error {
   override name = 'ErreurSignalement';
-  readonly code: 'correlation_invalide' | 'champ_vide';
-  constructor(code: 'correlation_invalide' | 'champ_vide') {
-    super(code);
-    this.code = code;
-  }
+  constructor(readonly code: 'correlation_invalide' | 'champ_vide') { super(code); }
 }
 
 /** Textes montrés à la personne : aucun délai, aucun mot interdit. */
-export const TEXTES_SIGNALEMENT = {
-  confirmation: 'Votre signalement a bien été transmis.',
-  suite: 'Nous reviendrons vers vous dès que possible.',
-} as const;
+export const TEXTES_SIGNALEMENT = { confirmation: 'Votre signalement a bien été transmis.', suite: 'Nous reviendrons vers vous dès que possible.' } as const;
 
 export interface DemandeSignalement { societeId: string; personneId: string; nature: string; correlationId: string }
 
@@ -57,8 +42,7 @@ export async function enregistrerSignalement(
     if (typeof v !== 'string' || v.trim() === '') throw new ErreurSignalement('champ_vide');
   }
   const s: Signalement = {
-    societeId: demande.societeId, signalementId: nouvelId(), personneId: demande.personneId,
-    nature: demande.nature, etat: 'ouvert', creeLe: maintenant.toISOString(), correlationId: demande.correlationId,
+    ...demande, signalementId: nouvelId(), etat: 'ouvert', creeLe: maintenant.toISOString(),
   };
   await depot.ajouter(s);
   return s;
