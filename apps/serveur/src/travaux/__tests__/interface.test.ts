@@ -106,12 +106,12 @@ function consommateur(declarees: Periode[] = []) {
 }
 
 describe('événements d\'écriture', () => {
-  it('écriture antidatée : instantanés invalidés puis recalculés, période voisine intacte', async () => {
+  it.each([[true, ['2026-03-01', '2026-04-01'], 2], [false, ['2026-03-01'], 1]] as const)('écriture antidatée, version montée : %s, recalculs %j', async (monte, recalculs, v) => {
     const x = consommateur([T('2026-01-01', '2026-03-31')]);
-    x.monter();
+    if (monte) x.monter();
     expect(await x.c.consommer(evt('e1', 'compta.ecriture.validee', 1))).toBe('traite');
-    expect(x.calculs).toEqual(['2026-03-01', '2026-04-01']);
-    expect(x.liste().every((i) => !i.invalide && i.versionEcritures === 2)).toBe(true);
+    expect(x.calculs).toEqual(recalculs);
+    expect(x.liste().every((i) => !i.invalide && i.versionEcritures === v)).toBe(true);
     expect(x.cartes).toEqual(['ecr-1@2026-03-15']);
   });
 
