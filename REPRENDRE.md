@@ -38,7 +38,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Test `regle-eslint` de `packages/noyau` : peut dépasser 5 s en local, sans lien avec P0.
 
 ## Prochaine commande
-`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter le statut de L01-T39 et L01-T47 (remplacées) ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
+`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
 
 ## Pièges
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
@@ -64,4 +64,41 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Écart à la fiche : elle annonçait 8 fiches bloquées (T48 à T55) ; T51 à T55 sont déjà faites, il n'en reste que 3.
 - Écarts à la spec gardés : identifiants suffixés (K11M, K12H, K13S, T03A, T12M, T18M) ; vocabulaire du CSV et du code (gravité B/M, `bloque`, `declencheurs`).
 - PR du lot (lignes, durée de CI, corrections après relecture) : non mesuré (pas de gh dans cette session) ; `pilotage/calibrage.csv` ne contient que l'en-tête, rien n'y est ajouté.
+- Aucune date de livraison annoncée.
+
+## Lot 14
+- Existe (parties pures, lecture, contrat et faux serveur) : gardes des formats et du registre légal ; veille (circuit, état, mode dégradé) ; Sirene (planification, partage, cache) ; santé des connecteurs.
+- Juridique : dispense, convocation, confidentialité, rapport de la SCI, rémunération, intérêts et écriture de compte courant.
+- Paramètres : paquet versionné, pays, utilisation exigée. TVA : carte de paiement et rappels, rattachement, « sous réserve ».
+- Cas sûr et ses versions ; budget de gestes ; textes et composants ; contrat et faux serveur (état de la veille et des connecteurs : L14-T32, L14-T33).
+- Fiches T00 à T33 attendues par L14-T08 : `statut: fait` (en-têtes lus sur main). T35 et T42 sont aussi faites.
+- Faites depuis (statut: fait sur main au 09/11/2026) : T34, T36, T37, T38.
+- Restent `a_faire`, à écrire contre une interface et un faux serveur (données fictives, rien en production avant J10) :
+  - T39 : routes d'écriture du juridique ; identité et double facteur de la console (D29).
+  - T40 : routes TVA (refus 403, « payé », « sous réserve ») ; identité et rôles de la console (D29).
+  - T41 : archive datée des rapports avec empreinte ; stockage chez l'hébergeur (D42).
+- Mesures sans IA : les relevés du 08/11/2026 sont périmés (fusions faites depuis). Nombre de PR fusionnées et délais médians : non mesuré (à refaire, fiches et créations de fiche séparées) ; `pilotage/calibrage.csv` : en-tête seul ; score Stryker du noyau sur main : non mesuré.
+- Aucune date de livraison annoncée.
+
+## Lot 02
+- Fiches : 71 au total (T00 à T70) ; 69 `statut: fait` avec L02-T06, en-têtes lus sur main au 09/11/2026 ; les 23 dépendances de L02-T06 sont faites.
+- Écart à la fiche : T62 à T67 et T69 sont faites, plus bloquées. Restent L02-T68 (écran d'import, `a_faire`, non sensible) et L02-T70 (connexion bancaire, ABANDONNÉE par Will, D63 : ne jamais planifier).
+- Banc de rapprochement (L02-T33, 3 graines) : 0 faux lien en `RAPPROCHEE` ; rappel 49/120 = 40,8 %, sous la cible de 90 % : fiche de suivi à ouvrir, banc non ajusté au moteur.
+- Banc de profils : aucun résultat chiffré dans le dépôt ; L02-T50 porte les vues d'exemple, et le jeu de 10 relevés fictifs avec profils est celui de L02-T61, lu par L02-T20.
+- Mesures PR (API REST, journal L02-T06) : 79 PR fusionnées pour 70 fiches ; médiane ouverture à fusion 33,9 min (51 sensibles), 30,9 min (28 non sensibles).
+- Échecs CI : 0 contrôle en échec sur 711 au dernier commit des 79 PR (check-runs) ; 7 runs de workflow en échec sur 56 runs de branches lot-02/*, 6 branches (`actions/runs`, 3000 derniers runs). Stryker du noyau : 86,67 % (`npx stryker run`, main 69605cb).
+- Prochaines étapes : L02-T68, puis la fiche de suivi du rappel du banc de rapprochement ; Will relit les PR sensibles.
+- Aucune date de livraison annoncée.
+
+## Lot 03
+- Fiches : 59 (T00 à T58) ; 58 `statut: fait` avec L03-T07, en-têtes lus sur main (3217534) ; reste L03-T58 (explication d'un montant, `a_faire`, sensible, débloquée par D43 et J3a).
+- Écart à la fiche T07 : T52 à T57 sont faites, plus bloquées ; elles sont écrites contre des interfaces et un faux serveur (D29 au 21/11/2026, D42, D43, J3a, aucune mise en production avant J10).
+- FEC : fichier complet en octets, lecture et contrôles, banc de 11 jeux, rapport, import ; catalogue de règles (19, source `a_sourcer`).
+- TVA : régime, périodes, périodicité, exigibilité, traitement, totaux ; formulaire, report, pas-à-pas, contrôles de déclaration ; échéances.
+- États financiers, affectation, contrôles de clôture ; conservation ; paquet pour le comptable.
+- Contrat, faux serveur et écrans E19 et E57 ; T52 à T57 : dépôts en mémoire, routes d'écriture, lien FEC court, envoi du paquet, purge planifiée, réception des factures (faux adaptateur).
+- Mesures PR (API REST, sans IA) : 65 PR fusionnées pour 59 fiches ; médiane ouverture à fusion 16,0 min (49 sensibles), 31,9 min (16 non sensibles). `pilotage/calibrage.csv` : vide (en-tête seul).
+- Stryker du noyau : 86,67 % (195 tués, 30 survivants, `npx stryker run` dans `packages/noyau`, main 3217534). Échecs CI du lot : non mesuré.
+- Reste : L03-T58 ; fiches de suite à créer (adaptateurs réels de purge et de sauvegardes ; route du webhook des factures reçues et rattrapage planifié) après la console du 21/11/2026 et J10 ; aucun contact avec une plateforme agréée sans l'accord de Will.
+- Le FEC n'est PAS déclaré accepté par l'outil officiel : le passage dans Test Compta Demat (J7) n'est pas fait.
 - Aucune date de livraison annoncée.

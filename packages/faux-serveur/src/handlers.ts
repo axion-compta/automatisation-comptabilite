@@ -14,11 +14,16 @@ import { creerHandlersBanque } from './domaines/banque.js';
 import { creerHandlersPrincipes } from './domaines/principes.js';
 import { creerHandlersTva } from './domaines/tva.js';
 import { creerHandlersChange } from './domaines/change.js';
+import { creerHandlersFrais } from './domaines/frais.js';
+import { creerHandlersVehiculesBareme } from './domaines/vehicules-bareme.js';
+import { creerHandlersFec } from './domaines/fec.js';
 import { creerHandlersSante } from './domaines/sante.js';
 import { creerHandlersJuridique } from './domaines/juridique.js';
+import { creerHandlersProfil } from './domaines/profil.js';
 import { creerHandlersTresorerie } from './domaines/tresorerie.js';
 import { creerHandlersBloquants } from './domaines/bloquants.js';
 import { creerHandlersSources } from './domaines/sources.js';
+import { creerHandlersEcheances } from './domaines/echeances.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
 import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
 import type { OptionsAbonnementFaux } from './domaines/options-abonnement.js';
@@ -27,6 +32,13 @@ import { handlersVolume } from './domaines/volume.js';
 import { handlersPalier } from './domaines/palier.js';
 import { handlersFinContrat } from './domaines/fin-contrat.js';
 import { handlersAcceptations } from './domaines/acceptations.js';
+import { handlersSante } from './domaines/sante.js';
+import { handlersPersonnes } from './domaines/personnes.js';
+import { handlersGardeAcces } from './garde-acces.js';
+import type { OptionsExploitationFaux } from './domaines/options-exploitation.js';
+
+/** Réglages FICTIFS des personnes pour le mode simulé : jamais une valeur légale. */
+const REGLAGES_FICTIFS_PERSONNES = { moisReponse: 2, joursRappel: 3 };
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -50,6 +62,8 @@ export type OptionsFauxServeur = {
   scenarioAbonnement?: string;
   /** Abonnement : horloge injectée (horodatage ISO). */
   horloge?: () => string;
+  /** Exploitation : date de référence fictive (ISO, jour) ; par défaut le jour de l'horloge. */
+  dateReferenceExploitation?: string;
 };
 
 const MESSAGES: Record<403 | 423, string> = {
@@ -79,6 +93,16 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     attendre,
   };
 
+  const horloge = abonnement.horloge;
+  const exploitation: OptionsExploitationFaux = {
+    base,
+    horloge,
+    dateReference: options.dateReferenceExploitation ?? horloge().slice(0, 10),
+    attendre,
+    reglagesPersonnes: REGLAGES_FICTIFS_PERSONNES,
+    reglesConservation: [],
+  };
+
   const refus = (panne: Panne, versionActuelle = 1) =>
     panne === 409 ? erreur('CONFLIT_VERSION', 409, { versionActuelle }) : erreur(MESSAGES[panne], panne);
 
@@ -87,6 +111,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined });
 
   return [
+    ...handlersGardeAcces(abonnement),
     http.get(base + '/ecritures', async ({ request }) => {
       await attendre();
       const q = new URL(request.url).searchParams;
@@ -139,11 +164,18 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersPrincipes(base, attendre),
     ...creerHandlersTva(base, attendre),
     ...creerHandlersChange(base, attendre),
+    ...creerHandlersFrais(base, attendre),
+    ...creerHandlersVehiculesBareme(base, attendre),
+    ...creerHandlersFec(base, attendre),
     ...creerHandlersSante(base, attendre),
     ...creerHandlersJuridique(base, attendre),
+    ...creerHandlersProfil(base, attendre),
     ...creerHandlersTresorerie(base, attendre),
     ...creerHandlersBloquants(base, attendre),
     ...creerHandlersSources(base, attendre),
+    ...creerHandlersEcheances(base, attendre),
+    ...handlersSante(exploitation),
+    ...handlersPersonnes(exploitation),
     ...[handlersAcces, handlersVolume, handlersPalier, handlersFinContrat, handlersAcceptations].flatMap((f) => f(abonnement)),
   ];
 }

@@ -18,7 +18,15 @@ export const socle = {
     plus: 'Plus',
   },
   discuter: 'Discuter',
-  navigation: { titre: 'Navigation principale' },
+  cloche: 'Ce qui demande mon attention',
+  compteur: {
+    une: '1 alerte',
+    plusieurs: '{n} alertes',
+    uneUrgente: ', dont une urgente',
+    plusieursUrgentes: ', dont {n} urgentes',
+    prioritaire: ', à traiter en priorité',
+  },
+  navigation: { titre: 'Navigation principale', reduire: 'Réduire le menu', agrandir: 'Agrandir le menu' },
   enPreparation: { titre: 'Page en préparation', message: 'Cette page sera bientôt disponible.' },
   accueil: { titre: 'Bienvenue', message: "Votre espace est en cours de mise en place." },
   etats: {

@@ -1,5 +1,6 @@
 import { oc } from '@orpc/contract';
 import { z } from 'zod';
+import { juridiqueEcriture } from './juridique-ecriture.js';
 
 const DateJour = z.iso.date();
 const Code = z.string().min(1);
@@ -33,4 +34,4 @@ export const lireObligationsJuridiques = oc
   .input(z.object({ params: ParamsJuridique }))
   .output(ReponseObligationsJuridiques);
 
-export const juridique = { lireObligationsJuridiques };
+export const juridique = { lireObligationsJuridiques, ...juridiqueEcriture };
