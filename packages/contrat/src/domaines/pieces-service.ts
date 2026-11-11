@@ -13,6 +13,21 @@ export interface FiltrePieces {
   decalage?: number | undefined;
 }
 
+/** Pièce reçue par le dépôt (en mémoire, fictive). */
+export interface PieceDeposee {
+  id: string;
+  empreinte: string;
+  etat: string;
+  motif?: string | undefined;
+  recueLe: string;
+  canal: string;
+}
+
+export function ajouterPieceDeposee(stock: PieceDeposee[], p: PieceDeposee): PieceDeposee {
+  stock.push(p);
+  return p;
+}
+
 const LIMITE_PAR_DEFAUT = 50;
 
 function normaliser(t: string): string {
@@ -89,4 +104,14 @@ export function detailPiece(id: string): PieceDetail | undefined {
   };
   if (p.motifNonComptee !== undefined) d.motifNonComptee = p.motifNonComptee;
   return d;
+}
+
+/** Pièces modifiées en mémoire : la version corrigée prime sur le jeu fictif. */
+export function pieceCourante(stock: Map<string, PieceDetail>, id: string): PieceDetail | undefined {
+  return stock.get(id) ?? detailPiece(id);
+}
+
+export function mettreAJourPiece(stock: Map<string, PieceDetail>, id: string, piece: PieceDetail): PieceDetail {
+  stock.set(id, piece);
+  return piece;
 }
