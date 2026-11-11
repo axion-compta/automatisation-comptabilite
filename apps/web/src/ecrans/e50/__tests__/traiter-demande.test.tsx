@@ -8,12 +8,10 @@ import { fr } from '../../../../../../packages/textes/src/fr.js';
 import { e50Personnes as t } from '../../../../../../packages/textes/src/ecrans/e50-personnes.js';
 import { FournisseurDonnees, creerClient } from '../../../donnees/lecture.js';
 import { DemandesPersonnes } from '../DemandesPersonnes.js';
-
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let serveur: { fermer: () => void } | null = null;
 let racine: Root | null = null;
 afterEach(() => (act(() => racine?.unmount()), serveur?.fermer(), (document.body.innerHTML = ''), vi.unstubAllGlobals()));
-
 const demande = (type: string) => ({ id: 'dem_1', type, recue_le: '2026-10-01', echeance: '2026-11-01', etat: 'recue', en_retard: false, a_rappeler: false, issue: null, conserve_jusqu_au: null, source_motif: null });
 const attendre = () => act(async () => void (await new Promise((r) => setTimeout(r, 150))));
 type Appel = { url: string; methode: string; cle: string | null; corps: Record<string, unknown> | null };
@@ -52,57 +50,47 @@ const saisir = (nom: string, valeur: string, proto: object = HTMLInputElement.pr
 const choisir = (issue: string) => saisir('issue', issue, HTMLSelectElement.prototype);
 const valider = () => clic(bouton(t.traiter.valider));
 const envois = (a: Appel[]) => a.filter((x) => x.methode === 'POST');
-
+const ouvert = async (...a: Parameters<typeof monter>) => { const r = await monter(...a); await ouvrir(); return r; };
+const texte = () => document.body.textContent;
+const alerte = () => document.querySelector('[role="alert"]')?.textContent;
+const refusIncomplet = async (issue: string, nom: string, valeur: string, attendu: string) => {
+  const { appels } = await ouvert('effacement');
+  await choisir(issue);
+  await saisir(nom, valeur);
+  await valider();
+  expect(texte()).toContain(attendu);
+  expect(envois(appels)).toHaveLength(0);
+};
 describe('écran E50, traiter une demande', () => {
   it('issues-filtrees-par-type', async () => {
     for (const type of ['acces', 'effacement', 'opposition'] as const) {
-      await monter(type);
-      await ouvrir();
+      await ouvert(type);
       expect([...champ('issue').options].map((o) => o.value)).toEqual([...ISSUES_PAR_DROIT[type]]);
       act(() => racine?.unmount());
     }
   });
-  it('refus-sans-motif-bloque-avant-envoi', async () => {
-    const { appels } = await monter('effacement');
-    await ouvrir();
-    await choisir('refus_conservation');
-    await saisir('source', 'Source fictive A');
-    await valider();
-    expect(document.body.textContent).toContain(t.erreurs.motifManquant);
-    expect(envois(appels)).toHaveLength(0);
-  });
-  it('refus-sans-source-bloque-avant-envoi', async () => {
-    const { appels } = await monter('effacement');
-    await ouvrir();
-    await choisir('refus_gel');
-    await saisir('motif', 'Motif fictif');
-    await valider();
-    expect(document.body.textContent).toContain(t.erreurs.sourceManquante);
-    expect(envois(appels)).toHaveLength(0);
-  });
+  it('refus-sans-motif-bloque-avant-envoi', () => refusIncomplet('refus_conservation', 'source', 'Source fictive A', t.erreurs.motifManquant));
+  it('refus-sans-source-bloque-avant-envoi', () => refusIncomplet('refus_gel', 'motif', 'Motif fictif', t.erreurs.sourceManquante));
   it('autres-personnes-decochee-par-defaut', async () => {
-    const { appels } = await monter('acces');
-    await ouvrir();
+    const { appels } = await ouvert('acces');
     expect(champ('autresPersonnes').checked).toBe(false);
-    expect(document.body.textContent).toContain(t.traiter.autresPersonnesAide);
+    expect(texte()).toContain(t.traiter.autresPersonnesAide);
     await valider();
-    const [envoi] = envois(appels);
-    expect(envoi?.url).toContain('/personnes/demandes/dem_1/traitement');
-    expect(envoi?.corps).toEqual({ issue: 'acces_produit', inclure_autres_personnes: false });
-    expect(envoi?.cle?.length).toBeGreaterThanOrEqual(8);
+    const [{ url, corps, cle }] = envois(appels) as [Appel];
+    expect(url).toContain('/personnes/demandes/dem_1/traitement');
+    expect(corps).toEqual({ issue: 'acces_produit', inclure_autres_personnes: false });
+    expect(cle?.length).toBeGreaterThanOrEqual(8);
   });
   it('deja-traitee-message', async () => {
-    await monter('acces', { statut: 409, corps: { code: 'DEJA_TRAITEE' } });
-    await ouvrir();
+    await ouvert('acces', { statut: 409, corps: { code: 'DEJA_TRAITEE' } });
     await valider();
-    expect(document.body.textContent).toContain(t.erreurs.dejaTraitee);
+    expect(texte()).toContain(t.erreurs.dejaTraitee);
   });
   it('a-effacer-sans-promesse-immediate', async () => {
-    await monter('effacement');
-    await ouvrir();
+    await ouvert('effacement');
     await choisir('a_effacer');
-    expect(document.body.textContent).toContain(t.aEffacerExplication);
-    expect(document.body.textContent).not.toMatch(/effacées? immédiatement|effacement immédiat/i);
+    expect(texte()).toContain(t.aEffacerExplication);
+    expect(texte()).not.toMatch(/effacées? immédiatement|effacement immédiat/i);
   });
   it('enregistrer-puis-voir-dans-la-liste', async () => {
     serveur = demarrerNoeud({ base: location.origin });
@@ -115,11 +103,10 @@ describe('écran E50, traiter une demande', () => {
   });
   it('erreurs-reseau-serveur-et-422-traduites', async () => {
     for (const [rep, attendu] of [['reseau', fr.erreurs.reseau], [{ statut: 500, corps: {} }, fr.erreurs.generique], [{ statut: 422, corps: { code: 'MOTIF_MANQUANT' } }, t.erreurs.motifManquant]] as const) {
-      await monter('acces', rep);
-      await ouvrir();
+      await ouvert('acces', rep);
       await valider();
-      expect(document.querySelector('[role="alert"]')?.textContent).toBe(attendu);
-      expect(document.body.textContent).not.toContain(t.erreurs.reglageAbsent);
+      expect(alerte()).toBe(attendu);
+      expect(texte()).not.toContain(t.erreurs.reglageAbsent);
       act(() => racine?.unmount());
     }
   });
@@ -127,12 +114,11 @@ describe('écran E50, traiter une demande', () => {
     await monter('acces', 'reseau');
     await saisir('recue_le', '2026-11-02');
     await clic(bouton('Enregistrer'));
-    expect(document.querySelector('[role="alert"]')?.textContent).toBe(fr.erreurs.reseau);
+    expect(alerte()).toBe(fr.erreurs.reseau);
   });
   it('double-clic-un-seul-envoi-meme-cle', async () => {
     let lacher = () => {};
-    const { appels } = await monter('acces', { statut: 500, corps: {} }, ['recue'], new Promise<void>((r) => (lacher = r)));
-    await ouvrir();
+    const { appels } = await ouvert('acces', { statut: 500, corps: {} }, ['recue'], new Promise<void>((r) => (lacher = r)));
     await valider();
     await valider();
     expect(envois(appels)).toHaveLength(1);
@@ -144,8 +130,7 @@ describe('écran E50, traiter une demande', () => {
     expect(b?.cle).toBe(a?.cle);
   });
   it('liste-relue-apres-succes', async () => {
-    const { appels } = await monter('acces');
-    await ouvrir();
+    const { appels } = await ouvert('acces');
     await valider();
     expect(appels.filter((x) => x.methode === 'GET')).toHaveLength(2);
     expect(document.querySelector('tbody')?.textContent).toContain(t.etats.traitee);
@@ -156,9 +141,8 @@ describe('écran E50, traiter une demande', () => {
   });
   it('clavier-seul', async () => {
     const { appels } = await monter('acces');
-    const origine = bouton('Traiter');
-    origine.focus();
-    await clic(origine);
+    bouton('Traiter').focus();
+    await ouvrir();
     expect(document.activeElement).toBe(champ('issue'));
     await act(async () => champ('issue').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
     await attendre();

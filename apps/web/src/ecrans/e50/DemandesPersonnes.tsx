@@ -76,16 +76,8 @@ function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) 
   return (
     <form aria-labelledby="e50-enregistrer" onSubmit={envoyer}>
       <h3 id="e50-enregistrer">{L.enregistrer}</h3>
-      <label>
-        {L.type}
-        <select name="type" value={type} onChange={(e) => setType(e.target.value)} style={{ minHeight: 24 }}>
-          {TYPES_DROIT_PERSONNE.map((x) => <option key={x} value={x}>{t.types[x]}</option>)}
-        </select>
-      </label>
-      <label>
-        {L.date}
-        <input name="recue_le" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ minHeight: 24 }} />
-      </label>
+      <label>{L.type}<select name="type" value={type} onChange={(e) => setType(e.target.value)} style={{ minHeight: 24 }}>{TYPES_DROIT_PERSONNE.map((x) => <option key={x} value={x}>{t.types[x]}</option>)}</select></label>
+      <label>{L.date}<input name="recue_le" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ minHeight: 24 }} /></label>
       {erreur ? <p role="alert">{erreur}</p> : null}
       <Bouton type="submit">{L.envoyer}</Bouton>
     </form>
