@@ -52,8 +52,7 @@ const MAPPAGE: Readonly<Record<string, CodePersonnes>> = {
 const comparer = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 const PREMIERS: number[] = [];
 for (let p = 2; PREMIERS.length < 64; p++) if (PREMIERS.every((d) => p % d)) PREMIERS.push(p);
-const frac = (x: number): number => Math.floor((x - Math.floor(x)) * 2 ** 32);
-const K = PREMIERS.map((p) => frac(Math.cbrt(p)));
+const frac = (x: number): number => Math.floor((x - Math.floor(x)) * 2 ** 32), K = PREMIERS.map((p) => frac(Math.cbrt(p)));
 const rot = (x: number, n: number): number => (x >>> n) | (x << (32 - n));
 /** SHA-256 pur et synchrone (hexadécimal, 64 caractères) sur l'UTF-8 du texte : aucun module Node, donc sûr dans le navigateur. */
 export function empreintePure(t: string): string {
@@ -67,11 +66,8 @@ export function empreintePure(t: string): string {
   const w = new Array<number>(64).fill(0);
   for (let b = 0; b < m.length; b += 64) {
     for (let i = 0; i < 64; i++) {
-      if (i < 16) w[i] = v.getUint32(b + i * 4);
-      else {
-        const x = w[i - 15] as number, y = w[i - 2] as number;
-        w[i] = ((w[i - 16] as number) + (rot(x, 7) ^ rot(x, 18) ^ (x >>> 3)) + (w[i - 7] as number) + (rot(y, 17) ^ rot(y, 19) ^ (y >>> 10))) >>> 0;
-      }
+      const x = w[i - 15] as number, y = w[i - 2] as number;
+      w[i] = i < 16 ? v.getUint32(b + i * 4) : ((w[i - 16] as number) + (rot(x, 7) ^ rot(x, 18) ^ (x >>> 3)) + (w[i - 7] as number) + (rot(y, 17) ^ rot(y, 19) ^ (y >>> 10))) >>> 0;
     }
     let [a, bb, c, d, e, f, g, hh] = h as [number, number, number, number, number, number, number, number];
     for (let n = 0; n < 64; n++) {
