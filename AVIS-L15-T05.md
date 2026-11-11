@@ -1,28 +1,28 @@
 VERDICT: A CORRIGER
-8814f8a7697891a34ff04fc306b9538878e433cb
+3b62f41b9997d16582c2cc72187f5766cfcea705
 
-# Avis PR 1042 (L15-T05, sortie du lot 15) : seconde relecture
+# Avis PR 1042 (L15-T05, sortie du lot 15) : troisième relecture
 
-Relu au SHA de tête ci-dessus, après la correction qui répond à l'avis A CORRIGER du SHA 1920840. Fiche lue sur origin/main (82aa0a7). `sensible: non`, `tests_requis: non` : la « mutation » consiste ici à confronter chaque affirmation du bloc aux en-têtes des fiches sur main.
+Relu au SHA de tête ci-dessus, après la correction qui répond à l'avis A CORRIGER du SHA 8814f8a (e87a92f). Fiche lue sur origin/main (19292eb). En-têtes des fiches L15 relus sur 19292eb.
 
-## Défauts de l'avis précédent : tous corrigés au moment du push (main 253fbf4)
-1. Compte « 64 avant, 65 avec » et T65 retirée de la liste : juste sur 253fbf4.
-2. Ligne « T65 : PR #1022 ouverte » retirée.
-3. Ligne #1032 remplacée par les motifs relus : T64 débloquée, T67 `bloque_par` (Coque.tsx dans L06-T45) : juste.
-4. Colonne « Attente » : « attend L15-T68 (à faire, dépend de T62 à T64) » : juste sur 253fbf4.
-- Remarque traitée : requête et heure d'arrêt des délais écrites au journal.
+## Points de l'avis précédent
+1. Compte : CORRIGÉ. « 65 avant cette PR, 66 avec L15-T05 ; restent T62, T63, T67, T68 » : juste sur main (65 `fait`, 5 `a_faire` dont T05).
+2. Ligne T64 « faite (PR #1043) » : CORRIGÉ.
+3. « dépend de T62 et T63 (T64 à T66 faites) » : CORRIGÉ (`depend_de` de T68 relu : T60 à T66, seules T62 et T63 `a_faire`).
+4. #1043 citée et SHA de main relu (f77e2dd) : CORRIGÉ.
+5. Journal aligné (65 faites, f77e2dd) : CORRIGÉ.
 
-## Défaut bloquant (nouveau, PAS une faute de l'auteur)
-Main a de nouveau avancé après le push : #1043 (L15-T64) est fusionnée à 20:10 UTC et `pilotage/fiches/L15-T64.md` est `statut: fait` sur main (82aa0a7). Relevé sur main : 65 fiches L15 faites, 5 à faire (T05, T62, T63, T67, T68). Le premier critère de la fiche (ce qui est fait et ce qui reste) n'est plus tenu. Fusionner origin/main, puis dans `REPRENDRE.md` :
-1. `REPRENDRE.md:155` : « 64 `statut: fait` avant cette PR, 65 avec L15-T05 ; restent T62, T63, T64, T67, T68 » → « 65 avant cette PR, 66 avec L15-T05 ; restent T62, T63, T67, T68 ».
-2. `REPRENDRE.md:159` : la ligne T64 doit dire « faite (PR #1043) » ou sortir de la liste des fiches en attente.
-3. `REPRENDRE.md:161` et `172-175` : « dépend de T62 à T64 (T65 et T66 faites) » → « dépend de T62 et T63 (T64 à T66 faites) ».
-4. `REPRENDRE.md:162` : citer #1043 parmi les PR fusionnées et le SHA de main relu.
-5. `pilotage/journal/L15-T05.md` : « 64 faites avant cette PR (main 253fbf4) » à aligner.
-Avant fusion, relire aussi la ligne T63 : si #1047 est fusionnée d'ici là, T63 devient faite.
+## Défaut bloquant
+`REPRENDRE.md:158` : « T63 (envoi du résumé) : PR #1047 ouverte ». La PR #1047 (L15-T63) est FUSIONNÉE depuis le 11/11/2026 20:38 UTC, avant le commit de correction (21:20 UTC) ; la fiche L15-T63 est restée `statut: a_faire` sur main. Le premier critère (ce qui est fait et ce qui reste) n'est donc pas tenu sur cette ligne.
+Correction demandée :
+- ligne 158 : « T63 (envoi du résumé) : code fusionné (PR #1047), fiche encore `statut: a_faire` sur main (statut à passer à `fait`) ; point P2, aucun fournisseur d'e-mail choisi ; écrite contre une interface d'envoi et un faux » ;
+- ligne 162 : citer #1047 parmi les PR fusionnées ;
+- le compte de la ligne 154 reste juste (il suit les en-têtes de fiches) ; si la fiche T63 passe à `fait` avant la fusion, l'aligner (66 avant, 67 avec ; T68 dépend de T62 seule).
 
 ## Contrôles
-- Périmètre : 3 fichiers, tous dans `fichiers_autorises`. Taille : 36 + 1 = 37 pour un maximum de 120. Bloc « Lot 15 » : 27 lignes (30 au plus). Aucune ligne « - - », aucun mot interdit, aucun prix, aucune date de livraison. Journal : 8 lignes, commence par `# Journal L15-T05`. `statut: fait` posé. Total du tableau : 41 + 26 + 19 + 25 = 111 ; cas S « en attente ». Fusion avec main sans conflit (mergeable : clean).
+- Périmètre : 3 fichiers, tous dans `fichiers_autorises`. Taille : 27 + 2 = 29 lignes (max 120), aucune ligne « - - ». Bloc « Lot 15 » : 27 lignes (30 au plus). Total du tableau : 41 + 26 + 19 + 25 = 111. Cas S « en attente », comme le demande la fiche.
+- Aucun mot interdit, aucun prix, aucune date de livraison. Journal : 8 lignes, commence par `# Journal L15-T05`. `statut: fait` posé.
+- CI au SHA relu : les 9 jobs verts.
 
 ## Remarques
-- Ligne T63 : on peut signaler que la PR #1047 est ouverte.
+- Mesures arrêtées au 11/11/2026 17:57 UTC : depuis, #1022, #1043 et #1047 (L15) sont fusionnées. Non bloquant : la fenêtre est écrite.
