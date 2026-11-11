@@ -22,14 +22,11 @@ export const handlersPersonnes = (options: OptionsExploitationFaux): HttpHandler
       throw e;
     }
   };
-  // Comme le vrai serveur : en-tête et corps validés par le contrat, 400 BAD_REQUEST avant tout autre contrôle.
   const entree = async <T>(request: Request, schema: { safeParse: (v: unknown) => { success: boolean; data?: T } }) => {
-    const cle = EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined });
-    const c = schema.safeParse(await request.json().catch(() => null));
+    const [cle, c] = [EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined }), schema.safeParse(await request.json().catch(() => null))];
     return cle.success && c.success ? { cle: cle.data['idempotency-key'], corps: c.data as T } : null;
   };
-  const refuse = () => erreurExploitation('BAD_REQUEST', 400);
-
+  const refuse = () => erreurExploitation('BAD_REQUEST', 400); // comme le vrai serveur : contrat validé avant tout autre contrôle
   return [
     http.get(options.base + '/personnes/recherche', ({ request }) => {
       const q = RequeteRecherche.safeParse(Object.fromEntries(new URL(request.url).searchParams));

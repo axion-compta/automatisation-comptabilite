@@ -38,8 +38,7 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         expect([r.status, d.etat, d.issue]).toEqual([201, 'recue', null]);
         expect(corpsDe<Demande>(await poster()).id).toBe(d.id);
         const l = corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'));
-        expect(l).toHaveLength(7);
-        expect(l.filter((x) => x.id === d.id)).toHaveLength(1);
+        expect([l.length, l.filter((x) => x.id === d.id).length]).toEqual([7, 1]);
       }));
 
     it('rechercher-par-nom', () =>
@@ -64,8 +63,7 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
         const r = await c.appeler('POST', `/personnes/demandes/${cree.id}/traitement`, { issue: 'refus_conservation', motif: 'Motif fictif.' }, 'cle-refus-0001');
         expect(r.status).toBe(422);
         expect(codeDe(r)).toBe('ISSUE_NON_PERMISE');
-        const l = corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes'));
-        expect(l.find((d) => d.id === cree.id)?.etat).toBe('recue');
+        expect(corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes')).find((d) => d.id === cree.id)?.etat).toBe('recue');
       }));
 
     it('traiter-deux-fois-409', () =>
