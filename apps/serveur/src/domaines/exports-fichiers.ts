@@ -14,7 +14,7 @@ export type DemandeFichier = {
 };
 export type FichierExport = {
   id: string; cle: string; societeId: string; demandeur: string; liste: string; perimetre: Perimetre;
-  octets: Uint8Array; empreinte: string; nbLignes: number; expireA: number; marqueExpire: boolean;
+  octets: Uint8Array; empreinte: string; empreinteFiltres: string; nbLignes: number; expireA: number; marqueExpire: boolean;
 };
 /** Prise de stockage (Union européenne). La console fournira le vrai service ; ici un faux en mémoire. */
 export interface PortStockage {
@@ -61,17 +61,16 @@ export function creerStockageMemoire(): PortStockage {
 
 export function creerServiceExportsFichiers(d: Dependances) {
   const identifiant = d.identifiant ?? randomUUID;
-  const trace = (f: FichierExport, e: EntreeJournal['evenement'], qui: string, filtres: string, code?: number) =>
-    d.journal.ajouter({ evenement: e, qui, liste: f.liste, empreinteFiltres: filtres, nbLignes: f.nbLignes, empreinteFichier: f.empreinte, ...(code ? { code } : {}) });
-  const filtresDe = new Map<string, string>();
+  const trace = (f: FichierExport, e: EntreeJournal['evenement'], qui: string, code?: number) =>
+    d.journal.ajouter({ evenement: e, qui, liste: f.liste, empreinteFiltres: f.empreinteFiltres, nbLignes: f.nbLignes, empreinteFichier: f.empreinte, ...(code ? { code } : {}) });
 
   /** Vérifié à CHAQUE téléchargement : permission, accès de l'expert, périmètre qui couvre la liste. */
-  async function droits(a: Acteur, f: FichierExport): Promise<number | null> {
+  async function droits(a: Acteur, perimetre: Perimetre): Promise<number | null> {
     if (!a.permissions.includes('compta-exporter')) return 403;
     if (a.roles.includes('invite_externe')) {
       const acces = await d.experts.lire(a.personneId, a.societeId);
       if (acces === null || acces.etat !== 'actif') return 403;
-      if (!acces.perimetre.includes(f.perimetre)) return 403;
+      if (!acces.perimetre.includes(perimetre)) return 403;
     }
     return null;
   }
@@ -79,18 +78,16 @@ export function creerServiceExportsFichiers(d: Dependances) {
   return {
     /** Au-delà du direct : réponse 202 et identifiant à interroger (GET …/exports/{id}). */
     async demander(a: Acteur, q: DemandeFichier): Promise<Reponse> {
-      if (!a.permissions.includes('compta-exporter')) return erreur(403, 'role_insuffisant');
+      if ((await droits(a, q.perimetre)) !== null) return erreur(403, 'acces_refuse');
       const { octets, nbLignes } = await q.produire();
       const id = identifiant();
       const f: FichierExport = {
         id, cle: cleExport(a.societeId, id), societeId: a.societeId, demandeur: a.personneId, liste: q.liste,
-        perimetre: q.perimetre, octets, empreinte: sha(octets), nbLignes,
+        perimetre: q.perimetre, octets, empreinte: sha(octets), empreinteFiltres: empreinteFiltres(q.filtres), nbLignes,
         expireA: d.maintenantMs() + GARDE_MS, marqueExpire: false,
       };
       await d.stockage.ecrire(f);
-      const ef = empreinteFiltres(q.filtres);
-      filtresDe.set(f.cle, ef);
-      await trace(f, 'export_cree', a.personneId, ef);
+      await trace(f, 'export_cree', a.personneId);
       return { statut: 202, entetes: { 'Cache-Control': 'no-store' }, corps: { code: 'accepte', id } };
     },
 
@@ -98,6 +95,7 @@ export function creerServiceExportsFichiers(d: Dependances) {
     async etat(a: Acteur, id: string): Promise<Reponse> {
       const f = await d.stockage.lire(cleExport(a.societeId, id));
       if (f === null || f.demandeur !== a.personneId) return erreur(404, 'introuvable');
+      if ((await droits(a, f.perimetre)) !== null) return erreur(403, 'acces_refuse');
       const perime = f.marqueExpire || d.maintenantMs() >= f.expireA;
       return { statut: perime ? 410 : 200, entetes: { 'Cache-Control': 'no-store' }, corps: { code: perime ? 'expire' : 'pret' } };
     },
@@ -105,14 +103,13 @@ export function creerServiceExportsFichiers(d: Dependances) {
     async telecharger(a: Acteur, id: string): Promise<Reponse> {
       const f = await d.stockage.lire(cleExport(a.societeId, id));
       if (f === null || f.societeId !== a.societeId || f.demandeur !== a.personneId) return erreur(404, 'introuvable');
-      const ef = filtresDe.get(f.cle) ?? '';
-      const refus = await droits(a, f);
-      if (refus !== null) { await trace(f, 'export_refuse', a.personneId, ef, refus); return erreur(refus, 'acces_refuse'); }
+      const refus = await droits(a, f.perimetre);
+      if (refus !== null) { await trace(f, 'export_refuse', a.personneId, refus); return erreur(refus, 'acces_refuse'); }
       if (f.marqueExpire || d.maintenantMs() >= f.expireA) {
-        await trace(f, 'export_refuse', a.personneId, ef, 410);
+        await trace(f, 'export_refuse', a.personneId, 410);
         return erreur(410, 'expire');
       }
-      await trace(f, 'export_telecharge', a.personneId, ef);
+      await trace(f, 'export_telecharge', a.personneId);
       return { statut: 200, entetes: { ...ENTETES }, corps: f.octets };
     },
 
@@ -122,7 +119,7 @@ export function creerServiceExportsFichiers(d: Dependances) {
       for (const f of await d.stockage.lister()) {
         if (f.marqueExpire || d.maintenantMs() < f.expireA) continue;
         await d.stockage.marquerExpire(f.cle);
-        await trace(f, 'export_marque_expire', f.demandeur, filtresDe.get(f.cle) ?? '');
+        await trace(f, 'export_marque_expire', f.demandeur);
         n += 1;
       }
       return n;

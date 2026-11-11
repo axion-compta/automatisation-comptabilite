@@ -125,4 +125,31 @@ describe('exports en tâche : téléchargement revérifié', () => {
     await m.service.telecharger(expert, 'exp-1');
     expect(m.journal.at(-1)).toMatchObject({ evenement: 'export_refuse', code: 403, qui: 'p-expert' });
   });
+
+  it("l'empreinte des filtres survit à un autre service sur le même stockage", async () => {
+    const m = monde();
+    await m.service.demander(compta, m.demande);
+    const j2: EntreeJournal[] = [];
+    const autre = creerServiceExportsFichiers({ stockage: m.stockage, journal: { ajouter: async (e) => { j2.push(e); } }, experts: { lire: async () => null }, maintenantMs: () => 1_000_000 });
+    await autre.telecharger(compta, 'exp-1');
+    expect(j2[0]).toMatchObject({ evenement: 'export_telecharge', empreinteFiltres: empreinteFiltres(FILTRES) });
+  });
+
+  it('expert révoqué ou hors périmètre : la demande est refusée sans rien produire ni stocker', async () => {
+    const m = monde({ etat: 'revoque', perimetre: ['journaux'] });
+    let appels = 0;
+    const demande = { ...m.demande, produire: async () => { appels += 1; return { octets: OCTETS, nbLignes: 1 }; } };
+    expect((await m.service.demander(expert, demande)).statut).toBe(403);
+    m.etat.acces = { etat: 'actif', perimetre: ['exercices'] };
+    expect((await m.service.demander(expert, demande)).statut).toBe(403);
+    expect(appels).toBe(0);
+    expect(await m.stockage.lister()).toEqual([]);
+  });
+
+  it("l'état d'une tâche est refusé (403) à un expert révoqué", async () => {
+    const m = monde();
+    await m.service.demander(expert, m.demande);
+    m.etat.acces = { etat: 'revoque', perimetre: ['journaux'] };
+    expect((await m.service.etat(expert, 'exp-1')).statut).toBe(403);
+  });
 });
