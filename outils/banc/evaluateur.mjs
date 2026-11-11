@@ -2,7 +2,7 @@
 // Jeu de cas fictifs seulement. Coûts en entiers (micro-centimes), calculs en entiers.
 const CENTILE_HAUT = 90;
 const COURRIEL = /[\w.+-]+@([\w-]+(?:\.[\w-]+)+)/g;
-const IBAN = /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/;
+const IBAN = /[A-Z]{2}\d{2}[A-Z0-9]{11,30}/;
 
 const entierPositif = (v) => Number.isSafeInteger(v) && v >= 0;
 const trier = (xs) => {
@@ -33,7 +33,7 @@ export function noterChamps(attendu, obtenu) {
 function verifierFictif(valeur) {
   if (typeof valeur === 'string') {
     const hors = [...valeur.matchAll(COURRIEL)].some((m) => m[1] !== 'exemple.fr');
-    if (hors || IBAN.test(valeur)) throw new Error('donnee_reelle');
+    if (hors || IBAN.test(valeur.replace(/[\s-]/g, '').toUpperCase())) throw new Error('donnee_reelle');
   } else if (valeur !== null && typeof valeur === 'object') Object.values(valeur).forEach(verifierFictif);
 }
 
@@ -41,7 +41,7 @@ function verifierJeu(jeu) {
   if (!Array.isArray(jeu) || jeu.length === 0) throw new Error('jeu_vide');
   const ok = jeu.every((c) => c !== null && typeof c === 'object' && typeof c.id === 'string' && c.attendu && typeof c.attendu === 'object');
   if (!ok || new Set(jeu.map((c) => c.id)).size !== jeu.length) throw new Error('jeu_invalide');
-  jeu.forEach((c) => verifierFictif(c.entree));
+  jeu.forEach((c) => { verifierFictif(c.entree); verifierFictif(c.attendu); });
 }
 
 /** Rejoue le jeu sur chaque port { modele, version, repondre(cas) -> { champs, cout } } ; un rapport par modèle et version. */

@@ -66,6 +66,10 @@ describe('evaluateur', () => {
     await expect(refus({ client: ['jean', 'exemple.com'].join('@') })).rejects.toThrow('donnee_reelle');
     await expect(refus({ note: `virement ${iban}` })).rejects.toThrow('donnee_reelle');
     await expect(refus({ imbrique: { contact: ['x', 'autre.fr'].join('@') } })).rejects.toThrow('donnee_reelle');
+    const groupes = iban.match(/.{1,4}/g).join(' ');
+    await expect(refus({ note: `virement ${groupes}` })).rejects.toThrow('donnee_reelle');
+    await expect(refus({ note: iban.toLowerCase() })).rejects.toThrow('donnee_reelle');
+    await expect(evaluer({ jeu: [{ ...cas('s'), attendu: { montant: 1, contact: ['x', 'autre.fr'].join('@') } }], ports: [port('m', 'v', [1])], horloge })).rejects.toThrow('donnee_reelle');
     await expect(refus({ client: 'alice@exemple.fr' })).resolves.toHaveLength(1);
   });
 });
