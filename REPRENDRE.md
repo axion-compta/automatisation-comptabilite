@@ -38,7 +38,7 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Test `regle-eslint` de `packages/noyau` : peut dépasser 5 s en local, sans lien avec P0.
 
 ## Prochaine commande
-`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`.
+`git fetch origin && node scripts/pilotage/avancement.mjs`, puis traiter L03-T58 (contre interface et faux fournisseur) et L02-T68 ; ensuite `pnpm install --frozen-lockfile && pnpm verifier`. Pour le lot 05, ne reprendre aucune fiche à `bloque_par` (section « Lot 05 »).
 
 ## Pièges
 - Ne jamais écrire de faux secret en clair dans un fichier suivi : gitleaks le bloquerait.
@@ -101,4 +101,22 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Stryker du noyau : 86,67 % (195 tués, 30 survivants, `npx stryker run` dans `packages/noyau`, main 3217534). Échecs CI du lot : non mesuré.
 - Reste : L03-T58 ; fiches de suite à créer (adaptateurs réels de purge et de sauvegardes ; route du webhook des factures reçues et rattrapage planifié) après la console du 21/11/2026 et J10 ; aucun contact avec une plateforme agréée sans l'accord de Will.
 - Le FEC n'est PAS déclaré accepté par l'outil officiel : le passage dans Test Compta Demat (J7) n'est pas fait.
+- Aucune date de livraison annoncée.
+
+## Lot 05, chat et agents
+- Fiches : 69 (T00 à T68) ; 63 `statut: fait` avec L05-T55 (en-têtes lus sur main, 01c4579). Restent `a_faire` : T60, T62, T64, T66, T67. Écart à la fiche T55 : T56 à T59, T61, T63 et T65 sont faites, seules 5 fiches sont bloquées.
+- Existe : noyau du chat (`packages/noyau/src/chat/`), agents (`agents/`), voix (`voix/`) ; contrat (`packages/contrat/src/chat/`) ; serveur en mémoire avec modèle simulé (`apps/serveur/src/chat/`) ; faux serveur ; composants et panneau de discussion (`apps/web/src/chat/`, coque T53) ; garde des outils du chat (`outils/gardes/outils-chat.mjs`).
+- Rejoués par L05-T42 (`apps/serveur/src/chat/__tests__/`, un `it` par cas, port de test, zéro réseau) : 9 T-CHT (3, 4, 9, 10, 13, 14, 15, 16, 17) et 12 A2 (01, 02, 04, 06, 07, 08, 10, 16, 17, 18, 22, 30).
+- Attendent une décision de Will (énoncé dans la spec privée) : T-CHT-1, 2, 5, 6, 19, 20 ; A2-03, 09, 20, 21, 27, 28.
+- Attendent le branchement dans le serveur en mémoire (règle déjà testée dans le noyau) : T-CHT-7 et A2-25 (T12), T-CHT-8 (T11), A2-11 à 15 et A2-26 (T16), A2-19 (T23), A2-24 (T22), A2-29 (T02, T47).
+- Rejoués ailleurs : T-CHT-12 (T40), T-CHT-11 (T50), T-CHT-18 (T31), A2-06 côté écran (T44, T52). Attendent une fiche bloquée : A2-05 voix (T60), A2-23 réseau (T59, adaptateur réel).
+- Fiches bloquées :
+  - T60 voix : hébergeur de transcription (D42) et Q3, décisions en attente.
+  - T62 recherche plein texte : base réelle (J3a) et T56.
+  - T64 banc des modèles réels : fournisseurs d'IA de l'UE (D43) et adaptateur réel de T59.
+  - T66 effacement à l'échéance : action de la console (D29), durée de conservation (D45), T56.
+  - T67 revue de sécurité du niveau I : Q11, T58, T59, T60 ; approbation écrite de Will.
+  - T56 à T59, T61, T63, T65 : faites, plus bloquées.
+- Mesures PR (API REST, sans IA, titres L05-T*) : 70 PR fusionnées pour 63 fiches ; médiane ouverture à fusion 24,2 min (33 PR de fiches sensibles), 25,3 min (37 PR de fiches non sensibles). `pilotage/calibrage.csv` : en-tête seul, non utilisé.
+- Stryker du noyau : 86,67 % (195 tués, 30 survivants, `npx stryker run` dans `packages/noyau`, main 01c4579). Échecs CI du lot : non mesuré.
 - Aucune date de livraison annoncée.
