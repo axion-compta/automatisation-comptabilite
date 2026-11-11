@@ -30,6 +30,7 @@ export async function lireAvecOcr(ocr: Ocr, image: ImageGris): Promise<ResultatO
 }
 
 function boiteValide(b: BoiteOcr, image: ImageGris): boolean {
+  if (typeof b !== 'object' || b === null) return false;
   const { x, y, largeur, hauteur } = b;
   if (typeof b.texte !== 'string' || ![x, y, largeur, hauteur].every((v) => Number.isFinite(v))) return false;
   return largeur > 0 && hauteur > 0 && x >= 0 && y >= 0 && x + largeur <= image.largeur && y + hauteur <= image.hauteur;
@@ -38,8 +39,10 @@ function boiteValide(b: BoiteOcr, image: ImageGris): boolean {
 export function elementsDepuisOcr(resultat: ResultatOcr, page: number, image: ImageGris): ElementsOcr {
   const elements: ElementTexte[] = [];
   let rejetees = 0;
+  const contexteValide = Number.isInteger(page) && page >= 1
+    && Number.isInteger(image.largeur) && image.largeur > 0 && Number.isInteger(image.hauteur) && image.hauteur > 0;
   for (const b of resultat.boites) {
-    if (!boiteValide(b, image)) { rejetees += 1; continue; }
+    if (!contexteValide || !boiteValide(b, image)) { rejetees += 1; continue; }
     elements.push({
       texte: b.texte, page, x: b.x, y: b.y, largeur: b.largeur, hauteur: b.hauteur,
       taillePolice: b.hauteur, couleur: [...NOIR], couleurFond: [...BLANC], calqueVisible: true, annotationCachee: false,
