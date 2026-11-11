@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ReponseFrais, type FraisResume } from '../../../../../packages/contrat/src/domaines/frais.js';
 import { centimes } from '../../../../../packages/noyau/src/argent/index.js';
 import { e12 } from '../../../../../packages/textes/src/ecrans/e12.js';
@@ -13,6 +13,7 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterMontantAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { Bandeau } from './Bandeau.js';
 
 const DIXIEMES_PAR_KM = 10;
 const CHEMIN_DETAIL = '/factures/frais/detail?id=';
@@ -50,7 +51,19 @@ const Cellule = ({ f, children }: { f: FraisResume; children: ReactNode }) =>
 
 /** Écran E17 : liste des frais et trajets, trois totaux séparés jamais additionnés (lecture seule). */
 export function Ecran() {
-  const lecture = useLecture('/frais', ReponseFrais);
+  const [saisie, setSaisie] = useState({ du: '', au: '' });
+  const [periode, setPeriode] = useState({ du: '', au: '' });
+  const inversee = saisie.du !== '' && saisie.au !== '' && saisie.du > saisie.au;
+  const changer = (cle: 'du' | 'au', valeur: string) => {
+    const suivante = { ...saisie, [cle]: valeur };
+    setSaisie(suivante);
+    // Une période inversée n'est jamais envoyée : la dernière période valide reste affichée.
+    if (suivante.du === '' || suivante.au === '' || suivante.du <= suivante.au) setPeriode(suivante);
+  };
+  const requete = new URLSearchParams(Object.entries(periode).filter(([, v]) => v !== '')).toString();
+  // Date de fin de la période ; sans fin choisie, le jour même (UTC), sans analyse de date locale.
+  const dateBareme = periode.au || new Date().toISOString().slice(0, 10);
+  const lecture = useLecture('/frais' + (requete ? '?' + requete : ''), ReponseFrais);
   let contenu: ReactNode;
   if (lecture.etat === 'chargement') contenu = <EtatChargement libelle={fr.etats.chargement} />;
   else if (lecture.etat === 'erreur' || !lecture.donnees) contenu = <EtatErreur message={fr.erreurs.generique} />;
@@ -81,6 +94,13 @@ export function Ecran() {
   return (
     <section aria-labelledby="e17-titre">
       <h1 id="e17-titre">{e17.titre}</h1>
+      {/* En panne de la liste, l'écran n'affiche aucun chiffre : le bandeau (qui porte une année) attend aussi. */}
+      {lecture.etat === 'erreur' ? null : <Bandeau date={dateBareme} />}
+      <div>
+        <label>{e17.periode.du}<input type="date" name="du" value={saisie.du} onChange={(e) => changer('du', e.target.value)} /></label>
+        <label>{e17.periode.au}<input type="date" name="au" value={saisie.au} onChange={(e) => changer('au', e.target.value)} /></label>
+        {inversee ? <p role="alert">{e17.periode.ordre}</p> : null}
+      </div>
       {contenu}
     </section>
   );
