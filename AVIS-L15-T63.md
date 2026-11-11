@@ -1,28 +1,25 @@
-VERDICT: A CORRIGER
+VERDICT: OK
+4bac8c363b22cfd45d63de7bdd41393afa9786ea
 
-Fiche L15-T63 (SENSIBLE), PR #1047, SHA relu : f536b12e6a3d2540d1da97567d7f5959fe16773b
-Fiche lue sur origin/main (7c5f74c), amendée par #1032 (L00-T83, fusionnée ; la branche `lot-00/L00-T83` n'existe plus, la fiche de main en est la version). Décision D88 : interface d'envoi et faux, aucun fournisseur, aucun envoi réel.
+# Avis PR 1047 (L15-T63, résumé quotidien par e-mail) : seconde relecture, SENSIBLE
 
-## Défauts
-1. `apps/serveur/src/travaux/resume-email.ts:102-105` : le journal `envoye` est écrit dans le même `try` que l'envoi. Si `journaliser` échoue APRÈS un envoi réussi, le `catch` libère le jour et le passage suivant renvoie l'e-mail. Sonde : journal en échec puis passage suivant = 2 e-mails le même jour à la même personne. Le critère « jamais deux envois le même jour pour une personne » n'est pas tenu.
-   Correction : ne libérer la réservation que si `envoyer` lui-même a échoué. Un échec du journal après l'envoi garde la réservation (et remonte l'erreur). Ajouter le test nommé « journal en échec après envoi : aucun second envoi ».
-2. `apps/serveur/src/travaux/resume-email.ts:85-88` : la décision (`decisionResume`, `instantEnvoi`) est hors du `try`. Une seule personne dont un compte vaut NaN, Infinity ou un non entier (0,5), ou dont l'heure ou le fuseau est invalide, fait lever `nb_actions_invalide` ou `RangeError` et arrête tout le passage. Toutes les autres personnes ne reçoivent plus rien, à chaque minute. Sonde : `[{a_valider: NaN}, alice]` = 0 envoi pour alice. Aucun test ne couvre ces cas limites (NaN, Infinity, non entier, heure invalide).
-   Correction : isoler chaque personne (erreur journalisée en `echec`, sans envoi, puis personne suivante) et ajouter les tests de ces cas limites.
+Relu au SHA de tête ci-dessus, après la correction qui répond à l'avis A CORRIGER du SHA f536b12. Fiche lue sur origin/main (82aa0a7). D88 : aucun fournisseur d'e-mail choisi, interface `PortEnvoi` et faux de test seulement, aucun envoi réel. Fusion par Will seul.
 
-## Vérifications
-- Fichiers : 4, tous dans `fichiers_autorises` ; fiche non touchée.
-- Taille : 299 ≤ 300 : une correction devra tenir dans cette limite.
-- D88 : interface `PortEnvoi`, faux dans les tests seulement, aucun nom de fournisseur, aucun envoi réel, aucune dépendance ajoutée.
-- Texte : nombres par catégorie seulement, aucun montant, aucun nom de tiers ; destinataire = adresse de la personne seulement ; lien de désinscription à jeton à usage unique ; sans accès sortant : inactif. 07:30 et Europe/Paris marqués HYPOTHÈSE comme la spec, pas une valeur légale.
-- Inscription au `Planificateur` (UTC), conversion de l'heure à la décision, changement d'heure testé (29/03/2026).
-- Aucun secret, aucun prix, aucun mot interdit, données fictives (`exemple.fr`). Journal 9 lignes, commence par `# Journal L15-T63`.
+## Défauts de l'avis précédent : vérifiés par mutation
+1. Journal en échec après envoi : la réservation reste prise (`parti`), l'erreur remonte (`envois_en_echec`). Test « journal en échec après envoi : aucun second envoi ».
+   - libération même après l'envoi (`if (!parti)` → `if (true)`) : le test rougit ;
+   - `parti = true` retiré : le test rougit.
+2. Chaque personne est isolée : la décision et le calcul de l'heure sont dans le `try` ; une erreur donne `echec` pour cette personne seule. Tests `it.each` : compte NaN, infini, non entier, heure invalide, fuseau invalide ; la personne suivante reçoit son résumé.
+   - décision remise hors du `try` : les 5 cas rougissent ;
+   - `throw new Error('envois_en_echec')` retiré : 4 tests rougissent ;
+   - libération après échec d'envoi retirée : le test de reprise rougit.
+- Remarques précédentes traitées : `dejaEnvoyes()` lu une fois par passage ; catégorie à 0 absente du rendu (mutation `x.n > 0` → `x.n >= 0` : le test du rendu rougit).
 
-## Tests et mutations
-- `vitest run src/travaux/__tests__/resume-email.test.ts` : 12/12 verts ; eslint et tsc propres.
-- Mutations qui rougissent : réservation du jour retirée ; libération après échec retirée ; jeton accepté deux fois ; accès sortant ignoré ; heure choisie ignorée.
-- Mutation qui reste verte : `texteResume` garde les catégories à 0 (« - 0 points urgents ») ; aucun test ne vérifie l'absence des catégories vides.
+## Contrôles
+- Périmètre : 4 fichiers, tous dans `fichiers_autorises`. Taille : 298 pour un maximum de 300. Aucune ligne « - - ». Aucun nom de fournisseur, aucun montant ni nom de tiers, aucun mot interdit, aucun prix, données fictives (`exemple.fr`). 07:30 et Europe/Paris marqués HYPOTHÈSE.
+- Tests locaux (Node 22) : `resume-email.test.ts` 18 sur 18. CI verte au SHA relu (run 43092943920 : verifier, tests, e2e, gardes, types, lint, licences, gitleaks, stryker). Fusion avec main sans conflit (mergeable : clean).
 
 ## Remarques
-- `resume-email.ts:88` : `dejaEnvoyes()` est relu pour chaque personne à chaque minute. Le lire une fois par passage suffit.
-- Un jeton est créé avant un envoi en échec et reste valide ; sans gravité (usage unique), à nettoyer avec le stockage réel.
-- Ajouter au test de rendu une catégorie à 0 qui ne doit pas apparaître.
+- `pilotage/journal/L15-T63.md` n'est plus à jour : « 12 passent » (18 désormais) et « Fiche non touchée : en attente de #1032 » (#1032 est fusionnée). La fiche reste `statut: a_faire` alors que L15-T68 dépend d'elle : à passer à `fait`, ici ou par une PR de statut après la fusion.
+- Une heure hors bornes (ex. 25 ou -1) n'est pas refusée : `Date.UTC` la reporte au jour voisin (25 : aucun envoi ; -1 : envoi dès minuit). Sans danger pour le critère « un envoi par jour », mais à valider à la saisie de l'heure.
+- Un jeton est créé avant un envoi en échec et reste valide (usage unique) : à nettoyer avec le stockage réel.
