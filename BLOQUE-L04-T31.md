@@ -1,10 +1,9 @@
 # BLOQUE-L04-T31
-- Fiche : L04-T31 (faux serveur : pièces en lecture, suite commune aux deux cibles).
-- Code et tests écrits : 13 tests verts (vrai serveur et faux serveur), tsc vert, 193 lignes pour 280 permises.
-- Gardes lancées avec scripts/verifier.mjs --gardes : toutes vertes sauf `portes.mjs`.
-- Garde en cause : pilotage/portes, deux messages :
-  - lot back-end de l'écran e07 sans porte « maquette validée » (pilotage/portes/e07.json absent sur origin/main) ;
-  - idem pour l'écran e08 (pilotage/portes/e08.json absent).
-- Cause hors de la fiche : les fichiers de portes e07 et e08 ne figurent pas dans fichiers_autorises.
-- À changer : Will ajoute les portes e07 et e08 (maquette validée, datée et nommée, D62) sur main, puis la fiche est relancée.
-- Aucune branche lot-04/L04-T31 poussée (point 10 de la consigne).
+- Fiche : L04-T31 (faux serveur : pièces en lecture, suite commune aux deux cibles). Relance du 11/11/2026.
+- Pré-vol (1) rouge : la PR ouverte #1025 (L00-T81, amendement de 11 fiches) modifie pilotage/fiches/L04-T31.md, qui est dans fichiers_autorises.
+- Cette PR n'est pas parmi celles citées par la consigne (#1027, #1030, #1010) : arrêt, rien codé, aucune branche lot-04/L04-T31 poussée.
+- Le code écrit lors de l'essai précédent n'existe sur aucune branche distante (bloque/L04-T31 ne contient que ce fichier).
+- Dépendances L04-T30 et L01-T26 : statut fait sur origin/main.
+- Autres PR ouvertes touchant faux-serveur (#1026, #1028, #986, #1016, #1010) : aucun de mes fichiers.
+- À changer : fusionner #1025 (ou confirmer qu'elle peut précéder), puis relancer la fiche depuis origin/main.
+- Portes e07/e08 (#1027, #1030) et #1010 toujours en attente de fusion.
