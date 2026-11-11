@@ -23,6 +23,10 @@ describe('volume', () => {
     expect(new Set(a.map((b) => b.societe_id)).size).toBe(200);
     expect(JSON.stringify(a)).not.toMatch(/@|\d{14}/);
     expect(() => genererBases({ bases: 10, lignes: 5 })).toThrow('parametres_invalides');
+    for (const mauvais of [NaN, Infinity, 2.5]) {
+      expect(() => genererBases({ bases: mauvais, lignes: 100 })).toThrow('parametres_invalides');
+      expect(() => genererBases({ bases: 2, lignes: mauvais })).toThrow('parametres_invalides');
+    }
   });
 
   it('mesure-compte-les-refus-et-le-p95', async () => {

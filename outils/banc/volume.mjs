@@ -1,6 +1,7 @@
 // Banc de volume hors production (V3-PLA-183, V3-QUA-026, T-ISO-6). Bases fictives seulement ;
 // la connexion et les écrans sont des ports injectés (faux serveur). Aucun réseau ici.
 import { writeFileSync } from 'node:fs';
+import { performance } from 'node:perf_hooks';
 import { centile } from './evaluateur.mjs';
 
 export const ECRANS = ['tableau-de-bord', 'liste-ecritures', 'grand-livre', 'rapprochement'];
@@ -37,7 +38,10 @@ export async function mesurer({ bases, connecter, executer, horloge = () => perf
   const ouvertes = [];
   let refus = 0;
   for (const b of bases) {
-    try { (await connecter(b)) === true ? ouvertes.push(b) : refus++; } catch { refus++; }
+    try {
+      if ((await connecter(b)) === true) ouvertes.push(b);
+      else refus++;
+    } catch { refus++; }
   }
   const ecrans = {};
   for (const nom of ECRANS) {
