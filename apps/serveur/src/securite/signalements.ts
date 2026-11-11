@@ -26,7 +26,9 @@ export interface PortSignalements {
 /** Ligne du paramètre daté : `dureeJours` vide par défaut. */
 export interface LigneParametre { dateEffet: string; dureeJours: number | null; source: string }
 export interface PortParametre { lire(societeId: string): Promise<readonly LigneParametre[]> }
-export interface AlerteSignalements { code: 'parametre_signalements_absent'; societeId: string }
+export type AlerteSignalements =
+  | { code: 'parametre_signalements_absent'; societeId: string }
+  | { code: 'signalements_illisibles'; societeId: string; nombre: number };
 
 export class ErreurSignalement extends Error {
   override name = 'ErreurSignalement';
@@ -89,10 +91,11 @@ export async function purgerSignalements(p: ParametresPurgeSignalements, mainten
       continue;
     }
     const lignes = await p.depot.lister(societeId);
-    const { aPurger } = signalementsAPurger(
+    const { aPurger, illisibles } = signalementsAPurger(
       lignes.map((s) => ({ id: s.signalementId, creeLe: s.creeLe })), maintenant, duree * MS_PAR_JOUR,
     );
     if (aPurger.length > 0) await p.depot.supprimer(societeId, aPurger);
+    if (illisibles.length > 0) await p.alerte.alerter({ code: 'signalements_illisibles', societeId, nombre: illisibles.length });
     total += aPurger.length;
   }
   return total;

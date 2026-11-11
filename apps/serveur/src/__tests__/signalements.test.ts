@@ -96,6 +96,37 @@ describe('signalements', () => {
     expect(dureeEnVigueur(lignes, '2026-06-15')).toBe(NB_JOURS + 1);
     expect(dureeEnVigueur(lignes, '2025-12-31')).toBeUndefined();
     expect(dureeEnVigueur([ligneParam(-1)], '2026-06-15')).toBeUndefined();
+    for (const d of [NaN, Infinity, 1.5]) expect(dureeEnVigueur([ligneParam(d)], '2026-06-15')).toBeUndefined();
+  });
+
+  it('durée infinie : aucune purge, alerte, les sociétés suivantes sont traitées', async () => {
+    const { p, lignes, recues } = monde(
+      [sig('vieux', avant(1000 * JOUR_MS)), sig('vieux-b', avant(1000 * JOUR_MS), 'societe-b')],
+      { 'societe-a': [ligneParam(Infinity)], 'societe-b': [ligneParam(NB_JOURS)] },
+    );
+    expect(await purgerSignalements(p, MAINTENANT)).toBe(1);
+    expect(lignes.map((s) => s.signalementId)).toEqual(['vieux']);
+    expect(recues).toEqual([{ code: 'parametre_signalements_absent', societeId: 'societe-a' }]);
+  });
+
+  it.each(['societeId', 'personneId', 'nature'] as const)('champ vide refusé : %s', async (champ) => {
+    for (const vide of ['', '   ']) {
+      const { p, lignes } = monde([], {});
+      const demande = { societeId: 'societe-a', personneId: 'personne-1', nature: 'affichage', correlationId: CORR, [champ]: vide };
+      await expect(enregistrerSignalement(p.depot, demande, new Date(MAINTENANT), () => 'sig-x'))
+        .rejects.toMatchObject({ code: 'champ_vide' });
+      expect(lignes).toHaveLength(0);
+    }
+  });
+
+  it('date illisible : jamais purgé, mais signalé par une alerte', async () => {
+    const { p, lignes, recues } = monde(
+      [sig('casse', 'pas-une-date'), sig('vieux', avant(NB_JOURS * JOUR_MS + 1))],
+      { 'societe-a': [ligneParam(NB_JOURS)], 'societe-b': [ligneParam(NB_JOURS)] },
+    );
+    expect(await purgerSignalements(p, MAINTENANT)).toBe(1);
+    expect(lignes.map((s) => s.signalementId)).toEqual(['casse']);
+    expect(recues).toEqual([{ code: 'signalements_illisibles', societeId: 'societe-a', nombre: 1 }]);
   });
 
   it('purge quotidienne inscrite au planificateur, une seule fois par jour', async () => {
