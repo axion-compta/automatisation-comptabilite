@@ -1,30 +1,25 @@
-VERDICT: A CORRIGER
-SHA relu : f7dd65abec39911eb389b46d7f9570d19601957f
+VERDICT: OK
+SHA relu : 05d8742b62105f3fc2ee3fe54884b9cc2c181dc0
 
-# Avis de relecture PR 997 (L15-T61, travaux de fond). Fiche sensible : fusion par Will seul
+# Avis de relecture PR 997 (L15-T61, travaux de fond), seconde relecture. Fiche sensible : fusion par Will seul
 
-Fiche lue sur origin/main. Relecture au SHA ci-dessus.
+Fiche lue sur origin/main. Relecture au SHA de tête ci-dessus, après le correctif 05d8742 qui suit l'avis au SHA f7dd65a.
 
-## Défaut bloquant
-1. `apps/serveur/src/travaux/__tests__/interface.test.ts:109-116`. Le test « écriture antidatée : instantanés invalidés puis recalculés, période voisine intacte » ne vérifie pas l'invalidation. Il appelle `x.monter()`, qui fait passer `versionEcritures` de 1 à 2 : les deux instantanés sont recalculés à cause de l'écart de version, qu'ils aient été invalidés ou non. Preuve : avec l'appel à `appliquerEvenement` (`evenements-interface.ts:68`) remplacé par une copie de la liste, les 8 tests restent verts. Le titre promet aussi « période voisine intacte », mais le test attend `['2026-03-01', '2026-04-01']`.
-   Correction : ajouter un cas sans `x.monter()`, où la version reste égale. Il doit vérifier que `x.calculs` vaut `['2026-03-01']`, que l'instantané d'avril est inchangé et que la carte est ouverte. Corriger aussi le titre du test actuel.
+## Défaut bloquant de l'avis précédent
+1. Invalidation non vérifiée par le test d'écriture antidatée : **corrigé**. `interface.test.ts:109` devient un `it.each` à deux cas. Le cas sans `x.monter()` garde la version à 1 et exige `x.calculs` égal à `['2026-03-01']`, tous les instantanés valides à la version 1 (donc avril inchangé), et la carte `ecr-1@2026-03-15` ouverte. Le titre trompeur « période voisine intacte » a disparu.
 
-## Mutations à la main (appliquées puis annulées)
-- `appliquerEvenement` retiré : aucun test n'échoue (défaut ci-dessus).
-- Plus de file par société dans `creerEvaluateur` : « évaluations concurrentes : aucune alerte en double » échoue.
-- `e.version <=` remplacé par `<` : le test d'idempotence échoue.
-- Plus de file dans le consommateur : « même événement livré deux fois en même temps » échoue.
+## Mutations à la main (dans `evenements-interface.ts`, appliquées puis annulées)
+- `appliquerEvenement` remplacé par la liste lue telle quelle : le cas « version montée : false » échoue (il passait avant le correctif).
+- `recalculerInstantanes` retiré : les deux cas de l'écriture antidatée échouent.
 - Carte toujours ouverte : « écriture hors période déclarée : aucune carte » échoue.
-- `recalculerInstantanes` retiré : « écriture antidatée » échoue.
+- `e.version <=` remplacé par `<` : le test d'idempotence échoue.
 
 ## Contrôles
-- Fichiers : 5, tous dans `fichiers_autorises`. Taille : 299 + 1 = 300 lignes, juste à la limite. Aucune dépendance.
-- Vitest : 8 tests verts sur 8. `tsc --noEmit` vert sur `apps/serveur`. eslint vert. `verifier.mjs --gardes` : 21 étapes vertes. En local, `pnpm verifier` bute sur Node 22. La CI GitHub au SHA relu est verte.
+- Fichiers : 5, tous dans `fichiers_autorises`. Taille : 299 + 1 = 300 lignes, à la limite sans la dépasser. Aucune dépendance. Aucun octet NUL. Aucun alias de `it`.
+- Vitest : 9 tests verts sur 9. `tsc --noEmit -p apps/serveur` vert, eslint vert sur `apps/serveur/src/travaux`. La CI GitHub au SHA relu est verte (9 contrôles).
 - Aucun mot interdit, aucun prix ni secret. Données fictives. Journal : 9 lignes, il commence par `# Journal L15-T61`.
+- Pas de régression : seul le fichier de test change depuis le SHA f7dd65a, et le cas d'avant (version montée) est gardé.
 
 ## Remarques
-- `evenements-interface.ts:66` : un événement d'écriture sans `charge.date` saute l'invalidation sans le signaler. Avec une date invalide, `appliquerEvenement` lève une erreur et l'événement sera relivré sans fin. Ces deux cas ne sont pas testés.
-- `derniereVersion` est indexée par `objet_id` seul, sans le type de l'objet.
-- La Map `files` de `creerEvaluateur` n'est jamais purgée.
-- Le corps de la PR annonce 9 tests, il y en a 8.
-- La fiche parle de tests « sur base de test ». Les tests utilisent des faux en mémoire : Will doit confirmer que cela suffit.
+- La PR est à 300 lignes pile : toute retouche devra en retirer autant qu'elle en ajoute.
+- Les remarques de l'avis précédent restent valables : événement sans `charge.date` ignoré sans signal, date invalide relivrée sans fin, `derniereVersion` indexée par `objet_id` seul, Map `files` jamais purgée, tests sur faux en mémoire et non « sur base de test » (à confirmer par Will).
