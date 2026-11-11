@@ -1,5 +1,16 @@
 // Détail d'une vente (E24) : tous les textes visibles. Vouvoiement.
 export const e24Vente = {
+  titre: 'Détail de la vente',
+  chargement: 'Chargement de la vente…',
+  erreur: 'La vente ne se charge pas. Réessayez dans un instant.',
+  champs: { client: 'Client', dateFacture: 'Date de facture', echeance: 'Échéance', total: 'Total TTC', resteDu: 'Reste dû' },
+  ecritureColonnes: { compte: 'Compte', debit: 'Débit', credit: 'Crédit' },
+  aucuneCarte: 'Aucun point à relire.',
+  aucuneEcriture: 'Aucune écriture proposée pour le moment.',
+  aucunPaiement: 'Aucun paiement reçu.',
+  aucunAvoir: 'Aucun avoir lié.',
+  pourcent: '%',
+  tauxIllisible: 'taux illisible',
   sections: {
     facture: 'Facture',
     lignes: 'Lignes',
