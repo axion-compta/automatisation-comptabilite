@@ -1,17 +1,15 @@
 // @vitest-environment jsdom
-// Fiche L04-T42 : écran E03 « Déposer des pièces » (faux serveur).
+// Fiche L04-T42 : écran E03 « Déposer des pièces » (service de dépôt du faux serveur).
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { demarrerNoeud } from '../../../../../../packages/faux-serveur/src/noeud.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { creerDepotEnMemoire } from '../../../../../../packages/contrat/src/domaines/depot-service.js';
+import { reglagesPiecesAuJour } from '../../../../../../packages/parametres/src/reglages-pieces.js';
 import { e03 } from '../../../../../../packages/textes/src/ecrans/e03.js';
 import { Ecran } from '../Ecran.js';
 import { route } from '../route.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-let serveur: { fermer: () => void };
-beforeAll(() => void (serveur = demarrerNoeud()));
-afterAll(() => serveur.fermer());
 let racine: Root | null = null;
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -22,26 +20,18 @@ afterEach(() => {
 const pdf = (n: string): File => new File(['%PDF-1.4 fictif ' + n], n + '.pdf', { type: 'application/pdf' });
 const exe = (): File => new File([new Uint8Array([0x4d, 0x5a, 0x90, 0x00])], 'outil.exe');
 
-/** jsdom et le fetch de Node ne partagent pas FormData : le corps multipart est reconstruit à la main. */
-function reconstruireMultipart(): void {
-  const vrai = globalThis.fetch;
-  vi.stubGlobal('fetch', async (u: string, o: RequestInit) => {
-    const limite = 'limite-fictive';
-    const morceaux: Uint8Array[] = [];
-    const texte = new TextEncoder();
-    for (const [nom, v] of (o.body as FormData).entries()) {
-      const fichier = typeof v === 'string' ? null : v;
-      morceaux.push(texte.encode(`--${limite}\r\nContent-Disposition: form-data; name="${nom}"${fichier ? `; filename="${fichier.name}"` : ''}\r\n\r\n`));
-      morceaux.push(fichier ? new Uint8Array(await fichier.arrayBuffer()) : texte.encode(String(v)));
-      morceaux.push(texte.encode('\r\n'));
-    }
-    morceaux.push(texte.encode(`--${limite}--\r\n`));
-    const corps = new Blob(morceaux as BlobPart[]);
-    return vrai(u, { ...o, headers: { ...(o.headers as Record<string, string>), 'content-type': `multipart/form-data; boundary=${limite}` }, body: Buffer.from(await corps.arrayBuffer()) });
+/** Le fetch de Node et le FormData de jsdom ne s'entendent pas selon la version : le service de dépôt du faux serveur est appelé directement. */
+function brancherService(): void {
+  const service = creerDepotEnMemoire([], reglagesPiecesAuJour(new Date().toISOString().slice(0, 10)));
+  vi.stubGlobal('fetch', async (_u: string, o: RequestInit) => {
+    const form = o.body as FormData;
+    const octets = await Promise.all(form.getAll('fichiers').map(async (f) => new Uint8Array(await (f as File).arrayBuffer())));
+    const cle = new Headers(o.headers).get('idempotency-key') ?? '';
+    return Response.json({ body: { resultats: await service.deposer(cle, octets, String(form.get('canal'))) } });
   });
 }
 async function monter(): Promise<void> {
-  reconstruireMultipart();
+  brancherService();
   racine = createRoot(document.body.appendChild(document.createElement('div')));
   await act(async () => racine?.render(<Ecran />));
 }
