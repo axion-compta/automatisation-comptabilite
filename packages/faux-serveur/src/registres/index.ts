@@ -15,8 +15,6 @@ import { handlersLot12 } from './lot-12.js';
 import { handlersLot13 } from './lot-13.js';
 import { handlersLot14 } from './lot-14.js';
 import { handlersLot15 } from './lot-15.js';
-
-/** Réunit les handlers des quinze lots, dans l'ordre des lots. */
 export function handlersModules(ctx: ContexteFaux): HttpHandler[] {
   return [
     handlersLot01, handlersLot02, handlersLot03, handlersLot04, handlersLot05,
