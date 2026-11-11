@@ -105,3 +105,13 @@ export function detailPiece(id: string): PieceDetail | undefined {
   if (p.motifNonComptee !== undefined) d.motifNonComptee = p.motifNonComptee;
   return d;
 }
+
+/** Pièces modifiées en mémoire : la version corrigée prime sur le jeu fictif. */
+export function pieceCourante(stock: Map<string, PieceDetail>, id: string): PieceDetail | undefined {
+  return stock.get(id) ?? detailPiece(id);
+}
+
+export function mettreAJourPiece(stock: Map<string, PieceDetail>, id: string, piece: PieceDetail): PieceDetail {
+  stock.set(id, piece);
+  return piece;
+}
