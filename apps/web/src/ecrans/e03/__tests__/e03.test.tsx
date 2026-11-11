@@ -51,9 +51,12 @@ async function deposer(...f: File[]): Promise<void> {
   await act(async () => {
     entree.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  await act(async () => {
-    await new Promise((r) => setTimeout(r, 300));
-  });
+  const avant = lignes().length;
+  for (let i = 0; i < 100 && !document.querySelector('[role=alert]') && (lignes().length === avant || document.querySelector('[aria-busy]')); i++) {
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+  }
 }
 const lignes = (): string[] => Array.from(document.querySelectorAll('[role=status] li'), (l) => l.textContent ?? '');
 
