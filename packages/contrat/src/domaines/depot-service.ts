@@ -33,7 +33,7 @@ export function creerDepotEnMemoire(pieces: PieceDeposee[], reglage: ReglageLimi
     async deposer(cle: string, fichiers: Uint8Array[], canal: string): Promise<ResultatDepot[]> {
       const rejeu = `${cle}|${(await Promise.all(fichiers.map(empreinteSha256))).join(',')}`;
       const deja = rejeux.get(rejeu);
-      //M
+      if (deja !== undefined) return deja;
       const resultats: ResultatDepot[] = [];
       for (const octets of fichiers) resultats.push(await traiter(octets, canal));
       rejeux.set(rejeu, resultats);
