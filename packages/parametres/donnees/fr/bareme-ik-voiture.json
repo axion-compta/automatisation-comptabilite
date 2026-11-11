@@ -1,0 +1,22 @@
+[
+  {
+    "cle": "bareme_ik_voiture",
+    "pays": "FR",
+    "valeur": "{\"puissances\": [{\"cv\": 3, \"tranches\": [{\"jusqua_km\": 5000, \"taux\": \"0,529\", \"fixe\": \"0\"}, {\"jusqua_km\": 20000, \"taux\": \"0,316\", \"fixe\": \"1065\"}, {\"jusqua_km\": null, \"taux\": \"0,370\", \"fixe\": \"0\"}]}, {\"cv\": 4, \"tranches\": [{\"jusqua_km\": 5000, \"taux\": \"0,606\", \"fixe\": \"0\"}, {\"jusqua_km\": 20000, \"taux\": \"0,340\", \"fixe\": \"1330\"}, {\"jusqua_km\": null, \"taux\": \"0,407\", \"fixe\": \"0\"}]}, {\"cv\": 5, \"tranches\": [{\"jusqua_km\": 5000, \"taux\": \"0,636\", \"fixe\": \"0\"}, {\"jusqua_km\": 20000, \"taux\": \"0,357\", \"fixe\": \"1395\"}, {\"jusqua_km\": null, \"taux\": \"0,427\", \"fixe\": \"0\"}]}, {\"cv\": 6, \"tranches\": [{\"jusqua_km\": 5000, \"taux\": \"0,665\", \"fixe\": \"0\"}, {\"jusqua_km\": 20000, \"taux\": \"0,374\", \"fixe\": \"1457\"}, {\"jusqua_km\": null, \"taux\": \"0,447\", \"fixe\": \"0\"}]}, {\"cv\": 7, \"tranches\": [{\"jusqua_km\": 5000, \"taux\": \"0,697\", \"fixe\": \"0\"}, {\"jusqua_km\": 20000, \"taux\": \"0,394\", \"fixe\": \"1515\"}, {\"jusqua_km\": null, \"taux\": \"0,470\", \"fixe\": \"0\"}]}]}",
+    "effet_debut": "2022-01-01",
+    "effet_fin": "2026-01-01",
+    "statut": "a_verifier",
+    "source": "BOFiP BOI-BAREME-000001-20230720 §10 et §5 (https://bofip.impots.gouv.fr/bofip/2185-PGP.html/identifiant=BOI-BAREME-000001-20230720) ; service-public.gouv.fr actualité A14686 du 09/04/2026 (https://www.service-public.gouv.fr/particuliers/actualites/A14686)",
+    "date_releve": "2026-11-11"
+  },
+  {
+    "cle": "bareme_ik_majoration_electrique",
+    "pays": "FR",
+    "valeur": "20",
+    "effet_debut": "2022-01-01",
+    "effet_fin": "2026-01-01",
+    "statut": "a_verifier",
+    "source": "BOFiP BOI-BAREME-000001-20230720 §10 et §5 (https://bofip.impots.gouv.fr/bofip/2185-PGP.html/identifiant=BOI-BAREME-000001-20230720) ; service-public.gouv.fr actualité A14686 du 09/04/2026 (https://www.service-public.gouv.fr/particuliers/actualites/A14686)",
+    "date_releve": "2026-11-11"
+  }
+]
