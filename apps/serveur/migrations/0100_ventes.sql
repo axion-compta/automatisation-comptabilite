@@ -63,10 +63,15 @@ CREATE TABLE IF NOT EXISTS a_compta.encaissement_tva (
 
 -- Isolation : chaque ligne n'est visible que pour la société portée par le réglage de session.
 ALTER TABLE a_compta.tiers_client ENABLE ROW LEVEL SECURITY;
+ALTER TABLE a_compta.tiers_client FORCE ROW LEVEL SECURITY;
 ALTER TABLE a_compta.serie_numerotation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE a_compta.serie_numerotation FORCE ROW LEVEL SECURITY;
 ALTER TABLE a_compta.piece_vente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE a_compta.piece_vente FORCE ROW LEVEL SECURITY;
 ALTER TABLE a_compta.ligne_vente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE a_compta.ligne_vente FORCE ROW LEVEL SECURITY;
 ALTER TABLE a_compta.encaissement_tva ENABLE ROW LEVEL SECURITY;
+ALTER TABLE a_compta.encaissement_tva FORCE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE t text;

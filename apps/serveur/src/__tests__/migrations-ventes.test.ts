@@ -32,6 +32,11 @@ describe('migration des ventes (texte)', () => {
     expect(code).not.toMatch(/\b(numeric|decimal|real|double precision|float|money)\b/i);
     expect(code).not.toMatch(/CHECK \(ht_centimes \+ tva_centimes/);
     expect(code).not.toMatch(/ht_centimes \+ tva_centimes\s*=/);
+    expect(code).not.toMatch(/ttc_centimes\s*=|=\s*ht_centimes/);
+    expect(code).not.toMatch(/ht_centimes\s*\+\s*tva_centimes/);
+    const ttc = TABLES.flatMap((t) => corps(t).split('\n')).filter((l) => /ttc_centimes/.test(l));
+    expect(ttc.length).toBeGreaterThan(0);
+    for (const l of ttc) expect(l).toMatch(/ttc_centimes bigint NOT NULL CHECK \(ttc_centimes >= 0\),?$|montant_ttc_centimes bigint NOT NULL CHECK \(montant_ttc_centimes >= 0\),?$/);
   });
 
   it('trous-et-doublons-en-tableau-entier', () => {
@@ -45,6 +50,7 @@ describe('migration des ventes (texte)', () => {
       expect(c).toContain('societe_id text NOT NULL');
       expect(c).toMatch(/PRIMARY KEY \(societe_id, /);
       expect(code).toContain(`ALTER TABLE a_compta.${t} ENABLE ROW LEVEL SECURITY`);
+      expect(code).toContain(`ALTER TABLE a_compta.${t} FORCE ROW LEVEL SECURITY`);
       for (const f of c.matchAll(/FOREIGN KEY \(([^)]*)\)/g)) expect(f[1]).toMatch(/^societe_id, /);
     }
     expect(code).toContain("USING (societe_id = current_setting(''a_compta.societe_id'', true))");
