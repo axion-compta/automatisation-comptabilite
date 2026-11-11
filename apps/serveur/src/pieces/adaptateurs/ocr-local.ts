@@ -13,7 +13,7 @@ const BLANC: [number, number, number] = [255, 255, 255];
 
 export class OcrMemoire implements Ocr {
   constructor(private readonly reponse: ResultatOcr, private readonly enPanne = false) {}
-  async lire(_image: ImageGris): Promise<ResultatOcr> {
+  async lire(): Promise<ResultatOcr> {
     if (this.enPanne) throw new Error('ocr en panne simulée');
     return { boites: this.reponse.boites.map((b) => ({ ...b })) };
   }
