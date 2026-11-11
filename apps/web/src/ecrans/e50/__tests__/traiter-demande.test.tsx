@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { demarrerNoeud } from '../../../../../../packages/faux-serveur/src/noeud.js';
 import { ISSUES_PAR_DROIT } from '../../../../../../packages/noyau/src/rgpd/types.js';
+import { fr } from '../../../../../../packages/textes/src/fr.js';
 import { e50Personnes as t } from '../../../../../../packages/textes/src/ecrans/e50-personnes.js';
 import { FournisseurDonnees, creerClient } from '../../../donnees/lecture.js';
 import { DemandesPersonnes } from '../DemandesPersonnes.js';
@@ -23,13 +24,18 @@ async function rendre(): Promise<HTMLElement> {
   await attendre();
   return hote;
 }
-async function monter(type: string, reponse: { statut: number; corps: unknown } = { statut: 200, corps: { body: { ...demande(type), etat: 'traitee' } } }) {
+type Rep = { statut: number; corps: unknown } | 'reseau';
+async function monter(type: string, reponse: Rep = { statut: 200, corps: { body: { ...demande(type), etat: 'traitee' } } }, etats = ['recue'], attente: Promise<void> = Promise.resolve()) {
   const appels: Appel[] = [];
   vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
     const methode = init?.method ?? 'GET';
     appels.push({ url: String(url), methode, cle: new Headers(init?.headers).get('idempotency-key'), corps: init?.body ? JSON.parse(String(init.body)) : null });
     const lecture = methode === 'GET';
-    return new Response(JSON.stringify(lecture ? { body: [demande(type)] } : reponse.corps), { status: lecture ? 200 : reponse.statut, headers: { 'content-type': 'application/json' } });
+    const poste = envois(appels).length > 0;
+    if (!lecture) await attente;
+    if (!lecture && reponse === 'reseau') throw new TypeError('coupé');
+    const liste = etats.map((etat, i) => ({ ...demande(type), id: `dem_${i + 1}`, etat: i === 0 && poste ? 'traitee' : etat }));
+    return new Response(JSON.stringify(lecture ? { body: liste } : (reponse as { corps: unknown }).corps), { status: lecture ? 200 : (reponse as { statut: number }).statut, headers: { 'content-type': 'application/json' } });
   });
   return { hote: await rendre(), appels };
 }
@@ -106,6 +112,47 @@ describe('écran E50, traiter une demande', () => {
     await saisir('recue_le', '2026-11-02');
     await clic(bouton('Enregistrer'));
     expect(hote.querySelectorAll('tbody tr')).toHaveLength(avant + 1);
+  });
+  it('erreurs-reseau-serveur-et-422-traduites', async () => {
+    for (const [rep, attendu] of [['reseau', fr.erreurs.reseau], [{ statut: 500, corps: {} }, fr.erreurs.generique], [{ statut: 422, corps: { code: 'MOTIF_MANQUANT' } }, t.erreurs.motifManquant]] as const) {
+      await monter('acces', rep);
+      await ouvrir();
+      await valider();
+      expect(document.querySelector('[role="alert"]')?.textContent).toBe(attendu);
+      expect(document.body.textContent).not.toContain(t.erreurs.reglageAbsent);
+      act(() => racine?.unmount());
+    }
+  });
+  it('enregistrer-en-echec-message-reseau', async () => {
+    await monter('acces', 'reseau');
+    await saisir('recue_le', '2026-11-02');
+    await clic(bouton('Enregistrer'));
+    expect(document.querySelector('[role="alert"]')?.textContent).toBe(fr.erreurs.reseau);
+  });
+  it('double-clic-un-seul-envoi-meme-cle', async () => {
+    let lacher = () => {};
+    const { appels } = await monter('acces', { statut: 500, corps: {} }, ['recue'], new Promise<void>((r) => (lacher = r)));
+    await ouvrir();
+    await valider();
+    await valider();
+    expect(envois(appels)).toHaveLength(1);
+    lacher();
+    await attendre();
+    await valider();
+    const [a, b] = envois(appels);
+    expect(envois(appels)).toHaveLength(2);
+    expect(b?.cle).toBe(a?.cle);
+  });
+  it('liste-relue-apres-succes', async () => {
+    const { appels } = await monter('acces');
+    await ouvrir();
+    await valider();
+    expect(appels.filter((x) => x.methode === 'GET')).toHaveLength(2);
+    expect(document.querySelector('tbody')?.textContent).toContain(t.etats.traitee);
+  });
+  it('bouton-traiter-seulement-sur-demandes-non-finales', async () => {
+    await monter('acces', undefined, ['recue', 'traitee', 'refusee']);
+    expect([...document.querySelectorAll('button')].filter((b) => b.textContent === 'Traiter')).toHaveLength(1);
   });
   it('clavier-seul', async () => {
     const { appels } = await monter('acces');

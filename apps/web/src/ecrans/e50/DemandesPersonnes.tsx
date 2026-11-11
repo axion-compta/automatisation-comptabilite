@@ -10,7 +10,7 @@ import { Tableau, type ColonneTableau } from '../../../../../packages/ui/src/com
 import { formaterDateAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { ErreurEcriture, ecrire, nouvelleCle } from '../../api.js';
 import { useLecture } from '../../donnees/lecture.js';
-import { TraiterDemande } from './TraiterDemande.js';
+import { TraiterDemande, messageErreur } from './TraiterDemande.js';
 
 const t = e50Personnes;
 const Reponse = z.object({ body: z.array(DemandeVue) });
@@ -53,7 +53,7 @@ const colonnes = (ouvrir: (d: DemandeVue, el: HTMLElement) => void): ColonneTabl
 function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) {
   const [type, setType] = useState<string>(TYPES_DROIT_PERSONNE[0]);
   const [date, setDate] = useState('');
-  const [erreur, setErreur] = useState(false);
+  const [erreur, setErreur] = useState('');
   const enCours = useRef(false);
   const cle = useRef(nouvelleCle());
   async function envoyer(e: FormEvent) {
@@ -64,11 +64,11 @@ function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) 
       await ecrire('POST', ROUTE, { type, recue_le: date }, Cree, cle.current);
       cle.current = nouvelleCle();
       setDate('');
-      setErreur(false);
+      setErreur('');
       surEnregistree();
     } catch (err) {
       if (err instanceof ErreurEcriture && err.statut < 500) cle.current = nouvelleCle();
-      setErreur(true);
+      setErreur(messageErreur(err));
     }
     enCours.current = false;
   }
@@ -85,7 +85,7 @@ function EnregistrerDemande({ surEnregistree }: { surEnregistree: () => void }) 
         {L.date}
         <input name="recue_le" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ minHeight: 24 }} />
       </label>
-      {erreur ? <p role="alert">{t.erreurs.reglageAbsent}</p> : null}
+      {erreur ? <p role="alert">{erreur}</p> : null}
       <Bouton type="submit">{L.envoyer}</Bouton>
     </form>
   );

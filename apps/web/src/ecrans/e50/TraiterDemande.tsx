@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { z } from 'zod';
 import { DemandeVue } from '../../../../../packages/contrat/src/domaines/personnes.js';
 import { ISSUES_PAR_DROIT } from '../../../../../packages/noyau/src/rgpd/types.js';
+import { fr } from '../../../../../packages/textes/src/fr.js';
 import { e50Personnes } from '../../../../../packages/textes/src/ecrans/e50-personnes.js';
 import { Bouton } from '../../../../../packages/ui/src/composants/Bouton.js';
 import { ErreurEcriture, ecrire, nouvelleCle } from '../../api.js';
@@ -14,6 +15,12 @@ const CODES: Record<string, string> = {
   MOTIF_MANQUANT: t.erreurs.motifManquant, SOURCE_MANQUANTE: t.erreurs.sourceManquante,
 };
 const MIN = { minHeight: 24 };
+
+/** Message d'une écriture refusée : code connu, sinon réseau coupé ou erreur générique. */
+export const messageErreur = (err: unknown): string => {
+  const e = err instanceof ErreurEcriture ? err : null;
+  return (e && CODES[e.code]) || (e?.statut === 0 ? fr.erreurs.reseau : fr.erreurs.generique);
+};
 
 type Props = { demande: DemandeVue; surFerme: () => void; surTraitee: () => void };
 
@@ -47,7 +54,7 @@ export function TraiterDemande({ demande, surFerme, surTraitee }: Props) {
     } catch (err) {
       const e4 = err instanceof ErreurEcriture ? err : null;
       if (e4 && e4.statut >= 400 && e4.statut < 500) cle.current = nouvelleCle();
-      setErreurs([(e4 && CODES[e4.code]) || t.erreurs.reglageAbsent]);
+      setErreurs([messageErreur(err)]);
       enCours.current = false;
       setEnvoi(false);
     }
