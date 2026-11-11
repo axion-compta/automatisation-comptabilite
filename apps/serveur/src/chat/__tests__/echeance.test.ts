@@ -62,6 +62,26 @@ describe('echeance des conversations et préférences', () => {
     expect(listerEchus(ELEMENTS)).toEqual([]);
   });
 
+  it('duree-invalide-rien-n-est-efface', async () => {
+    for (const valeur of ['0', '00', '-30', '30.5', 'NaN', 'Infinity', '1e3', ' 30', '30 ', '99999999999999999999']) {
+      const params = [duree(CLE_DUREE_CONVERSATION, valeur), duree(CLE_DUREE_PREFERENCE, valeur)];
+      expect(listerEchus(ELEMENTS, params, AUJOURDHUI), valeur).toEqual([]);
+      const f = faux();
+      const r = await demanderEffacementsEchus({
+        elements: ELEMENTS, parametres: params, gels: [], aujourdhui: AUJOURDHUI, console: f.console, suivi: f.suivi,
+      });
+      expect(r.envoyes, valeur).toBe(0);
+      expect(f.demandes, valeur).toHaveLength(0);
+    }
+  });
+
+  it('activite-posterieure-au-jour-gardee-et-date-mal-formee-refusee', () => {
+    const futur = [{ id: 'c', sorte: 'conversation' as const, societeId: 's', derniereActivite: '2027-06-01' }];
+    expect(listerEchus(futur, PARAMS, AUJOURDHUI)).toEqual([]);
+    const mal = [{ id: 'c', sorte: 'conversation' as const, societeId: 's', derniereActivite: '2027-13-45' }];
+    expect(() => listerEchus(mal, PARAMS, AUJOURDHUI)).toThrow();
+  });
+
   it('demande-transmise-a-la-console', async () => {
     const f = faux();
     const r = await demanderEffacementsEchus({
