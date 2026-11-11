@@ -11,21 +11,19 @@ import { ecrire, nouvelleCle } from '../../api.js';
 import { Extrait } from './extrait.js';
 import './n08.css';
 
-type Page = { resultats: ResultatRecherche[]; curseurSuivant?: string; vide: boolean };
+type Page = { resultats: ResultatRecherche[]; curseurSuivant?: string };
 
 /** POST /recherche (via la couche api.ts) : le texte cherché reste dans le corps, jamais dans l'URL. */
 async function chercher(q: string, curseur?: string): Promise<Page> {
   const corps = curseur === undefined ? { q } : { q, curseur };
   const lu = await ecrire('POST', '/recherche', corps, ReponseRecherche, nouvelleCle());
-  const { resultats, curseurSuivant, mot } = lu.body;
-  return { resultats, ...(curseurSuivant !== undefined ? { curseurSuivant } : {}), vide: mot === 'rien_trouve' || resultats.length === 0 };
+  const { resultats, curseurSuivant } = lu.body;
+  return curseurSuivant === undefined ? { resultats } : { resultats, curseurSuivant };
 }
 
 const longueur = (s: string): number => [...s.trim()].length;
 
-function annonce(n: number): string {
-  return n === 1 ? n08.annonce.un : n08.annonce.plusieurs.replace('{n}', String(n));
-}
+const annonce = (n: number): string => (n === 1 ? n08.annonce.un : n08.annonce.plusieurs.replace('{n}', String(n)));
 
 /** N08 : recherche globale, résultats groupés par type. */
 export function Ecran() {
@@ -63,7 +61,6 @@ export function Ecran() {
   let message = '';
   if (etat === 'court') message = n08.trop_court;
   else if (etat === 'erreur') message = n08.erreur;
-  else if (etat === 'chargement') message = n08.chargement;
   else if (pret) message = resultats.length === 0 ? n08.rien_trouve : annonce(resultats.length);
 
   return (
@@ -76,9 +73,7 @@ export function Ecran() {
         </div>
         <Bouton type="submit">{n08.bouton}</Bouton>
       </form>
-      <p role="status" aria-live="polite">
-        {message}
-      </p>
+      <p role="status" aria-live="polite">{message}</p>
       {pret &&
         TYPES_RECHERCHE.map((type) => {
           const liste = resultats.filter((r) => r.type === type);
@@ -97,9 +92,7 @@ export function Ecran() {
           );
         })}
       {pret && curseur !== undefined && (
-        <Bouton variante="discret" onClick={() => void lancer(requeteCourante.current, curseur)}>
-          {n08.voirPlus}
-        </Bouton>
+        <Bouton variante="discret" onClick={() => void lancer(requeteCourante.current, curseur)}>{n08.voirPlus}</Bouton>
       )}
     </section>
   );
