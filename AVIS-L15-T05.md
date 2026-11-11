@@ -1,24 +1,28 @@
 VERDICT: A CORRIGER
-19208406485fe9ffb3c3d821a892cebaff796c4a
+8814f8a7697891a34ff04fc306b9538878e433cb
 
-# Avis PR 1042 (L15-T05, sortie du lot 15)
+# Avis PR 1042 (L15-T05, sortie du lot 15) : seconde relecture
 
-Relu au SHA de tête ci-dessus, fiche lue sur origin/main (`sensible: non`, `tests_requis: non`). Aucun avis antérieur sur `avis/L15-T05`.
+Relu au SHA de tête ci-dessus, après la correction qui répond à l'avis A CORRIGER du SHA 1920840. Fiche lue sur origin/main (82aa0a7). `sensible: non`, `tests_requis: non` : la « mutation » consiste ici à confronter chaque affirmation du bloc aux en-têtes des fiches sur main.
 
-## Ce qui est tenu
-- Périmètre : 3 fichiers, tous dans `fichiers_autorises`. Taille : 37 + 1 = 38 pour un maximum de 120. Aucune ligne « - - ». Bloc « Lot 15 » de 28 lignes (30 au plus). Aucun mot interdit, aucun prix, aucune date de livraison annoncée. Journal : 8 lignes, commence par `# Journal L15-T05`. `statut: fait` posé. CI verte (run 43079060892). La branche se fusionne sur main sans conflit.
-- **Cas déclarés couverts : aucun.** Les 111 cas sont tous marqués « non établi ». Rien n'est donc affirmé sans test. Vérifié : le texte de la spec 15 n'est pas dans le dépôt, et `X13b` et `R06b` ne figurent que dans les fiches L15-T05, L15-T60 et L15-T68. Les tests `it('P01')`… de `packages/noyau/src/profil/__tests__/banc/` appartiennent au banc du profil, pas à la spec 15. Ils ne contredisent pas le tableau. Les cas S restent « en attente », comme la fiche le demande.
-- **Mesures recalculées** avec l'API de recherche (PR fusionnées titrées « L15- », arrêt au 11/11/2026 17:57 UTC) : 75 PR, 64 fiches L15 distinctes, médiane 39,6 min ; 29 PR de fiches sensibles à 65,3 min, 39 non sensibles à 39,4 min, 7 PR L00 de création de fiches. Les chiffres du bloc sont exacts.
+## Défauts de l'avis précédent : tous corrigés au moment du push (main 253fbf4)
+1. Compte « 64 avant, 65 avec » et T65 retirée de la liste : juste sur 253fbf4.
+2. Ligne « T65 : PR #1022 ouverte » retirée.
+3. Ligne #1032 remplacée par les motifs relus : T64 débloquée, T67 `bloque_par` (Coque.tsx dans L06-T45) : juste.
+4. Colonne « Attente » : « attend L15-T68 (à faire, dépend de T62 à T64) » : juste sur 253fbf4.
+- Remarque traitée : requête et heure d'arrêt des délais écrites au journal.
 
-## Défauts bloquants
-Main a avancé depuis la base de la PR (91ff466) : #1022 (L15-T65) et #1032 (L00-T83) sont fusionnées. Le bloc ne décrit plus l'état réel. Or le premier critère de la fiche demande ce qui est fait et ce qui reste bloqué, avec le motif de chaque blocage. Il faut fusionner origin/main, relire les en-têtes et corriger `REPRENDRE.md` :
-1. `REPRENDRE.md:155` : « 63 `statut: fait` avant cette PR, 64 avec L15-T05 ; restent T62, T63, T64, T65, T67, T68 ». Sur main : 64 faites avant la PR, 65 avec elle ; T65 est faite ; restent T62, T63, T64, T67, T68.
-2. `REPRENDRE.md:160` : « T65 : PR #1022 ouverte, non fusionnée » est faux (fusionnée, `statut: fait`). Retirer la ligne.
-3. `REPRENDRE.md:163` : « La PR #1032, ouverte… relire les fiches après sa fusion ». Elle est fusionnée : remplacer cette ligne par les motifs relus.
-   - `REPRENDRE.md:159` : T64 est débloquée (D42/D43/D29/J3a, contre une interface et un faux) et n'attend plus que ses dépendances.
-   - `REPRENDRE.md:161` : le motif de T67 est désormais `bloque_par` : `Coque.tsx` et `coque.test.tsx` sont dans les `fichiers_autorises` de L06-T45 (lot 06), et non plus « recoupement avec le lot 07 ».
-4. `REPRENDRE.md:173-176` : la colonne « Attente » dit « L15-T68 (bloquée) ». Sur main, L15-T68 est débloquée : elle est à faire et attend T62, T63 et T64. Écrire « attend L15-T68 (à faire, dépend de T62 à T64) », ou la formule que la fiche impose si T68 redevient bloquée.
+## Défaut bloquant (nouveau, PAS une faute de l'auteur)
+Main a de nouveau avancé après le push : #1043 (L15-T64) est fusionnée à 20:10 UTC et `pilotage/fiches/L15-T64.md` est `statut: fait` sur main (82aa0a7). Relevé sur main : 65 fiches L15 faites, 5 à faire (T05, T62, T63, T67, T68). Le premier critère de la fiche (ce qui est fait et ce qui reste) n'est plus tenu. Fusionner origin/main, puis dans `REPRENDRE.md` :
+1. `REPRENDRE.md:155` : « 64 `statut: fait` avant cette PR, 65 avec L15-T05 ; restent T62, T63, T64, T67, T68 » → « 65 avant cette PR, 66 avec L15-T05 ; restent T62, T63, T67, T68 ».
+2. `REPRENDRE.md:159` : la ligne T64 doit dire « faite (PR #1043) » ou sortir de la liste des fiches en attente.
+3. `REPRENDRE.md:161` et `172-175` : « dépend de T62 à T64 (T65 et T66 faites) » → « dépend de T62 et T63 (T64 à T66 faites) ».
+4. `REPRENDRE.md:162` : citer #1043 parmi les PR fusionnées et le SHA de main relu.
+5. `pilotage/journal/L15-T05.md` : « 64 faites avant cette PR (main 253fbf4) » à aligner.
+Avant fusion, relire aussi la ligne T63 : si #1047 est fusionnée d'ici là, T63 devient faite.
+
+## Contrôles
+- Périmètre : 3 fichiers, tous dans `fichiers_autorises`. Taille : 36 + 1 = 37 pour un maximum de 120. Bloc « Lot 15 » : 27 lignes (30 au plus). Aucune ligne « - - », aucun mot interdit, aucun prix, aucune date de livraison. Journal : 8 lignes, commence par `# Journal L15-T05`. `statut: fait` posé. Total du tableau : 41 + 26 + 19 + 25 = 111 ; cas S « en attente ». Fusion avec main sans conflit (mergeable : clean).
 
 ## Remarques
-- Les mesures de délai viennent d'une requête à l'API, pas d'un test. C'est normal pour un délai de fusion, mais la requête exacte n'est pas écrite. Ajouter dans le journal la requête et l'heure d'arrêt (`is:pr is:merged "L15-" in:title`, fusion avant 17:57 UTC), pour qu'on puisse la rejouer.
-- Le tableau des cas regroupe par famille au lieu d'une ligne par cas. C'est acceptable tant qu'aucun cas n'est couvert, mais L15-T68 devra passer à une ligne par cas.
+- Ligne T63 : on peut signaler que la PR #1047 est ouverte.
