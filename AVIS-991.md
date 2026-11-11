@@ -1,22 +1,19 @@
-VERDICT: A CORRIGER
-SHA relu : 239bd1469d5e4d839a4398805c5ac5078bf3b02c
+VERDICT: OK
+SHA relu : 23425b3ce3ccd30ed38b97ec2f40cc8e6bf6858f
 
-PR 991, fiche L03-T58 (sensible, IA). Deuxième relecture Opus du 11/11/2026, après la correction de l'avis précédent (SHA d4a41c0 → 239bd14).
+PR 991, fiche L03-T58 (sensible, IA). Troisième relecture Opus du 11/11/2026, après la correction de l'avis précédent (SHA 239bd14 → 23425b3).
 
-Périmètre : 4 fichiers, tous dans `fichiers_autorises` ; 263 lignes (plafond 300). Les 10 tests nommés sont verts en local ; CI de ce SHA entièrement verte (verifier compris). Journal : 7 lignes. Mots interdits, prix, secrets : rien trouvé. Données fictives.
+Périmètre : 4 fichiers, tous dans `fichiers_autorises` ; 277 lignes (plafond 300). Le dernier commit ne touche que le fichier de test (+14 lignes) ; `explication.ts` est inchangé. 11 tests verts en local (les 10 nommés plus `montant-au-debit`) ; CI de ce SHA entièrement verte (verifier, tests, lint, types, gardes, stryker, gitleaks, e2e, licences). Journal : 7 lignes. Mots interdits, prix, secrets, octets NUL, alias de `it`/`test`, `.only`/`.skip` : rien trouvé. Données fictives.
 
-## Défaut bloquant de l'avis précédent : corrigé
-- `explication.ts:87` : le code de case n'est plus retiré que comme jeton entier (`(?<![\p{L}\p{N}])` + code échappé + `(?![\p{L}\p{N}])`, drapeaux `gu`). Le cas `08` / `0808` est maintenant rejeté (`chiffre_hors_reference`) et testé, ainsi que le cas positif « La ligne 08 vient de … ».
-- Sondes (codes `08` et `3.1`) : `0,08`, `08.5`, `08 000`, `331` rejetés ; « La ligne <code> vient de {{ref:e1.montant}} » accepté.
-- Le code mort `if (tentative === undefined) break;` est remplacé par `for (let essai = 0; essai < ESSAIS_MAX; essai++)` ; mutants `ESSAIS_MAX` 1 et 3 et `<=` tués.
+## Défauts bloquants de l'avis précédent : corrigés
+1. `explication.ts:61` (ligne au débit) : nouveau test `montant-au-debit`, écriture fictive au compte 445660 avec `debit: 4321`, `credit: 0`, qui vérifie `resultats.e1.montant.valeur` et `etapes[0].montant`. Mutations à la main `false ? l.debit : l.credit` et `l.credit` seul : tuées.
+2. `explication.ts:87` (échappement du code) : cas `3.1` ajoutés à `chiffre-invente-rejete`, le négatif « La ligne 3.1 vaut 331 euros… » attendu `chiffre_hors_reference` et le positif « La ligne 3.1 vient de … » attendu `ok: true`. Mutation à la main `${c.code.replace(...)}` → `${c.code}` : tuée (échec à `explication.test.ts:83`, le cas 331).
 
-## Défauts bloquants (nouveaux, trouvés par mutation)
-Stryker sur `explication.ts` : 89,54 % (16 survivants). Deux survivants touchent directement la règle « aucun montant ne vient du modèle » et doivent être tués :
-1. `explication.ts:61` : `l.debit !== 0 ? l.debit : l.credit` → `false ? l.debit : l.credit` survit. Les deux écritures fictives du test sont au crédit (`debit: 0`) : si le montant d'une ligne au débit (TVA déductible, compte 445660 par exemple) était pris au crédit, la référence `{{ref:eN.montant}}` afficherait 0 sans qu'aucun test ne le voie. Correction : ajouter une écriture fictive au débit comme source d'une case, et vérifier `resultats.eN.montant.valeur` et `etapes[N].montant`.
-2. `explication.ts:87` : l'échappement du code n'est pas testé. Mutation à la main `${c.code.replace(...)}` → `${c.code}` : 10/10 verts. Un code contenant un métacaractère, par exemple `3.1`, deviendrait le motif `3.1`, qui reconnaît `331` : « vaut 331 euros » passerait. Correction : ajouter à `chiffre-invente-rejete` une case de code `3.1` avec le texte `La ligne 3.1 vaut 331 euros, voir {{ref:e1.montant}}.`, attendu `chiffre_hors_reference`, et le cas positif `La ligne 3.1 vient de {{ref:e1.montant}}.`, attendu `ok: true` (sondé : le code actuel donne bien ces deux résultats).
+## Régressions et autres mutations à la main
+- Aucune régression : code de production inchangé, tests précédents conservés à l'identique.
+- Tuées aussi : drapeaux `'gu'` → `'u'` (nouveau cas du code cité deux fois), borne `<=` → `<` (nouveaux cas à la longueur exacte et à la longueur moins un), `ESSAIS_MAX` 2 → 3, `s.source.type === 'ecriture'` → `true`.
 
 ## Remarques (non bloquantes)
-- Mutants équivalents à la main : retrait du seul regard arrière ou du seul regard avant de `codeEntier` (une seule borne suffit déjà à empêcher qu'une suite de chiffres disparaisse en entier) ; garder les deux est très bien.
-- `explication.ts:87`, drapeaux `'gu'` → `''` survit : un texte qui cite deux fois le code serait rejeté à tort (sens prudent : repli sans modèle). Un cas de test avec le code cité deux fois serait utile.
-- Autres survivants : borne `texte.length <= longueurMax` (`<` survit : aucun test à la longueur exacte), `JETON` `\d+` → `\d` (aucun jeton `[PERSONNE_10]`), `e${i + 1}` → `e${i - 1}` dans l'entrée, `join('\n')` → `join('')`, messages d'erreur.
-- Libellés pseudonymisés mais pas masqués sur les nombres (remarque de l'avis précédent) : toujours à trancher dans une fiche de suite.
+- `JETON` `\d+` → `\d` survit encore (aucun jeton `[PERSONNE_10]` dans les tests) : sens prudent, un tel jeton serait seulement rejeté. Un cas avec dix personnes serait utile dans une fiche de suite.
+- Libellés pseudonymisés mais pas masqués sur les nombres (remarque des avis précédents) : toujours à trancher dans une fiche de suite.
+- Fiche sensible : fusion par Will seul.
