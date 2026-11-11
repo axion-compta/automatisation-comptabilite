@@ -1,7 +1,8 @@
 import { Link, Outlet, useRouter, useRouterState } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { e25 } from '../../../../packages/textes/src/ecrans/e25.js';
 import { socle } from '../../../../packages/textes/src/ecrans/socle.js';
+import { BandeauSupport } from '../../../../packages/ui/src/composants/BandeauSupport.js';
 import { Discussion } from '../chat/Discussion.js';
 import { LETTRES_PAR_DEFAUT, installerLettres } from '../commandes/lettres.js';
 import { Palette, ouvrirPalette } from '../commandes/Palette.js';
@@ -14,6 +15,10 @@ import { Compteur, useCompteursMenu } from './Compteur.js';
 import { PorteAcceptation } from './PorteAcceptation.js';
 import { MENU_BUREAU, estActive } from './menu.js';
 import './socle.css';
+
+/** Bail de lecture du personnel Axion, lu depuis la console par l'hôte de l'application ; absent = pas de bail. */
+export type BailSupportAffiche = { actif: boolean; texte: string };
+export const ContexteBailSupport = createContext<BailSupportAffiche | null>(null);
 
 export const CHEMIN_DISCUSSION = '/discussion';
 /** Écran technique d'essai (tests de pannes) : pas de colonne, son bouton « Envoyer » doit rester unique. */
@@ -43,6 +48,7 @@ function CoqueInterne() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [replie, setReplie] = useState(false);
   const [clocheOuverte, setClocheOuverte] = useState(false);
+  const bail = useContext(ContexteBailSupport);
   const { exercice, parEntree } = useCompteursMenu();
   useEffect(() => {
     const ouvrir = () => setClocheOuverte(true);
@@ -67,6 +73,7 @@ function CoqueInterne() {
     <>
       <div className="coque">
         <BandeauAcces />
+        {bail?.actif === true ? <BandeauSupport texte={bail.texte} actif /> : null}
         {exercice ? <BoutonCloche ouvert={clocheOuverte} surBasculer={() => setClocheOuverte(!clocheOuverte)} /> : null}
         {exercice ? <Cloche exercice={exercice} ouvert={clocheOuverte} surFermer={() => setClocheOuverte(false)} /> : null}
         <main className="coque-principal">
