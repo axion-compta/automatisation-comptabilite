@@ -36,6 +36,7 @@ import { handlersAcceptations } from './domaines/acceptations.js';
 import { handlersSante } from './domaines/sante.js';
 import { handlersPersonnes } from './domaines/personnes.js';
 import { handlersGardeAcces } from './garde-acces.js';
+import { handlersModules } from './registres/index.js';
 import type { OptionsExploitationFaux } from './domaines/options-exploitation.js';
 
 /** Réglages FICTIFS des personnes pour le mode simulé : jamais une valeur légale. */
@@ -113,6 +114,7 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
 
   return [
     ...handlersGardeAcces(abonnement),
+    ...handlersModules({ base, attendre, options, abonnement, exploitation, erreur }),
     http.get(base + '/ecritures', async ({ request }) => {
       await attendre();
       const q = new URL(request.url).searchParams;
