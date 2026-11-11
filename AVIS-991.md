@@ -1,15 +1,22 @@
 VERDICT: A CORRIGER
-SHA relu : d4a41c0f1292f8c38d72b2f57deccd6fb1a16840
+SHA relu : 239bd1469d5e4d839a4398805c5ac5078bf3b02c
 
-PR 991, fiche L03-T58 (sensible, IA). Relecture Opus du 11/11/2026. Le SHA de tête est passé de d79fe23 à d4a41c0 pendant la relecture (correction d'une erreur eslint `_tentative` inutilisée) ; c'est d4a41c0 qui est relu.
+PR 991, fiche L03-T58 (sensible, IA). Deuxième relecture Opus du 11/11/2026, après la correction de l'avis précédent (SHA d4a41c0 → 239bd14).
 
-Périmètre : 4 fichiers, tous dans `fichiers_autorises` ; 260 lignes (plafond 300). Les 10 tests nommés sont présents et verts en local ; tsc et eslint propres. Mutations faites à la main (3e essai autorisé, garde `aucune_ecriture_citee` coupée, identifiant d'écriture dans l'entrée, `break` remplacé par `continue` après une exception, `retablir` retiré) : toutes tuées. Mots interdits, prix, secrets : rien trouvé. Données fictives.
+Périmètre : 4 fichiers, tous dans `fichiers_autorises` ; 263 lignes (plafond 300). Les 10 tests nommés sont verts en local ; CI de ce SHA entièrement verte (verifier compris). Journal : 7 lignes. Mots interdits, prix, secrets : rien trouvé. Données fictives.
 
-## Défaut bloquant
-1. `packages/noyau/src/declarations/explication.ts:87` : `t.split(c.code).join(' ')` retire le code de la case partout, y compris à l'intérieur d'un nombre. Les codes de ligne viennent de la table du millésime, et ce sont souvent des chiffres seuls (par exemple « 08 »). Dans ce cas, un nombre inventé formé uniquement de répétitions du code passe la vérification. Sonde : case `08`, texte « La ligne 08 vaut 0808 euros, voir {{ref:e1.montant}}. » donne `ok: true`. Cela viole la règle de la fiche « Aucun montant ne vient du modèle : tout chiffre passe par {{ref:…}} ». Correction : n'exempter le code que s'il forme un mot entier (par exemple `(?<![\p{L}\p{N}])` + code échappé + `(?![\p{L}\p{N}])`, avec le drapeau `u`), puis ajouter un cas à `chiffre-invente-rejete` avec un code numérique (`08` et le texte `0808`, attendu `chiffre_hors_reference`).
+## Défaut bloquant de l'avis précédent : corrigé
+- `explication.ts:87` : le code de case n'est plus retiré que comme jeton entier (`(?<![\p{L}\p{N}])` + code échappé + `(?![\p{L}\p{N}])`, drapeaux `gu`). Le cas `08` / `0808` est maintenant rejeté (`chiffre_hors_reference`) et testé, ainsi que le cas positif « La ligne 08 vient de … ».
+- Sondes (codes `08` et `3.1`) : `0,08`, `08.5`, `08 000`, `331` rejetés ; « La ligne <code> vient de {{ref:e1.montant}} » accepté.
+- Le code mort `if (tentative === undefined) break;` est remplacé par `for (let essai = 0; essai < ESSAIS_MAX; essai++)` ; mutants `ESSAIS_MAX` 1 et 3 et `<=` tués.
+
+## Défauts bloquants (nouveaux, trouvés par mutation)
+Stryker sur `explication.ts` : 89,54 % (16 survivants). Deux survivants touchent directement la règle « aucun montant ne vient du modèle » et doivent être tués :
+1. `explication.ts:61` : `l.debit !== 0 ? l.debit : l.credit` → `false ? l.debit : l.credit` survit. Les deux écritures fictives du test sont au crédit (`debit: 0`) : si le montant d'une ligne au débit (TVA déductible, compte 445660 par exemple) était pris au crédit, la référence `{{ref:eN.montant}}` afficherait 0 sans qu'aucun test ne le voie. Correction : ajouter une écriture fictive au débit comme source d'une case, et vérifier `resultats.eN.montant.valeur` et `etapes[N].montant`.
+2. `explication.ts:87` : l'échappement du code n'est pas testé. Mutation à la main `${c.code.replace(...)}` → `${c.code}` : 10/10 verts. Un code contenant un métacaractère, par exemple `3.1`, deviendrait le motif `3.1`, qui reconnaît `331` : « vaut 331 euros » passerait. Correction : ajouter à `chiffre-invente-rejete` une case de code `3.1` avec le texte `La ligne 3.1 vaut 331 euros, voir {{ref:e1.montant}}.`, attendu `chiffre_hors_reference`, et le cas positif `La ligne 3.1 vient de {{ref:e1.montant}}.`, attendu `ok: true` (sondé : le code actuel donne bien ces deux résultats).
 
 ## Remarques (non bloquantes)
-- `preparerEntree` envoie les libellés tels que `pseudonymiser` les rend : un chiffre présent dans un libellé (sonde : « Acompte 1500 euros ») arrive en clair dans l'entrée du modèle. La fiche l'admet (« libellés passés par `pseudonymiser` »), mais l'interdit « ni montant en clair » est alors contourné par le libellé. À trancher dans une fiche de suite (masquer les nombres des libellés ?).
-- `explication.ts:104` : `if (tentative === undefined) break;` est du code mort, ajouté seulement pour faire taire eslint. Une boucle `for (let essai = 0; essai < 2; essai++)` ou `for (const _ of …)` selon la règle de lint serait plus claire.
-- `preparerEntree` renvoie un champ `etapes` en plus de la signature de la fiche : c'est acceptable.
-- CI de ce SHA : gardes et stryker verts, les autres tâches encore en attente au moment de la relecture.
+- Mutants équivalents à la main : retrait du seul regard arrière ou du seul regard avant de `codeEntier` (une seule borne suffit déjà à empêcher qu'une suite de chiffres disparaisse en entier) ; garder les deux est très bien.
+- `explication.ts:87`, drapeaux `'gu'` → `''` survit : un texte qui cite deux fois le code serait rejeté à tort (sens prudent : repli sans modèle). Un cas de test avec le code cité deux fois serait utile.
+- Autres survivants : borne `texte.length <= longueurMax` (`<` survit : aucun test à la longueur exacte), `JETON` `\d+` → `\d` (aucun jeton `[PERSONNE_10]`), `e${i + 1}` → `e${i - 1}` dans l'entrée, `join('\n')` → `join('')`, messages d'erreur.
+- Libellés pseudonymisés mais pas masqués sur les nombres (remarque de l'avis précédent) : toujours à trancher dans une fiche de suite.
