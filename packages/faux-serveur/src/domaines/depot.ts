@@ -7,14 +7,7 @@ import type { ContexteFaux } from '../registres/types.js';
 /** Erreur déclarée au contrat : `defined` vrai, comme sur le vrai serveur. */
 const declaree = (code: string, status: number) => HttpResponse.json({ defined: true, code, status, message: code }, { status });
 
-const INDICE_MAX = 9999;
-
-/**
- * Lit les fichiers comme le vrai serveur (notation à crochets) :
- * - `fichiers[0]`, `fichiers[1]`… : indices décimaux sans zéro de tête, chacun une fois, contigus depuis 0, sinon refus (null) ;
- * - `fichiers[]` : ajoutés dans l'ordre d'arrivée, mais refus si mélangés à des indices ;
- * - `fichiers` nu : accepté seulement s'il y a au moins deux parties, ajoutées à la suite ; tout autre nom est ignoré.
- */
+/** Lit les fichiers comme le vrai serveur (oRPC, notation à crochets) ; null = refus. `fichiers[n]` : indices décimaux sans zéro de tête, uniques, contigus depuis 0, au plus 9999 ; `fichiers[]` : ordre d'arrivée, refusé avec des indices ; `fichiers` nu : au moins deux parties. */
 function fichiersIndexes(form: FormData | null): File[] | null {
   if (form === null) return [];
   const indexes = new Map<number, File>();
@@ -22,23 +15,19 @@ function fichiersIndexes(form: FormData | null): File[] | null {
   const nus: File[] = [];
   let doublon = false;
   for (const [nom, v] of form.entries()) {
-    if (typeof v === 'string') continue;
     const m = /^fichiers\[(0|[1-9]\d*)?\]$/.exec(nom);
-    if (m === null) {
-      if (nom === 'fichiers') nus.push(v);
-    } else if (m[1] === undefined) sansIndice.push(v);
+    if (typeof v === 'string' || (m === null && nom !== 'fichiers')) continue;
+    if (m === null) nus.push(v);
+    else if (m[1] === undefined) sansIndice.push(v);
     else {
-      const i = Number(m[1]);
-      if (indexes.has(i) || i > INDICE_MAX) doublon = true;
-      indexes.set(i, v);
+      doublon ||= indexes.has(Number(m[1])) || Number(m[1]) > 9999;
+      indexes.set(Number(m[1]), v);
     }
   }
-  if (doublon || (indexes.size > 0 && sansIndice.length > 0)) return null;
   const ordre = [...indexes.keys()].sort((a, b) => a - b);
-  if (ordre.some((i, rang) => i !== rang)) return null;
-  const tous = [...ordre.map((i) => indexes.get(i) as File), ...sansIndice, ...nus];
+  if (doublon || (indexes.size > 0 && sansIndice.length > 0) || ordre.some((i, rang) => i !== rang)) return null;
   if (indexes.size === 0 && sansIndice.length === 0 && nus.length < 2) return [];
-  return tous;
+  return [...ordre.map((i) => indexes.get(i) as File), ...sansIndice, ...nus];
 }
 
 /** Dépôt de pièces FICTIVES : même service que le vrai serveur, état en mémoire propre à chaque série de handlers. */
