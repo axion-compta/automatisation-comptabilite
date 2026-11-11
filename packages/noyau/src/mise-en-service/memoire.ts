@@ -13,6 +13,7 @@ const SERVICE = {
   personneId: 'service-memoire', nature: 'service', organisationId: 'console', organisations: [], societeId: 'console',
   societes: [], roles: [], permissions: [], revendications: {},
 } as unknown as Session;
+// Réglages fictifs du faux service ; un test peut les remplacer via `contexte`.
 const PARAMETRES_FIN: ParametresFinContrat = { joursAvantEffacement: 30, joursRappelAvantEffacement: 23, joursRelancesSansAccuse: [7, 14] };
 const INSTANT = new Date(Date.UTC(2031, 4, 10, 8)).toISOString();
 const CONTEXTE: Contexte = { horodatage: INSTANT, aujourdhui: INSTANT.slice(0, 10), longueurMaxMotif: 200, parametresFin: PARAMETRES_FIN };
@@ -21,6 +22,8 @@ export type ServiceMemoire = EnsembleMiseEnService & {
   /** La prochaine création échoue une fois, après la création de la base et avant les migrations. */
   injecterPanne(): void;
   nombreBases(): number;
+  /** Nombre d'appels reçus par les deux opérations de la base cliente. */
+  appels(): { creerBase: number; appliquerMigrations: number };
 };
 
 export function creerServiceMemoire(contexte: Contexte = CONTEXTE): ServiceMemoire {
@@ -29,18 +32,23 @@ export function creerServiceMemoire(contexte: Contexte = CONTEXTE): ServiceMemoi
   const bases = new Map<string, number>();
   const verrous = new Map<string, Promise<unknown>>();
   let panne = false;
+  const appels = { creerBase: 0, appliquerMigrations: 0 };
 
   const base: PortBaseClient = {
-    creerBase: (nom) => {
+    creerBase: async (nom) => {
+      appels.creerBase++;
+      await Promise.resolve(); // asynchrone comme un vrai serveur : sans verrou, les appels s'entrelacent
       const nouvelle = !bases.has(nom);
       if (nouvelle) bases.set(nom, 0);
-      return Promise.resolve(nouvelle);
+      return nouvelle;
     },
-    appliquerMigrations: (nom) => {
+    appliquerMigrations: async (nom) => {
+      appels.appliquerMigrations++;
+      await Promise.resolve();
       const faites = bases.get(nom);
-      if (faites === undefined) return Promise.reject(new Error('base_absente'));
+      if (faites === undefined) throw new Error('base_absente');
       bases.set(nom, MIGRATIONS_PREVUES);
-      return Promise.resolve(MIGRATIONS_PREVUES - faites);
+      return MIGRATIONS_PREVUES - faites;
     },
     verifierEtat: (nom): Promise<EtatBase> => Promise.resolve({ existe: bases.has(nom), migrationsAppliquees: bases.get(nom) ?? 0 }),
   };
@@ -76,5 +84,5 @@ export function creerServiceMemoire(contexte: Contexte = CONTEXTE): ServiceMemoi
     etatEspace: (id) => Promise.resolve(statuts.get(id) ?? null),
   };
 
-  return { console: portConsole, bases: base, injecterPanne: () => { panne = true; }, nombreBases: () => bases.size };
+  return { console: portConsole, bases: base, injecterPanne: () => { panne = true; }, nombreBases: () => bases.size, appels: () => ({ ...appels }) };
 }

@@ -6,7 +6,11 @@ export type EtatEspace = 'en_creation' | 'pret';
 
 export type ReponseCreation = { organisationId: string; base: string; etat: EtatEspace; rejoue: boolean };
 
-/** Port de la console des automatisations. Chaque appel porte une clé d'idempotence (`cle`). */
+/**
+ * Port de la console des automatisations. Chaque appel porte une clé d'idempotence (`cle`).
+ * Limite connue : si la création tombe en panne, seul un rejeu avec la MÊME clé la termine ;
+ * avec une autre clé, `creerEspace` répond `deja_existant` et l'espace reste `en_creation`.
+ */
 export interface PortConsole {
   creerEspace(d: { cle: string; identifiant: string }): Promise<ReponseCreation>;
   inviter(d: { cle: string; organisationId: string; personne: string; role: string }): Promise<Retour>;

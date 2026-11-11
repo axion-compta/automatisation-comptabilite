@@ -5,6 +5,7 @@ export type ServiceATester = EnsembleMiseEnService & {
   /** La prochaine création échoue une fois, après la création de la base et avant les migrations. */
   injecterPanne(): void;
   nombreBases(): number;
+  appels(): { creerBase: number; appliquerMigrations: number };
 };
 export type Fabrique = () => ServiceATester;
 
@@ -17,6 +18,7 @@ export function suiteMiseEnService(nom: string, fabrique: Fabrique): void {
         Array.from({ length: 10 }, () => s.console.creerEspace({ cle: 'cle-creation-1', identifiant: 'dupont' })),
       );
       expect(s.nombreBases()).toBe(1);
+      expect(s.appels()).toEqual({ creerBase: 1, appliquerMigrations: 1 });
       expect(reponses.every((r) => r.base === 'cli_dupont' && r.etat === 'pret')).toBe(true);
       expect(reponses.filter((r) => !r.rejoue)).toHaveLength(1);
       expect(await s.bases.verifierEtat('cli_dupont')).toEqual({ existe: true, migrationsAppliquees: 3 });
@@ -51,6 +53,19 @@ export function suiteMiseEnService(nom: string, fabrique: Fabrique): void {
       expect(await s.bases.appliquerMigrations('cli_leroy')).toBe(0);
       expect(await s.bases.verifierEtat('cli_leroy')).toEqual(avant);
       expect(await s.bases.creerBase('cli_leroy')).toBe(false);
+      expect(await s.bases.verifierEtat('cli_leroy')).toEqual(avant);
+    });
+
+    it('rejeu-apres-creation-reussie-ne-refait-rien', async () => {
+      const s = fabrique();
+      const d = { cle: 'cle-creation-4', identifiant: 'bernard' };
+      await s.console.creerEspace(d);
+      const avant = s.appels();
+      const r = await s.console.creerEspace(d);
+      expect(r.rejoue).toBe(true);
+      expect(s.appels()).toEqual(avant);
+      expect(await s.console.etatEspace('bernard')).toBe('pret');
+      expect(await s.bases.verifierEtat('cli_bernard')).toEqual({ existe: true, migrationsAppliquees: 3 });
     });
 
     it('espace-inconnu-et-operations-idempotentes', async () => {
