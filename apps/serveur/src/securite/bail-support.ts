@@ -6,6 +6,8 @@ import type { Action, Raison } from '../../../../packages/noyau/src/securite/typ
 
 export interface Bail {
   readonly personneId: string;
+  /** Société cliente dont le dossier est ouvert en lecture : le bail ne vaut que pour elle. */
+  readonly societeId: string;
   /** Référence de l'accord écrit du client (texte fictif en test). */
   readonly accordEcrit: string;
   readonly debutLe: string;
@@ -14,11 +16,11 @@ export interface Bail {
 
 /** Lecture des baux auprès de la console : interface, un faux sert aux tests. */
 export interface PortBails {
-  lire(personneId: string): Promise<Bail | null>;
+  lire(personneId: string, societeId: string): Promise<Bail | null>;
 }
 
 export function creerBailsMemoire(baux: readonly Bail[]): PortBails {
-  return { lire: async (personneId) => baux.find((b) => b.personneId === personneId) ?? null };
+  return { lire: async (personneId, societeId) => baux.find((b) => b.personneId === personneId && b.societeId === societeId) ?? null };
 }
 
 /** Un bail court seulement s'il a un accord écrit, une durée d'une heure au plus, et n'est pas échu. */
@@ -46,22 +48,23 @@ export interface OptionsBail {
 
 export function creerBailSupport(options: OptionsBail) {
   const { bails, journaliser, maintenant, maxMs } = options;
+  async function actif(personneId: string, societeId: string): Promise<boolean> {
+    try {
+      return bailCourt(await bails.lire(personneId, societeId), maintenant(), maxMs);
+    } catch {
+      return false;
+    }
+  }
   return {
-    /** Vrai tant que le bail court : sert au bandeau montré au client. */
-    async actif(personneId: string): Promise<boolean> {
-      try {
-        return bailCourt(await bails.lire(personneId), maintenant(), maxMs);
-      } catch {
-        return false;
-      }
-    },
-    /** Décide pour un membre du personnel Axion ; sans bail courant, rien n'est permis. */
-    async decider(contexte: ContexteAutorisation, action: Action, objet?: ObjetAutorisation): Promise<Verdict> {
+    /** Vrai tant que le bail court sur CETTE société : sert au bandeau montré à son client. */
+    actif,
+    /** Décide pour un membre du personnel Axion sur une société ; sans bail courant sur elle, rien n'est permis. */
+    async decider(contexte: ContexteAutorisation, societeId: string, action: Action, objet?: ObjetAutorisation): Promise<Verdict> {
       if (contexte.role !== 'personnel_axion') {
         const d = autoriser(contexte, action, objet);
         return d.permis ? { statut: 200 } : { statut: 403, raison: d.raison };
       }
-      if (!(await this.actif(contexte.personneId))) return { statut: 403, raison: 'acces_expire' };
+      if (!(await actif(contexte.personneId, societeId))) return { statut: 403, raison: 'acces_expire' };
       const d = autoriser(contexte, action, objet);
       if (d.permis) return { statut: 200 };
       if (d.raison === 'personnel_axion_lecture_seule') {
