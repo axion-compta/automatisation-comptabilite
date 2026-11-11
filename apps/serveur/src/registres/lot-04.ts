@@ -1,8 +1,8 @@
+import { implementerDepot } from '../domaines/depot.js';
 import type { OptionsModules, OptionsRouteur, OsContrat } from './types.js';
 
-/** Implémentation des modules du lot 04 (rien pour l'instant). */
+/** Implémentation des modules du lot 04 : dépôt de pièces (état en mémoire, pièces fictives). */
 export function implementerLot04(os: OsContrat, options: OptionsRouteur & OptionsModules) {
-  void os;
   void options;
-  return {};
+  return { depot: implementerDepot(os) };
 }
