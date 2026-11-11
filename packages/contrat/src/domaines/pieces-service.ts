@@ -13,6 +13,21 @@ export interface FiltrePieces {
   decalage?: number | undefined;
 }
 
+/** Pièce reçue par le dépôt (en mémoire, fictive). */
+export interface PieceDeposee {
+  id: string;
+  empreinte: string;
+  etat: string;
+  motif?: string | undefined;
+  recueLe: string;
+  canal: string;
+}
+
+export function ajouterPieceDeposee(stock: PieceDeposee[], p: PieceDeposee): PieceDeposee {
+  stock.push(p);
+  return p;
+}
+
 const LIMITE_PAR_DEFAUT = 50;
 
 function normaliser(t: string): string {
