@@ -87,7 +87,7 @@ export function defineAutomation(manifeste) {
     permissions: Object.freeze([...manifeste.permissions]),
     actionsAutomatiquesAutorisees: Object.freeze([...(manifeste.actionsAutomatiquesAutorisees ?? [])]),
     tablesAjoutSeul: Object.freeze([...(manifeste.tablesAjoutSeul ?? [])]),
-    commercial: manifeste.commercial === undefined ? undefined : structuredClone(manifeste.commercial),
+    commercial: manifeste.commercial === undefined ? undefined : JSON.parse(JSON.stringify(manifeste.commercial)),
     jeuEssai: Object.freeze(manifeste.jeuEssai.map((c) => Object.freeze({ ...c }))),
   });
 }
