@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { setupServer } from 'msw/node';
 import { creerApp } from '../../../../apps/serveur/src/app.js';
 import { creerServicePersonnes } from '../../../contrat/src/domaines/personnes-service.js';
@@ -26,7 +27,6 @@ const cibleVrai: CiblePersonnes = async (avecReglage) => {
   };
 };
 const cibleFaux: CiblePersonnes = async (avecReglage) => {
-  // Sans réglage : `handlersPersonnes` est monté sans `reglagesPersonnes`, pour exécuter son chemin 503.
   serveur.use(...(avecReglage ? creerHandlers({ base: H, horloge: HORLOGE, dateReferenceExploitation: '2026-11-09' }) : handlersPersonnes({ base: H, horloge: HORLOGE, dateReference: '2026-11-09', attendre: async () => {} })));
   return {
     appeler: async (methode, chemin, corps, cle) => {
@@ -64,3 +64,4 @@ it('service-cree-a-la-premiere-requete-seulement', async () => { // le jeu RGPD 
   await c.appeler('GET', '/personnes/demandes');
   expect(creerServicePersonnes).toHaveBeenCalledTimes(1);
 });
+it('personnes-service-jamais-importe-statiquement', () => expect(readFileSync(new URL('../domaines/personnes.ts', import.meta.url), 'utf8')).not.toMatch(/^import (?!type)[^\n]*personnes-service/m)); // sinon node:crypto est évalué au démarrage du navigateur

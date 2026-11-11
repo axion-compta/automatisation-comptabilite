@@ -50,7 +50,6 @@ export function suitePersonnes(nom: string, cible: CiblePersonnes): void {
     it('traiter-refus-sans-source-422', () =>
       avec(true, async (c) => {
         const cree = corpsDe<Demande>(await c.appeler('POST', '/personnes/demandes', { type: 'effacement', recue_le: '2026-11-09' }, 'cle-effacement-1'));
-        // Aucune personne concernée n'est rattachée : le refus n'est pas permis (422 exact). La règle « source manquante » est prouvée sur le service (commun-personnes.test.ts).
         const r = await c.appeler('POST', `/personnes/demandes/${cree.id}/traitement`, { issue: 'refus_conservation', motif: 'Motif fictif.' }, 'cle-refus-0001');
         expect([r.status, codeDe(r)]).toEqual([422, 'ISSUE_NON_PERMISE']);
         expect(corpsDe<Demande[]>(await c.appeler('GET', '/personnes/demandes')).find((d) => d.id === cree.id)?.etat).toBe('recue');
