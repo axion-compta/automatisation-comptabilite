@@ -4,9 +4,6 @@ import { autoriser, type ContexteAutorisation, type ObjetAutorisation } from '..
 import { evenementEcritureAxionRefusee, type BrouillonEvenement } from '../../../../packages/noyau/src/securite/evenements.js';
 import type { Action, Raison } from '../../../../packages/noyau/src/securite/types.js';
 
-/** Durée maximale d'un bail : une heure (règle 3 de la spec 06). */
-export const DUREE_MAX_BAIL_MS = 3_600_000;
-
 export interface Bail {
   readonly personneId: string;
   /** Référence de l'accord écrit du client (texte fictif en test). */
@@ -25,11 +22,13 @@ export function creerBailsMemoire(baux: readonly Bail[]): PortBails {
 }
 
 /** Un bail court seulement s'il a un accord écrit, une durée d'une heure au plus, et n'est pas échu. */
-export function bailCourt(bail: Bail | null, maintenant: number): boolean {
+/** `maxMs` : borne reçue en paramètre (règle 3 de la spec 06 : une heure au plus), jamais écrite ici. */
+export function bailCourt(bail: Bail | null, maintenant: number, maxMs: number): boolean {
+  if (!Number.isFinite(maxMs) || maxMs <= 0) return false;
   if (bail === null || bail.accordEcrit.trim() === '') return false;
   const debut = Date.parse(bail.debutLe);
   const fin = Date.parse(bail.expireLe);
-  if (Number.isNaN(debut) || Number.isNaN(fin) || fin <= debut || fin - debut > DUREE_MAX_BAIL_MS) return false;
+  if (Number.isNaN(debut) || Number.isNaN(fin) || fin <= debut || fin - debut > maxMs) return false;
   return maintenant >= debut && maintenant < fin;
 }
 
@@ -41,15 +40,17 @@ export interface OptionsBail {
   readonly bails: PortBails;
   readonly journaliser: (evenement: BrouillonEvenement) => Promise<void> | void;
   readonly maintenant: () => number;
+  /** Durée maximale d'un bail en millisecondes, fournie par l'hôte. */
+  readonly maxMs: number;
 }
 
 export function creerBailSupport(options: OptionsBail) {
-  const { bails, journaliser, maintenant } = options;
+  const { bails, journaliser, maintenant, maxMs } = options;
   return {
     /** Vrai tant que le bail court : sert au bandeau montré au client. */
     async actif(personneId: string): Promise<boolean> {
       try {
-        return bailCourt(await bails.lire(personneId), maintenant());
+        return bailCourt(await bails.lire(personneId), maintenant(), maxMs);
       } catch {
         return false;
       }

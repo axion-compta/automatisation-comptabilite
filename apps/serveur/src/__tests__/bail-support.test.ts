@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { ContexteAutorisation } from '../../../../packages/noyau/src/securite/autoriser.js';
 import { ACTIONS_ECRITURE } from '../../../../packages/noyau/src/securite/types.js';
 import type { BrouillonEvenement } from '../../../../packages/noyau/src/securite/evenements.js';
-import { DUREE_MAX_BAIL_MS, bailCourt, creerBailSupport, creerBailsMemoire, type Bail } from '../securite/bail-support.js';
+import { bailCourt, creerBailSupport, creerBailsMemoire, type Bail } from '../securite/bail-support.js';
 
+const UNE_HEURE = 60 * 60 * 1000;
 const T0 = Date.parse('2026-11-11T10:00:00Z');
 const bail: Bail = { personneId: 'pers-axion-1', accordEcrit: 'accord-fictif-001', debutLe: '2026-11-11T10:00:00Z', expireLe: '2026-11-11T10:45:00Z' };
 const contexte: ContexteAutorisation = {
@@ -13,7 +14,7 @@ const contexte: ContexteAutorisation = {
 
 function monter(baux: Bail[], maintenant: { t: number }) {
   const journal: BrouillonEvenement[] = [];
-  const support = creerBailSupport({ bails: creerBailsMemoire(baux), journaliser: (e) => void journal.push(e), maintenant: () => maintenant.t });
+  const support = creerBailSupport({ bails: creerBailsMemoire(baux), journaliser: (e) => void journal.push(e), maintenant: () => maintenant.t, maxMs: UNE_HEURE });
   return { support, journal };
 }
 
@@ -44,15 +45,16 @@ describe('bail de support', () => {
   });
 
   it('sans-bail-ou-sans-accord-ou-trop-long-aucun-acces', () => {
-    expect(bailCourt(null, T0)).toBe(false);
-    expect(bailCourt({ ...bail, accordEcrit: ' ' }, T0)).toBe(false);
-    expect(bailCourt({ ...bail, expireLe: new Date(T0 + DUREE_MAX_BAIL_MS + 1).toISOString() }, T0)).toBe(false);
-    expect(bailCourt({ ...bail, expireLe: 'pas une date' }, T0)).toBe(false);
-    expect(bailCourt({ ...bail, expireLe: new Date(T0 + DUREE_MAX_BAIL_MS).toISOString() }, T0)).toBe(true);
+    expect(bailCourt(null, T0, UNE_HEURE)).toBe(false);
+    expect(bailCourt({ ...bail, accordEcrit: ' ' }, T0, UNE_HEURE)).toBe(false);
+    expect(bailCourt({ ...bail, expireLe: new Date(T0 + UNE_HEURE + 1).toISOString() }, T0, UNE_HEURE)).toBe(false);
+    expect(bailCourt({ ...bail, expireLe: 'pas une date' }, T0, UNE_HEURE)).toBe(false);
+    expect(bailCourt({ ...bail, expireLe: new Date(T0 + UNE_HEURE).toISOString() }, T0, UNE_HEURE)).toBe(true);
+    expect(bailCourt(bail, T0, 0)).toBe(false);
   });
 
   it('panne-de-la-console-refus-par-defaut', async () => {
-    const support = creerBailSupport({ bails: { lire: async () => { throw new Error('panne'); } }, journaliser: () => undefined, maintenant: () => T0 });
+    const support = creerBailSupport({ bails: { lire: async () => { throw new Error('panne'); } }, journaliser: () => undefined, maintenant: () => T0, maxMs: UNE_HEURE });
     expect(await support.decider(contexte, 'lire')).toEqual({ statut: 403, raison: 'acces_expire' });
   });
 });
