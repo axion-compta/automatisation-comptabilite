@@ -1,26 +1,45 @@
 VERDICT: A CORRIGER
+d6d59b3555f5bc6365a0389f3e0b1b634b0ad0d5
 
-PR #1072, fiche L08-T40, SHA de tête relu : 48c104a52d4e2b4dc69922afe1272d9cec0cfc97
+PR #1072, fiche L08-T40, SHA de tête relu : d6d59b3555f5bc6365a0389f3e0b1b634b0ad0d5
+Seconde relecture, après l'avis A CORRIGER du SHA 48c104a5 (relecteur Opus, lot 5 section R, 11/11/2026). Seul l'apport propre à la fiche est relu : diff contre `lot-08/L08-T39` (#1051) en `00b847d6`.
 
-## Périmètre relu
-Seul l'apport propre à la fiche a été relu (PR empilée sur #1051 L08-T39, elle-même sur #986, toutes deux ouvertes) : diff entre le commit de merge `cc0b4d14` et la tête. 5 fichiers, tous dans `fichiers_autorises`, 294 lignes ajoutées pour 300 au plus.
+## Défauts de l'avis précédent : les quatre sont corrigés
+1. Erreurs sans code connu : **corrigé**.
+   - `messageErreur` (`TraiterDemande.tsx:20`) choisit dans cet ordre : texte du code connu, sinon `fr.erreurs.reseau` si `statut === 0`, sinon `fr.erreurs.generique`. Le panneau et « Enregistrer une demande reçue » l'utilisent tous les deux.
+   - Mutation : revenir à `reglageAbsent` fait rougir `erreurs-reseau-serveur-et-422-traduites` et `enregistrer-en-echec-message-reseau`.
+   - Mutation : retirer `MOTIF_MANQUANT` de `CODES` fait rougir le test du 422.
+2. Double clic : **corrigé**.
+   - Mutation : retirer `if (enCours.current) return;` et `desactive={envoi}` fait rougir `double-clic-un-seul-envoi-meme-cle`.
+   - Mutation : renouveler la clé après un 500 fait aussi rougir ce test.
+3. Liste relue après succès : **corrigé**.
+   - Mutation : sans `void relire()` (`DemandesPersonnes.tsx:112`), `liste-relue-apres-succes` rougit.
+4. Bouton Traiter seulement sur les demandes non finales : **corrigé**.
+   - Mutation : sans le filtre `FINALS` (`DemandesPersonnes.tsx:49`), `bouton-traiter-seulement-sur-demandes-non-finales` rougit.
 
-## Ce qui est en place
-- Issues lues dans `ISSUES_PAR_DROIT`, motif et source obligatoires pour un refus et contrôlés avant l'envoi, case « autres personnes » décochée par défaut (accès et portabilité), `aEffacerExplication` affichée, envoi par `ecrire()`, 409 `DEJA_TRAITEE` traduite, focus rendu au bouton d'origine, cibles de 24 px, pas de `<main>`, motif jamais affiché dans la liste.
-- Les 8 tests nommés sont présents et verts : 25/25 sur `apps/web/src/ecrans/e50` (Node 22). `garde:textes` vert. ESLint et `tsc -p apps/web` sans sortie.
-- Mutations qui rougissent : contrôle du motif retiré ; case cochée par défaut ; focus non rendu.
-- Aucun mot interdit, aucun prix, données fictives. Journal de 8 lignes commençant par `# Journal L08-T40`.
+Au SHA de tête, avec Node 22 : vitest `apps/web/src/ecrans/e50` passe 30/30. ESLint et `tsc -p apps/web` ne sortent rien.
 
-## Défauts à corriger
-1. `apps/web/src/ecrans/e50/TraiterDemande.tsx:50` et `apps/web/src/ecrans/e50/DemandesPersonnes.tsx:88` : toute erreur sans code connu (réseau coupé, 500, 400, réponse invalide) affiche `t.erreurs.reglageAbsent` (« Le réglage nécessaire n'est pas renseigné : demandez-le à votre administrateur. »). C'est faux pour une panne réseau ou serveur, et pour un échec de « Enregistrer une demande reçue ». Correction : `fr.erreurs.reseau` (`packages/textes/src/fr.ts`) si `statut === 0`, sinon `fr.erreurs.generique` ; dans `EnregistrerDemande`, un code connu passe par la même table que le panneau. Tests à ajouter : réseau coupé et 500 donnent ces messages, et un 422 `MOTIF_MANQUANT` donne `t.erreurs.motifManquant` (la fiche exige la traduction du 422, aucun test ne la couvre).
-2. Double clic sur Valider (Pièges de la fiche) non testé : en retirant à la fois `if (enCours.current) return;` (`TraiterDemande.tsx:37`) et `desactive={envoi}`, les 8 tests restent verts. Ajouter un test : réponse du `fetch` simulé retenue, deux clics sur Valider, un seul POST, puis un second essai garde la même clé tant que l'échec n'est pas un 4xx.
-3. « Après succès, la liste est relue » (À faire, point 1) non testé : `DemandesPersonnes.tsx:112` sans `void relire()` laisse les tests verts. Ajouter un test : après un traitement réussi, un nouveau GET `/personnes/demandes` part et la ligne affiche le nouvel état.
-4. « Bouton Traiter sur les demandes non finales » (À faire, point 2) non testé : `DemandesPersonnes.tsx:49` avec le filtre `FINALS` neutralisé laisse les tests verts. Ajouter un test : une demande `traitee` (et une `refusee`) n'a pas de bouton « Traiter », une demande `recue` en a un.
+## Défaut bloquant (nouveau, causé par les tests demandés)
+1. La taille dépasse `taille_max_lignes`.
+   - Lignes propres à la fiche (ajouts plus retraits, comptées comme `garde:perimetre`) : `DemandesPersonnes.tsx` 67+5, `TraiterDemande.tsx` 101, `traiter-demande.test.tsx` 171, fiche 2, journal 8. Total : **354 lignes pour une limite de 300**.
+   - Une fois #1051 et #986 fusionnées, `garde:perimetre` restera rouge pour cette raison.
+   - Correction : retirer au moins 54 lignes sans supprimer aucun des 13 tests ni aucune assertion. Pistes :
+     - factoriser `ouvrir()`, `valider()` et le montage répétés ;
+     - écrire les cas d'erreur dans un tableau ;
+     - compacter `CODES` et les styles.
+   - Sinon, Will relève le plafond par un amendement de la fiche (le correcteur l'a déjà signalé comme « défaut de fiche »). C'est la décision de Will.
 
-## CI
-La CI GitHub n'a pas tourné (panne générale) : avis rendu sur relecture du code et tests lancés en local. Rouge attendu sur `garde:termine` et `garde:perimetre` tant que #1051 et #986 ne sont pas fusionnées : ce n'est pas un défaut de l'auteur.
+## CI au SHA de tête
+- `gardes` est rouge sur `garde:termine` et `garde:perimetre`. Les fichiers hors liste viennent de L08-T39 et L08-T37 (#1051 et #986, encore ouvertes) : ce n'est pas un défaut de l'auteur. La taille, elle, en est un (voir plus haut).
+- `e2e` est rouge : 11 échecs dans `accessibilite.e2e.ts` et `pannes.e2e.ts`. Ce sont **les mêmes 11 échecs** qu'à la tête de #1051 (`00b847d6`), alors que l'e2e de main est vert. La panne vient de la PR amont, pas de L08-T40, et se corrige dans #1051.
+- `verifier` est rouge à cause de `gardes` et `e2e`.
 
-## Remarques (non bloquantes)
-- `DemandesPersonnes.tsx:19` : libellés en dur (`L`). `fr.actions.enregistrer` existe déjà pour « Enregistrer » ; les autres demandent d'élargir `e50-personnes.ts`, hors périmètre (défaut de fiche, à reprendre dans une fiche de textes).
-- `clavier-seul` ouvre et valide, mais ne choisit pas d'issue au clavier comme le demande la fiche.
-- `DemandesPersonnes.tsx:103` (venu de L08-T39) : même message `reglageAbsent` pour une erreur de lecture, à traiter avec #1051.
+## Autres contrôles
+- Fichiers : 5, tous dans `fichiers_autorises`.
+- Journal : 8 lignes, commence par `# Journal L08-T40`.
+- Aucun mot interdit, aucun prix, aucun secret ; données fictives.
+
+## Remarques (non bloquantes, reprises de l'avis précédent)
+- Libellés en dur dans `DemandesPersonnes.tsx:19`.
+- `clavier-seul` ne choisit pas d'issue au clavier.
+- Le message de lecture `reglageAbsent` vient de L08-T39.
