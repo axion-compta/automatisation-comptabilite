@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { http, HttpResponse, matchRequestUrl, type HttpHandler } from 'msw';
 
-// Marqueurs injectés par le test d'ordre ; vides sinon (les quinze lots sont vides au départ).
+// Marqueurs injectés par le test d'ordre, placés avant les modules réels ; vides sinon.
 const marqueurs = vi.hoisted(() => [] as HttpHandler[]);
 const reels = vi.hoisted(() => [] as HttpHandler[][]);
 vi.mock('../registres/index.js', async (importOriginal) => {
@@ -10,7 +10,7 @@ vi.mock('../registres/index.js', async (importOriginal) => {
     handlersModules: (ctx: Parameters<typeof reel.handlersModules>[0]) => {
       const modules = reel.handlersModules(ctx);
       reels.push(modules);
-      return [...modules, ...marqueurs];
+      return [...marqueurs, ...modules];
     },
   };
 });
@@ -83,8 +83,12 @@ describe('faux serveur : registres par lot', () => {
       const tous = creerHandlers({ base: H });
       const garde = handlersGardeAcces(optionsGarde).map((h) => infoDe(h).chemin);
       expect(tous.slice(0, tailleGarde).map((h) => infoDe(h).chemin)).toEqual(garde);
+      const modules = reels[reels.length - 1] as HttpHandler[];
       expect(tous[tailleGarde]).toBe(marqueur);
-      expect(infoDe(tous[tailleGarde + 1] as HttpHandler)).toEqual({ methode: 'GET', chemin: H + '/ecritures' });
+      modules.forEach((m, i) => expect(tous[tailleGarde + 1 + i]).toBe(m));
+      const socle = tous.slice(tailleGarde + 1 + modules.length);
+      expect(socle.length).toBeGreaterThan(0);
+      expect(infoDe(socle[0] as HttpHandler)).toEqual({ methode: 'GET', chemin: H + '/ecritures' });
     } finally {
       marqueurs.length = 0;
     }
