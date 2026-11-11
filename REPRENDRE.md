@@ -149,3 +149,31 @@ Mesures sans IA, relevées le 07/11/2026 :
 - Cas non rejoués (vrai serveur, identité et base requis) : C01, C03, C10, C15, C16, C18, C20 à C23 ; T-CNX-1, T-CNX-4 à T-CNX-7 ; T-ISO-1, 2, 4, 6 ; T-JRN-2, 4, 5 ; T-SEC-1, 2, 4 à 6, 8 ; T-SUP-1, 3.
 - Bloqué, à `a_faire` : T36 à T42, T44 à T46 et T48 ; T47 dépend de T39. Décisions attendues : D29 (identité et schéma de la console), J3a, D42 (stockage et bases), D45 (T48 seulement). T43 est faite.
 - Écart à la fiche : la décision D43 n'est citée par aucune fiche T36 à T48 restante.
+
+## Lot 15, interface transverse (sortie)
+Relevé du 11/11/2026 sur main à jour (en-têtes de fiches, API de recherche des PR).
+- Fiches : 70 (T00 à T69) ; 63 `statut: fait` avant cette PR, 64 avec L15-T05. Restent `a_faire` : T62, T63, T64, T65, T67, T68.
+- Bloquées ou en attente (motif lu dans chaque fiche sur main) :
+  - T62 (résoudre une alerte en un clic) : fiche débloquée, non faite, aucune PR ouverte.
+  - T63 (envoi du résumé) : point P2, aucun fournisseur d'e-mail choisi ; écrite contre une interface d'envoi et un faux.
+  - T64 (index de recherche en base) : D29, J3a, D42 (schéma `a_compta`, extension `unaccent`, base réelle).
+  - T65 (exports en tâche) : PR #1022 ouverte, non fusionnée.
+  - T67 (chat en 4 états) : `Coque.tsx` absent des `fichiers_autorises` ; recoupement avec le lot 07 à vérifier.
+  - T68 (banc des 111 cas) : dépend de T62 à T65 ; les seuils de performance sont des HYPOTHÈSES.
+- La PR #1032 (L00-T83), ouverte, modifie les motifs de T63, T64, T67 et T68 : relire les fiches après sa fusion.
+- Mesures sans IA (API de recherche, titres contenant « L15- », fusionnées) : 75 PR pour 64 fiches distinctes, du 07/11/2026 13:17 UTC au 11/11/2026 17:57 UTC.
+- Délai médian ouverture à fusion : 39,6 min pour les 75 PR ; 65,3 min pour 29 PR de fiches sensibles ; 39,4 min pour 39 PR de fiches non sensibles ; 7 PR sans fiche reconnue (créations de fiches).
+- `pilotage/calibrage.csv` : en-tête seul, non utilisé. Jetons par fiche, score Stryker, durée de CI : non mesurés ici.
+- Écarts : l'isolation (T60) existe contre des interfaces et des faux ; aucune base réelle. Aucune date de livraison annoncée.
+
+### Cas de la spec 15 (111) : état au 11/11/2026
+Limite : le texte de la spec 15 n'est pas dans ce dépôt public (le journal de L15-T60 le dit aussi). Un `git grep` de `X13b` et `R06b` dans `apps` et `packages` ne trouve aucun test : seules trois fiches citent ces identifiants. Aucun cas n'est donc affirmé couvert ; aucune correspondance cas par test n'a été vérifiée.
+| Famille | Cas | Nombre | Test qui couvre | Attente |
+|---|---|---|---|---|
+| T | T01 à T41 | 41 | non établi | banc nommé par identifiant : L15-T68 (bloquée) |
+| P | P01 à P26 | 26 | non établi | L15-T68 (bloquée) |
+| R | R01 à R17, R06b, R07b | 19 | non établi | L15-T68 (bloquée) |
+| X | X01 à X23, X13b, X14b | 25 | non établi | L15-T68 (bloquée) |
+- Total : 41 + 26 + 19 + 25 = 111.
+- Cas de sécurité (S), cités par les critères de L15-T60 : R02, R03, R04, R06b, R07, R07b, R11, R12, R15, X04 à X06, X10, X11, X13, X13b, X14, X14b, X21, T31, P24. Tous restent « en attente » : T60 est faite contre des interfaces et des faux, pas contre l'isolation réelle ; le serveur en mémoire imite ces cas sans les prouver.
+- Suite : L15-T68 donne un test par cas, nommé par son identifiant, et met ce tableau à jour.
