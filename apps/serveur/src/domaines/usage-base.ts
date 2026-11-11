@@ -2,6 +2,7 @@
 // Données pseudonymisées ; secret propre à chaque client ; aucune suppression réelle (marquage seulement).
 import { pseudonyme, validerEvenements, type EvenementUsage } from '../../../../packages/noyau/src/usage/usage.js';
 
+// Réglages d'interface (pas des valeurs légales).
 const MOIS_MIN = 1;
 const MOIS_MAX = 120;
 const DUREE_MAX_MS = 3_600_000;
