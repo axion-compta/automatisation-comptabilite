@@ -152,14 +152,14 @@ Mesures sans IA, relevées le 07/11/2026 :
 
 ## Lot 15, interface transverse (sortie)
 Relevé du 11/11/2026 sur main à jour (en-têtes de fiches, API de recherche des PR).
-- Fiches : 70 (T00 à T69) ; 64 `statut: fait` avant cette PR, 65 avec L15-T05. Restent `a_faire` : T62, T63, T64, T67, T68.
+- Fiches : 70 (T00 à T69) ; 65 `statut: fait` avant cette PR, 66 avec L15-T05. Restent `a_faire` : T62, T63, T67, T68.
 - Bloquées ou en attente (motif lu dans chaque fiche sur main) :
   - T62 (résoudre une alerte en un clic) : fiche débloquée, non faite, aucune PR ouverte.
-  - T63 (envoi du résumé) : point P2, aucun fournisseur d'e-mail choisi ; écrite contre une interface d'envoi et un faux.
-  - T64 (index de recherche en base) : débloquée (D42, D43, D29, J3a) ; schéma `a_compta` et `unaccent` écrits contre une interface et un faux ; attend ses dépendances (T61 et L00-T53).
+  - T63 (envoi du résumé) : PR #1047 ouverte ; point P2, aucun fournisseur d'e-mail choisi ; écrite contre une interface d'envoi et un faux.
+  - T64 (index de recherche en base) : faite (PR #1043).
   - T67 (chat en 4 états) : `bloque_par` : `Coque.tsx` et `coque.test.tsx` sont dans les `fichiers_autorises` de L06-T45 (lot 06) ; ordre à fixer par Will.
-  - T68 (banc des 111 cas) : à faire, dépend de T62 à T64 (T65 et T66 faites) ; les seuils de performance sont des HYPOTHÈSES.
-- Les PR #1022 (T65) et #1032 (L00-T83) sont fusionnées ; motifs relus sur main (253fbf4).
+  - T68 (banc des 111 cas) : à faire, dépend de T62 et T63 (T64 à T66 faites) ; les seuils de performance sont des HYPOTHÈSES.
+- Les PR #1022 (T65), #1032 (L00-T83) et #1043 (T64) sont fusionnées ; motifs relus sur main (f77e2dd).
 - Mesures sans IA (API de recherche, titres contenant « L15- », fusionnées) : 75 PR pour 64 fiches distinctes, du 07/11/2026 13:17 UTC au 11/11/2026 17:57 UTC.
 - Délai médian ouverture à fusion : 39,6 min pour les 75 PR ; 65,3 min pour 29 PR de fiches sensibles ; 39,4 min pour 39 PR de fiches non sensibles ; 7 PR sans fiche reconnue (créations de fiches).
 - `pilotage/calibrage.csv` : en-tête seul, non utilisé. Jetons par fiche, score Stryker, durée de CI : non mesurés ici.
@@ -169,10 +169,10 @@ Relevé du 11/11/2026 sur main à jour (en-têtes de fiches, API de recherche de
 Limite : le texte de la spec 15 n'est pas dans ce dépôt public (le journal de L15-T60 le dit aussi). Un `git grep` de `X13b` et `R06b` dans `apps` et `packages` ne trouve aucun test : seules trois fiches citent ces identifiants. Aucun cas n'est donc affirmé couvert ; aucune correspondance cas par test n'a été vérifiée.
 | Famille | Cas | Nombre | Test qui couvre | Attente |
 |---|---|---|---|---|
-| T | T01 à T41 | 41 | non établi | banc nommé par identifiant : attend L15-T68 (à faire, dépend de T62 à T64) |
-| P | P01 à P26 | 26 | non établi | attend L15-T68 (à faire, dépend de T62 à T64) |
-| R | R01 à R17, R06b, R07b | 19 | non établi | attend L15-T68 (à faire, dépend de T62 à T64) |
-| X | X01 à X23, X13b, X14b | 25 | non établi | attend L15-T68 (à faire, dépend de T62 à T64) |
+| T | T01 à T41 | 41 | non établi | banc nommé par identifiant : attend L15-T68 (à faire, dépend de T62 et T63) |
+| P | P01 à P26 | 26 | non établi | attend L15-T68 (à faire, dépend de T62 et T63) |
+| R | R01 à R17, R06b, R07b | 19 | non établi | attend L15-T68 (à faire, dépend de T62 et T63) |
+| X | X01 à X23, X13b, X14b | 25 | non établi | attend L15-T68 (à faire, dépend de T62 et T63) |
 - Total : 41 + 26 + 19 + 25 = 111.
 - Cas de sécurité (S), cités par les critères de L15-T60 : R02, R03, R04, R06b, R07, R07b, R11, R12, R15, X04 à X06, X10, X11, X13, X13b, X14, X14b, X21, T31, P24. Tous restent « en attente » : T60 est faite contre des interfaces et des faux, pas contre l'isolation réelle ; le serveur en mémoire imite ces cas sans les prouver.
 - Suite : L15-T68 donne un test par cas, nommé par son identifiant, et met ce tableau à jour.
