@@ -93,6 +93,10 @@ export function fusionnerOpenapi(documents: object[]): object {
   return { openapi: '3.1.0', info: { title: 'Contrat Axion', version: '0.0.0' }, paths: Object.fromEntries(Object.entries(paths).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) };
 }
 
+/** Un corps qui porte un fichier (format binary) est un corps multipart. */
+const corpsMultipart = (corps: Sch): boolean => JSON.stringify(z.toJSONSchema(corps, { io: 'input', unrepresentable: 'any' })).includes('"format":"binary"');
+const schemaCorps = (corps: Sch): unknown => (corpsMultipart(corps) ? z.toJSONSchema(corps, { io: 'input', unrepresentable: 'any' }) : z.toJSONSchema(corps));
+
 function document(defs: Def[]): object {
   const paths: Paths = {};
   for (const d of defs) {
@@ -112,7 +116,7 @@ function document(defs: Def[]): object {
       operationId: d.operationId,
       ...(d.tags ? { tags: d.tags } : {}),
       parameters: parametres,
-      ...(s['body'] ? { requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(s['body']) } } } } : {}),
+      ...(s['body'] ? { requestBody: { required: true, content: { [corpsMultipart(s['body']) ? 'multipart/form-data' : 'application/json']: { schema: schemaCorps(s['body']) } } } } : {}),
       responses: reponses,
     };
   }
