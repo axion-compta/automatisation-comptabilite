@@ -1,22 +1,16 @@
 VERDICT: OK
 
-Fiche L04-T40, PR #1044, SHA relu : 000c25e366d7e3f00ed51244db091fb6299ddc89
-Fiche lue sur origin/main (7c5f74c). PR empilée sur #1041 (L04-T31) : seul l'apport propre de la fiche (commit 000c25e) est relu ; L04-T31 a son propre avis (avis/L04-T31).
+Fiche L04-T40, PR #1044, SHA relu : 0f23604eaba3ad277c764b1c764825cd9d97d3aa
+Relecture de mise à jour. Avis OK précédent rendu sur 000c25e366d7e3f00ed51244db091fb6299ddc89 ; seul un merge de origin/main a été ajouté depuis (après la fusion en squash de #1041).
 
 ## Vérifications
-- Fichiers propres à la fiche : 6, tous dans `fichiers_autorises` (`route.tsx`, `Ecran.tsx`, `e07.test.tsx`, `e07.ts`, fiche, journal). Fiche : seul `statut: fait`.
-- Taille propre : 276 lignes ≤ 300 (433 au total avec #1041).
-- Route `e07` `/documents` groupe `menu` ; `<h1>` ; 5 champs de filtre chacun dans un `<label>` visible, envoi par formulaire (Entrée ou bouton) ; tableau date, fournisseur, nom, TTC par `Montant`, état, `MotConfiance` ; lien `/documents/piece?id=` ; pagination par 50 ; états chargement, vide, erreur ; « Préparé par IA, à valider ».
-- Aucun total calculé, aucun `%`, confiance en mots seulement. Pièce sensible : « pièce protégée » ; le nom normalisé ne porte pas le fournisseur (vérifié sur les 32 pièces fictives).
-- Tous les textes dans `e07.ts`, vouvoiement ; aucun mot interdit, aucun prix, données fictives. Journal 7 lignes, commence par `# Journal L04-T40`.
-- Les 7 tests nommés sont présents.
+- `git diff origin/main...0f23604` : 6 fichiers seulement, tous dans `fichiers_autorises` (route, Ecran, test, textes e07, fiche, journal). Les fichiers de #1041 ont disparu du diff.
+- `git diff 000c25e 0f23604` sur ces 6 fichiers : vide. Le code relu est identique à celui de l'avis OK précédent. Les commits ajoutés ne viennent que de main.
+- Taille : 276 + 1 = 277 lignes ≤ 300 (`garde:perimetre` vert en local).
 
 ## Tests
-- `vitest run src/ecrans/e07` : 7/7 verts. `garde:textes` vert ; eslint et tsc propres.
-- Mutations (toutes rougissent, puis annulées) : masquage sensible retiré (`sensible-protegee`) ; mention non comptée retirée (`non-comptee-marquee`) ; filtre état non envoyé (`filtre-par-etat`) ; `<label>` remplacés par `<div>` (3 rouges).
-- Gardes `perimetre` et `termine` rouges tant que #1041 n'est pas fusionnée : dû seulement à la PR amont, pas un défaut.
+- `vitest run src/ecrans/e07` : 7/7 verts. tsc vert. Sur la tête et sur sa fusion d'essai avec main : `garde:textes`, `garde:appels` et `garde:perimetre` verts. Les autres gardes ont tourné sur la fusion d'essai seulement (`fictif`, `couleurs`, `actions`, `interrupteurs`, `ci`, `tests`, `termine`) : toutes vertes.
+- Job CI `gardes` rouge sur ce SHA : en local, sans fusion avec main, `garde:termine` dit « L04-T40 : fait alors que L04-T31 ne l'est pas ». La branche porte encore `statut: a_faire` pour L04-T31 ; main l'a passée à `fait` après (#1055). Ce n'est pas un défaut de l'auteur. Avec main fusionné, la garde est verte : relancer la CI (ou fusionner main) suffit.
 
 ## Remarques
-- `apps/web/src/ecrans/e07/Ecran.tsx:46` : le « motif » de non-comptage affiché est le libellé de l'état (ex. « Prête » puis « non comptée (Prête) »), car `PieceResume` n'expose pas `motifNonComptee`. Écart déclaré au journal. Une fiche de contrat pourrait ajouter `motifNonComptee` au résumé ; non bloquant ici.
-- Aucun test ne couvre la pagination (pas exigé par les 7 tests nommés ; le jeu fictif a 32 pièces < 50).
-- Filtre `au` (service L04-T30, hors fiche) : comparaison de chaîne entre `recuLe` (date-heure) et une date seule, ce qui exclut les pièces reçues le jour même de la borne `au`. À suivre dans le service.
+- Remarques de l'avis précédent inchangées : motif de non-comptage = libellé de l'état ; pagination sans test ; borne `au` du service L04-T30.
