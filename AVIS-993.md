@@ -1,18 +1,27 @@
-VERDICT: A CORRIGER
-SHA relu : acd81b358b737712a07f318804ec734f1c95ce62
+VERDICT: OK
+SHA relu : 73739de2f16d52eeba1fd7af1f5d3ac6a2f5d093
 
-# Avis de relecture PR 993 (L07-T44)
+# Avis de relecture PR 993 (L07-T44), deuxième passage
 
-Fiche lue sur origin/main (de38efd). Relecture au SHA ci-dessus. La demande de relecture la classe parmi les fiches sensibles, même si la fiche porte `sensible: non` : fusion par Will.
+Fiche lue sur origin/main (de38efd). Relecture au SHA ci-dessus. L'avis précédent (acd81b3) demandait trois corrections : elles sont faites. La demande de relecture classe cette PR parmi les fiches sensibles : la fusion revient à Will.
 
-## Contrôles passés
-- Fichiers : 5, tous dans `fichiers_autorises`. Taille : 86 + 2 = 88 lignes, sous 200.
-- `pnpm verifier` relancé : vert (24 étapes). Tests `outils/faux-hote-c4` : 36 verts. CI verte.
-- Bloc facultatif (manifeste sans `commercial` accepté) ; `VERSION_CONTRAT` reste `0.5.0`.
-- Modes d'arrivée `installation_axion` et `libre_service` ; opérations identiques au port L07-T42 (`creerEspace`, `inviter`, `suspendre`, `geler`, `supprimer`) ; événement de consommation (société, agent, coût en micro-centimes, date).
-- `actif: false` gardé et vérifié.
+## Corrections vérifiées
+1. Clés de montant dans les chaînes : `cleMontant` teste maintenant les chaînes (`contrat.mjs`). Le test `commercial-montant-dans-les-chaines` couvre `champs: ['prixUnitaire']`, `code: 'tarif_ia'`, un mode `stripe` et une opération `margeAjoutee`.
+2. Bloc strict : une clé inconnue est refusée dans le bloc et dans un événement (hors `code` et `champs`). Le test `commercial-bloc-strict` couvre `remise: 5` et `extra: 1`. Le commentaire correspond au code.
+3. Gel : `commercial` est gelé en profondeur (`gelerProfond`). Le test `commercial-gele-en-profondeur` vérifie l'objet, ses tableaux et `champs`.
 
-## Défauts à corriger
-1. Refus des clés de prix incomplet : `cleMontant` n'examine que les clés d'objet, pas les noms de champs déclarés. Essai relancé : `evenementsConsommation: [{ code: 'c', champs: ['prixUnitaire'] }]` est accepté par `validerManifeste` (aucune erreur), de même qu'un `code: 'tarif_ia'`. `champs` liste justement des noms de champs : appliquer `CLES_MONTANT` aussi aux chaînes de `champs`, `code`, `modesArrivee` et `operationsMiseEnService`, et ajouter un test par cas au test `commercial-aucun-montant`.
-2. Le commentaire annonce « present = strict », mais les clés inconnues du bloc sont acceptées (essai : `remise: 5` est accepté). Refuser toute clé hors `modesArrivee`, `libreService`, `operationsMiseEnService`, `evenementsConsommation` (et hors `code`, `champs` dans un événement), avec un test ; ou corriger le commentaire et dire au journal pourquoi le bloc reste ouvert.
-3. Mineur : dans `defineAutomation`, `commercial` est copié par JSON mais pas gelé, alors que tous les autres champs rendus sont gelés (`Object.freeze`). Le geler (en profondeur), avec un test.
+## Mutations à la main (appliquées puis annulées)
+- Retirer le test des chaînes dans `cleMontant` : `commercial-montant-dans-les-chaines` échoue.
+- Retirer le refus des clés inconnues du bloc : `commercial-bloc-strict` échoue.
+- Accepter la clé `extra` dans un événement : `commercial-bloc-strict` échoue.
+- Remplacer `gelerProfond` par `Object.freeze` : `commercial-gele-en-profondeur` échoue.
+- Rendre `gelerProfond` non récursif : `commercial-gele-en-profondeur` échoue.
+
+## Contrôles
+- Fichiers : 5, tous dans `fichiers_autorises`. Taille : 127 + 2 = 129 lignes, sous 200.
+- Tests `outils/faux-hote-c4` : 39 verts. CI au SHA relu : les 9 contrôles sont verts.
+- `pnpm verifier` en local : toutes les étapes sont vertes sauf `types`, qui bute sur la version de Node du conteneur (22 au lieu de 24). Ce n'est pas lié au code, et `types` est vert en CI.
+- Aucun prix, aucun mot interdit, données fictives. Journal : 6 lignes, il commence par `# Journal L07-T44`.
+
+## Remarques
+- `CLES_MONTANT` s'applique aussi aux chaînes : un futur nom d'opération contenant « euro » ou « devise » sera refusé. C'est voulu, mais il faudra le savoir.
