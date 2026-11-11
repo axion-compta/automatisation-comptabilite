@@ -1,20 +1,26 @@
 VERDICT: A CORRIGER
-SHA relu: 95df3ab6cdd786c063d07f87d81b722a39d8c407
+2c75454ed383990a1f69c0ebf932cb4bd3dfd86a
 
-PR 986, fiche L08-T37 (branche lot-08/L08-T37), sensible : oui (droits). Relecture stricte Opus locale, fiche lue sur origin/main. Fusion par Will seul.
+# Avis PR 986 (L08-T37, domaine demandes des personnes) — 2e relecture, SENSIBLE
 
-Vérifié :
-- Périmètre : 5 fichiers, tous dans fichiers_autorises ; ni handlers.ts, ni app.ts, ni le contrat, ni options-exploitation.ts touchés. Fusion propre avec origin/main actuel (c528b01).
-- Taille : 257 lignes (maximum 260). Aucune ligne « - - », aucun octet NUL. Journal : 8 lignes, commence par « # Journal L08-T37 ».
-- Le vrai serveur et le faux serveur appellent le même creerServicePersonnes ; état par instance vérifié (etat-propre-a-chaque-instance) ; REGLAGE_ABSENT 503 bien déclaré au contrat ; réglages de test fictifs, aucune valeur légale par défaut.
-- Aucun mot interdit, prix, secret ni nom réel ; pas d'alias d'import de it/test.
+Relu au SHA de tête ci-dessus. Fiche lue sur origin/main (`sensible: oui`, droits) : fusion par Will seul.
 
-Défauts bloquants :
-1. Critère « pnpm verifier » non tenu : la CI est rouge au SHA relu (run 42931237830). Reproduit en local : packages/faux-serveur/src/__tests__/exploitation-branchement.test.ts (L08-T34) échoue sur cinq-routes-interceptees et base-appliquee (« POST /personnes/demandes/d1/traitement: expected 404 not to be 404 »), car le domaine branché répond 404 DEMANDE_INTROUVABLE. Ce fichier est hors périmètre : il faut une fiche corrective (décision de Will) qui l'autorise, par exemple en attendant un statut différent de 501 ; ne pas l'élargir dans cette PR.
-2. suite-personnes.ts:64-73 (traiter-refus-sans-source-422) : le test accepte ISSUE_NON_PERMISE ou SOURCE_MANQUANTE et reçoit en fait ISSUE_NON_PERMISE ; la règle « refus sans source » n'est donc pas testée. Correction : construire un cas où le refus de conservation est permis et la source absente, et exiger exactement SOURCE_MANQUANTE ; si c'est impossible avec les options existantes, le noter au journal et demander une fiche corrective.
-3. commun-personnes.test.ts:44 : pour la cible « faux serveur », sans-reglage-503 rejoue en fait le serveur en mémoire (cibleVrai(false)). Le chemin 503 du faux serveur (personnes.ts:21 côté faux) n'est jamais exécuté : le remplacer par 501 NOT_IMPLEMENTED laisse les 15 tests verts. Correction : appeler handlersPersonnes directement avec des options sans reglagesPersonnes (dans commun-personnes.test.ts, fichier autorisé) et exiger 503 REGLAGE_ABSENT.
-4. faux-serveur/src/domaines/personnes.ts:29 : cleDe rend '' si l'en-tête idempotency-key manque, et les corps ne sont pas validés, alors que le contrat (EnTeteEcriture, CleIdempotence de 8 à 128 caractères) fait refuser ces requêtes par le vrai serveur. Les deux serveurs divergent. Correction : refuser comme le vrai serveur (même statut, même code) et l'ajouter à la suite commune.
+Depuis l'avis précédent (SHA 95df3ab), les commits ajoutés sont `478b0d2` (types, taille, journal) et deux fusions de main. Le code n'a reçu que des retouches de types et des commentaires raccourcis. Les défauts 2, 3 et 4 de l'avis précédent ne sont pas traités.
 
-Remarques :
-- Journal, ligne 2 : « pas de PR ouverte » alors que la PR 986 est ouverte ; mettre le journal à jour.
-- Mutations : 2 sur 3 détectées (clé de rejeu aléatoire côté faux ; 503 du serveur en mémoire) ; la 3e est le défaut 3.
+## Ce qui est tenu
+- Mots interdits : « conforme », « conformité », « sans erreur », « garanti », « juriste », « PDP » sont absents des lignes ajoutées. La PR ne touche aucun écran e50 : le périmètre de la fiche ne comprend aucun écran (L08-T39 et L08-T40 sont hors périmètre).
+- `fichiers_autorises` : les 5 fichiers modifiés sont dans la liste ; `handlers.ts`, `app.ts`, le contrat et `options-exploitation.ts` ne sont pas touchés.
+- Taille : 241 + 19 = 260 lignes, pour un maximum de 260 (pile à la limite). Aucune ligne « - - », aucun octet NUL, pas d'alias de `it` ou de `test`.
+- Journal : 8 lignes, commence par `# Journal L08-T37`. Réglages fictifs, aucun prix, aucun secret, aucun nom réel.
+- Tests nommés : `commun-personnes.test.ts` passe au SHA relu (15 sur 15).
+
+## Défauts bloquants
+1. **CI rouge : `tests`, `e2e` et `verifier`** (run 43011761023). Le critère « pnpm verifier » n'est pas tenu.
+   a. `tests` : `packages/faux-serveur/src/__tests__/exploitation-branchement.test.ts` (L08-T34, hors périmètre) échoue sur `cinq-routes-interceptees` et `base-appliquee` ; reproduit en local. Ce défaut est déjà signalé : il faut une fiche corrective décidée par Will.
+   b. **NOUVEAU — `e2e` : 11 échecs** (accessibilite.e2e.ts ×4, pannes.e2e.ts ×7), alors que l'e2e est vert sur main (PR 1013, même base). Cause reproduite en local avec `vite --mode simule` et `/essai` : `PAGEERR Error: Module "node:crypto" has been externalized for browser compatibility. Cannot access "node:crypto.createHash" in client code`. `packages/faux-serveur/src/domaines/personnes.ts:2` importe `creerServicePersonnes` de `packages/contrat/src/domaines/personnes-service.ts`, qui importe `createHash` de `node:crypto` (ligne 1). Le faux serveur tourne aussi dans le navigateur (`apps/web/src/main.tsx:14`) : l'application en mode simulé ne démarre plus. Correction : rendre le service utilisable dans le navigateur, sans `node:crypto` (empreinte pure ou injectée en option). Cela touche `personnes-service.ts`, hors périmètre : il faut une fiche corrective (décision de Will), sans élargir cette PR.
+2. **Non traité** — `suite-personnes.ts:64-73` (`traiter-refus-sans-source-422`) accepte `ISSUE_NON_PERMISE` ou `SOURCE_MANQUANTE`. Le journal (ligne 6) reconnaît que la réponse est toujours `ISSUE_NON_PERMISE` : la règle « refus sans source » n'est pas testée. Il faut exiger exactement `SOURCE_MANQUANTE` dans un cas où le refus est permis. Si les options ne le permettent pas, il faut une fiche corrective, et ce test nommé ne peut pas être compté comme tenu.
+3. **Non traité** — `commun-personnes.test.ts:44` : côté faux serveur, `sans-reglage-503` rejoue en fait le serveur en mémoire (`cibleVrai(false)`). Le chemin 503 du faux serveur (`faux-serveur/src/domaines/personnes.ts:20`) n'est jamais exécuté. Il faut appeler `handlersPersonnes` avec des options sans `reglagesPersonnes` et exiger 503 `REGLAGE_ABSENT`.
+4. **Non traité** — `faux-serveur/src/domaines/personnes.ts:27` : `cleDe` rend `''` quand l'en-tête `idempotency-key` manque, et les corps ne sont pas validés. Le vrai serveur refuse ces requêtes (contrat `EnTeteEcriture`) : les deux serveurs divergent. Il faut refuser comme le vrai serveur et ajouter ce cas à la suite commune. Attention : la taille est déjà à 260, il faudra compacter ou demander une marge dans une fiche.
+
+## Remarques
+- Le corps de la PR ne signale ni le blocage, ni les échecs de CI ; le journal, lui, le fait.
