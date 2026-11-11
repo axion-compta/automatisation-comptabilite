@@ -5,7 +5,7 @@ import {
   type Courriel, type PersonneResume, type PortJetons, type PortResume,
 } from '../resume-email.js';
 
-function monde(personnes: PersonneResume[], opts: { accesSortant?: boolean; echecs?: number } = {}) {
+function monde(personnes: PersonneResume[], opts: { accesSortant?: boolean; echecs?: number; journalEnEchec?: boolean } = {}) {
   const envoyes: Courriel[] = [];
   const pris = new Set<string>();
   const journal: string[] = [];
@@ -17,7 +17,7 @@ function monde(personnes: PersonneResume[], opts: { accesSortant?: boolean; eche
     dejaEnvoyes: async () => [...pris].map((k) => ({ personneId: k.split('|')[0] ?? '', dateEnvoi: k.split('|')[1] ?? '' })),
     reserver: async (p, d) => (pris.has(`${p}|${d}`) ? false : (pris.add(`${p}|${d}`), true)),
     liberer: async (p, d) => { pris.delete(`${p}|${d}`); },
-    journaliser: async (l) => { journal.push(`${l.personneId}:${l.issue}`); },
+    journaliser: async (l) => { if (opts.journalEnEchec && l.issue === 'envoye') throw new Error('journal'); journal.push(`${l.personneId}:${l.issue}`); },
   };
   const jetons: PortJetons = {
     creer: async (p) => { n += 1; const j = `jeton${n}`; jetonsValides.set(j, p); return j; },
@@ -89,7 +89,7 @@ describe('résumé quotidien', () => {
     expect(m.journal).toEqual(['p1:echec', 'p1:envoye']);
   });
   it('le rendu ne contient ni montant ni nom de tiers, ni mot interdit', async () => {
-    const m = monde([{ ...alice, comptes: { a_valider: 1, echeance: 2, urgent: 1, cabinet: 1 } }]);
+    const m = monde([{ ...alice, comptes: { a_valider: 1, echeance: 2, urgent: 0, cabinet: 1 } }]);
     await m.travail.passer('2026-01-15T10:00:00Z');
     const { texte, sujet } = m.envoyes[0] as Courriel;
     const tout = `${sujet}\n${texte}`;
@@ -98,6 +98,25 @@ describe('résumé quotidien', () => {
     expect(tout).not.toMatch(/conforme|sans erreur|garanti|juriste|PDP/i);
     expect(texte).toContain('- 1 élément à valider');
     expect(texte).toContain('- 2 échéances proches');
+    expect(texte).not.toMatch(/- 0 |urgent/);
+  });
+  it('journal en échec après envoi : aucun second envoi', async () => {
+    const m = monde([alice], { journalEnEchec: true });
+    await expect(m.travail.passer('2026-01-15T06:30:00Z')).rejects.toThrow('envois_en_echec');
+    await expect(m.travail.passer('2026-01-15T06:31:00Z')).resolves.toBe(0);
+    expect(m.envoyes).toHaveLength(1);
+  });
+  it.each([
+    ['compte NaN', { comptes: { a_valider: NaN } }],
+    ['compte infini', { comptes: { a_valider: Infinity } }],
+    ['compte non entier', { comptes: { a_valider: 0.5 } }],
+    ['heure invalide', { heure: NaN }],
+    ['fuseau invalide', { fuseau: 'Nulle/Part' }],
+  ])('%s : cette personne seule est en échec, la suivante reçoit son résumé', async (_nom, mauvais) => {
+    const m = monde([{ ...alice, personneId: 'p0', adresse: 'zoe@exemple.fr', ...mauvais }, alice]);
+    await expect(m.travail.passer('2026-01-15T10:00:00Z')).rejects.toThrow('envois_en_echec');
+    expect(m.envoyes.map((c) => c.destinataire)).toEqual(['alice@exemple.fr']);
+    expect(m.journal).toEqual(['p0:echec', 'p1:envoye']);
   });
   it('désinscription : le jeton ne sert qu’une fois', async () => {
     const m = monde([alice]);

@@ -1,5 +1,4 @@
-// Résumé quotidien par e-mail (PR-R5, PR-R6). Écrit contre des interfaces : aucun fournisseur d'envoi choisi (D88),
-// jamais d'envoi réel ici. Heures converties en UTC au moment de décider (changement d'heure compris).
+// Résumé quotidien (PR-R5, PR-R6) contre des interfaces : aucun fournisseur choisi (D88), aucun envoi réel. Heures converties en UTC à la décision.
 import { decisionResume } from '../../../../packages/noyau/src/alertes/notifications.js';
 import type { Planificateur } from '../../../../packages/noyau/src/exploitation/planificateur.js';
 import { SUJET_RESUME, texteResume, type CategorieResume } from '../../../../packages/textes/src/courriels/resume.js';
@@ -9,12 +8,7 @@ export const FUSEAU_PAR_DEFAUT = 'Europe/Paris'; // HYPOTHÈSE
 export const HEURE_PAR_DEFAUT = { heure: 7, minute: 30 }; // HYPOTHÈSE
 
 export interface PersonneResume {
-  personneId: string;
-  adresse: string;
-  actifs: boolean;
-  heure?: number;
-  minute?: number;
-  fuseau?: string;
+  personneId: string; adresse: string; actifs: boolean; heure?: number; minute?: number; fuseau?: string;
   comptes: Readonly<Partial<Record<CategorieResume, number>>>;
 }
 export interface Courriel { destinataire: string; sujet: string; texte: string }
@@ -35,18 +29,11 @@ export interface PortJetons {
   consommer(jeton: string): Promise<string | null>;
 }
 
-export interface ParametresResume {
-  resume: PortResume;
-  envoi: PortEnvoi;
-  jetons: PortJetons;
-  accesSortant: boolean;
-  baseLiens: string;
-}
+export interface ParametresResume { resume: PortResume; envoi: PortEnvoi; jetons: PortJetons; accesSortant: boolean; baseLiens: string }
 
 function parties(ms: number, fuseau: string): Record<string, number> {
   const f = new Intl.DateTimeFormat('en-GB', {
-    timeZone: fuseau, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
-  });
+    timeZone: fuseau, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   const o: Record<string, number> = {};
   for (const p of f.formatToParts(new Date(ms))) if (p.type !== 'literal') o[p.type] = Number(p.value);
   return o;
@@ -77,34 +64,33 @@ export function creerTravailResume(o: ParametresResume): { passer(maintenant: st
       const nowMs = Date.parse(maintenant);
       let envoyes = 0;
       let echecs = 0;
+      const deja = await o.resume.dejaEnvoyes(); // lu une fois ; la réservation du jour reste atomique
       for (const p of await o.resume.personnes()) {
-        const fuseau = p.fuseau ?? FUSEAU_PAR_DEFAUT;
-        const jour = dateLocale(maintenant, fuseau);
-        const h = p.heure ?? HEURE_PAR_DEFAUT.heure;
-        const mi = p.minute ?? HEURE_PAR_DEFAUT.minute;
-        if (nowMs < instantEnvoi(jour, h, mi, fuseau)) continue;
-        const nbActions = Object.values(p.comptes).reduce<number>((s, n) => s + (n ?? 0), 0);
-        const decision = decisionResume({
-          personneId: p.personneId, dateDuJour: jour, actifs: p.actifs, nbActions, dejaEnvoye: await o.resume.dejaEnvoyes(),
-        });
-        if (decision !== 'envoyer' || !(await o.resume.reserver(p.personneId, jour))) continue;
+        let jour = maintenant.slice(0, 10);
+        let reserve = false;
+        let parti = false;
         try {
+          const fuseau = p.fuseau ?? FUSEAU_PAR_DEFAUT;
+          jour = dateLocale(maintenant, fuseau);
+          if (nowMs < instantEnvoi(jour, p.heure ?? HEURE_PAR_DEFAUT.heure, p.minute ?? HEURE_PAR_DEFAUT.minute, fuseau)) continue;
+          const nbActions = Object.values(p.comptes).reduce<number>((s, n) => s + (n ?? 0), 0);
+          const decision = decisionResume({ personneId: p.personneId, dateDuJour: jour, actifs: p.actifs, nbActions, dejaEnvoye: deja });
+          if (decision !== 'envoyer' || !(reserve = await o.resume.reserver(p.personneId, jour))) continue;
           const jeton = await o.jetons.creer(p.personneId);
-          await o.envoi.envoyer({
-            destinataire: p.adresse,
-            sujet: SUJET_RESUME,
-            texte: texteResume({
-              comptes: p.comptes,
-              lienOuverture: `${o.baseLiens}/alertes`,
-              lienDesinscription: `${o.baseLiens}/desinscription/${encodeURIComponent(jeton)}`,
-            }),
-          });
+          const lienDesinscription = `${o.baseLiens}/desinscription/${encodeURIComponent(jeton)}`;
+          const texte = texteResume({ comptes: p.comptes, lienOuverture: `${o.baseLiens}/alertes`, lienDesinscription });
+          await o.envoi.envoyer({ destinataire: p.adresse, sujet: SUJET_RESUME, texte });
+          parti = true; // après l'envoi la réservation reste prise, même si le journal échoue
           await o.resume.journaliser({ personneId: p.personneId, dateEnvoi: jour, issue: 'envoye' });
           envoyes += 1;
         } catch {
-          await o.resume.liberer(p.personneId, jour);
-          await o.resume.journaliser({ personneId: p.personneId, dateEnvoi: jour, issue: 'echec' });
-          echecs += 1;
+          echecs += 1; // une personne en erreur n'arrête pas les suivantes
+          try {
+            if (!parti) {
+              if (reserve) await o.resume.liberer(p.personneId, jour);
+              await o.resume.journaliser({ personneId: p.personneId, dateEnvoi: jour, issue: 'echec' });
+            }
+          } catch { /* l'erreur remonte par envois_en_echec */ }
         }
       }
       if (echecs > 0) throw new Error('envois_en_echec');
@@ -126,11 +112,5 @@ export async function desinscrire(
 }
 
 export function inscrireTravailResume(planificateur: Planificateur, travail: { passer(m: string): Promise<number> }): void {
-  planificateur.inscrire({
-    nom: NOM_TRAVAIL_RESUME,
-    rythme: { chaque: 'minute' },
-    async executer(passage) {
-      await travail.passer(passage.prevuLe);
-    },
-  });
+  planificateur.inscrire({ nom: NOM_TRAVAIL_RESUME, rythme: { chaque: 'minute' }, async executer(p) { await travail.passer(p.prevuLe); } });
 }
