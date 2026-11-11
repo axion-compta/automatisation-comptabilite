@@ -11,8 +11,29 @@ const sql = readFileSync(new URL(`../migrations/${NOM}`, import.meta.url), 'utf8
 const code = sql.replace(/--[^\n]*/g, '');
 const TABLES = ['personne', 'acces_expert', 'regle_permission', 'horloge_vue', 'tete_journal', 'signalement', 'jeton_integration'];
 const table = (n: string): string => new RegExp(`CREATE TABLE IF NOT EXISTS a_compta\\.${n} \\(([\\s\\S]*?)\\n\\);`).exec(sql)?.[1] ?? '';
+const elements = (n: string): string[] => {
+  const sortie: string[] = [];
+  let profondeur = 0;
+  let courant = '';
+  for (const c of table(n)) {
+    if (c === '(') profondeur++;
+    if (c === ')') profondeur--;
+    if (c === ',' && profondeur === 0) { sortie.push(courant.trim()); courant = ''; } else courant += c;
+  }
+  sortie.push(courant.trim());
+  return sortie.filter((e) => e !== '');
+};
 const colonnes = (n: string): string[] =>
-  table(n).split('\n').map((l) => /^ {2}([a-z_]+) /.exec(l)?.[1]).filter((c): c is string => c !== undefined && c !== 'CONSTRAINT' && c !== 'PRIMARY' && c !== 'FOREIGN' && c !== 'UNIQUE');
+  elements(n).map((e) => /^([a-z_]+) /.exec(e)?.[1]).filter((c): c is string => c !== undefined && !['CONSTRAINT', 'PRIMARY', 'FOREIGN', 'UNIQUE', 'CHECK'].includes(c));
+const ATTENDUES: Record<string, string[]> = {
+  personne: ['societe_id', 'personne_id', 'mode', 'role', 'actif', 'cree_le'],
+  acces_expert: ['societe_id', 'acces_id', 'personne_id', 'portee', 'debut', 'fin'],
+  regle_permission: ['societe_id', 'role', 'action', 'ressource', 'autorise'],
+  horloge_vue: ['societe_id', 'personne_id', 'vue', 'vu_le'],
+  tete_journal: ['societe_id', 'rang', 'empreinte', 'empreinte_precedente', 'ecrit_le'],
+  signalement: ['societe_id', 'signalement_id', 'personne_id', 'nature', 'etat', 'cree_le'],
+  jeton_integration: ['societe_id', 'jeton_id', 'personne_id', 'nom', 'portee', 'reference_coffre', 'actif', 'cree_le'],
+};
 
 describe('092-securite.sql', () => {
   it('migrer-deux-fois-sans-changement', () => {
@@ -25,7 +46,7 @@ describe('092-securite.sql', () => {
 
   it('aucun-champ-secret (T-CNX-7)', () => {
     for (const t of TABLES) {
-      expect(colonnes(t).length, t).toBeGreaterThan(0);
+      expect(colonnes(t), t).toEqual(ATTENDUES[t]);
       for (const c of colonnes(t)) expect(c, `${t}.${c}`).not.toMatch(/mot_de_passe|motdepasse|password|token|secret|(^|_)code($|_)/);
     }
   });
