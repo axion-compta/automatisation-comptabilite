@@ -71,11 +71,7 @@ describe('ExtracteurPdf', () => {
   });
 
   it('pdf-avec-javascript-non-execute', async () => {
-    const pdf = fabriquer({
-      textes: [{ x: 50, y: 700, s: 'Texte visible' }],
-      catalogue: '/OpenAction 6 0 R',
-      extras: ['<< /S /JavaScript /JS (app.alert\\(1\\);) >>'],
-    });
+    const pdf = fabriquer({ textes: [{ x: 50, y: 700, s: 'Texte visible' }], catalogue: '/OpenAction 6 0 R', extras: ['<< /S /JavaScript /JS (app.alert\\(1\\);) >>'] });
     const r = await new ExtracteurPdf().extraire(pdf);
     expect(r.elements.map((e) => e.texte)).toEqual(['Texte visible']);
     expect(optionsVues).toHaveLength(1);
