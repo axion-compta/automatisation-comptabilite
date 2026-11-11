@@ -1,29 +1,25 @@
 VERDICT: A CORRIGER
 
-PR #1065 — fiche L04-T56 (sensible) — SHA de tête relu : c610f3521fe4423358901e9b3473853c1e2b39a4
-Relecture Opus. Périmètre respecté (4 fichiers autorisés), 217 lignes ≤ 250, journal de 6 lignes commençant par « # Journal L04-T56 », aucun mot interdit, aucun prix, données fictives. Les 5 tests nommés passent localement (vitest, Node 22).
-CI : run 43096859329 toujours « queued » depuis 20:34 UTC après plus d’une heure d’attente (26 runs en file sur le dépôt). Résultat de CI inconnu au moment de l’avis. Le verdict repose sur le code et ne dépend pas de la CI.
+Fiche L04-T56, PR #1065, SHA de tête relu : 06b7f4369b74f16fb40d4c418f3f9824c11740f9
+Deuxième relecture, après l'avis A CORRIGER du SHA c610f3521fe4423358901e9b3473853c1e2b39a4. Fiche sensible : fusion par Will seul.
 
-## Défauts
+## Vérifications
+- Diff contre main : 4 fichiers, tous dans `fichiers_autorises` ; 249 lignes ≤ 250 (marge d'1 ligne).
+- Aucun mot interdit, aucun prix, données fictives. Journal 5 lignes, commence par `# Journal L04-T56`. `statut: fait`.
+- `vitest run apps/serveur/src/pieces/adaptateurs/__tests__/extracteur-pdf.test.ts` : 5/5 verts.
+- CI au SHA relu : les 9 jobs sont verts.
 
-1. `apps/serveur/src/pieces/adaptateurs/extracteur-pdf.ts:59-70` — couleur décalée quand pdf.js fusionne plusieurs `Tj` en un seul élément. `couleursDeTexte` produit une couleur par opérateur `showText`, mais `getTextContent` regroupe les `Tj` voisins d'une même ligne. Sonde : `BT 0 0 0 rg (Total ) Tj 1 1 1 rg (cache) Tj 0 0 0 rg ( fin) Tj ET` puis `BT (Ligne2) Tj ET` donne `["Total cache fin", noir]` et `["Ligne2", blanc]` : le texte blanc sur blanc passe pour visible, et la ligne suivante, noire, devient « cachée ». C'est le cas d'usage visé par `texte-cache.ts` (texte caché inséré au milieu d'un texte visible).
-   Correction demandée : ne plus apparier par rang. Par exemple, tirer texte et couleur de la même source (opérateurs `showText` avec leurs glyphes, ou `getTextContent` avec `disableCombineTextItems` et contrôle que le nombre d'éléments égale le nombre d'opérateurs, sinon couleur la plus défavorable ou erreur). Test demandé : le PDF de la sonde ci-dessus, avec « cache » blanc et « Ligne2 » noir.
+## Défauts de l'ancien avis, vérifiés par mutation
+1. Couleurs mélangées dans une ligne : corrigé (alignement des affichages sur les éléments, pire cas). Remplacer le pire cas par la première couleur fait rougir `pdf-texte-et-positions`. Sondes : `q 1 1 1 rg … Q` est bien restauré, `1 g` et `0 0 0 0 k` sortent en blanc, `TJ` est lu.
+2. Calques masqués : corrigé. `masque = false` en dur fait rougir le test (`Cache` attendu `calqueVisible: false`).
+3. Mode de rendu `3 Tr` : corrigé. `invisible: false` en dur fait rougir le test.
+4. Annotations : testées. `annotationCachee` forcé à `false` fait rougir le test.
 
-2. `extracteur-pdf.ts:62-63` — calques masqués jamais détectés. Avec `includeMarkedContent`, pdf.js 6.4 renvoie `{ type: 'beginMarkedContentProps', tag: 'OC', id: null }` pour un contenu optionnel (sonde : OCG listé dans `/D /OFF`, `isVisible` rend `false` pour l'id `6R`, mais l'élément sort avec `calqueVisible: true`). La condition `typeof it.id === 'string'` est donc toujours fausse pour un calque. Correction demandée : lire les calques dans la liste d'opérations (`beginMarkedContentProps` porte `{ type: 'OCG', id }`) avec `isVisible`. Test demandé : un texte dans un OCG à OFF ressort avec `calqueVisible: false`, un texte hors calque avec `true`. La mutation `calqueVisible: true` en dur laisse aujourd'hui les 5 tests verts.
-
-3. `extracteur-pdf.ts:68-74` — mode de rendu invisible (`3 Tr`) non traité : `BT /F1 12 Tf 3 Tr 50 700 Td (invisible) Tj ET` ressort en texte noir visible. C'est la forme la plus courante de texte caché dans un PDF. Correction demandée : suivre `setTextRenderingMode` dans `couleursDeTexte` et marquer ces éléments comme cachés (par exemple `couleur = couleurFond`, sans changer `ports.ts` ni `ElementTexte`). Test demandé : ce PDF.
-
-4. `apps/serveur/src/pieces/adaptateurs/__tests__/extracteur-pdf.test.ts` — annotations non testées : la mutation `annotationCachee: false` en dur (ligne 82) laisse les 5 tests verts. Ajouter, dans un test nommé existant (par exemple `pdf-texte-et-positions`), une annotation `/Contents` avec `/F 2` (cachée) et une sans drapeau, avec `annotationCachee` attendu à `true` et à `false`.
-
-## Mutations faites
-- `isEvalSupported: true` → `pdf-avec-javascript-non-execute` rouge.
-- couleur hexadécimale forcée à noir → `pdf-texte-et-positions` rouge.
-- factur-x jamais reconnu → 2 tests rouges.
-- `disableAutoFetch: false` → `aucun-appel-reseau` rouge.
-- `annotationCachee` forcé à `false` → 5 verts (défaut 4).
-- `calqueVisible` forcé à `true` → 5 verts (défaut 2).
+## Défaut
+1. `apps/serveur/src/pieces/adaptateurs/extracteur-pdf.ts:52` : seul le mode de rendu 3 est traité comme invisible. Le mode 7 (le texte sert seulement de tracé de découpe : ni rempli ni contouré) est lui aussi invisible. Sonde : `BT /F1 12 Tf 7 Tr 50 700 Td (Clip) Tj ET` donne `["Clip", [0,0,0]]`, du texte invisible présenté comme visible. C'est la même classe que le défaut 3 de l'ancien avis.
+   Correction demandée : `invisible: rendu === 3 || rendu === 7`. Test : dans `pdf-texte-et-positions`, ajouter au PDF `invisible` (ligne 59) un texte en `7 Tr` attendu à `[255, 255, 255]`. Pour rester sous 250 lignes, modifier les lignes existantes au lieu d'en ajouter.
 
 ## Remarques (non bloquantes)
-- `fichiersIncorpores` s'appuie sur `filename` (chemin retiré par pdf.js) : un fichier nommé `dossier/factur-x.xml` est pris pour la facture. C'est acceptable, mais à documenter dans le journal.
-- Avertissement pdf.js « standardFontDataUrl » à chaque police standard : sans conséquence (aucun réseau), mais `verbosity: 0` ne le coupe pas en test.
-- Les annotations ont `taillePolice: 12` en dur. Pour le filtre de taille, ce n'est pas une valeur légale, mais une constante nommée serait plus claire.
+- Mutations qui survivent, sans défaut observé : le repli « toute la page au pire cas » (`etatDesElements`, ligne 66) n'est pas testé ; la restauration `Q` et l'imbrication des contenus marqués non plus. Sonde : un texte hors de la page (que pdf.js ne rend pas dans `getTextContent`) fait passer tous les éléments de la page en blanc. Ce repli est prudent (fausse alerte, pas de texte caché manqué), mais il mériterait une phrase au journal.
+- Modes 1, 2, 5, 6 (contour) : la couleur de contour n'est pas lue. Un texte contouré en blanc ressort noir. Plus rare ; à noter pour une fiche suivante.
+- `taillePolice: 12` en dur pour les annotations (déjà signalé).
