@@ -1,7 +1,7 @@
 // Fiche L05-T60 : tests nommés audio-jamais-ecrit, segment-trop-long-refuse, normalisation-appliquee, oui avant récapitulatif.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { DUREE_MAX_SEGMENT_MS, SegmentTropLong, accepterOui, creerFauxTranscription, normaliser, transcrire } from '../transcription.js';
+import { SEGMENT_MAX_MS, SegmentTropLong, accepterOui, creerFauxTranscription, normaliser, transcrire } from '../transcription.js';
 
 const segment = (dureeMs = 3000) => ({ octets: Uint8Array.from([1, 2, 3, 4]), dureeMs });
 
@@ -26,12 +26,12 @@ describe('transcription', () => {
 
   it('segment-trop-long-refuse : le port n’est pas appelé, l’audio est effacé', async () => {
     const faux = creerFauxTranscription(['x']);
-    const s = segment(DUREE_MAX_SEGMENT_MS + 1);
+    const s = segment(SEGMENT_MAX_MS + 1);
     await expect(transcrire(faux, s)).rejects.toBeInstanceOf(SegmentTropLong);
     expect(faux.appels()).toBe(0);
     expect([...s.octets]).toEqual([0, 0, 0, 0]);
     await expect(transcrire(faux, segment(0))).rejects.toBeInstanceOf(SegmentTropLong);
-    await expect(transcrire(faux, segment(DUREE_MAX_SEGMENT_MS))).resolves.toBe('x');
+    await expect(transcrire(faux, segment(SEGMENT_MAX_MS))).resolves.toBe('x');
   });
 
   it('normalisation-appliquee : espaces réduits, virgule décimale', async () => {
