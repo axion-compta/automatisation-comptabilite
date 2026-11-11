@@ -21,7 +21,7 @@ describe('serveur : branchement abonnement', () => {
       method: 'POST',
       url: '/abonnement/demandes-palier',
       headers: cle,
-      payload: { code_demande: 'palier-b', accord: true },
+      payload: { code_demande: 'compta-2', accord: true },
     });
     for (const r of [r1, r2, r3]) {
       expect(r.statusCode).not.toBe(404);
@@ -33,7 +33,7 @@ describe('serveur : branchement abonnement', () => {
 
   it('post-sans-cle-refuse-400', async () => {
     const a = neuf();
-    const corps = { code_demande: 'palier-b', accord: true };
+    const corps = { code_demande: 'compta-2', accord: true };
     const h = { 'content-type': 'application/json' };
     expect((await a.inject({ method: 'POST', url: '/abonnement/demandes-palier', headers: h, payload: corps })).statusCode).toBe(400);
     const court = { ...h, 'idempotency-key': 'x' };

@@ -124,4 +124,21 @@ describe('préférences', () => {
       expect(JSON.parse(puts()[0]?.corps ?? '{}').appareil).toBe(attendu);
     }
   });
+  it('fournisseur-imbrique-partage-l-etat-du-parent', async () => {
+    let ecrireRacc: (v: { actifs: boolean }) => void = () => undefined;
+    let ecrireMenuCoque: (v: string) => void = () => undefined;
+    const Racc = () => { const [r, e] = usePreference<{ actifs: boolean }>('raccourcis'); ecrireRacc = e; return <i id="racc">{String(r?.actifs)}</i>; };
+    const Coque = () => { const [r] = usePreference<{ actifs: boolean }>('raccourcis'); const [, e] = usePreference<string>('menu_etat'); ecrireMenuCoque = e; return <i id="coque">{String(r?.actifs)}</i>; };
+    act(() => racine?.unmount());
+    racine = createRoot(document.body.appendChild(document.createElement('div')));
+    await act(async () => racine?.render(<FournisseurPreferences><Coque /><FournisseurPreferences><Racc /></FournisseurPreferences></FournisseurPreferences>));
+    await attendre();
+    await act(async () => ecrireRacc({ actifs: false, remap: {} } as { actifs: boolean }));
+    expect(document.getElementById('coque')?.textContent).toBe('false');
+    await act(async () => ecrireMenuCoque('reduit'));
+    const copie = JSON.parse(localStorage.getItem(COPIE) ?? '{}').bureau;
+    expect(copie.raccourcis.actifs).toBe(false);
+    expect(copie.menu_etat).toBe('reduit');
+    expect(document.getElementById('racc')?.textContent).toBe('false');
+  });
 });
