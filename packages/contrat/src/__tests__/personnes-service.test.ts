@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { genererRgpd } from '../../../donnees-fictives/src/rgpd.js';
 import type { RegleConservation } from '../../../noyau/src/conservation/regles.js';
-import { creerServicePersonnes, ErreurPersonnes, type OptionsPersonnes } from '../domaines/personnes-service.js';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { creerServicePersonnes, empreintePure, ErreurPersonnes, type OptionsPersonnes } from '../domaines/personnes-service.js';
 
 const REF = '2026-11-09';
 // Réglages inventés pour les tests : ni délai ni durée réels.
@@ -117,5 +119,25 @@ describe('service des demandes des personnes', () => {
     expect(s.traiter('t', 'dem_6', { issue: 'limitee' })).toEqual(t);
     expect(s.journal()).toHaveLength(2);
     expect(s.lister().filter((x) => x.id.startsWith('dem-'))).toHaveLength(1);
+  });
+
+  it('empreinte-pure-sans-node-crypto', () => {
+    expect(readFileSync(new URL('../domaines/personnes-service.ts', import.meta.url), 'utf8')).not.toMatch(/node:crypto|from 'crypto'/);
+    expect(empreintePure('dem_1|limitee')).not.toBe(empreintePure('dem_2|limitee'));
+  });
+
+  it('empreinte-pure-vecteurs-sha256', () => {
+    const ancien = (t: string): string => createHash('sha256').update(t).digest('hex');
+    expect(empreintePure('')).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    expect(empreintePure('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    expect(empreintePure('dem_1|limitee')).toBe('896a2c0eee2f1953089a352d45f9e955e1f39ad2c18f273438776cc45d49e790');
+    for (const t of ['é€', 'a'.repeat(55), 'a'.repeat(56), 'a'.repeat(64), 'x'.repeat(300)]) expect(empreintePure(t)).toBe(ancien(t));
+  });
+
+  it('empreinte-injectee-utilisee-pour-le-traitement', () => {
+    const vues: string[] = [];
+    const s = creer({ empreinte: (t) => { vues.push(t); return 'a'.repeat(64); } });
+    s.traiter('t', 'dem_6', { issue: 'limitee' });
+    expect(vues).toEqual(['dem_6|limitee']);
   });
 });
