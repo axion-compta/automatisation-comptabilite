@@ -51,6 +51,7 @@ import { ventes } from './domaines/ventes.js';
 import { pieces } from './domaines/pieces.js';
 import { capacites } from './domaines/capacites.js';
 import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
+import { contratModules } from './registres/index.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -78,7 +79,7 @@ export const modifier = oc
   .input(z.object({ params: z.object({ id: z.string().min(1) }), headers: EnTeteEcriture, body: ModificationEcriture }))
   .output(z.object({ body: Ecriture }));
 
-export const contrat = {
+export const contratSocle = {
   ecritures: { lister, creer, modifier },
   plan,
   principes,
@@ -122,6 +123,8 @@ export const contrat = {
   acceptations,
   capacites,
 };
+/** Contrat complet : socle puis modules (un par lot, voir registres/). Les clés doivent rester disjointes. */
+export const contrat = { ...contratSocle, ...contratModules };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };
 export type Contrat = typeof contrat;
