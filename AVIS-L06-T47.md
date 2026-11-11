@@ -1,22 +1,30 @@
-VERDICT: A CORRIGER
+VERDICT: OK
+eb9d20b02ec3f17407aa9813cb6d5d26494c5460
 
-Fiche: L06-T47 - PR #1069 - SHA de tête relu : cecf2b3fb19a10289b6b5cfe51828067817f19e8
-Relu : seulement ce que la fiche ajoute (diff contre lot-06/L06-T39 / #1052, encore ouverte). Les fichiers de L06-T39 sont identiques à #1052.
+Fiche: L06-T47 - PR #1069 - SHA de tête relu : eb9d20b02ec3f17407aa9813cb6d5d26494c5460
+Seconde relecture, après l'avis A CORRIGER du SHA cecf2b3f (relecteur Opus, lot 5 section R, 11/11/2026).
 
-CI : n'a pas tourné (tests GitHub en panne générale). Relecture du code et des tests, exécution locale :
-- vitest `outils/banc/test/volume.test.mjs` : 3/3 verts.
-- Mutations qui rougissent : refus masqué dans `mesurer`, reste de lignes non réparti, « PROPOSÉ » retiré du rapport, graine ignorée.
-- `garde:termine` / `garde:perimetre` rouges attendus tant que #1052 n'est pas fusionnée : ce n'est pas un défaut de l'auteur.
+## Défauts de l'avis précédent
+1. `outils/banc/volume.mjs`, erreurs de lint : **corrigé**.
+   - `import { performance } from 'node:perf_hooks'` ajouté. Mutation : si je retire l'import, `pnpm exec eslint outils/banc` redonne `'performance' is not defined` (no-undef).
+   - Le ternaire est devenu un `if / else`. Mutation : si je remets le ternaire, eslint redonne `no-unused-expressions`.
+   - Au SHA de tête, `pnpm exec eslint outils/banc` ne sort aucune erreur.
 
-Périmètre : 5 fichiers, tous dans fichiers_autorises ; 149 lignes (limite 250). Journal 7 lignes, commence par « # Journal L06-T47 ». Tests nommés présents. Seuil de p95 marqué PROPOSÉ, sans engagement. Aucun prix, secret ni mot interdit ; données fictives.
+## Contrôles relancés
+- vitest `outils/banc` : 8/8 verts (Node 22, `engine-strict=false`).
+- La remarque sur les cas limites est traitée : `generateur-deterministe` teste NaN, Infinity et 2.5 pour `bases` et `lignes`.
+  - Mutation : si `bases` n'a plus à être entier, le test rougit (`expected [Function] to throw`).
+  - Mutation : si le contrôle de finitude saute, le générateur boucle sans fin, et le test ne passe donc pas.
+- Périmètre propre à la fiche : 5 fichiers, tous dans `fichiers_autorises`. Il fait 158 lignes, pour une limite de 250.
+- Journal : 7 lignes, commence par « # Journal L06-T47 ».
+- Aucun prix, aucun secret, aucun mot interdit ; données fictives.
 
-## Défauts
-1. `outils/banc/volume.mjs` : `pnpm exec eslint .` (étape « lint » de `pnpm verifier`, critère de la fiche) donne 2 erreurs :
-   - ligne 36 : `'performance' is not defined` (no-undef) ; correction : `import { performance } from 'node:perf_hooks'` ou `globalThis.performance.now()` ;
-   - ligne 40 : `Expected an assignment or function call and instead saw an expression` (no-unused-expressions) ; correction : remplacer le ternaire par `if (...) ouvertes.push(b); else refus++;`.
-   Relancer `pnpm exec eslint outils/banc` : 0 erreur attendue.
+## CI au SHA de tête
+- Verts : tests, lint, types, e2e, gitleaks, licences, stryker. `garde:termine` est vert.
+- `gardes` est rouge sur la seule étape `garde:perimetre`. Les fichiers hors liste viennent tous de L06-T39 (#1052, encore ouverte), et la taille comptée (309 lignes) les inclut. Ce n'est pas un défaut de l'auteur.
+- `verifier` est rouge uniquement à cause de `gardes`.
+- La PR ne peut être fusionnée qu'après #1052.
 
-## Remarques (non bloquantes)
-- `genererBases` : aucun cas limite NaN, Infinity ou non entier pour `bases` / `lignes` (le code les refuse, mais rien ne le teste).
-- `docs/banc-volume.md` : aucune commande ne le régénère (pas de point d'entrée dans `volume.mjs`) ; dire comment il a été produit. Le p95 de 5 ms vient d'un faux serveur, ce que le texte dit bien.
-- `executer` qui lève arrête toute la mesure (erreur non comptée) : acceptable, mais à documenter.
+## Remarques (non bloquantes, reprises de l'avis précédent)
+- `docs/banc-volume.md` : aucune commande ne le régénère. Le texte ne dit pas comment il a été produit.
+- Si `executer` lève, toute la mesure s'arrête. C'est acceptable, mais à documenter.
