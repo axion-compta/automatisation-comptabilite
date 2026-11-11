@@ -1,38 +1,31 @@
-VERDICT: A CORRIGER
-SHA relu : 2b53939f8086f3d6a8b72cd177dff02e7d71d5e7
+VERDICT: OK
+SHA relu : 24c57e6a4d45f4cd05ddf7a0db7ce2fc7c8acb2d
 
-# Avis de relecture PR 995 (L10-T51, migrations du schéma des ventes). Fiche sensible : fusion par Will seul
+# Avis de relecture PR 995 (L10-T51, migrations du schéma des ventes), seconde relecture. Fiche sensible : fusion par Will seul
 
-Fiche lue sur origin/main. Relecture au SHA ci-dessus.
+Fiche lue sur origin/main. Relecture au SHA de tête ci-dessus, après le correctif 24c57e6 qui suit l'avis au SHA 2b53939.
 
-## Défauts bloquants
-1. `apps/serveur/migrations/0100_ventes.sql:65-69` : la sécurité par ligne est activée (`ENABLE`) mais pas imposée (`FORCE`). Le rôle propriétaire des tables échappe donc aux politiques. Essai sur un PostgreSQL 16 jetable :
-   - rôle non propriétaire réglé sur s1 : 1 ligne ;
-   - le même rôle sans réglage : 0 ligne ;
-   - **rôle propriétaire réglé sur s1 : 2 lignes, la pièce de s2 est visible.**
-
-   Le critère « un client ne lit jamais les ventes d'un autre » n'est donc pas tenu si l'application se connecte avec le rôle qui a créé les tables.
-   Correction : ajouter `ALTER TABLE a_compta.<t> FORCE ROW LEVEL SECURITY;` pour les cinq tables. Dans `apps/serveur/src/__tests__/migrations-ventes.test.ts:47`, exiger aussi `FORCE ROW LEVEL SECURITY` pour chaque table.
-2. `apps/serveur/src/__tests__/migrations-ventes.test.ts:33-34` : la fiche interdit la contrainte `ht + tva = ttc`, mais le test ne repère que l'écriture `ht_centimes + tva_centimes =`. En ajoutant `CHECK (ttc_centimes = ht_centimes + tva_centimes)`, les 6 tests restent verts.
-   Correction : vérifier que les seules contraintes sur `ttc_centimes` sont de non-négativité. Par exemple, `not.toMatch(/ttc_centimes\s*=|=\s*ht_centimes/)`, ou une liste des clauses CHECK comparée à une liste attendue.
+## Défauts bloquants de l'avis précédent
+1. Sécurité par ligne non imposée : **corrigé**. `0100_ventes.sql:65-74` ajoute `FORCE ROW LEVEL SECURITY` sur les cinq tables, et `migrations-ventes.test.ts:53` l'exige pour chacune. Essai sur un PostgreSQL 16 jetable, avec un rôle non superutilisateur propriétaire des tables :
+   - migration jouée deux fois, la seconde passe aussi ;
+   - `relrowsecurity` et `relforcerowsecurity` à vrai pour les cinq tables ;
+   - **propriétaire réglé sur s1 : 1 ligne**, la pièce de s2 n'est plus visible (2 lignes avant le correctif) ;
+   - propriétaire sans réglage : 0 ligne ;
+   - propriétaire réglé sur s1 qui insère une ligne de s2 : refusé par la politique.
+2. Test des contraintes sur `ttc_centimes` trop étroit : **corrigé**. `migrations-ventes.test.ts:35-39` refuse `ttc_centimes =`, `= ht_centimes` et `ht_centimes + tva_centimes`, et chaque ligne des corps de table qui cite `ttc_centimes` doit être la seule clause de non-négativité.
 
 ## Mutations à la main (dans le SQL, appliquées puis annulées)
-- `UNIQUE (cle_dedoublonnage)` sans `societe_id` : `cle-de-dedoublonnage-unique-par-societe` échoue.
-- Sécurité par ligne retirée sur `encaissement_tva` : `autre-societe-invisible` échoue.
-- `tva_centimes` en `integer` : `montants-en-bigint` échoue.
-- Politique `USING (true)` : `autre-societe-invisible` échoue.
-- Garde `IF NOT EXISTS` de la politique retirée : `migration-rejouable` échoue.
-- Clé étrangère de `ligne_vente` sans `societe_id` : `autre-societe-invisible` échoue.
-- `CHECK (ttc_centimes = ht_centimes + tva_centimes)` ajouté : aucun test n'échoue (défaut 2).
-- Seconde politique permissive `USING (true)` sur `piece_vente` : aucun test n'échoue. C'est la limite des tests qui ne lisent que le texte.
+- `FORCE` retiré sur `piece_vente` : `autre-societe-invisible` échoue.
+- `ENABLE` retiré sur `encaissement_tva`, `FORCE` gardé : `autre-societe-invisible` échoue.
+- `CHECK (ttc_centimes >= 0 AND ttc_centimes = ht_centimes + tva_centimes)` : `montants-en-bigint` échoue.
+- Contrainte de table `CHECK (ttc_centimes - ht_centimes - tva_centimes = 0)` : `montants-en-bigint` échoue.
 
 ## Contrôles
-- Fichiers : 4, tous dans `fichiers_autorises`. Taille : 146 lignes, sous 300. Aucune dépendance.
-- Vitest : 6 tests verts sur 6. `tsc --noEmit -p apps/serveur` vert. En local, `pnpm verifier` est vert sauf l'étape `types`, qui bute sur Node 22 (766 fichiers de test verts, gardes vertes). La CI GitHub au SHA relu est verte.
-- En base jetable : la migration rejouée deux fois donne le même schéma (`pg_dump -s`). La clé de dédoublonnage est unique par société, les montants négatifs sont refusés, une pièce rattachée au client d'une autre société est refusée, et `ht + tva ≠ ttc` est accepté.
-- Aucun mot interdit, aucun prix ni secret. Aucune valeur légale en dur. Journal : 6 lignes, il commence par `# Journal L10-T51`.
+- Fichiers : 4, tous dans `fichiers_autorises`. Taille : 156 + 1 lignes, sous 300. Aucune dépendance. Aucun octet NUL.
+- Vitest : 6 tests verts sur 6. `tsc --noEmit -p apps/serveur` vert. La CI GitHub au SHA relu est verte (9 contrôles).
+- Aucun mot interdit, aucun prix ni secret. Données fictives. Journal : 6 lignes, il commence par `# Journal L10-T51`.
+- Pas de régression : le correctif n'ajoute que des lignes, les six tests d'avant sont tous là.
 
 ## Remarques
-- Le chemin `apps/serveur/migrations/` est provisoire, et la garde `outils/gardes/migrations.mjs` ne le lit pas. Le test pourrait appeler `analyserMigration`, comme `090-profil.test.ts`.
-- `trous`/`doublons` sont en `int[]` (spec) alors que `numero` est en `bigint`.
-- Aucune unicité sur `(societe_id, serie_id, numero)`. C'est cohérent avec le suivi des doublons, mais à confirmer.
+- Une contrainte posée hors des corps `CREATE TABLE` échappe encore au test, par exemple `ALTER TABLE a_compta.piece_vente ADD CONSTRAINT x CHECK (ttc_centimes - ht_centimes - tva_centimes = 0);` ajoutée en fin de fichier : les 6 tests restent verts. Appliquer le filtre des lignes à tout `code`, et non aux seuls corps, fermerait ce trou. Non bloquant : le schéma actuel n'a pas cette contrainte.
+- Les remarques de l'avis précédent restent valables : chemin de migrations provisoire non lu par `outils/gardes/migrations.mjs`, `int[]` pour `trous`/`doublons` face à `numero` en `bigint`, aucune unicité sur `(societe_id, serie_id, numero)`.
