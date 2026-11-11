@@ -100,7 +100,8 @@ export async function expliquerCase(
   reglage: { longueurMax: number },
 ): Promise<ResultatExplication> {
   const { entree, resultats, table, etapes } = preparerEntree(c, ecritures, personnes);
-  for (const _tentative of TENTATIVES) {
+  for (const tentative of TENTATIVES) {
+    if (tentative === undefined) break;
     try {
       const r = await port.completer(entree);
       const v = verifierExplication(r.texte, resultats, c, table, reglage.longueurMax);
