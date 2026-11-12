@@ -1,20 +1,22 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR n° 1207, tête relue : f9ae28e5446be4ba48a8544f33156dc1edacc16e
-Relecteur Opus, 12/11/2026.
+PR n° 1207, fiche L21-T06, seconde relecture au SHA de tête d9d012edba8ec409c780fe62f351eda4abde601b.
+Relecteur Opus, 12/11/2026. Avis précédent : A CORRIGER au SHA f9ae28e5446be4ba48a8544f33156dc1edacc16e.
 
-## Vérifié
-- Fichiers : les 5 du diff sont dans `fichiers_autorises`. Taille : 246 lignes ajoutées, 1 retirée, sous le plafond de 250.
-- `fflate` est déjà une dépendance de `packages/noyau` : aucune nouvelle dépendance.
-- Tests ciblés : 7 sur 7 verts. Mots interdits, secrets, prix : aucun. Données fictives.
-- Mutations tuées : bornes `debut <=` et `<= fin`, `estDateValide` sur la date du nom, `trim()` de la personne.
+## Défauts précédents
+1. `validation` non gelée : LEVÉ. `figer` gèle une copie de `validation`, et `inventaire-valide-fige` vérifie que l'affectation de `validation.par` lève une erreur. Le retour au code d'avant fait échouer ce test.
+2. Filtre MIME non testé : LEVÉ. `releve.jpg` (image), `bilan.mp4` (video) et `bilan.mp3` (audio) doivent rendre `a_classer`. Le retrait de `image`, de `video` ou de `audio` du motif, ou le filtre MIME désactivé, fait chaque fois échouer un test.
+3. `Number.isNaN(Date.parse(horodatage))` : LEVÉ. `2026-13-45T99:99:99Z` est refusé ; le retrait du contrôle fait échouer un test.
+4. Date du nom non bornée : LEVÉ. `n12025-01-15.pdf` et `2025011599.pdf` rendent `exercice: null` ; le retrait de `(?<!\d)` ou de `(?!\d)` fait échouer un test.
 
-## Défauts
-1. `packages/noyau/src/reprise/inventaire.ts:55-56` (`figer`) : l'objet `validation` n'est pas gelé. Constaté par une sonde : après `validerInventaire(inv, 'p', ...)`, l'affectation `v.validation.par = 'x'` réussit. La fiche demande que toute modification soit refusée après validation. Correction : `Object.freeze` sur `validation`, et dans `inventaire-valide-fige`, un test qui vérifie que la modification de `validation.par` lève une erreur.
-2. `packages/noyau/src/reprise/types-document.ts:26` : le filtre MIME n'est pas testé. `^(video|audio)` et `^(image|video)` survivent tous les deux, car `photo-vacances.jpg` tombe en `a_classer` par son seul nom. Correction : tester `releve.jpg` en `image/jpeg`, ainsi qu'un nom classable en `video/...` et en `audio/...`, qui doivent tous rendre `a_classer`.
-3. `inventaire.ts:93` : `Number.isNaN(Date.parse(horodatage))` remplacé par `false` survit. Correction : refuser `'2026-13-45T99:99:99Z'`, qui passe l'expression régulière mais donne NaN.
-4. `inventaire.ts:38` (`DATE_DANS_NOM`) : retirer `(?<!\d)` ou `(?!\d)` laisse les tests verts. La date du nom n'est donc pas bornée, alors que c'était la correction de relecture annoncée. Correction : `n12025-01-15.pdf` et `2025011599.pdf` doivent rendre `exercice: null`.
+## Régressions
+- Seule la ligne `figer` de `inventaire.ts` a changé ; le gel des lignes est toujours vérifié (mutation tuée).
+- Fichiers : les 5 du diff sont dans `fichiers_autorises`. Taille : 249 lignes pour une limite de 250. Journal : 5 lignes.
+- Tests ciblés : 7 sur 7 verts. Aucun mot interdit, aucun secret, aucun prix, données fictives.
 
-## Remarques (non bloquantes)
-- Les variantes `gl`, `fichier des ecritures` et `statuts?([^a-z]|$)` ne sont pas testées (`statutaire.pdf` rend bien `a_classer`).
+## Remarques (non bloquantes, reprises de l'avis précédent)
+- Les variantes `gl`, `fichier des ecritures` et `statuts?([^a-z]|$)` ne sont pas testées.
 - `reclasserLigne` reclasse toutes les lignes qui portent le même nom.
+
+## CI (pas un défaut de l'auteur)
+Les jobs `tests` et `verifier` sont rouges à cause d'un seul test qui échoue aussi sur main (347401ab) : `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues`. Ce test, ajouté par la PR #1215 (L22-T30), attend l'en-tête `porte_rgpd` dans `docs/mise-en-production.csv`, alors que la PR #1146 (L25-T01) a renommé la colonne en `porte`. Il faut corriger main avant de fusionner.
