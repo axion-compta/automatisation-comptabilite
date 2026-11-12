@@ -45,6 +45,7 @@ describe('version-pcg', () => {
     }
     expect(code(() => verifierCompteSelonVersion('79a', v))).toBe('numero_invalide');
     expect(code(() => verifierCompteSelonVersion('', v))).toBe('numero_invalide');
+    expect(code(() => verifierCompteSelonVersion('a79', v))).toBe('numero_invalide');
   });
   it('exercice-decale-ouvert-2024-garde-ancienne-version', () => {
     expect(versionPcg('2024-07-01', VERSIONS).id).toBe('ancienne');
@@ -73,6 +74,7 @@ describe('version-pcg', () => {
     expect(code(() => versionPcg('2025-01-01', [ANCIENNE]))).toBe('version_inconnue');
     expect(code(() => versionPcg('2025-02-30', VERSIONS))).toBe('date_invalide');
     expect(code(() => versionPcg('', VERSIONS))).toBe('date_invalide');
+    expect(code(() => versionPcg('2025-13-01', VERSIONS))).toBe('date_invalide');
     expect(code(() => versionPcg('2024-06-01', [ANCIENNE, { ...NOUVELLE, debut: '2024-01-01' }]))).toBe(
       'version_ambigue',
     );
