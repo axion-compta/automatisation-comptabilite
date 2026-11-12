@@ -1,6 +1,7 @@
 // Amortissement linéaire au prorata des jours de détention. Un seul arrondi par dotation, au centime.
 import { centimes, fraction, soustraire, type Centimes } from '../argent/index.js';
 import { ajouterJours, ajouterMois, estDateValide } from '../dates/civiles.js';
+import { dureeEnMois } from '../exercices/exercices.js';
 import type { Ecriture } from '../ecritures/modele.js';
 import { ErreurImmobilisation, type Bien } from './registre.js';
 
@@ -18,7 +19,7 @@ function nombreDeJours(debut: string, fin: string): number {
 }
 
 /**
- * Dotation de l'exercice : base × 12 × jours de détention ÷ (durée en mois × jours de l'exercice).
+ * Dotation de l'exercice : base × mois de l'exercice × jours de détention ÷ (durée en mois × jours de l'exercice).
  * Dans l'exercice qui contient la fin de l'amortissement, la dotation solde la base ; jamais de cumul au-delà.
  */
 export function dotationExercice(bien: Bien, exercice: ExerciceAmortissement, cumulAnterieur: Centimes = centimes(0)): Centimes {
@@ -30,11 +31,11 @@ export function dotationExercice(bien: Bien, exercice: ExerciceAmortissement, cu
   if (!(Number.isSafeInteger(bien.dureeMois) && bien.dureeMois > 0)) throw new ErreurImmobilisation('duree_invalide');
   const reste = soustraire(bien.base, cumulAnterieur);
   if (exercice.fin < bien.miseEnService) return centimes(0);
-  if (exercice.fin >= ajouterMois(bien.miseEnService, bien.dureeMois)) return reste;
+  if (exercice.fin >= ajouterJours(ajouterMois(bien.miseEnService, bien.dureeMois), -1)) return reste;
   const debutDetention = exercice.debut > bien.miseEnService ? exercice.debut : bien.miseEnService;
   const prorata = fraction(
     bien.base,
-    12 * nombreDeJours(debutDetention, exercice.fin),
+    dureeEnMois(exercice.debut, exercice.fin).mois * nombreDeJours(debutDetention, exercice.fin),
     bien.dureeMois * nombreDeJours(exercice.debut, exercice.fin),
     'demi-superieur',
   );

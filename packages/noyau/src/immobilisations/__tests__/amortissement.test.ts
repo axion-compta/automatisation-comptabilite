@@ -39,6 +39,10 @@ describe('amortissement linéaire', () => {
   it('annee-pleine-1200-sur-4-ans-300', () => {
     expect(dotationExercice(bien('2024-01-01'), exercice(2024))).toBe(30000);
     expect(dotations(bien('2024-01-01'))).toEqual([30000, 30000, 30000, 30000, 0, 0, 0, 0]);
+    // Exercice de 18 mois : l'annuité suit la durée de l'exercice.
+    const long = { id: 'EX18', debut: '2024-01-01', fin: '2025-06-30' };
+    expect(dotationExercice(bien('2024-01-01'), long)).toBe(45000);
+    expect(dotationExercice(bien('2024-01-01'), { id: 'EX6', debut: '2024-01-01', fin: '2024-06-30' })).toBe(15000);
     // Année bissextile : le prorata reste une année pleine.
     expect(dotationExercice(bien('2023-01-01'), exercice(2024), centimes(30000))).toBe(30000);
   });
@@ -89,6 +93,10 @@ describe('amortissement linéaire', () => {
         expect(cumul).toBe(base);
       }
     }
+    // La fin du plan tombe le jour de clôture : le dernier exercice solde, rien après.
+    const tiers = bien('2024-01-01', { base: centimes(100000), dureeMois: 36 });
+    expect(dotations(tiers)).toEqual([33333, 33333, 33334, 0, 0, 0, 0, 0]);
+    expect(dotations(bien('2024-01-01', { base: centimes(1), dureeMois: 36 }))).toEqual([0, 0, 1, 0, 0, 0, 0, 0]);
     expect(code(() => dotationExercice(bien('2024-01-01'), exercice(2024), centimes(120001)))).toBe('cumul_invalide');
     expect(code(() => dotationExercice(bien('2024-01-01'), exercice(2024), centimes(-1)))).toBe('cumul_invalide');
     expect(dotationExercice(bien('2024-01-01'), exercice(2024), centimes(120000))).toBe(0);
