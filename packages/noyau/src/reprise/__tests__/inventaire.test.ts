@@ -58,11 +58,13 @@ describe('inventaire de reprise', () => {
         f('releve-2024-06-30.pdf', '2025-03-15'),
         f('date-impossible-2025-02-30.pdf'),
         f('x.pdf', 'pas-une-date'),
+        f('123456789FEC20251231.txt'),
+        f('piece-12345678-2024-03-31.pdf'),
       ],
       EXERCICES,
     );
     expect(inv.lignes.map((l) => l.exercice)).toEqual([
-      'ex-2024', 'ex-2025', 'ex-2025', null, null, 'ex-2025', null, null,
+      'ex-2024', 'ex-2025', 'ex-2025', null, null, 'ex-2025', null, null, 'ex-2025', 'ex-2024',
     ]);
   });
 

@@ -35,14 +35,16 @@ export interface Inventaire {
   validation: { par: string; le: string } | null;
 }
 
-const DATE_DANS_NOM = /(\d{4})-?(\d{2})-?(\d{2})/;
+const DATE_DANS_NOM = /(?<!\d)(\d{4})-?(\d{2})-?(\d{2})(?!\d)/g;
 const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[.]\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 function dateDe(f: FichierReprise): string | null {
   if (f.date !== undefined) return estDateValide(f.date) ? f.date : null;
-  const g = DATE_DANS_NOM.exec(f.nom);
-  const d = g === null ? '' : `${g[1]}-${g[2]}-${g[3]}`;
-  return estDateValide(d) ? d : null;
+  for (const g of f.nom.matchAll(DATE_DANS_NOM)) {
+    const d = `${g[1]}-${g[2]}-${g[3]}`;
+    if (estDateValide(d)) return d;
+  }
+  return null;
 }
 
 function exerciceDe(date: string | null, exercices: readonly ExerciceReprise[]): string | null {
