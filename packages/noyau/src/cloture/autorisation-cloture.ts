@@ -1,4 +1,3 @@
-import { empreinteSha256 } from '../documents/empreinte.js';
 import { type Canal, type Role } from '../securite/types.js';
 
 // Règle de qui peut clôturer et avec quel accord. Pur : ne branche rien (geste G02 hors périmètre).
@@ -111,6 +110,3 @@ export function autoriserCloture(d: DemandeCloture): DecisionCloture {
     trace: { auteur: auteur.personneId, confirmations: d.confirmations, horodatage: derniere },
   };
 }
-
-// Empreinte d'un document d'accord : même calcul que le reste des documents.
-export const empreinteAccord = (octets: Uint8Array | string): string => empreinteSha256(octets);
