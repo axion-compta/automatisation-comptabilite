@@ -18,12 +18,21 @@ describe('plan de navigation', () => {
     expect(ecransAuDela(plan, 2).map((n) => n.chemin).sort()).toEqual(['/documents/piece/lignes', '/reglages/donnees']);
     expect(ecransAuDela(plan, 3).map((n) => n.chemin)).toEqual([]);
     expect(ecransAuDela(plan, 0).length).toBe(plan.noeuds.filter((n) => n.distance !== null && n.distance > 0).length);
+    // Écrans réels (V3-UX-126) : les seules exceptions à 2 clics sont celles listées au journal.
+    const reel = planNavigation(ecransDecouverts());
+    expect(ecransAuDela(reel, 2).map((n) => n.id).sort()).toEqual(['e17-frais', 'e44', 'e44-client', 'e45', 'e50', 'e53', 'n03', 'n04', 't05']);
+    expect(ecransAuDela(reel, 4)).toEqual([]);
+    expect(ecransAuDela(reel, Number.NaN)).toEqual([]);
+    expect(ecransAuDela(reel, -1).length).toBeGreaterThan(ecransAuDela(reel, 0).length);
   });
   it('ecran-hors-menu-signale', () => {
     const ecrans = [ecran('perdu', '/perdu'), ecran('piege', '/documentsx'), ecran('faux-detail', '/documentsx/piece')];
     const plan = planNavigation(ecrans);
     expect(plan.horsMenu).toEqual(['perdu', 'piege', 'faux-detail']);
     expect(dist(ecrans, '/perdu')).toBeNull();
+    // Écrans réels : seuls ces écrans n'ont aucun chemin d'accès.
+    expect([...planNavigation(ecransDecouverts()).horsMenu].sort()).toEqual(['e39', 'informations', 'n08']);
+    expect(planNavigation([]).horsMenu).toEqual([]);
     // Un écran sans chemin d'accès n'est jamais rendu comme « au-delà » : il est signalé à part.
     expect(ecransAuDela(plan, 0).map((n) => n.id)).not.toContain('perdu');
   });

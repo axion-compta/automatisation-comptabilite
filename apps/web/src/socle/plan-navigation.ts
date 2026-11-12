@@ -1,5 +1,6 @@
 // Plan de navigation calculé : les écrans viennent de ecrans.ts, les entrées de menu de menu.ts (aucune liste recopiée).
 // Un clic = un lien suivi depuis l'accueil. Entrée de la barre du bas ou du menu de bureau : 1 clic ; panneau « Plus » seul : 2 clics.
+// L'Accueil provisoire n'est pas un écran du plan.
 // Le bouton « Discuter » de la barre du bas mène à la discussion en 1 clic.
 // Un écran dont le chemin prolonge celui d'une liste (« /documents » → « /documents/piece ») est atteint par cette liste : +1 clic.
 import type { DefinitionEcran } from './ecrans.js';
