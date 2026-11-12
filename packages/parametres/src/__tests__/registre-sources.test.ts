@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOGUE_IS_SOCIETES } from '../catalogue/is-societes.js';
+import { MATRICE_FORMES, PERIMETRE } from '../catalogue/formes-perimetre.js';
 import { CATALOGUE_TVA_MICRO } from '../catalogue/tva-micro.js';
 import {
   alertesConsultation,
@@ -71,6 +72,10 @@ describe('registre-sources', () => {
       [...CATALOGUE_IS_SOCIETES, ...CATALOGUE_TVA_MICRO].map((l) => l.source_url).filter((u) => u !== ''),
     );
     expect(urls.size).toBeGreaterThanOrEqual(13);
+    // formes-perimetre n'a aucun source_url ; s'il en reçoit un, il doit entrer au registre.
+    for (const l of [...MATRICE_FORMES, PERIMETRE]) {
+      expect(JSON.stringify(l)).not.toContain('source_url');
+    }
     const connues = new Set(REGISTRE_SOURCES.map((e) => e.url));
     for (const u of urls) expect(connues.has(u)).toBe(true);
     expect(connues.size).toBe(REGISTRE_SOURCES.length);
