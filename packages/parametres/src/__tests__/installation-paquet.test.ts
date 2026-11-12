@@ -67,14 +67,14 @@ describe('installation hors ligne du paquet légal', () => {
 
   it('fichier-illisible-refuse', () => {
     const bon = JSON.parse(texte(fichier(k, paquet('v2')))) as Record<string, unknown>;
+    const invalideUtf8 = Buffer.from(JSON.stringify(bon)); // JSON valide dont la valeur de `source` contient un octet UTF-8 invalide
+    invalideUtf8[invalideUtf8.indexOf('"source":"') + 10] = 0xff;
     const sans = (champ: string) => octets(JSON.stringify({ ...bon, [champ]: undefined }));
     const cas: Uint8Array[] = [
-      octets(''),
-      octets('pas du json'),
-      octets('[]'),
-      octets('null'),
-      octets('"texte"'),
+      ...['', 'pas du json', '[]', 'null', '"texte"'].map(octets),
       new Uint8Array([0xff, 0xfe, 0x00]),
+      ...[{ cleId: '' }, { signature: '' }].map((vide) => octets(JSON.stringify({ ...bon, ...vide }))),
+      invalideUtf8,
       ...['paquet', 'version', 'dateEffet', 'cleId', 'signature'].map(sans),
       octets(JSON.stringify({ ...bon, paquet: { version: 'v2' } })),
       octets(JSON.stringify({ ...bon, paquet: { version: 'v2', lignes: [42] } })),
