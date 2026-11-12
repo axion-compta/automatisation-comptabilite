@@ -50,7 +50,7 @@ describe('decisions courantes', () => {
     expect(code(() => preparerDecision('mandat', modele({ type: 'mandat', approuve: false }), DONNEES))).toBe(
       'modele_a_faire_valider',
     );
-    expect(code(() => preparerDecision('mandat', modele({ type: 'mandat', version: undefined }), DONNEES))).toBe(
+    expect(code(() => preparerDecision('mandat', { type: 'mandat', dateModele: '2026-06-01', approuve: true }, DONNEES))).toBe(
       'modele_a_faire_valider',
     );
     expect(code(() => preparerDecision('mandat', modele({ type: 'mandat', dateModele: ' ' }), DONNEES))).toBe(
