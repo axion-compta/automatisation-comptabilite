@@ -3,7 +3,7 @@ import { MOTIFS_SENSIBLES } from '../../../../../packages/noyau/src/pieces/sensi
 import { validerListeRoutes } from '../../../../../packages/noyau/src/securite/routes-ia.js';
 import { etapePreparation } from '../../pieces/etape-preparation.js';
 import { StockageMemoire } from '../../pieces/ports-memoire.js';
-import type { Extracteur, PieceEnregistree } from '../../pieces/ports.js';
+import type { Extracteur, PieceEnregistree, ResultatExtraction } from '../../pieces/ports.js';
 import { creerPasserelle } from '../passerelle.js';
 
 const route = { fournisseur: 'IA-1', region: 'ue-test', mode: 'sans-conservation' };
@@ -23,8 +23,8 @@ function monter() {
   const p = creerPasserelle({ liste, appel, journaliser: () => {} });
   const stockage = new StockageMemoire();
   const extracteur: Extracteur = {
-    async extraire(octets) {
-      const el = { texte: new TextDecoder().decode(octets), page: 1, x: 10, y: 10, largeur: 100, hauteur: 12, taillePolice: 12, couleur: [0, 0, 0], couleurFond: [255, 255, 255], calqueVisible: true, annotationCachee: false };
+    async extraire(octets: Uint8Array): Promise<ResultatExtraction> {
+      const el = { texte: new TextDecoder().decode(octets), page: 1, x: 10, y: 10, largeur: 100, hauteur: 12, taillePolice: 12, couleur: [0, 0, 0] as [number, number, number], couleurFond: [255, 255, 255] as [number, number, number], calqueVisible: true, annotationCachee: false };
       return { elements: [el], pages: [{ numero: 1, largeur: 600, hauteur: 800 }], nbPages: 1 };
     },
   };
