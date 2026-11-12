@@ -33,6 +33,11 @@ describe('échéance d\'emprunt repérée sur le relevé', () => {
     expect(reconnaitreEcheance(ligne(100000, '2027-01-05'), tableau)).toBeUndefined(); // un crédit n'est pas une échéance
     expect(reconnaitreEcheance(ligne(0, '2027-01-05'), tableau)).toBeUndefined();
     expect(reconnaitreEcheance(ligne(-100000, '2027-01-05'), [])).toBeUndefined();
+    // Ligne du tableau au bon montant mais à date invalide : ignorée, sans lever d'erreur.
+    const date_invalide: readonly Echeance[] = [{ date: '2027-02-30', capital: c(80000), interets: c(15000), assurance: c(5000) }];
+    expect(code(() => reconnaitreEcheance(ligne(-100000, '2027-02-28'), date_invalide))).toBe('aucune');
+    expect(reconnaitreEcheance(ligne(-100000, '2027-02-28'), date_invalide)).toBeUndefined();
+    expect(reconnaitreEcheance(ligne(-100000, '2027-02-28'), [...date_invalide, tableau[1]!])).toBeUndefined();
   });
 
   it('refuse une fenêtre ou une date invalide', () => {

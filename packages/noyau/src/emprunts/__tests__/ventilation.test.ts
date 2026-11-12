@@ -37,6 +37,7 @@ describe('ventilation capital / intérêts / assurance', () => {
     expect(code(() => ventiler(ligne(-99999), ech))).toBe('somme_differente');
     expect(code(() => ventiler(ligne(100000), ech))).toBe('pas_un_debit');
     expect(code(() => ventiler(ligne(0), ech))).toBe('pas_un_debit');
+    for (const m of [Number.NaN, -1.5, -Infinity]) expect(code(() => ventiler({ ...ligne(-1), montant: m as never }, ech))).toBe('pas_un_debit');
   });
 
   it('tableau-incoherent-refuse', () => {
@@ -44,6 +45,8 @@ describe('ventilation capital / intérêts / assurance', () => {
     expect(code(() => ventiler(ligne(-100000), { ...ech, assurance: c(-1) }))).toBe('tableau_incoherent');
     expect(code(() => ventiler(ligne(-100000), { ...ech, capital: c(-1) }))).toBe('tableau_incoherent');
     expect(code(() => ventiler(ligne(-100000), { ...ech, capital: Number.NaN as never }))).toBe('tableau_incoherent');
+    expect(code(() => ventiler(ligne(-100000), { ...ech, capital: 1.5 as never }))).toBe('tableau_incoherent');
+    expect(code(() => ventiler(ligne(-100000), { ...ech, interets: Infinity as never }))).toBe('tableau_incoherent');
     expect(code(() => ventiler(ligne(-100000), { ...ech, capital: c(0), interets: c(0), assurance: c(0) }))).toBe('tableau_incoherent');
   });
 
