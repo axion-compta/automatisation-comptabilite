@@ -71,3 +71,4 @@ CC-T17,V3-TVA-030,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-31 d
 CC-T18,V3-TVA-030,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-32 detection,tva.exigibilite.acompte_bien|tva.acompte_verse_deductible,oui
 CC-T18M,V3-TVA-030,M,aucun,arrivee|continu|avant_tva|demande,P6,CT-32 detection,,oui
 CC-T19,V3-TVA-030,B,preparation_tva,arrivee|continu|avant_tva|demande,P6,CT-34,tva.creance_irrecouvrable,oui
+CC-T20,V3-TVA-027,B,preparation_tva,arrivee|continu|avant_tva|demande,P7,societe-mixte-declaration-bloquee,,oui
