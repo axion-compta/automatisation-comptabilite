@@ -10,24 +10,19 @@ const enc = (t: string): Uint8Array => new TextEncoder().encode(t);
 const contenu = (f: { rayon: string; exerciceId: string; chemin: string }): string => `fictif ${f.exerciceId} ${f.rayon} ${f.chemin}`;
 
 function fichiers(): FichierExercice[] {
-  const liste: FichierExercice[] = [];
+  const l: FichierExercice[] = [];
+  const ajouter = (exerciceId: string, rayon: string, chemin: string): number => l.push({ exerciceId, rayon, chemin, taille: enc(contenu({ exerciceId, rayon, chemin })).length });
   for (let i = 0; i < 100; i++) {
     const n = String(i).padStart(3, '0');
-    liste.push({ exerciceId: 'ex-2026', rayon: 'pieces', chemin: `pieces/2026/piece-${n}.pdf`, taille: 0 });
-    liste.push({ exerciceId: 'ex-2026', rayon: 'ecritures', chemin: `ecritures/2026/ecr-${n}.txt`, taille: 0 });
+    ajouter('ex-2026', 'pieces', `pieces/2026/piece-${n}.pdf`);
+    ajouter('ex-2026', 'ecritures', `ecritures/2026/ecr-${n}.txt`);
   }
-  liste.push({ exerciceId: 'ex-2026', rayon: 'declarations', chemin: 'declarations/2026/tva-01.txt', taille: 0 });
-  liste.push({ exerciceId: 'ex-2025', rayon: 'pieces', chemin: 'pieces/2025/ancienne.pdf', taille: 0 });
-  return liste.map((f) => ({ ...f, taille: enc(contenu(f)).length }));
+  ajouter('ex-2026', 'declarations', 'declarations/2026/tva-01.txt');
+  ajouter('ex-2025', 'pieces', 'pieces/2025/ancienne.pdf');
+  return l;
 }
 function creerSource(tous = fichiers()): SourceExercice {
-  return {
-    lister: async () => tous,
-    lire: async (chemin) => {
-      const f = tous.find((x) => x.chemin === chemin);
-      return enc(f === undefined ? '' : contenu(f));
-    },
-  };
+  return { lister: async () => tous, lire: async (c) => enc(((f) => (f === undefined ? '' : contenu(f)))(tous.find((x) => x.chemin === c))) };
 }
 function creerDepot(): DepotExercice & { objets: Map<string, Uint8Array>; depots: string[]; panneSur: string | null } {
   const d = {
@@ -40,45 +35,47 @@ function creerDepot(): DepotExercice & { objets: Map<string, Uint8Array>; depots
   };
   return d;
 }
-function creerSuivi(): SuiviExercice & { notees: PartieFaite[] } {
-  const s = {
-    notees: [] as PartieFaite[],
-    faites: async (): Promise<PartieFaite[]> => [...s.notees],
-    noter: async (_id: string, p: PartieFaite): Promise<void> => {
-      s.notees.push(p);
-    },
+function creerSuivi(): SuiviExercice & { notees: PartieFaite[]; ids: string[] } {
+  const parId = new Map<string, PartieFaite[]>();
+  const s: SuiviExercice & { notees: PartieFaite[]; ids: string[] } = {
+    notees: [], ids: [],
+    faites: async (id) => (s.ids.push(id), [...(parId.get(id) ?? [])]),
+    noter: async (id, p) => { s.notees.push(p); parId.set(id, [...(parId.get(id) ?? []), p]); },
   };
   return s;
 }
 function cheminsDuDepot(depot: { objets: Map<string, Uint8Array> }): string[] {
-  const chemins: string[] = [];
-  for (const [cle, octets] of depot.objets) {
-    if (!cle.endsWith('.zip')) continue;
-    for (const nom of Object.keys(unzipSync(octets))) if (nom !== NOM_MANIFESTE) chemins.push(nom);
-  }
-  return chemins.sort();
+  return [...depot.objets].filter(([c]) => c.endsWith('.zip')).flatMap(([, o]) => Object.keys(unzipSync(o))).filter((n) => n !== NOM_MANIFESTE).sort();
 }
+const code = async (o: Parameters<typeof exporterExercice>[0]): Promise<string | undefined> => {
+  try { await exporterExercice(o); } catch (e) { return e instanceof ErreurExploitation ? e.code : 'autre'; }
+  return undefined;
+};
 const base = (rayons: string[], tailleMax = 2000) => ({ exerciceId: 'ex-2026', rayons, tailleMax });
+
+const nomsZip = (depot: { depots: string[] }): (string | undefined)[] => depot.depots.filter((c) => c.endsWith('.zip')).map((c) => c.split('/').pop());
+const lancerSimple = async (rayons: string[]): Promise<ReturnType<typeof creerDepot>> => {
+  const depot = creerDepot();
+  await exporterExercice({ ...base(rayons), source: creerSource(), depot, suivi: creerSuivi() });
+  return depot;
+};
 
 describe('zip d’un exercice', () => {
   it('deux-cents-fichiers-manifeste-verifie', async () => {
     const [depot, suivi] = [creerDepot(), creerSuivi()];
     const r = await exporterExercice({ ...base(['pieces', 'ecritures']), source: creerSource(), depot, suivi });
     expect(r.parties.length).toBeGreaterThan(3);
-    const chemins = cheminsDuDepot(depot);
-    expect(chemins.length).toBe(200);
-    expect(new Set(chemins).size).toBe(200);
-    for (const [cle, octets] of depot.objets) {
-      if (!cle.endsWith('.zip')) continue;
+    expect(new Set(cheminsDuDepot(depot)).size).toBe(200);
+    expect(cheminsDuDepot(depot).length).toBe(200);
+    for (const [cle, octets] of [...depot.objets].filter(([c]) => c.endsWith('.zip'))) {
       const contenuZip = unzipSync(octets);
       const manifeste = strFromU8(contenuZip[NOM_MANIFESTE] ?? new Uint8Array());
       for (const [nom, o] of Object.entries(contenuZip)) {
         if (nom !== NOM_MANIFESTE) expect(manifeste).toContain(`${empreinteSha256(o)}  ${nom}\n`);
       }
-      const partie = r.parties.find((p) => cle.endsWith(p.nom));
-      expect(partie?.empreinte).toBe(empreinteSha256(octets));
+      expect(r.parties.find((p) => cle.endsWith(p.nom))?.empreinte).toBe(empreinteSha256(octets));
     }
-    const global = strFromU8(depot.objets.get([...depot.objets.keys()].find((c) => c.endsWith('manifeste-global.sha256')) ?? '') ?? new Uint8Array());
+    const global = strFromU8([...depot.objets].find(([c]) => c.endsWith('manifeste-global.sha256'))?.[1] ?? new Uint8Array());
     expect(global.split('\n').filter((l) => l !== '').length).toBe(r.parties.length);
     expect(r.manifesteEmpreinte).toBe(empreinteSha256(global));
   });
@@ -86,63 +83,88 @@ describe('zip d’un exercice', () => {
   it('interruption-puis-reprise-sans-doublon', async () => {
     const source = creerSource();
     const reference = await exporterExercice({ ...base(['pieces']), source, depot: creerDepot(), suivi: creerSuivi() });
+    const noms = reference.parties.map((p) => p.nom);
     const [depot, suivi] = [creerDepot(), creerSuivi()];
-    depot.panneSur = reference.parties[2]?.nom ?? '';
+    depot.panneSur = noms[2] ?? '';
     await expect(exporterExercice({ ...base(['pieces']), source, depot, suivi })).rejects.toThrow('panne fictive');
     expect(suivi.notees.length).toBe(2);
     depot.panneSur = null;
     depot.depots.length = 0;
     const reprise = await exporterExercice({ ...base(['pieces']), source, depot, suivi });
-    const deposees = depot.depots.filter((c) => c.endsWith('.zip')).map((c) => c.split('/').pop());
-    expect(deposees).toEqual(reference.parties.slice(2).map((p) => p.nom));
+    expect(nomsZip(depot)).toEqual(noms.slice(2));
     expect(reprise.manifesteEmpreinte).toBe(reference.manifesteEmpreinte);
     expect(cheminsDuDepot(depot).length).toBe(100);
     // Partie déposée puis altérée : refaite ; les autres restent intactes.
-    const cle = [...depot.objets.keys()].find((c) => c.endsWith(reference.parties[0]?.nom ?? '')) ?? '';
-    depot.objets.set(cle, enc('octets alteres'));
+    depot.objets.set([...depot.objets.keys()].find((c) => c.endsWith(noms[0] ?? '')) ?? '', enc('octets alteres'));
     depot.depots.length = 0;
     await exporterExercice({ ...base(['pieces']), source, depot, suivi });
-    expect(depot.depots.filter((c) => c.endsWith('.zip')).map((c) => c.split('/').pop())).toEqual([reference.parties[0]?.nom]);
+    expect(nomsZip(depot)).toEqual([noms[0]]);
   });
 
   it('un-seul-rayon', async () => {
-    const depot = creerDepot();
-    await exporterExercice({ ...base(['declarations']), source: creerSource(), depot, suivi: creerSuivi() });
-    expect(cheminsDuDepot(depot)).toEqual(['declarations/2026/tva-01.txt']);
+    expect(cheminsDuDepot(await lancerSimple(['declarations']))).toEqual(['declarations/2026/tva-01.txt']);
   });
 
   it('deux-rayons', async () => {
-    const depot = creerDepot();
-    await exporterExercice({ ...base(['declarations', 'ecritures']), source: creerSource(), depot, suivi: creerSuivi() });
-    const chemins = cheminsDuDepot(depot);
+    const chemins = cheminsDuDepot(await lancerSimple(['declarations', 'ecritures']));
     expect(chemins.length).toBe(101);
-    expect(chemins.some((c) => c.startsWith('pieces/'))).toBe(false);
-    expect(chemins.some((c) => c.startsWith('declarations/'))).toBe(true);
-    expect(chemins.some((c) => c.startsWith('ecritures/'))).toBe(true);
+    expect(['pieces/', 'declarations/', 'ecritures/'].map((r) => chemins.some((c) => c.startsWith(r)))).toEqual([false, true, true]);
   });
 
   it('autre-exercice-exclu', async () => {
-    const depot = creerDepot();
-    await exporterExercice({ ...base(['pieces']), source: creerSource(), depot, suivi: creerSuivi() });
-    expect(cheminsDuDepot(depot)).toEqual(fichiers().filter((f) => f.exerciceId === 'ex-2026' && f.rayon === 'pieces').map((f) => f.chemin).sort());
+    expect(cheminsDuDepot(await lancerSimple(['pieces']))).toEqual(fichiers().filter((f) => f.exerciceId === 'ex-2026' && f.rayon === 'pieces').map((f) => f.chemin).sort());
+  });
+
+  it('contenu-change-de-meme-taille-refait', async () => {
+    const source = creerSource();
+    const [depot, suivi, lire] = [creerDepot(), creerSuivi(), source.lire];
+    await exporterExercice({ ...base(['declarations']), source, depot, suivi });
+    const taille = (await lire('declarations/2026/tva-01.txt')).length;
+    source.lire = async (c) => (c === 'declarations/2026/tva-01.txt' ? enc('x'.repeat(taille)) : lire(c));
+    depot.depots.length = 0;
+    await exporterExercice({ ...base(['declarations']), source, depot, suivi });
+    const zips = [...depot.objets].filter(([c]) => c.endsWith('.zip'));
+    expect(nomsZip(depot).length).toBe(1);
+    expect(zips.some(([, o]) => strFromU8(unzipSync(o)['declarations/2026/tva-01.txt'] ?? new Uint8Array()) === 'x'.repeat(taille))).toBe(true);
+    expect(suivi.ids[0]).not.toBe(suivi.ids[1]);
+  });
+
+  it('signature-du-suivi-depend-des-rayons-et-du-plan', async () => {
+    const [source, suivi] = [creerSource(), creerSuivi()];
+    const lancer = (rayons: string[], tailleMax?: number) => exporterExercice({ ...base(rayons, tailleMax), source, depot: creerDepot(), suivi });
+    await lancer(['declarations']);
+    await lancer(['declarations', 'vide']); // même plan, rayons différents
+    await lancer(['pieces'], 2000);
+    await lancer(['pieces'], 3000); // mêmes rayons, découpe différente
+    await lancer(['pieces'], 3000);
+    const [a, b, c, d, e] = suivi.ids;
+    expect([a !== b, c !== d, d === e]).toEqual([true, true, true]);
+  });
+
+  it('controle-final-echoue-si-le-depot-altere-ou-perd-une-partie-ou-le-manifeste', async () => {
+    const lancer = (cible: string | null, perdre = false): Promise<string | undefined> => {
+      const depot = creerDepot();
+      const deposer = depot.deposer;
+      depot.deposer = async (cle, octets) => deposer(cle, cible !== null && cle.endsWith(cible) ? enc('octets alteres') : octets);
+      if (perdre) depot.lire = async (cle) => (cible !== null && cle.endsWith(cible) ? undefined : depot.objets.get(cle));
+      return code({ ...base(['declarations']), source: creerSource(), depot, suivi: creerSuivi() });
+    };
+    expect(await lancer(null)).toBeUndefined();
+    for (const cible of ['.zip', 'manifeste-global.sha256']) {
+      expect(await lancer(cible)).toBe('controle_absent');
+      expect(await lancer(cible, true)).toBe('controle_absent');
+    }
   });
 
   it('refuse les entrées invalides', async () => {
     const [source, depot, suivi] = [creerSource(), creerDepot(), creerSuivi()];
-    const code = async (o: Parameters<typeof exporterExercice>[0]): Promise<string | undefined> => {
-      try {
-        await exporterExercice(o);
-      } catch (e) {
-        return e instanceof ErreurExploitation ? e.code : 'autre';
-      }
-      return undefined;
-    };
-    expect(await code({ ...base([]), source, depot, suivi })).toBe('chemin_invalide');
-    expect(await code({ ...base(['../x']), source, depot, suivi })).toBe('chemin_invalide');
-    expect(await code({ ...base(['pieces']), exerciceId: 'a/b', source, depot, suivi })).toBe('chemin_invalide');
-    expect(await code({ ...base(['pieces'], 0), source, depot, suivi })).toBe('taille_invalide');
-    expect(await code({ ...base(['pieces'], Number.NaN), source, depot, suivi })).toBe('taille_invalide');
-    expect(await code({ ...base(['pieces'], -5), source, depot, suivi })).toBe('taille_invalide');
+    const c = (o: object) => code({ ...base(['pieces']), source, depot, suivi, ...o });
+    expect(await c({ rayons: [] })).toBe('chemin_invalide');
+    expect(await c({ rayons: ['../x'] })).toBe('chemin_invalide');
+    expect(await c({ exerciceId: 'a/b' })).toBe('chemin_invalide');
+    expect(await c({ tailleMax: 0 })).toBe('taille_invalide');
+    expect(await c({ tailleMax: Number.NaN })).toBe('taille_invalide');
+    expect(await c({ tailleMax: -5 })).toBe('taille_invalide');
     expect(depot.depots).toEqual([]);
   });
 });

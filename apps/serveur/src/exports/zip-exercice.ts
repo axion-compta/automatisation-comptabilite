@@ -2,9 +2,7 @@
 // Interfaces seulement : aucun compartiment réel. Aucun effacement ici.
 import { empreinteSha256 } from '../../../../packages/noyau/src/documents/empreinte.js';
 import { ErreurExploitation } from '../../../../packages/noyau/src/exploitation/types.js';
-import {
-  decouper, manifesteGlobal, verifierParties, type PartieFaite,
-} from '../../../../packages/noyau/src/export-complet/parties.js';
+import { decouper, manifesteGlobal, type PartieFaite } from '../../../../packages/noyau/src/export-complet/parties.js';
 import { ecrirePartie } from '../../../../packages/noyau/src/export-complet/zip-partie.js';
 
 export type FichierExercice = { chemin: string; taille: number; rayon: string; exerciceId: string };
@@ -36,8 +34,10 @@ export async function exporterExercice(o: {
   const rayons = new Set(o.rayons);
   const retenus = (await o.source.lister()).filter((f) => f.exerciceId === o.exerciceId && rayons.has(f.rayon));
   const plan = decouper(retenus.map(({ chemin, taille }) => ({ chemin, taille })), o.tailleMax ?? TAILLE_MAX_PARTIE);
-  // Le suivi dépend de l'exercice, des rayons et du plan : un contenu différent ne reprend jamais d'anciennes parties.
-  const signature = empreinteSha256(JSON.stringify([...rayons].sort().concat(plan.map((p) => [p.nom, p.chemins, p.taille]).flat(2).map(String)))).slice(0, 16);
+  // Le suivi dépend de l'exercice, des rayons, du plan et de l'empreinte du contenu lu (même taille ou non).
+  const empreintes: string[] = [];
+  for (const partie of plan) for (const chemin of partie.chemins) empreintes.push(empreinteSha256(await o.source.lire(chemin)));
+  const signature = empreinteSha256(JSON.stringify({ rayons: [...rayons].sort(), plan, empreintes })).slice(0, 16);
   const suiviId = `${o.exerciceId}-${signature}`;
   const prefixe = `exports/exercices/${suiviId}`;
   const notees = new Map((await o.suivi.faites(suiviId)).map((p) => [p.nom, p.empreinte]));
@@ -47,8 +47,7 @@ export async function exporterExercice(o: {
     const connue = notees.get(partie.nom);
     const relu = connue === undefined ? undefined : await o.depot.lire(cle);
     if (connue !== undefined && relu !== undefined && empreinteSha256(relu) === connue) {
-      parties.push({ nom: partie.nom, empreinte: connue });
-      continue;
+      parties.push({ nom: partie.nom, empreinte: connue }); continue;
     }
     const fichiers = await Promise.all(partie.chemins.map(async (chemin) => ({ chemin, octets: await o.source.lire(chemin) })));
     const { octets, empreinte } = ecrirePartie(fichiers);
@@ -58,7 +57,13 @@ export async function exporterExercice(o: {
     parties.push(faite);
   }
   const texte = manifesteGlobal(parties);
-  await o.depot.deposer(`${prefixe}/${NOM_MANIFESTE_EXERCICE}`, new TextEncoder().encode(texte));
-  if (!verifierParties(plan, parties, texte).ok) throw new ErreurExploitation('controle_absent');
+  const cleManifeste = `${prefixe}/${NOM_MANIFESTE_EXERCICE}`;
+  await o.depot.deposer(cleManifeste, new TextEncoder().encode(texte));
+  // Contrôle final sur ce que le dépôt restitue : chaque partie puis le manifeste global.
+  const relire = async (cle: string): Promise<Uint8Array> => (await o.depot.lire(cle)) ?? new Uint8Array();
+  for (const p of parties) {
+    if (empreinteSha256(await relire(`${prefixe}/${p.nom}`)) !== p.empreinte) throw new ErreurExploitation('controle_absent');
+  }
+  if (new TextDecoder().decode(await relire(cleManifeste)) !== texte) throw new ErreurExploitation('controle_absent');
   return { parties, manifesteEmpreinte: empreinteSha256(texte) };
 }
