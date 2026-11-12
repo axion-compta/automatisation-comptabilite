@@ -1,7 +1,9 @@
 // Plan de navigation calculé : les écrans viennent de ecrans.ts, les entrées de menu de menu.ts (aucune liste recopiée).
 // Un clic = un lien suivi depuis l'accueil. Entrée de la barre du bas ou du menu de bureau : 1 clic ; panneau « Plus » seul : 2 clics.
+// Le bouton « Discuter » de la barre du bas mène à la discussion en 1 clic.
 // Un écran dont le chemin prolonge celui d'une liste (« /documents » → « /documents/piece ») est atteint par cette liste : +1 clic.
 import type { DefinitionEcran } from './ecrans.js';
+import { CHEMIN_DISCUSSION } from './Coque.js';
 import { BARRE_MOBILE, MENU_BUREAU, MENU_PLUS } from './menu.js';
 
 export type NoeudPlan = {
@@ -33,6 +35,8 @@ export function planNavigation(ecrans: readonly DefinitionEcran[]): PlanNavigati
   for (const m of [...BARRE_MOBILE, ...MENU_BUREAU, ...MENU_PLUS]) {
     if (!parChemin.has(m.chemin)) parChemin.set(m.chemin, { chemin: m.chemin, id: m.id, distance: direct.has(m.chemin) ? 1 : 2, parent: null });
   }
+  const discussion = { chemin: CHEMIN_DISCUSSION, id: null, distance: 1, parent: null };
+  if (!parChemin.has(CHEMIN_DISCUSSION)) parChemin.set(CHEMIN_DISCUSSION, discussion);
   const ids = new Map<string, string>(ecrans.map((e) => [e.chemin, e.id]));
   for (const [chemin, noeud] of parChemin) {
     const id = ids.get(chemin);

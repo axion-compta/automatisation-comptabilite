@@ -20,10 +20,10 @@ describe('plan de navigation', () => {
     expect(ecransAuDela(plan, 0).length).toBe(plan.noeuds.filter((n) => n.distance !== null && n.distance > 0).length);
   });
   it('ecran-hors-menu-signale', () => {
-    const ecrans = [ecran('perdu', '/discussion'), ecran('piege', '/documentsx'), ecran('faux-detail', '/documentsx/piece')];
+    const ecrans = [ecran('perdu', '/perdu'), ecran('piege', '/documentsx'), ecran('faux-detail', '/documentsx/piece')];
     const plan = planNavigation(ecrans);
     expect(plan.horsMenu).toEqual(['perdu', 'piege', 'faux-detail']);
-    expect(dist(ecrans, '/discussion')).toBeNull();
+    expect(dist(ecrans, '/perdu')).toBeNull();
     // Un écran sans chemin d'accès n'est jamais rendu comme « au-delà » : il est signalé à part.
     expect(ecransAuDela(plan, 0).map((n) => n.id)).not.toContain('perdu');
   });
@@ -34,6 +34,7 @@ describe('plan de navigation', () => {
     for (const e of decouverts) expect(plan.noeuds.some((n) => n.id === e.id && n.chemin === e.chemin)).toBe(true);
     for (const m of [...MENU_BUREAU, ...BARRE_MOBILE, ...MENU_PLUS]) expect(parChemin.get(m.chemin)?.distance).toBeGreaterThanOrEqual(1);
     expect(parChemin.get('/')?.distance).toBe(0);
+    expect(parChemin.get('/discussion')?.distance).toBe(1);
     // Barre du bas et menu de bureau : 1 clic ; panneau « Plus » : 2 clics.
     for (const m of BARRE_MOBILE) expect(parChemin.get(m.chemin)?.distance).toBe(1);
     for (const m of MENU_BUREAU) expect(parChemin.get(m.chemin)?.distance).toBe(1);
