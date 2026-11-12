@@ -1,6 +1,7 @@
 // États d'une écriture : brouillon, proposé, validé, et délai d'annulation.
 // Fonctions pures : aucune horloge interne, `maintenant` (en millisecondes) vient de l'appelant.
 import { ErreurEcriture, verifierEcriture, type Ecriture } from './modele.js';
+import { exigerJustification, type LienPieceEcriture } from './lien-piece.js';
 
 export interface DemandeValidation {
   ecritureId: string;
@@ -86,4 +87,17 @@ export function repasserEnBrouillon(e: Ecriture): Ecriture {
     throw new ErreurEcriture('transition_interdite', 'Seule une écriture proposée repasse en brouillon.');
   }
   return { ...e, statut: 'brouillon' };
+}
+
+/** Validation qui exige une pièce liée ou un motif, puis applique `valider` inchangé. */
+export function validerJustifiee(
+  e: Ecriture,
+  liens: readonly LienPieceEcriture[],
+  numero: string,
+  validePar: string,
+  valideLe: string,
+  motif: string,
+): EcritureValidee {
+  exigerJustification(e.id, liens, motif);
+  return valider(e, numero, validePar, valideLe);
 }
