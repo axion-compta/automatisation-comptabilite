@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ErreurConservation, conserverJusquAu, purgePossible, type RegleConservation, type ResultatConservation } from '../regles.js';
+import { ErreurConservation, conserverJusquAu, estCategorieComptable, etendreReglesBancaires, purgePossible, type RegleConservation, type ResultatConservation } from '../regles.js';
 
 const r = (o: Partial<RegleConservation> = {}): RegleConservation => ({
   pays: 'AA', categorie: 'pieces', dureeAnnees: 7, pointDepart: 'cloture_exercice', statut: 'valide', source: 'test', ...o,
@@ -72,5 +72,34 @@ describe('conservation', () => {
     expect(purgePossible(dateBb, { gels, aujourdhui: '2031-06-01' })).toEqual({ ok: true });
     expect(purgePossible(dateBb, { gels, aujourdhui: '2031-01-01' })).toEqual({ ok: true });
     expect(purgePossible(dateBb, { gels, aujourdhui: '2030-12-31' })).toEqual({ ok: false, code: 'gel_actif' });
+  });
+
+  it.each(['releves_bancaires', 'rapprochements'] as const)('categorie-%s-meme-duree-que-les-pieces', (categorie) => {
+    const base = [r(), r({ pays: 'BB', dureeAnnees: 3, pointDepart: 'date_document' })];
+    const etendues = etendreReglesBancaires(base);
+    const demande = (pays: string, regles: RegleConservation[]) => conserverJusquAu(regles, { pays: [pays], categorie, dates });
+    expect(date(demande('AA', etendues))).toBe('2033-03-31');
+    expect(date(demande('BB', etendues))).toBe('2029-01-10');
+    expect(demande('AA', base)).toEqual(attendu('aucune_regle'));
+    expect(etendues.slice(0, base.length)).toEqual(base);
+    // Statut copié : une règle non vérifiée reste à confirmer.
+    expect(demande('AA', etendreReglesBancaires([r({ statut: 'non_verifie' })]))).toEqual(attendu('non_verifie'));
+    // Les pièces ne changent pas.
+    expect(date(q(etendues))).toBe('2033-03-31');
+  });
+  it('categorie-releves', () => {
+    expect(estCategorieComptable('releves_bancaires')).toBe(true);
+    expect(estCategorieComptable('conversations')).toBe(false);
+    // Règle explicite conservée, sans doublon.
+    const explicite = r({ categorie: 'releves_bancaires', dureeAnnees: 10 });
+    const etendues = etendreReglesBancaires([r(), explicite]);
+    expect(etendues.filter((x) => x.categorie === 'releves_bancaires')).toEqual([explicite]);
+    expect(etendues.filter((x) => x.categorie === 'rapprochements')).toHaveLength(1);
+  });
+  it('categorie-rapprochements', () => {
+    expect(estCategorieComptable('rapprochements')).toBe(true);
+    expect(estCategorieComptable('pieces')).toBe(true);
+    expect(etendreReglesBancaires([])).toEqual([]);
+    expect(etendreReglesBancaires([r({ categorie: 'conversations' })])).toHaveLength(1);
   });
 });
