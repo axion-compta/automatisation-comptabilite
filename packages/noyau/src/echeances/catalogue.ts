@@ -82,7 +82,7 @@ function verifierType(t: TypeEcheance): void {
   }
 }
 
-function conditionRemplie(c: TypeEcheance['condition'], p: ProfilEcheances): boolean {
+export function conditionRemplie(c: TypeEcheance['condition'], p: ProfilEcheances): boolean {
   const dans = (l: string[] | undefined, v: string | undefined) => l === undefined || (v !== undefined && l.includes(v));
   const egal = (a: boolean | undefined, b: boolean) => a === undefined || a === b;
   return (

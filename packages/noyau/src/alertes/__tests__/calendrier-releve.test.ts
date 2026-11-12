@@ -36,6 +36,15 @@ describe('échéances ancrées sur l’année comptable de la société', () => 
     const [e] = echeancesSociete([sans], profil, annee('2026-01-01', '2026-12-31'), cal);
     expect(e?.dateAVerifier).toBe(true);
     expect(e?.releveLe).toBeUndefined();
+    const sansSource = avec({});
+    delete sansSource.source;
+    expect(echeancesSociete([sansSource], profil, annee('2026-01-01', '2026-12-31'), cal)[0]).toMatchObject({ dateAVerifier: true, releveLe: '2026-01-15' });
+  });
+  it('ancrage-non-gere-signale', () => {
+    const an = ['2026-01-01', '2026-12-31'] as const;
+    for (const ancrage of ['creation', 'periode'] as const) expect(code(() => dates(avec({ ancrage }), ...an))).toBe('ancrage_non_gere');
+    // Écarté par le profil (condition non remplie) : pas d'erreur, rien à calculer.
+    expect(dates(avec({ ancrage: 'creation', condition: { avecSalaries: true } }), ...an)).toEqual([]);
   });
   it('cloture-au-30-juin-decale-les-echeances', () => {
     expect(dates(type, '2026-07-01', '2027-06-30')).toEqual(['2027-09-30']);
