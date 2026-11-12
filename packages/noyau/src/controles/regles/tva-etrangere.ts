@@ -15,7 +15,7 @@ export interface OrigineAchat {
   ttc: Centimes;
 }
 
-export type CodeOrigine = 'A_VERIFIER' | 'NON_DEDUCTIBLE_ETRANGERE' | 'NATIONAL';
+export type CodeOrigine = 'A_VERIFIER' | 'ACQUISITION_UE' | 'NON_DEDUCTIBLE_ETRANGERE' | 'NATIONAL';
 
 export interface QualificationOrigine {
   code: CodeOrigine;
@@ -56,9 +56,11 @@ export function qualifierOrigine(
   if (o.declarationDouane || o.numeroIoss || !etatsUe.includes(pays)) {
     return { code: 'A_VERIFIER', deduit: zero, charge: zero };
   }
-  if (pays === societe || o.tvaFrancaise || tva === zero) {
+  if (pays === societe || o.tvaFrancaise) {
     return { code: 'NATIONAL', deduit: zero, charge: zero };
   }
+  // Fournisseur d'un autre État de l'UE sans TVA facturée : acquisition intracommunautaire, jamais « nationale ».
+  if (tva === zero) return { code: 'ACQUISITION_UE', deduit: zero, charge: zero };
   return { code: 'NON_DEDUCTIBLE_ETRANGERE', deduit: zero, charge: ttc };
 }
 
