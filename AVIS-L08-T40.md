@@ -1,45 +1,33 @@
-VERDICT: A CORRIGER
-d6d59b3555f5bc6365a0389f3e0b1b634b0ad0d5
+VERDICT: OK
+b9734788e44973e68cc1e152fe62e6b78694cdbf
 
-PR #1072, fiche L08-T40, SHA de tête relu : d6d59b3555f5bc6365a0389f3e0b1b634b0ad0d5
-Seconde relecture, après l'avis A CORRIGER du SHA 48c104a5 (relecteur Opus, lot 5 section R, 11/11/2026). Seul l'apport propre à la fiche est relu : diff contre `lot-08/L08-T39` (#1051) en `00b847d6`.
+PR #1072, fiche L08-T40, SHA de tête relu : b9734788e44973e68cc1e152fe62e6b78694cdbf
+Troisième relecture, après l'avis A CORRIGER du SHA d6d59b35 (taille 354 > 300). Fiche lue sur origin/main. Seul l'apport propre à la fiche est relu : diff contre la tête de #1051 (`584fdddb`), qui est bien ancêtre de cette tête.
 
-## Défauts de l'avis précédent : les quatre sont corrigés
-1. Erreurs sans code connu : **corrigé**.
-   - `messageErreur` (`TraiterDemande.tsx:20`) choisit dans cet ordre : texte du code connu, sinon `fr.erreurs.reseau` si `statut === 0`, sinon `fr.erreurs.generique`. Le panneau et « Enregistrer une demande reçue » l'utilisent tous les deux.
-   - Mutation : revenir à `reglageAbsent` fait rougir `erreurs-reseau-serveur-et-422-traduites` et `enregistrer-en-echec-message-reseau`.
-   - Mutation : retirer `MOTIF_MANQUANT` de `CODES` fait rougir le test du 422.
-2. Double clic : **corrigé**.
-   - Mutation : retirer `if (enCours.current) return;` et `desactive={envoi}` fait rougir `double-clic-un-seul-envoi-meme-cle`.
-   - Mutation : renouveler la clé après un 500 fait aussi rougir ce test.
-3. Liste relue après succès : **corrigé**.
-   - Mutation : sans `void relire()` (`DemandesPersonnes.tsx:112`), `liste-relue-apres-succes` rougit.
-4. Bouton Traiter seulement sur les demandes non finales : **corrigé**.
-   - Mutation : sans le filtre `FINALS` (`DemandesPersonnes.tsx:49`), `bouton-traiter-seulement-sur-demandes-non-finales` rougit.
+## Défaut de l'avis précédent : corrigé
+1. Taille : **corrigé**. Lignes propres à la fiche (ajouts + retraits) : `DemandesPersonnes.tsx` 59+6, `TraiterDemande.tsx` 70, `traiter-demande.test.tsx` 155, fiche 2, journal 8. Total **300 pour une limite de 300**.
+   - Les 13 tests ont les mêmes noms qu'avant. Les 2 `expect` en moins viennent de la factorisation `refusIncomplet()` : les deux tests de refus gardent chacun leurs 2 assertions (message + aucun envoi).
+   - Le code de production n'a changé que de forme (lignes regroupées, `motif`/`source` dans un seul état, `CODES` compacté) ; aucun comportement modifié.
+   - La reprise de #1051 apporte aussi le message d'erreur de lecture selon le statut (503 → `reglageAbsent`, sinon `e50.etats.erreur`).
 
-Au SHA de tête, avec Node 22 : vitest `apps/web/src/ecrans/e50` passe 30/30. ESLint et `tsc -p apps/web` ne sortent rien.
-
-## Défaut bloquant (nouveau, causé par les tests demandés)
-1. La taille dépasse `taille_max_lignes`.
-   - Lignes propres à la fiche (ajouts plus retraits, comptées comme `garde:perimetre`) : `DemandesPersonnes.tsx` 67+5, `TraiterDemande.tsx` 101, `traiter-demande.test.tsx` 171, fiche 2, journal 8. Total : **354 lignes pour une limite de 300**.
-   - Une fois #1051 et #986 fusionnées, `garde:perimetre` restera rouge pour cette raison.
-   - Correction : retirer au moins 54 lignes sans supprimer aucun des 13 tests ni aucune assertion. Pistes :
-     - factoriser `ouvrir()`, `valider()` et le montage répétés ;
-     - écrire les cas d'erreur dans un tableau ;
-     - compacter `CODES` et les styles.
-   - Sinon, Will relève le plafond par un amendement de la fiche (le correcteur l'a déjà signalé comme « défaut de fiche »). C'est la décision de Will.
-
-## CI au SHA de tête
-- `gardes` est rouge sur `garde:termine` et `garde:perimetre`. Les fichiers hors liste viennent de L08-T39 et L08-T37 (#1051 et #986, encore ouvertes) : ce n'est pas un défaut de l'auteur. La taille, elle, en est un (voir plus haut).
-- `e2e` est rouge : 11 échecs dans `accessibilite.e2e.ts` et `pannes.e2e.ts`. Ce sont **les mêmes 11 échecs** qu'à la tête de #1051 (`00b847d6`), alors que l'e2e de main est vert. La panne vient de la PR amont, pas de L08-T40, et se corrige dans #1051.
-- `verifier` est rouge à cause de `gardes` et `e2e`.
-
-## Autres contrôles
-- Fichiers : 5, tous dans `fichiers_autorises`.
-- Journal : 8 lignes, commence par `# Journal L08-T40`.
+## Vérifications au SHA de tête (Node 22)
+- vitest `apps/web/src/ecrans/e50` : 32/32. ESLint et `tsc -p apps/web` ne sortent rien. Fusion avec main sans conflit.
+- Mutations (toutes rougissent, puis annulées) :
+  - garde `enCours` et `desactive={envoi}` retirés → `double-clic-un-seul-envoi-meme-cle` ;
+  - message réseau remplacé par le générique → `erreurs-reseau-serveur-et-422-traduites` et `enregistrer-en-echec-message-reseau` ;
+  - `MOTIF_MANQUANT` retiré de `CODES` → test du 422 ;
+  - contrôle motif/source avant envoi neutralisé → les deux tests `refus-sans-*-bloque-avant-envoi` ;
+  - `inclure_autres_personnes` forcé à vrai → `autres-personnes-decochee-par-defaut` ;
+  - `void relire()` retiré → `liste-relue-apres-succes` ;
+  - filtre `FINALS` neutralisé → `bouton-traiter-seulement-sur-demandes-non-finales`.
+- Fichiers propres : 5, tous dans `fichiers_autorises`. Journal : 8 lignes, commence par `# Journal L08-T40`.
 - Aucun mot interdit, aucun prix, aucun secret ; données fictives.
 
-## Remarques (non bloquantes, reprises de l'avis précédent)
-- Libellés en dur dans `DemandesPersonnes.tsx:19`.
-- `clavier-seul` ne choisit pas d'issue au clavier.
-- Le message de lecture `reglageAbsent` vient de L08-T39.
+## CI au SHA de tête
+- `tests`, `e2e`, `lint`, `types`, `gitleaks`, `licences`, `stryker` : verts (l'e2e est revenu au vert grâce à la correction reprise de #986).
+- `gardes` rouge (`garde:termine`, `garde:perimetre`) : fichiers de L08-T39 et L08-T37 (#1051 et #986, encore ouvertes). Ce n'est pas un défaut de l'auteur ; la garde passera après fusion des PR amont puis `git merge origin/main`. `verifier` est rouge pour cette seule raison.
+
+## Remarques (non bloquantes)
+- La taille est exactement au plafond : toute retouche future de ces fichiers dans cette fiche le dépassera.
+- Plusieurs lignes JSX très longues (`TraiterDemande.tsx`, `DemandesPersonnes.tsx`) après le regroupement : lisibilité moindre, sans effet sur le comportement.
+- Reprises des avis précédents : libellés en dur dans `DemandesPersonnes.tsx` ; `clavier-seul` ne choisit pas d'issue au clavier.
