@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ParametresLecture } from '../controles-structure.js';
+import { lireFichierFec } from '../controles-structure.js';
 import { lireFecTiers } from '../lecture-tiers.js';
 import type { ChampFec, ColonneFec } from '../lignes.js';
 
@@ -65,14 +66,14 @@ describe('lecture FEC tiers : détection du format', () => {
   });
 
   it('latin9-accepte', () => {
-    const r = lireFecTiers(latin9(corps('|', CRLF, 'Café 5€')), base);
+    const r = lireFecTiers(latin9(corps('|', CRLF, 'Café €')), base);
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.format.encodage).toBe('latin-9');
-      expect(r.lignes[0]?.valeurs.ecritureLib).toBe('Café 5€');
+      expect(r.lignes[0]?.valeurs.ecritureLib).toBe('Café €');
       expect(r.ecarts).toEqual([]);
     }
-    const utf8 = lireFecTiers(octets(corps('|', CRLF, 'Café 5€')), base);
+    const utf8 = lireFecTiers(octets(corps('|', CRLF, 'Café €')), base);
     expect(utf8.ok && utf8.format.encodage).toBe('utf-8');
   });
 
@@ -85,6 +86,9 @@ describe('lecture FEC tiers : détection du format', () => {
       octets(champs.join('|').replace('debit', 'Debit') + CRLF), // en-tête étranger
     ];
     // un octet nul dans un fichier au reste valide : refus, pas de lecture partielle
+    inconnus.push(Uint8Array.from([...latin9(corps('|', CRLF, 'Prix')), 0x80])); // Windows-1252 : 0x80 est un C1 en Latin-9
+    inconnus.push(Uint8Array.from([...octets(corps('|', CRLF, 'Achat')), 0x01]));
+    inconnus.push(new Uint8Array([0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, ...octets(corps('|', CRLF))])); // double marque
     inconnus.push(octets(corps('|', CRLF, 'Achat' + String.fromCharCode(0) + 'fictif')));
     for (const contenu of inconnus) {
       expect(lireFecTiers(contenu, base)).toEqual({ ok: false, code: 'format_fec_inconnu' });
@@ -96,9 +100,10 @@ describe('lecture FEC tiers : détection du format', () => {
     const r = lireFecTiers(latin9(mauvais), base);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.ecarts.map((e) => e.regleId)).toEqual(['FEC-S03']);
-    // le contrôle strict de l'export refuse toujours la marque d'ordre
+    // la lecture tiers accepte la marque d'ordre ; le contrôle strict de l'export la refuse toujours
     const avecMarque = new Uint8Array([0xef, 0xbb, 0xbf, ...octets(corps('|', CRLF))]);
-    const r2 = lireFecTiers(avecMarque, { ...base, marqueOrdreAcceptee: false });
+    const r2 = lireFecTiers(avecMarque, base);
     expect(r2.ok && r2.ecarts).toEqual([]);
+    expect(lireFichierFec(avecMarque, base).ecarts.map((e) => e.regleId)).toContain('FEC-S07');
   });
 });
