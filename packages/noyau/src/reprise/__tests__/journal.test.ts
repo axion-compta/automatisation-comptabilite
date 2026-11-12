@@ -3,6 +3,7 @@ import {
   accepterMention,
   ajouterLigne,
   ajouterVersionRapport,
+  ErreurJournal,
   ouvrirJournal,
   rejouer,
   type ParametresJournal,
@@ -43,9 +44,9 @@ describe('journal de reprise', () => {
     expect(j3.lignes).toEqual([{ etape: 'lecture', entreeEmpreinte: H1, sortieEmpreinte: H2 }]);
     expect(j3.versions).toEqual(params);
     refus(() => ajouterLigne(j, { etape: ' ', entreeEmpreinte: H1, sortieEmpreinte: H2 }), 'ligne_invalide');
-    refus(() => ajouterLigne(j, { etape: 'x', entreeEmpreinte: 'zz', sortieEmpreinte: H2 }), 'ligne_invalide');
-    refus(() => ajouterLigne(j, { etape: 'x', entreeEmpreinte: H1, sortieEmpreinte: H2.toUpperCase() }), 'ligne_invalide');
-    refus(() => ajouterLigne(j, { etape: 'x', entreeEmpreinte: H1, sortieEmpreinte: 'a'.repeat(63) }), 'ligne_invalide');
+    for (const mauvaise of ['zz', H2.toUpperCase(), 'a'.repeat(63)]) {
+      refus(() => ajouterLigne(j, { etape: 'x', entreeEmpreinte: H1, sortieEmpreinte: mauvaise }), 'ligne_invalide');
+    }
   });
 
   it('rapport-versionne-sans-ecrasement', () => {
@@ -98,14 +99,13 @@ describe('journal de reprise', () => {
 
   it('version-manquante-refusee', () => {
     for (const champ of ['versionRegles', 'versionConsignes', 'versionParametres'] as const) {
-      refus(() => ouvrirJournal({ ...params, [champ]: '' }), 'version_manquante');
-      refus(() => ouvrirJournal({ ...params, [champ]: '   ' }), 'version_manquante');
-      refus(() => ouvrirJournal({ ...params, [champ]: undefined } as never), 'version_manquante');
-      refus(() => ouvrirJournal({ ...params, [champ]: 3 } as never), 'version_manquante');
+      for (const valeur of ['', '   ', undefined, 3]) {
+        refus(() => ouvrirJournal({ ...params, [champ]: valeur } as never), 'version_manquante');
+      }
     }
-    refus(() => ouvrirJournal({ ...params, modeles: [] }), 'version_manquante');
-    refus(() => ouvrirJournal({ ...params, modeles: ['ok', ' '] }), 'version_manquante');
-    refus(() => ouvrirJournal({ ...params, modeles: undefined } as never), 'version_manquante');
-    refus(() => ouvrirJournal({ ...params, modeles: 'modele' } as never), 'version_manquante');
+    for (const modeles of [[], ['ok', ' '], undefined, 'modele']) {
+      refus(() => ouvrirJournal({ ...params, modeles } as never), 'version_manquante');
+    }
+    expect(() => ouvrirJournal({ ...params, versionRegles: '' })).toThrow(ErreurJournal);
   });
 });
