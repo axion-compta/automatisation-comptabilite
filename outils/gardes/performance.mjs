@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 export const ENTETE = 'ecran,metrique,seuil,unite';
 const UNITES = ['ms', 's', 'ko', 'mo', 'pct'];
 const NOM = /^[a-z0-9][a-z0-9-]*$/;
-// Un identifiant « seuil… » suivi de « = » ou « : » puis d'un nombre.
+// Un identifiant « seuil… » suivi de « = » ou « : » puis d'un nombre. Limite connue : une constante nommée autrement (ex. P95_MAX_MS = 800) n'est pas repérée.
 const SEUIL_EN_DUR = /\bseuil\w*\s*[:=]\s*-?\d/i;
 
 export function lireTableau(texte) {

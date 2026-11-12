@@ -45,7 +45,7 @@ test('ligne-mal-formee-rouge', () => {
 });
 
 test('seuil-en-dur-dans-le-banc-rouge', () => {
-  for (const code of ['export const SEUIL_P95_MS = 800;', 'const seuil = 500;', 'f({ seuil: 300 })', 'function g(seuil = 800) {}', 'const seuil_p95 = 1.5;']) {
+  for (const code of ['export const SEUIL_P95_MS = 800;', 'const seuil = 500;', 'f({ seuil: 300 })', 'function g(seuil = 800) {}', 'const seuil_p95 = 1.5;', 'const seuil = -5;']) {
     const e = analyser(lireTableau(ok), banc(code));
     assert.equal(e.length, 1, code);
     assert.match(e[0], /outils\/banc\/x\.mjs/);
@@ -70,10 +70,15 @@ test('banc-lit-le-tableau', () => {
   // le couple banc-volume/p95 est obligatoire
   assert.match(analyser(lireTableau(csv('e,p95,1,ms')), []).join(), /banc-volume/);
   assert.match(analyser([], []).join(), /banc-volume/);
+  // p95 obligatoire : une autre métrique du même écran ne suffit pas
+  assert.match(analyser(lireTableau(csv('banc-volume,p50,1,ms')), []).join(), /banc-volume\/p95 absent/);
   const reel = lireTableau(readFileSync('docs/budgets-performance.csv', 'utf8')).find((l) => l.ecran === 'banc-volume' && l.metrique === 'p95');
   assert.equal(SEUIL_P95_MS, reel.seuil);
   assert.equal(lireSeuil(csv('banc-volume,p95,123,ms')), 123);
   assert.throws(() => lireSeuil(csv('autre,p95,123,ms')), /banc-volume/);
+  // la métrique est filtrée : p50 ne remplace pas p95
+  assert.equal(lireSeuil(csv('banc-volume,p50,1,ms', 'banc-volume,p95,123,ms')), 123);
+  assert.throws(() => lireSeuil(csv('banc-volume,p50,1,ms')), /banc-volume/);
   return mesurer({ bases: [], connecter: async () => true, executer: async () => {}, seuil: lireSeuil(csv('banc-volume,p95,123,ms')) })
     .then((r) => assert.equal(r.seuil_propose_ms, 123));
 });
