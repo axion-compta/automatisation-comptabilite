@@ -59,7 +59,7 @@ describe('indicateurs et suites de numéros des ventes', () => {
     const lot = genererOpenapiLot('10') as { paths: Record<string, Record<string, { operationId?: string; parameters: { name: string; required: boolean }[] }>> };
     expect(lot.paths['/ventes/indicateurs']?.['get']?.parameters.find((x) => x.name === 'mois')?.required).toBe(true);
     expect(lot.paths['/ventes/series']?.['get']?.operationId).toBe('listerSeries');
-    expect(Object.keys(REGISTRES['10'] ?? {})).toEqual(['ventesIndicateurs', 'clients']);
+    expect(Object.keys(REGISTRES['10'] ?? {})).toEqual(['ventesIndicateurs', 'clients', 'ventesActions']);
     expect(routesEcritureSansEnTete()).toEqual([]);
   });
 
