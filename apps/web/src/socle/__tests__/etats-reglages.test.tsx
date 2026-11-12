@@ -9,15 +9,16 @@ import { ecransDecouverts } from '../ecrans.js';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 type Scenario = 'vide' | 'lent' | 'panne';
 const json = (corps: unknown, status: number) => new Response(JSON.stringify(corps), { status, headers: { 'content-type': 'application/json' } });
-const REPONSES: Record<Scenario, () => Promise<Response>> = {
-  vide: async () => json({ body: [], total: 0, decalage: 0, limite: 50 }, 200),
+const PROFIL_VIDE = { version: 'profil.v1', etat: 'incomplet', champs: [], manquants: [], aConfirmer: [], blocages: [] };
+const REPONSES: Record<Scenario, (url: string) => Promise<Response>> = {
+  vide: async (url) =>
+    json(url.includes('/profil/regimes/tva') ? { body: [] } : url.includes('/profil') ? { body: PROFIL_VIDE } : { body: [], total: 0, decalage: 0, limite: 50 }, 200),
   lent: () => new Promise<Response>(() => {}),
   panne: async () => json({ code: 'INTERNAL_SERVER_ERROR', status: 500 }, 500),
 };
-// Écran de détail : exige un identifiant, donc hors de ce parcours. Vide : écrans dont la réponse vide est une liste (les autres : voir le journal).
-const DETAIL = ['e44-client'];
-const AVEC_VIDE = ['e44', 'e50', 'n03', 'n04'];
-const reglages = ecransDecouverts().filter((e) => e.groupe === 'reglages' && !DETAIL.includes(e.id));
+// Vide : écrans qui ont un état vide pour une réponse vide (e53 et t05 n'en ont pas : voir le journal). e44-client est un écran de détail : pas d'état vide.
+const AVEC_VIDE = ['e44', 'e45', 'e50', 'n03', 'n04'];
+const reglages = ecransDecouverts().filter((e) => e.groupe === 'reglages');
 
 let racine: Root | null = null;
 afterEach(() => {
@@ -25,9 +26,11 @@ afterEach(() => {
   racine = null;
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
+  window.history.pushState({}, '', '/');
 });
 async function rendre(C: ComponentType, scenario: Scenario): Promise<void> {
-  vi.stubGlobal('fetch', REPONSES[scenario]);
+  window.history.pushState({}, '', '/reglages/entreprise/client?code=C1');
+  vi.stubGlobal('fetch', (entree: RequestInfo | URL) => REPONSES[scenario](String(entree instanceof Request ? entree.url : entree)));
   const client = creerClient();
   client.setDefaultOptions({ queries: { retry: false } });
   racine = createRoot(document.body.appendChild(document.createElement('div')));
@@ -46,7 +49,7 @@ async function pourChaque(scenario: Scenario, verifier: (id: string) => void, id
 
 describe('états des écrans de réglages', () => {
   it('reglages-ecrans-decouverts', () => {
-    expect(reglages.map((e) => e.id).sort()).toEqual(['e44', 'e45', 'e50', 'e53', 'n03', 'n04', 't05']);
+    expect(reglages.map((e) => e.id).sort()).toEqual(['e44', 'e44-client', 'e45', 'e50', 'e53', 'n03', 'n04', 't05']);
     expect(AVEC_VIDE.every((id) => reglages.some((e) => e.id === id))).toBe(true);
   });
   it('reglages-etat-vide', async () => {
