@@ -1,0 +1,5 @@
+parcours,ecran_depart,duree_max_s,gestes_max,pieges_min_pct
+P1,premier-lancement,300,5,80
+P2,reprise-comptabilite,240,4,80
+P3,ajout-piece,180,3,90
+P4,voir,60,1,100
