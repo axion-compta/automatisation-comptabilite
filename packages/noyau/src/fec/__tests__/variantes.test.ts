@@ -72,5 +72,12 @@ describe('variantes de FEC', () => {
       ok: false, ecartDebit: centimes(0), ecartCredit: centimes(-1),
     });
     expect(verifierTotaux(lu, { debit: centimes(0), credit: centimes(0) }).ok).toBe(false);
+    expect(verifierTotaux(lu, { debit: centimes(120056), credit: centimes(120057) })).toEqual({
+      ok: false, ecartDebit: centimes(-1), ecartCredit: centimes(0),
+    });
+    expect(verifierTotaux(lu, { debit: centimes(120057), credit: centimes(120058) })).toEqual({
+      ok: false, ecartDebit: centimes(0), ecartCredit: centimes(1),
+    });
+    expect(verifierTotaux(lu, lu)).toEqual({ ok: true, ecartDebit: centimes(0), ecartCredit: centimes(0) });
   });
 });
