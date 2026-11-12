@@ -21,10 +21,7 @@ export class ErreurANouveaux extends Error {
   }
 }
 
-export interface SoldeCompte {
-  compte: string;
-  solde: number;
-}
+export interface SoldeCompte { compte: string; solde: number }
 export interface LigneANouveau {
   compte: string;
   debit: number;
