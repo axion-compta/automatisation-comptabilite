@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { centimes } from '../../argent/index.js';
+import { centimes, type Centimes } from '../../argent/index.js';
 import { verifierEcriture } from '../../ecritures/modele.js';
 import { ecritureDotation, dotationExercice } from '../amortissement.js';
 import { ErreurImmobilisation, creerBien, type Bien } from '../registre.js';
@@ -51,10 +51,16 @@ describe('amortissement linéaire', () => {
     expect(dotationExercice(bien('2025-07-01'), exercice(2025))).toBe(15123);
     expect(dotationExercice(bien('2025-07-02'), exercice(2025))).toBe(15041);
     expect(dotationExercice(bien('2025-07-01'), exercice(2024))).toBe(0);
+    // Arrondi au centime supérieur : 14 958,9 centimes → 14959.
+    expect(dotationExercice(bien('2025-07-03'), exercice(2025))).toBe(14959);
     expect(dotations(bien('2025-07-01'))).toEqual([0, 15123, 30000, 30000, 30000, 14877, 0, 0]);
     expect(code(() => dotationExercice(bien('2025-07-01'), { id: 'X', debut: '2025-13-01', fin: '2025-12-31' }))).toBe(
       'date_invalide',
     );
+    // Dates inversées, et exercice qui ne suit pas les mois entiers : refusés.
+    expect(code(() => dotationExercice(bien('2025-07-01'), { id: 'X', debut: '2025-12-31', fin: '2025-01-01' }))).toBe('date_invalide');
+    expect(code(() => dotationExercice(bien('2024-01-01'), { id: 'X', debut: '2024-03-15', fin: '2024-12-31' }))).toBe('exercice_non_aligne');
+    expect(code(() => dotationExercice(bien('2024-01-01'), { id: 'X', debut: '2024-01-01', fin: '2024-12-30' }))).toBe('exercice_non_aligne');
   });
 
   it('terrain-non-amorti', () => {
@@ -111,6 +117,9 @@ describe('amortissement linéaire', () => {
     expect(creerBien({ ...saisie, dureeMois: 1, amortissable: true }).dureeMois).toBe(1);
     expect(creerBien({ ...saisie, dureeMois: 0, amortissable: false }).amortissable).toBe(false);
     expect(code(() => creerBien({ ...saisie, dureeMois: 12, amortissable: true, base: centimes(0) }))).toBe('base_invalide');
+    for (const base of [Number.NaN, Number.POSITIVE_INFINITY, 12.5, -1]) {
+      expect(code(() => creerBien({ ...saisie, dureeMois: 12, amortissable: true, base: base as Centimes }))).toBe('base_invalide');
+    }
     expect(code(() => creerBien({ ...saisie, dureeMois: 12, amortissable: true, miseEnService: '2025-02-30' }))).toBe(
       'date_invalide',
     );

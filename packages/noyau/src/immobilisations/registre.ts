@@ -7,7 +7,8 @@ export type CodeErreurImmobilisation =
   | 'base_invalide'
   | 'date_invalide'
   | 'cumul_invalide'
-  | 'compte_non_amortissable';
+  | 'compte_non_amortissable'
+  | 'exercice_non_aligne';
 
 export class ErreurImmobilisation extends Error {
   override name = 'ErreurImmobilisation';
@@ -34,7 +35,7 @@ export interface Bien {
 /** Crée la fiche d'un bien : base strictement positive, date valide, durée entière positive si amortissable. */
 export function creerBien(saisie: Bien): Bien {
   if (!estDateValide(saisie.miseEnService)) throw new ErreurImmobilisation('date_invalide');
-  if (saisie.base <= 0) throw new ErreurImmobilisation('base_invalide');
+  if (!Number.isSafeInteger(saisie.base) || saisie.base <= 0) throw new ErreurImmobilisation('base_invalide');
   if (saisie.amortissable && !(Number.isSafeInteger(saisie.dureeMois) && saisie.dureeMois > 0)) {
     throw new ErreurImmobilisation('duree_invalide');
   }

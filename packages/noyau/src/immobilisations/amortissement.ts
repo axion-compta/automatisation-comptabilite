@@ -26,6 +26,8 @@ export function dotationExercice(bien: Bien, exercice: ExerciceAmortissement, cu
   if (!estDateValide(exercice.debut) || !estDateValide(exercice.fin) || exercice.fin < exercice.debut) {
     throw new ErreurImmobilisation('date_invalide');
   }
+  // Un exercice qui ne commence pas un 1er du mois ou ne finit pas un dernier jour de mois fausserait le compte de mois.
+  if (!dureeEnMois(exercice.debut, exercice.fin).aligne) throw new ErreurImmobilisation('exercice_non_aligne');
   if (cumulAnterieur < 0 || cumulAnterieur > bien.base) throw new ErreurImmobilisation('cumul_invalide');
   if (!bien.amortissable) return centimes(0);
   if (!(Number.isSafeInteger(bien.dureeMois) && bien.dureeMois > 0)) throw new ErreurImmobilisation('duree_invalide');
