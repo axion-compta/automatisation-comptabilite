@@ -24,7 +24,8 @@ export type CodeErreurHistorique =
   | 'deja_valide'
   | 'validation_incomplete'
   | 'document_inconnu'
-  | 'indicatif_non_validable';
+  | 'indicatif_non_validable'
+  | 'version_paquet_absente';
 export class ErreurHistorique extends Error {
   readonly code: CodeErreurHistorique;
   constructor(code: CodeErreurHistorique, message: string) {
@@ -33,6 +34,7 @@ export class ErreurHistorique extends Error {
     this.code = code;
   }
 }
+const FORME_VERSION_PAQUET = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const vide = (texte: string | undefined): boolean => texte === undefined || texte.trim() === '';
 const memeCouple = (d: DocumentProduit, type: TypeDocument, exerciceId: string): boolean =>
   d.type === type && d.exerciceId === exerciceId;
@@ -51,6 +53,9 @@ export function ajouterVersion(
   nouveau: NouveauDocument,
 ): DocumentProduit[] {
   controler(historique);
+  if (!FORME_VERSION_PAQUET.test(nouveau.versionPaquet)) {
+    throw new ErreurHistorique('version_paquet_absente', 'Version de paquet absente ou mal formée.');
+  }
   if (historique.some((d) => d.id === nouveau.id)) throw new ErreurHistorique('version_invalide', 'Id déjà présent.');
   if (nouveau.statut === 'valide' || nouveau.statut === 'remplace') {
     throw new ErreurHistorique('validation_incomplete', 'Validation après coup obligatoire.');
