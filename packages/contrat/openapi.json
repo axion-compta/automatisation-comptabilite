@@ -2562,7 +2562,7 @@
         }
       }
     },
-    "/frais": {
+    "/api/compta/v1/societes/{s}/frais": {
       "get": {
         "operationId": "listerFrais",
         "parameters": [
@@ -2633,6 +2633,15 @@
               "minimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -2663,6 +2672,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -2800,10 +2818,19 @@
         }
       }
     },
-    "/frais/{id}": {
+    "/api/compta/v1/societes/{s}/frais/{id}": {
       "get": {
         "operationId": "lireFrais",
         "parameters": [
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           {
             "name": "id",
             "in": "path",
@@ -2850,6 +2877,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2925,7 +2961,7 @@
         }
       }
     },
-    "/frais/{id}/proposer": {
+    "/api/compta/v1/societes/{s}/frais/{id}/proposer": {
       "post": {
         "operationId": "proposerFrais",
         "parameters": [
@@ -2937,6 +2973,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2965,7 +3010,7 @@
         }
       }
     },
-    "/frais/valider": {
+    "/api/compta/v1/societes/{s}/frais/valider": {
       "post": {
         "operationId": "validerFrais",
         "parameters": [
@@ -2985,6 +3030,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -3034,7 +3088,7 @@
         }
       }
     },
-    "/remboursements": {
+    "/api/compta/v1/societes/{s}/remboursements": {
       "post": {
         "operationId": "preparerRemboursement",
         "parameters": [
@@ -3046,6 +3100,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -3114,7 +3177,7 @@
         }
       }
     },
-    "/vehicules": {
+    "/api/compta/v1/societes/{s}/vehicules": {
       "get": {
         "operationId": "listerVehicules",
         "parameters": [
@@ -3127,6 +3190,15 @@
               "minLength": 1,
               "maxLength": 50
             }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -3136,7 +3208,7 @@
         }
       }
     },
-    "/parametres/bareme_ik_voiture": {
+    "/api/compta/v1/societes/{s}/parametres/bareme_ik_voiture": {
       "get": {
         "operationId": "lireBaremeIk",
         "parameters": [
@@ -3148,6 +3220,15 @@
               "type": "string",
               "format": "date",
               "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
