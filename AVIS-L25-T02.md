@@ -1,17 +1,17 @@
-VERDICT: A CORRIGER
-SHA relu : 8a4e47d74fb91a27c816b1398070f81158f8c3b1 (PR #1190, fiche L25-T02)
+VERDICT: OK
 
-## Vérifications
-- Fichiers : les 5 fichiers modifiés sont dans `fichiers_autorises` ; `signature-paquet.ts` non modifié ; diff 259 lignes (max 260). CI : 9 jobs verts.
-- 7 tests nommés + 8 tests de `signature-paquet.test.ts` passent. Clés générées dans le test, aucune clé écrite. Aucun module réseau importé. Aucun mot interdit, aucun prix, données fictives.
-- Mutations tuées : contrôle `version !== paquet.version`, ancre `^…$` de `dateReelle`. Mutants équivalents (non exigés) : chacun des 3 contrôles année/mois/jour de `dateReelle` pris isolément.
+PR n°1190 (L25-T02), seconde relecture au SHA de tête dee36ab9b164ae31e0d2cb101b83925079fde52e.
 
-## Défauts (mutations survivantes : filtre « vide » non testé)
-1. `packages/parametres/src/installation-paquet.ts:37` : `cleId: z.string().min(1)` → `z.string()` survit. Un `cleId: ''` sort en `cle_inconnue` au lieu de `fichier_illisible`. Correction : ajouter au tableau `cas` de `fichier-illisible-refuse` le cas `{ ...bon, cleId: '' }`.
-2. `packages/parametres/src/installation-paquet.ts:38` : `signature: z.string().min(1)` → `z.string()` survit (sort en `signature_invalide`). Correction : ajouter le cas `{ ...bon, signature: '' }`.
-3. `packages/parametres/src/installation-paquet.ts:55` : `{ fatal: true }` retiré survit (le seul cas d'octets invalides n'est pas du JSON). Correction : ajouter un fichier JSON valide dont une chaîne contient un octet UTF-8 invalide (ex. remplacer un octet de la valeur `source` par `0xff`) ; attendu `fichier_illisible`.
-Taille : la marge est d'une ligne ; regrouper ces cas sur une ou deux lignes du tableau `cas` (ou compacter ailleurs dans le test) pour rester sous 260, sans retirer aucun cas.
+## Défauts précédents
+1. Levé : le cas `cleId: ''` est ajouté. La mutation `installation-paquet.ts:37` `min(1)` retiré fait échouer `fichier-illisible-refuse`.
+2. Levé : le cas `signature: ''` est ajouté. La mutation de la ligne 38 fait échouer le même test.
+3. Levé : un JSON valide contient l'octet 0xFF dans la valeur de `source`. La mutation `{ fatal: true }` retiré (ligne 55) fait échouer le test.
 
-## Remarques (non bloquantes, pour Will)
-- La date d'effet n'est pas couverte par la signature (octets signés fixés par L16-T29, que la fiche interdit de modifier) : un tiers peut changer `dateEffet` d'un fichier signé sans être refusé, alors que le titre de la fiche dit « signé, daté ». Défaut de fiche ; une fiche de suite est nécessaire avant tout usage de `dateEffet`.
-- PR sensible (signature) : fusion par Will seul.
+## Pas de régression
+- Aucun cas de test n'est retiré : les cinq textes invalides sont seulement regroupés dans un `map`. 15 tests sur 15 réussissent en local, dont ceux de `signature-paquet`.
+- Le diff fait 260 lignes, soit pile le maximum. La garde refuse seulement au-delà, et le job `gardes` est vert. Les fichiers sont dans `fichiers_autorises`. Le journal fait 5 lignes.
+- CI : tous les jobs sont verts sauf `tests` (et donc `verifier`). Le seul test en échec est `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Il échoue de la même façon sur `origin/main` (conflit entre L22-T30 n°1215 et L25-T01 n°1146) : ce n'est pas un défaut de l'auteur. Il faut réparer main, puis relancer la CI.
+
+## Remarques (ne bloquent pas, pour Will)
+- Déjà signalée : la date d'effet n'est pas couverte par la signature. C'est un défaut de fiche, à traiter par une fiche de suite.
+- La fiche est sensible : seul Will peut la fusionner.
