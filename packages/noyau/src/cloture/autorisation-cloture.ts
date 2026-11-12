@@ -38,14 +38,14 @@ export interface DemandeCloture {
   /** Confirmation faite à l'écran : seule façon de clôturer depuis le chat ou la voix. */
   confirmeeAEcran?: boolean;
   /** Instant de la décision, fourni par l'appelant. */
-  maintenant?: string;
+  maintenant: string;
 }
 
 export interface TraceCloture {
   auteur: string;
   accord?: AccordExpert;
   confirmations?: readonly Confirmation[];
-  horodatage: string | null;
+  horodatage: string;
 }
 
 export type DecisionCloture =
@@ -62,6 +62,7 @@ function accordValide(d: DemandeCloture): boolean {
   if (a.type === 'approbation') {
     return (
       texte(a.par) &&
+      a.par !== d.auteur.personneId &&
       a.role === ('comptable' satisfies Role) &&
       a.reauthRecente === true &&
       texte(a.horodatage) &&
@@ -88,12 +89,12 @@ function confirmationsValides(d: DemandeCloture): boolean {
 
 export function autoriserCloture(d: DemandeCloture): DecisionCloture {
   const { auteur } = d;
-  if ((d.canal === 'chat' || d.canal === 'voix') && d.confirmeeAEcran !== true) return refus('chat_seul');
+  if (d.canal !== 'clic' && d.confirmeeAEcran !== true) return refus('chat_seul');
   const comptable: Role = 'comptable';
   const administrateur: Role = 'administrateur';
   if (auteur.role !== comptable && auteur.role !== administrateur) return refus('role_insuffisant');
   if (auteur.reauthRecente !== true) return refus('reauthentification_requise');
-  const maintenant = d.maintenant ?? null;
+  const maintenant = d.maintenant;
 
   if (auteur.role === comptable) {
     return { permis: true, trace: { auteur: auteur.personneId, horodatage: maintenant } };
@@ -104,7 +105,7 @@ export function autoriserCloture(d: DemandeCloture): DecisionCloture {
     return { permis: true, trace: { auteur: auteur.personneId, accord: d.accord, horodatage } };
   }
   if (!confirmationsValides(d) || d.confirmations === undefined) return refus('confirmation_renforcee_requise');
-  const derniere = d.confirmations.map((c) => c.horodatage).sort().at(-1) ?? null;
+  const derniere = d.confirmations.map((c) => c.horodatage).sort().at(-1) ?? maintenant;
   return {
     permis: true,
     trace: { auteur: auteur.personneId, confirmations: d.confirmations, horodatage: derniere },

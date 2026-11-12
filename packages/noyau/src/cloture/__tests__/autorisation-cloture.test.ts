@@ -12,6 +12,7 @@ function demande(over: Partial<DemandeCloture> = {}): DemandeCloture {
     auteur: { personneId: 'p-admin', role: 'administrateur', reauthRecente: true },
     canal: 'clic',
     expertActif: true,
+    maintenant: HORO,
     ...over,
   };
 }
@@ -47,7 +48,7 @@ describe('autorisation de clôture', () => {
 
   it('accord-par-approbation-apres-reauth', () => {
     expect(autoriserCloture(demande({ accord: approbation() })).permis).toBe(true);
-    for (const over of [{ reauthRecente: false }, { role: 'administrateur' }, { par: '' }, { horodatage: '' }]) {
+    for (const over of [{ reauthRecente: false }, { role: 'administrateur' }, { par: '' }, { par: 'p-admin' }, { horodatage: '' }]) {
       expect(autoriserCloture(demande({ accord: approbation(over) }))).toMatchObject({
         permis: false, raison: 'accord_expert_requis',
       });
@@ -81,7 +82,8 @@ describe('autorisation de clôture', () => {
       // confirmation à l'écran : le canal ne bloque plus
       expect(autoriserCloture(demande({ canal, auteur: expert, confirmeeAEcran: true })).permis).toBe(true);
     }
-    expect(autoriserCloture(demande({ canal: 'inconnu' as never, auteur: expert })).permis).toBe(true);
+    for (const canal of ['inconnu', 'api', 'systeme', 'import'])
+      expect(autoriserCloture(demande({ canal: canal as never, auteur: expert }))).toMatchObject({ raison: 'chat_seul' });
   });
 
   it('trace-auteur-et-accord', () => {
@@ -90,7 +92,9 @@ describe('autorisation de clôture', () => {
     expect(r).toMatchObject({ permis: true, trace: { auteur: 'p-admin', accord: a, horodatage: HORO } });
     const sans = autoriserCloture(demande({ expertActif: false, ...CONF }));
     expect(sans).toMatchObject({ permis: true, trace: { auteur: 'p-admin', confirmations: CONF.confirmations } });
-    const exp = autoriserCloture(demande({ auteur: expert, maintenant: HORO }));
+    const doc = autoriserCloture(demande({ accord: { type: 'document', empreinte: EMPREINTE, rattacheA: 'ex-2026' } }));
+    expect(doc).toMatchObject({ permis: true, trace: { horodatage: HORO } });
+    const exp = autoriserCloture(demande({ auteur: expert }));
     expect(exp).toMatchObject({ permis: true, trace: { auteur: 'p-expert', horodatage: HORO } });
   });
 
