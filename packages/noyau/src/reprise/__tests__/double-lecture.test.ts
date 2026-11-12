@@ -33,7 +33,7 @@ describe('double lecture', () => {
     const moitie = comparerEtats(lecture({ a: ['abc', FR] }), lecture({ a: ['3,00', FR] }));
     expect(moitie).toEqual([{ champ: 'a', statut: 'a_arbitrer', valeurB: 300 }]);
     // champ hérité du prototype (« constructor ») présent dans une seule lecture : jamais lu comme une valeur
-    const herite = comparerEtats(lecture({ constructor: ['1,00', FR] }), lecture({ a: ['1,00', FR] }));
+    const herite = comparerEtats(lecture({ constructor: ['1,00', FR] as [string, ConventionPays] }), lecture({ a: ['1,00', FR] }));
     expect(herite).toEqual([{ champ: 'a', statut: 'a_arbitrer', valeurB: 100 }, { champ: 'constructor', statut: 'a_arbitrer', valeurA: 100 }]);
   });
 
