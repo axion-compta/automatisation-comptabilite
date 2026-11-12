@@ -55,6 +55,10 @@ describe('IS par période d’imposition', () => {
     expect(perte.periodes.map((x) => x.impotCentimes)).toEqual([c(0), c(250000)]);
     expect(perte.periodes[1]?.baseReduiteCentimes).toBe(c(0));
     expect(calculerIsParPeriodes([per('2027-01-01', '2027-12-31', 1000000, 'a_confirmer')], P).periodes[0]?.impotCentimes).toBe(c(250000));
+    // Arrondi des paramètres : 0,5 centime (non éligible, 25 % de 2) et 0,75 centime (éligible, 15 % de 5).
+    const frac = [per('2027-01-01', '2027-12-31', 2, 'non_eligible'), per('2028-01-01', '2028-04-30', 5)];
+    expect(calculerIsParPeriodes(frac, P).periodes.map((x) => x.impotCentimes)).toEqual([c(1), c(1)]);
+    expect(calculerIsParPeriodes(frac, { ...P, arrondi: 'inferieur' as Arrondi }).periodes.map((x) => x.impotCentimes)).toEqual([c(0), c(0)]);
     // Entrées invalides.
     expect(code(() => calculerIsParPeriodes([], P))).toBe('entree_invalide');
     expect(code(() => calculerIsParPeriodes([per('2027-02-30', '2027-12-31', 1)], P))).toBe('entree_invalide');
@@ -91,6 +95,8 @@ describe('relevé de solde 2572', () => {
     expect(preparerReleve2572(entree(1, 0, 0)).soldeAPayerCentimes).toBe(c(1));
     const nul = preparerReleve2572(entree(1000, 900, 100));
     expect([nul.soldeAPayerCentimes, nul.excedentCentimes]).toEqual([c(0), c(0)]);
+    // Solde nul : case « solde à payer » à 0, jamais une case « excédent ».
+    expect(nul.cases.at(-1)?.code).toBe('solde_a_payer');
   });
 
   it('releve-2572-excedent-rendu', () => {
