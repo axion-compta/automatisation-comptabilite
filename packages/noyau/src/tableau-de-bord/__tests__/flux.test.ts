@@ -93,13 +93,14 @@ describe('flux du tableau de bord', () => {
   });
 
   it.each([
-    { recettes: { prefixes: [] } }, { depenses: { prefixes: [''] } }, { ca: { prefixes: [], deduire: [] } },
+    { recettes: { prefixes: [] } }, { depenses: { prefixes: [''] } }, { ca: { prefixes: [], deduire: [] } }, { ca: { prefixes: ['70'], deduire: [''] } },
     { achatsConsommes: { prefixes: [''] } }, { categories: [{ nom: 'a', prefixes: [] }] }, { categories: [{ nom: '', prefixes: ['60'] }] },
     { categories: [{ nom: 'non_classe', prefixes: ['60'] }] },
     { categories: [{ nom: 'a', prefixes: ['60'] }, { nom: 'a', prefixes: ['61'] }] },
   ] as Partial<DefinitionsFlux>[])('refuse la définition %j', (d) => {
     expect(codeErreur(() => calculer(ECRITURES, { ...DEF, ...d }))).toBe('definitions_invalides');
   });
+  it('accepte une liste deduire vide', () => { expect(calculer(ECRITURES, { ...DEF, ca: { prefixes: ['70'], deduire: [] } }).exerciceADate.ca).toBe(145033); });
   it('refuse les dates invalides', () => {
     expect(codeErreur(() => calculer(ECRITURES, DEF, E2025, '2027-01-01'))).toBe('jour_hors_exercice');
     expect(codeErreur(() => calculer(ECRITURES, DEF, E2025, 'pas-une-date'))).toBe('date_invalide');
