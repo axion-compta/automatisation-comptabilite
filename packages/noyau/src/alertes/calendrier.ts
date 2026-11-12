@@ -1,4 +1,7 @@
 // Calendrier d'échéances (CA-R1, D31) : aucune date inventée, paramètre non validé rendu « à vérifier » avec sa source.
+import { estDateValide } from '../dates/civiles.js';
+import { type Echeance, type ProfilEcheances, type TypeEcheance as TypeCatalogue, ErreurCatalogue, echeancesDe } from '../echeances/catalogue.js';
+import type { Calendrier as JoursOuvres } from '../echeances/jours-ouvres.js';
 import { comparerDates } from '../interface/dates.js';
 import type { Constat } from './moteur.js';
 
@@ -82,4 +85,19 @@ export function calendrier(entrees: readonly EntreeEcheance[], f: FiltreCalendri
 
 export function constatsDateIntrouvable(lignes: readonly LigneEcheance[]): Constat[] {
   return lignes.filter((l) => l.statut === 'inconnue').map((l) => ({ regle: 'ECH-INTROUVABLE', objetType: 'echeance', objetId: l.id, gravite: 'a_faire' as const }));
+}
+
+/** Année comptable de la société (paramètres) : début et fin inclus, durée libre (ex. dix-huit mois). */
+export interface AnneeComptable {
+  debut: string;
+  fin: string;
+}
+
+/** Échéances du catalogue ancrées sur la fin de l'année comptable ; sans date de relevé, l'échéance reste « à vérifier ». */
+export function echeancesSociete(types: readonly TypeCatalogue[], profil: ProfilEcheances, annee: AnneeComptable, jours: JoursOuvres): Echeance[] {
+  if (!estDateValide(annee.debut) || !estDateValide(annee.fin) || comparerDates(annee.debut, annee.fin) > 0) {
+    throw new ErreurCatalogue('annee_invalide');
+  }
+  const ancres = { clotures: [annee.fin], anneesCiviles: [Number(annee.fin.slice(0, 4))], finsDePeriode: [] };
+  return echeancesDe(types, profil, ancres, jours).map((e) => (e.releveLe === undefined ? { ...e, dateAVerifier: true } : e));
 }
