@@ -48,6 +48,7 @@ describe('saisie manuelle rapide', () => {
     expect(saisieRapide(entree({ montantTtc: c(1100) }), plan, taux).ecriture.lignes.map((l) => l.debit + l.credit)).toEqual([917, 183, 1100]);
     expect(code(() => saisieRapide(entree({ montantHt: c(-1) }), plan, taux))).toBe('montant_invalide');
     for (const m of [0, -100, Number.NaN, 1.5]) expect(code(() => saisieRapide(entree({ montantTtc: m as never }), plan, taux))).toBe('montant_invalide');
+    for (const m of [Number.NaN, 1.5]) expect(code(() => saisieRapide(entree({ montantHt: m as never }), plan, taux))).toBe('montant_invalide');
     expect(code(() => saisieRapide(entree({ date: '2027-02-30' }), plan, taux))).toBe('date_invalide');
     expect(code(() => saisieRapide(entree({ libelle: '  ' }), plan, taux))).toBe('libelle_vide');
     expect(code(() => saisieRapide(entree({ compte: '999' }), plan, taux))).toBe('compte_inconnu');
@@ -60,6 +61,8 @@ describe('saisie manuelle rapide', () => {
     expect(r.propositions.compte).toBe('606');
     expect(r.ecriture.lignes[0]?.compte).toBe('606');
     expect(saisieRapide(entree({ libelle: 'HONORAIRES dupont fictif', compte: '626' }), plan, taux).propositions.compte).toBe('622');
+    // Un accent de différence ne change pas la clé de recherche.
+    expect(saisieRapide(entree({ libelle: 'Papèterie du Centre', compte: undefined }), plan, taux).propositions.compte).toBe('606');
     // Libellé inconnu ou à égalité : aucune proposition, donc refus sans compte saisi.
     expect(code(() => saisieRapide(entree({ libelle: 'Inconnu Fictif', compte: undefined }), plan, taux))).toBe('compte_manquant');
     expect(code(() => saisieRapide(entree({ libelle: 'Mercerie Martin', compte: undefined }), plan, taux))).toBe('compte_manquant');
@@ -93,6 +96,8 @@ describe('saisie manuelle rapide', () => {
     expect(code(() => saisieRapide(entree({ montantHt: c(9000) }), plan, taux))).toBe('desequilibre');
     expect(code(() => saisieRapide(entree({ montantHt: c(10001) }), plan, taux))).toBe('desequilibre');
     expect(saisieRapide(entree({ montantHt: c(10000) }), plan, taux).ecriture.lignes[0]?.debit).toBe(10000);
+    // Frontière de l'arrondi : TVA 166,6 arrondie à 167, donc HT 833 + TVA 167 = TTC 1000 accepté.
+    expect(saisieRapide(entree({ montantTtc: c(1000), montantHt: c(833) }), plan, taux).ecriture.lignes.map((l) => l.debit + l.credit)).toEqual([833, 167, 1000]);
     expect(code(() => saisieRapide(entree({ montantHt: c(0) }), plan, taux))).toBe('desequilibre');
   });
 });
