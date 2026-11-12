@@ -51,14 +51,12 @@ describe('part non déductible passée en charge', () => {
     expect(l).toHaveLength(3);
     expect(solde(l, '606100')).toEqual({ debit: 10000, credit: 0 });
     expect(solde(l, '445660')).toEqual({ debit: 2000, credit: 0 });
-    // Facture sans TVA : ni ligne de TVA, ni part perdue.
     const sans: FacturePartPerdue = { ...CARBURANT, ttcCentimes: CARBURANT.htCentimes };
     const e0 = effetTraitement({ code: 'DEDUCTIBLE', sens: 'achat', base: sans.htCentimes, tvaLue: c(0), franchise: false });
     expect(lignesAvecPartPerdue(sans, e0, COMPTES)).toHaveLength(2);
   });
 
   it('ecriture-equilibree-au-centime', () => {
-    // Parts impaires : 3333 points de base d'une TVA de 2 001 centimes.
     const f: FacturePartPerdue = { libelle: 'Achat fictif', htCentimes: c(10005), ttcCentimes: c(12006), compteCharge: '606100' };
     for (const part of [0, 1, 3333, 5000, 9999, 10000]) {
       const l = lignesAvecPartPerdue(f, effet(f, part), COMPTES);
@@ -66,7 +64,6 @@ describe('part non déductible passée en charge', () => {
       expect(r.equilibree, String(part)).toBe(true);
       expect(l.reduce((s, x) => s + x.debit, 0)).toBe(12006);
     }
-    // Un effet qui ne rend pas la TVA de la facture est refusé.
     expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...effet(CARBURANT), perdue: c(1) }, COMPTES))).toBe('effet_incoherent');
     expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, ttcCentimes: c(9999) }, effet(CARBURANT), COMPTES))).toBe('montant_invalide');
     const e = effet(CARBURANT);
