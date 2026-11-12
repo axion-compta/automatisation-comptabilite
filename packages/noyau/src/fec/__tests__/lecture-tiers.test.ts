@@ -19,9 +19,9 @@ const corps = (sep: string, fin: string, libelle = 'Achat fictif'): string =>
   [champs.join(sep), ['AC', 'AC-1', '20260115', '', libelle, '10,00', '0,00'].join(sep)].join(fin) + fin;
 const octets = (t: string): Uint8Array => new TextEncoder().encode(t);
 
-/** Latin-9 : é = 0xE9, € = 0xA4, le reste ASCII. */
+/** Latin-9 : é = 0xE9 et les huit octets propres au Latin-9, le reste ASCII. */
 function latin9(t: string): Uint8Array {
-  const table: Record<string, number> = { 'é': 0xe9, '€': 0xa4 };
+  const table: Record<string, number> = { 'é': 0xe9, '€': 0xa4, 'Š': 0xa6, 'š': 0xa8, 'Ž': 0xb4, 'ž': 0xb8, 'Œ': 0xbc, 'œ': 0xbd, 'Ÿ': 0xbe };
   return Uint8Array.from(Array.from(t), (c) => table[c] ?? c.charCodeAt(0));
 }
 
@@ -66,14 +66,14 @@ describe('lecture FEC tiers : détection du format', () => {
   });
 
   it('latin9-accepte', () => {
-    const r = lireFecTiers(latin9(corps('|', CRLF, 'Café €')), base);
+    const r = lireFecTiers(latin9(corps('|', CRLF, 'Café €ŠšŽžŒœŸ')), base);
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.format.encodage).toBe('latin-9');
-      expect(r.lignes[0]?.valeurs.ecritureLib).toBe('Café €');
+      expect(r.lignes[0]?.valeurs.ecritureLib).toBe('Café €ŠšŽžŒœŸ');
       expect(r.ecarts).toEqual([]);
     }
-    const utf8 = lireFecTiers(octets(corps('|', CRLF, 'Café €')), base);
+    const utf8 = lireFecTiers(octets(corps('|', CRLF, 'Café €ŠšŽžŒœŸ')), base);
     expect(utf8.ok && utf8.format.encodage).toBe('utf-8');
   });
 
@@ -85,14 +85,19 @@ describe('lecture FEC tiers : détection du format', () => {
       Uint8Array.from([0, 1, 2, 0xff, 0xfe, 0, 0]), // binaire
       octets(champs.join('|').replace('debit', 'Debit') + CRLF), // en-tête étranger
     ];
-    // un octet nul dans un fichier au reste valide : refus, pas de lecture partielle
     inconnus.push(Uint8Array.from([...latin9(corps('|', CRLF, 'Prix')), 0x80])); // Windows-1252 : 0x80 est un C1 en Latin-9
-    inconnus.push(Uint8Array.from([...octets(corps('|', CRLF, 'Achat')), 0x01]));
+    // octet nul, C0 hors tabulation et fins de ligne, DEL, dernier C1 : refus, pas de lecture partielle
+    for (const code of [0x00, 0x01, 0x0b, 0x0c, 0x1f, 0x7f, 0x9f]) inconnus.push(octets(corps('|', CRLF, 'a' + String.fromCharCode(code))));
     inconnus.push(new Uint8Array([0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, ...octets(corps('|', CRLF))])); // double marque
-    inconnus.push(octets(corps('|', CRLF, 'Achat' + String.fromCharCode(0) + 'fictif')));
     for (const contenu of inconnus) {
       expect(lireFecTiers(contenu, base)).toEqual({ ok: false, code: 'format_fec_inconnu' });
     }
+    // bornes acceptées : espace, tilde, espace insécable
+    for (const code of [0x20, 0x7e, 0xa0]) expect(lireFecTiers(octets(corps('|', CRLF, 'a' + String.fromCharCode(code))), base).ok).toBe(true);
+    // en-tête ambigu (compatible avec la tabulation et la barre verticale) : seul le séparateur qui redonne les en-têtes exacts est retenu
+    const ambigu = { ...base, colonnes: [{ champ: 'journalCode', entete: 'x\ty' }, { champ: 'ecritureNum', entete: 'z' }] as ColonneFec[], obligatoires: ['journalCode', 'ecritureNum'] as ChampFec[] };
+    const lu = lireFecTiers(octets('x\ty|z' + CRLF + 'AC|AC-1' + CRLF), ambigu);
+    expect(lu.ok && lu.format.separateur).toBe('|');
   });
 
   it('normalise-puis-controles-existants', () => {

@@ -52,8 +52,8 @@ function detecterSeparateur(entete: string, parametres: ParametresLecture): stri
 export function lireFecTiers(contenu: Uint8Array, parametres: ParametresLecture): ResultatLectureTiers {
   const marqueOrdre = MARQUE.every((octet, i) => contenu[i] === octet);
   const { texte, encodage } = decoder(marqueOrdre ? contenu.subarray(MARQUE.length) : contenu);
-  // Un texte vide, un caractère de contrôle (octet nul, C0 hors tabulation et fins de ligne, C1) ou une deuxième
-  // marque d'ordre n'est pas un FEC : un Windows-1252 se trahit par ses octets 0x80 à 0x9F.
+  // Un texte vide ou un caractère de contrôle (octet nul, C0 hors tabulation et fins de ligne, DEL, C1) n'est pas un FEC :
+  // un Windows-1252 se trahit par ses octets 0x80 à 0x9F. Une deuxième marque d'ordre est refusée par le contrôle des en-têtes.
   if (texte === '' || Array.from(texte).some((c) => estControle(c.codePointAt(0) ?? 0))) return REFUS;
   const premierLf = texte.indexOf(LF);
   const finDeLigne = premierLf > 0 && texte[premierLf - 1] === CR ? CR + LF : LF;
