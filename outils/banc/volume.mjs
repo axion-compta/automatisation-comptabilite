@@ -73,7 +73,7 @@ export function rapport(r, date) {
     `Mesure du ${date} sur bases fictives, contre un faux serveur. Rien n'a été mesuré chez l'hébergeur (feu vert J10 attendu).`, '',
     `- Bases : ${r.bases} ; lignes : ${r.lignes}`,
     `- Connexions ouvertes : ${r.connexions_ouvertes} ; refus : ${r.refus}`,
-    `- Seuil de p95 PROPOSÉ : ${r.seuil_propose_ms} ms, à confirmer, aucun engagement. Le seuil est lu dans `docs/budgets-performance.csv` (tableau unique des budgets).`, '',
+    `- Seuil de p95 PROPOSÉ : ${r.seuil_propose_ms} ms, à confirmer, aucun engagement. Le seuil est lu dans docs/budgets-performance.csv (tableau unique des budgets).`, '',
     '| Écran | Mesures | p95 (ms) |', '|---|---|---|', ...lignes, '',
   ].join('\n');
 }
