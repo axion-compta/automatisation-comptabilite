@@ -1,9 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { analyser, analyserDepot, concerne, FICHIER_REGLAGE } from '../mode-deploiement.mjs';
-
 const codes = (texte, chemin = 'packages/noyau/src/x.ts') => analyser(texte, chemin).map((p) => `${p.ligne}:${p.code}`);
-
 test('comparaison-de-mode-refusee', () => {
   for (const nom of ['MODE_DEPLOIEMENT', 'modeDeploiement', 'mode_deploiement']) {
     for (const op of ['===', '!==', '==', '!=']) {

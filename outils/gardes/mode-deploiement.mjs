@@ -1,15 +1,10 @@
 // garde:mode-deploiement : le mode de déploiement est un réglage lu au démarrage, jamais une condition dans le code (V3-PLA-100).
-// Rouge si un fichier .ts, .tsx ou .mjs de apps/ ou packages/ (hors __tests__/) compare le mode de déploiement.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-
 // Exception unique : le fichier qui lit le réglage (il n'existe pas encore).
 export const FICHIER_REGLAGE = 'packages/parametres/src/reglage-mode-deploiement.ts';
-
-const NOM = '(?:MODE_DEPLOIEMENT|modeDeploiement|mode_deploiement)';
-const OP = '(?:===|!==|==|!=)';
-const LIT = '(installation|heberge|installe)';
+const [NOM, OP, LIT] = ['(?:MODE_DEPLOIEMENT|modeDeploiement|mode_deploiement)', '(?:===|!==|==|!=)', '(installation|heberge|installe)'];
 const REGLES = [
   new RegExp(`\\b${NOM}\\b\\s*${OP}`),
   new RegExp(`${OP}\\s*${NOM}\\b`),
@@ -18,7 +13,6 @@ const REGLES = [
   new RegExp(`${OP}\\s*(['"\`])${LIT}\\1`),
   new RegExp(`(['"\`])${LIT}\\1\\s*${OP}`),
 ];
-
 /** Remplace les commentaires par des blancs, sans toucher aux chaînes ni aux sauts de ligne. */
 function sansCommentaires(texte) {
   let sortie = '';
