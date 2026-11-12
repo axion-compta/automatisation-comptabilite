@@ -1,0 +1,10 @@
+/* Bandeau d'état : uniquement des variables de jetons. */
+.axion-bandeau-etat { display: flex; align-items: center; gap: var(--espace-s); padding: var(--espace-s) var(--espace-m); border: 1px solid var(--couleur-bordure); border-left-width: var(--espace-xs); border-radius: var(--rayon-m); background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); font-size: var(--taille-texte); overflow-wrap: anywhere; }
+.axion-bandeau-etat--info { border-left-color: var(--couleur-accent); }
+.axion-bandeau-etat--attention { border-left-color: var(--couleur-alerte); }
+.axion-bandeau-etat--panne { border-left-color: var(--couleur-erreur); }
+.axion-bandeau-etat__icone { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--espace-l); height: var(--espace-l); border-radius: var(--rayon-l); background: var(--couleur-accent); color: var(--couleur-accent-texte); font-weight: var(--graisse-forte); }
+.axion-bandeau-etat--attention .axion-bandeau-etat__icone { background: var(--couleur-alerte); }
+.axion-bandeau-etat--panne .axion-bandeau-etat__icone { background: var(--couleur-erreur); }
+.axion-bandeau-etat__texte { flex: 1; }
+.axion-bandeau-etat__action { flex: none; min-height: var(--espace-xl); padding: var(--espace-xs) var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-s); background: var(--couleur-fond); color: var(--couleur-texte); font: inherit; cursor: pointer; }

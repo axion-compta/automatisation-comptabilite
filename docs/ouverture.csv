@@ -1,0 +1,12 @@
+num,point,preuve_attendue,fichier_spec,porte_rgpd,preuve,verifie_le,verifie_par
+1,Le jeu d'essai est passe a 100 pour cent,Rapport du jeu d'essai archive,a_preciser,non,,,
+2,Le motif de chaque proposition de l'IA est affiche,Captures des ecrans avec le motif,a_preciser,non,,,
+3,Le pilote est vert 7 jours de suite,Releve date des 7 jours,a_preciser,non,,,
+4,Le cout de l'IA est mesure,Releve des couts mesures,a_preciser,non,,,
+5,Le retour en arriere est eprouve,Compte rendu de l'essai,a_preciser,non,,,
+6,La reconnexion bancaire est eprouvee,Compte rendu de l'essai,a_preciser,non,,,
+7,La reprise ne cree aucun doublon,Compte rendu de l'essai,a_preciser,non,,,
+8,La migration se fait sans perte,Compte rendu de comparaison avant apres,a_preciser,non,,,
+9,Les ecrans sont valides visuellement,Captures validees et datees,a_preciser,non,,,
+10,Condition d'ouverture dont l'enonce reste a publier,a_preciser,a_preciser,non,,,
+11,Condition d'ouverture dont l'enonce reste a publier,a_preciser,a_preciser,non,,,

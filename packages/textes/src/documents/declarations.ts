@@ -6,9 +6,11 @@
 // - autre_entreprise, doublon, fichier_de_travail : L03-T15 (vérification du FEC avant import)
 // - tva_en_doute, regime_non_traite : L03-T25 (totaux de TVA et estimation non calculée)
 // - ligne_absente, base_negative : L03-T27 (formules entre lignes)
+// - chaine_rompue : L22-T13 (préparation du FEC d'un exercice)
 // - siren_absent, prorata, lien_expire, controle_bloquant_ouvert, conserver_originaux : spec 03 (S1, C5, X3, TVA, IMP-032)
 export const messagesDeclarations = {
   siren_absent: 'Ajoutez votre numéro SIREN pour préparer ce fichier',
+  chaine_rompue: 'Le fichier ne peut pas être préparé : le journal comporte une rupture. Prévenez votre expert-comptable avant de continuer',
   mode_saisie_seule: 'Votre expert-comptable réalise la clôture : je vous montre une vue indicative',
   exercice_non_cloture: 'Cet exercice n’est pas encore clôturé : les chiffres restent indicatifs',
   autre_entreprise: 'Ce fichier appartient à une autre entreprise',
