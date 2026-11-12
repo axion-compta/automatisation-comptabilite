@@ -2,13 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { centimes } from '../../argent/index.js';
 import { empreinteSha256 } from '../../documents/empreinte.js';
 import { validerJustifiee } from '../etats.js';
-import {
-  ajouterLien,
-  ErreurLienPiece,
-  exigerJustification,
-  refuserModification,
-  type LienPieceEcriture,
-} from '../lien-piece.js';
+import { ajouterLien, ErreurLienPiece, exigerJustification, refuserModification, type LienPieceEcriture } from '../lien-piece.js';
 import type { Ecriture } from '../modele.js';
 
 const EMPREINTE_A = empreinteSha256('piece fictive A');
@@ -63,7 +57,6 @@ describe('lien pièce-écriture', () => {
     expect(code(() => ajouterLien(base, lien('p1', 'e1')))).toBe('lien_en_double');
     expect(code(() => ajouterLien(base, lien('p2', 'e1')))).toBeUndefined();
     expect(code(() => ajouterLien(base, lien('p1', 'e1', EMPREINTE_B)))).toBeUndefined();
-    // entrée non modifiée
     expect(base).toHaveLength(1);
   });
 
@@ -89,6 +82,11 @@ describe('lien pièce-écriture', () => {
   it('sans-piece-avec-motif-validation-acceptee', () => {
     const v = validerJustifiee(ecriture(), [], 'N1', 'u', '2026-02-01', 'Ticket perdu');
     expect(v.statut).toBe('valide');
+    expect(v.motif).toBe('Ticket perdu');
+    const dejaMotive = validerJustifiee(ecriture('Ticket perdu'), [], 'N3', 'u', '2026-02-01', '');
+    expect(dejaMotive.motif).toBe('Ticket perdu');
+    expect(validerJustifiee(ecriture('Ancien'), [], 'N4', 'u', '2026-02-01', 'Nouveau').motif).toBe('Nouveau');
+    expect(validerJustifiee(ecriture('Ancien'), [], 'N5', 'u', '2026-02-01', '  ').motif).toBe('Ancien');
     const avecPiece = validerJustifiee(ecriture(), [lien('p1', 'e1')], 'N2', 'u', '2026-02-01', '');
     expect(avecPiece.numero).toBe('N2');
   });

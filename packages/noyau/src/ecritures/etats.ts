@@ -89,7 +89,7 @@ export function repasserEnBrouillon(e: Ecriture): Ecriture {
   return { ...e, statut: 'brouillon' };
 }
 
-/** Validation qui exige une pièce liée ou un motif, puis applique `valider` inchangé. */
+/** Exige une pièce liée ou un motif (argument non vide, sinon `e.motif`), le rattache à l'écriture, puis `valider` inchangé. */
 export function validerJustifiee(
   e: Ecriture,
   liens: readonly LienPieceEcriture[],
@@ -98,6 +98,7 @@ export function validerJustifiee(
   valideLe: string,
   motif: string,
 ): EcritureValidee {
-  exigerJustification(e.id, liens, motif);
-  return valider(e, numero, validePar, valideLe);
+  const retenu = motif.trim() !== '' ? motif : (e.motif ?? '');
+  exigerJustification(e.id, liens, retenu);
+  return valider(retenu === '' ? e : { ...e, motif: retenu }, numero, validePar, valideLe);
 }
