@@ -45,9 +45,9 @@ const GENERIQUES = new Set<string>([
   'n04.ts n04.etats.introuvable',
 ]);
 
-function titres(): Feuille[] {
-  return toutes.filter((t) => /\.(titre|legende)$/.test(t.chemin));
-}
+const estTitre = (chemin: string): boolean => chemin.split('.').some((s) => /titre|legende/i.test(s));
+const titres = (): Feuille[] => toutes.filter((t) => estTitre(t.chemin));
+const dit = (texte: string): boolean => EXERCICE.test(texte);
 
 function sansDates(t: Feuille): boolean {
   return [...t.texte.matchAll(ANNEE_COMPTABLE)].some((m) => !DATES.test(t.texte.slice((m.index ?? 0) + m[0].length)));
@@ -56,7 +56,15 @@ function sansDates(t: Feuille): boolean {
 describe('vocabulaire année comptable', () => {
   it('exercice-absent-des-titres', () => {
     expect(titres().length).toBeGreaterThan(10);
-    expect(titres().filter((t) => EXERCICE.test(t.texte)).map((t) => `${t.fichier} ${t.chemin}`)).toEqual([]);
+    expect(titres().filter((t) => dit(t.texte)).map((t) => `${t.fichier} ${t.chemin}`)).toEqual([]);
+    // Le filtre retient tout segment titre ou legende, quelle que soit la casse.
+    for (const c of ['a.titre', 'a.videTitre', 'a.sansTitre', 'a.titres.ALR-04', 'a.legendeTableau', 'a.verifierTitre', 'a.conservationTitre']) {
+      expect(estTitre(c), c).toBe(true);
+    }
+    expect(estTitre('a.corps.texte')).toBe(false);
+    // La règle voit « exercice » quelle que soit la casse.
+    for (const t of ['exercice', 'Exercice 2026', 'EXERCICE', 'Clore un exercice']) expect(dit(t), t).toBe(true);
+    expect(dit('Année comptable')).toBe(false);
   });
 
   it('annee-comptable-avec-dates', () => {
@@ -76,6 +84,6 @@ describe('vocabulaire année comptable', () => {
   it('e56-e57-corriges', () => {
     const e = toutes.filter((t) => t.fichier === 'e56.ts' || t.fichier === 'e57.ts');
     expect(e.length).toBeGreaterThan(20);
-    expect(e.filter((t) => EXERCICE.test(t.texte)).map((t) => `${t.fichier} ${t.chemin}`)).toEqual([]);
+    expect(e.filter((t) => dit(t.texte)).map((t) => `${t.fichier} ${t.chemin}`)).toEqual([]);
   });
 });
