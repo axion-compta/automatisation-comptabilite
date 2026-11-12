@@ -56,8 +56,7 @@ describe('à-nouveaux de N+1', () => {
     expect(code(() => aNouveauxProvisoires([{ compte: '999999', solde: 0 }], PLAN))).toBe('compte_hors_plan');
     expect(code(() => aNouveauxProvisoires([{ compte: '512000', solde: 1.5 }], PLAN))).toBe('montant_invalide');
     expect(code(() => aNouveauxProvisoires([{ compte: '512000', solde: Number.NaN }], PLAN))).toBe('montant_invalide');
-    expect(code(() => aNouveauxProvisoires([{ compte: '8x', solde: 0 }], ['8x']))).toBe('compte_invalide');
-    expect(code(() => aNouveauxProvisoires([{ compte: '801000', solde: 0 }], ['801000']))).toBe('compte_invalide');
+    for (const c of ['8x', '012000', '801000', '901000']) expect(code(() => aNouveauxProvisoires([{ compte: c, solde: 0 }], [c]))).toBe('compte_invalide');
   });
 
   it('ecriture-validee-en-n-recalcule-a-nouveaux', () => {
@@ -107,5 +106,6 @@ describe('à-nouveaux de N+1', () => {
     // N doit finir avant le début de N+1 (frontière : même jour refusé)
     expect(code(() => fecOfficielAutorise(n1, { fin: '2027-01-01', statut: 'cloture' }))).toBe('exercices_non_consecutifs');
     expect(code(() => fecOfficielAutorise(n1, { fin: '2026-12-31', statut: 'x' as never }))).toBe('statut_inconnu');
+    expect(code(() => fecOfficielAutorise({ debut: '2027-01-01', statut: 'x' as never }, undefined))).toBe('statut_inconnu');
   });
 });
