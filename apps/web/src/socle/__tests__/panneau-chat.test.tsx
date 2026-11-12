@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Fiche L15-T67 : panneau du chat en 4 états et omnibarre à deux sources.
-import { act } from 'react';
+import { act, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { chat } from '../../../../../packages/textes/src/ecrans/chat.js';
@@ -12,7 +12,7 @@ let racine: Root | null = null;
 const CLE = 'axion.preferences.v1';
 beforeEach(() => localStorage.clear());
 afterEach(() => (act(() => racine?.unmount()), (racine = null), (document.body.innerHTML = '')));
-async function monter(el: JSX.Element) {
+async function monter(el: ReactElement) {
   racine = createRoot(document.body.appendChild(document.createElement('div')));
   await act(async () => racine?.render(<FournisseurPreferences>{el}</FournisseurPreferences>));
 }
