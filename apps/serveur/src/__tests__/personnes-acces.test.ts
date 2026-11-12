@@ -43,14 +43,14 @@ describe('personnes : accès réservé à compta-parametrer', () => {
     for (const route of ROUTES) {
       const r = await route(monter(undefined));
       expect(r.statusCode).toBe(401);
-      expect(r.json()).toMatchObject({ defined: false, code: 'NON_AUTHENTIFIE', status: 401 });
+      expect(r.json()).toEqual({ defined: false, code: 'NON_AUTHENTIFIE', status: 401, message: 'NON_AUTHENTIFIE' });
     }
   });
   it('sans-permission-403-sur-chaque-route', async () => {
     for (const route of ROUTES) {
       const r = await route(monter(identiteDe('dir-a')));
       expect(r.statusCode).toBe(403);
-      expect(r.json()).toMatchObject({ defined: false, code: 'PERMISSION_MANQUANTE' });
+      expect(r.json()).toEqual({ defined: false, code: 'PERMISSION_MANQUANTE', status: 403, message: 'PERMISSION_MANQUANTE' });
     }
   });
   it('personnel-axion-403-meme-avec-la-permission', async () => {
@@ -80,7 +80,7 @@ describe('personnes : accès réservé à compta-parametrer', () => {
       courante = identiteDe('adms-a', { revendications: { acr: 'mfa', authTime: VIEUX } });
       const r = await traiter(a, id, issue);
       expect(r.statusCode).toBe(401);
-      expect(r.json()).toMatchObject({ defined: false, code: 'REAUTHENTIFICATION_REQUISE' });
+      expect(r.json()).toEqual({ defined: false, code: 'REAUTHENTIFICATION_REQUISE', status: 401, message: 'REAUTHENTIFICATION_REQUISE' });
       courante = identiteDe('adms-a');
       expect(await identifiants(a)).toEqual(avant);
       expect((await traiter(a, id, issue)).statusCode).toBe(200);
@@ -95,7 +95,7 @@ describe('personnes : accès réservé à compta-parametrer', () => {
   it('sans-double-facteur-401', async () => {
     const r = await lister(monter(identiteDe('adms-a', { revendications: { authTime: RECENT } })));
     expect(r.statusCode).toBe(401);
-    expect(r.json()).toMatchObject({ code: 'MFA_REQUIS' });
+    expect(r.json()).toEqual({ defined: false, code: 'MFA_REQUIS', status: 401, message: 'MFA_REQUIS' });
   });
   it('cas-limites-de-l-identite', async () => {
     const adms = identiteDe('adms-a');
