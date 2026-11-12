@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 // Fiche L19-T02 : le raccourci d'un bouton est annoncé (aria-keyshortcuts) et visible dans l'infobulle.
 import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { ReactNode } from "react";
@@ -30,11 +32,19 @@ describe("Bouton avec raccourci", () => {
 
   it("raccourci-visible-dans-l-infobulle", async () => {
     const c = await monter(<Bouton raccourci={raccourci}>Valider</Bouton>);
-    const id = bouton(c).getAttribute("aria-describedby");
-    expect(id).toBeTruthy();
-    const bulle = c.querySelector("#" + CSS.escape(id!))!;
+    const ids = (bouton(c).getAttribute("aria-describedby") ?? "").split(" ");
+    expect(ids).toHaveLength(1);
+    const bulle = c.querySelector("#" + CSS.escape(ids[0]!))!;
     expect(bulle.getAttribute("role")).toBe("tooltip");
     expect(bulle.textContent).toBe("Raccourci fictif (g)");
+  });
+
+  it("raccourci-garde-le-aria-describedby-de-l-appelant", async () => {
+    const c = await monter(<Bouton raccourci={raccourci} aria-describedby="raison-appelant">Valider</Bouton>);
+    const ids = (bouton(c).getAttribute("aria-describedby") ?? "").split(" ");
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).toBe("raison-appelant");
+    expect(infobulle(c)!.id).toBe(ids[1]);
   });
 
   it("sans-raccourci-rendu-inchange", async () => {
@@ -48,12 +58,17 @@ describe("Bouton avec raccourci", () => {
     expect(infobulle(c)!.hidden).toBe(true);
     await act(async () => bouton(c).focus());
     expect(infobulle(c)!.hidden).toBe(false);
+    await act(async () => {
+      bouton(c).dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(infobulle(c)!.hidden).toBe(true);
+    expect(document.activeElement).toBe(bouton(c));
     await act(async () => bouton(c).blur());
     expect(infobulle(c)!.hidden).toBe(true);
   });
 
   it("aucun-texte-en-dur", async () => {
-    const source = readFileSync("packages/ui/src/composants/Bouton.tsx", "utf8");
+    const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "Bouton.tsx"), "utf8");
     expect(source).not.toMatch(/[«»]|Raccourci/);
     const c = await monter(<Bouton raccourci={{ touche: "x", libelle: "Autre libellé" }}>Valider</Bouton>);
     expect(infobulle(c)!.textContent).toBe("Autre libellé (x)");

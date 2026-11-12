@@ -30,9 +30,10 @@ export function Bouton({ variante = "principal", desactive = false, type = "butt
         disabled={desactive}
         className={classes}
         aria-keyshortcuts={raccourci.touche}
-        aria-describedby={id}
+        aria-describedby={[reste["aria-describedby"], id].filter(Boolean).join(" ")}
         onFocus={(e) => { montrer(true)(); reste.onFocus?.(e); }}
         onBlur={(e) => { montrer(false)(); reste.onBlur?.(e); }}
+        onKeyDown={(e) => { if (e.key === "Escape") montrer(false)(); reste.onKeyDown?.(e); }}
         onMouseEnter={(e) => { montrer(true)(); reste.onMouseEnter?.(e); }}
         onMouseLeave={(e) => { montrer(false)(); reste.onMouseLeave?.(e); }}
       >

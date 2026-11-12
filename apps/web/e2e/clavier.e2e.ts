@@ -1,4 +1,13 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+/** Atteint l'élément par Tab seulement ; échec explicite si la borne est dépassée. */
+async function atteindre(page: Page, cible: Locator, maxTab = 80): Promise<void> {
+  for (let i = 0; i < maxTab; i++) {
+    if (await cible.evaluate((el) => el === document.activeElement)) return;
+    await page.keyboard.press('Tab');
+  }
+  throw new Error('élément non atteignable au clavier en ' + maxTab + ' Tab');
+}
 
 // Fiche L19-T02 : parcours au clavier seul (aucun clic), en mode simulé.
 test('parcours-clavier-seul', async ({ page }) => {
@@ -16,18 +25,22 @@ test('parcours-clavier-seul', async ({ page }) => {
   // Ouvrir une pièce : lien activé par Entrée, puis lien de retour.
   const lien = page.getByRole('table').getByRole('link').first();
   await expect(lien).toBeVisible();
-  await lien.focus();
+  await atteindre(page, lien);
+  await expect(lien).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/documents\/piece\?id=/);
   const retour = page.getByRole('link', { name: 'Retour à mes documents' });
-  await retour.focus();
+  await atteindre(page, retour);
+  await expect(retour).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Mes documents' })).toBeVisible();
 
   // Dépôt : le bouton de la zone s'active au clavier et ouvre le sélecteur de fichiers.
   await page.goto('/documents/deposer');
   const bouton = page.getByRole('button', { name: 'Choisir des fichiers' });
-  await bouton.focus();
+  await expect(bouton).toBeVisible();
+  await atteindre(page, bouton);
+  await expect(bouton).toBeFocused();
   await expect(bouton).toBeFocused();
   const selecteur = page.waitForEvent('filechooser');
   await page.keyboard.press('Enter');
