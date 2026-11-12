@@ -1,8 +1,11 @@
 import { oc } from '@orpc/contract';
 import { z } from 'zod';
+import { cheminSociete } from '../prefixe-routes.js';
 
 const DateJour = z.iso.date();
 const Entier = z.number().int().min(0);
+const sous = (suffixe: string) => cheminSociete(suffixe) as `/${string}`;
+const Societe = z.object({ s: z.string().min(1) });
 
 /** Véhicule personnel : l'immatriculation n'est jamais exposée, seulement la présence de la carte grise. */
 export const Vehicule = z.object({
@@ -39,14 +42,14 @@ export const ReponseVehicules = z.object({ body: z.array(Vehicule) });
 export const ReponseBareme = z.object({ body: LigneBareme });
 
 export const listerVehicules = oc
-  .route({ method: 'GET', path: '/vehicules', inputStructure: 'detailed', operationId: 'listerVehicules' })
-  .input(z.object({ query: z.object({ personne: z.string().min(1).max(50) }) }))
+  .route({ method: 'GET', path: sous('/vehicules'), inputStructure: 'detailed', operationId: 'listerVehicules' })
+  .input(z.object({ params: Societe, query: z.object({ personne: z.string().min(1).max(50) }) }))
   .output(ReponseVehicules);
 
 export const lireBaremeIk = oc
-  .route({ method: 'GET', path: '/parametres/bareme_ik_voiture', inputStructure: 'detailed', operationId: 'lireBaremeIk' })
+  .route({ method: 'GET', path: sous('/parametres/bareme_ik_voiture'), inputStructure: 'detailed', operationId: 'lireBaremeIk' })
   .errors({ BAREME_ABSENT: { status: 404 }, BAREME_AMBIGU: { status: 409 }, BAREME_ILLISIBLE: { status: 409 } })
-  .input(z.object({ query: z.object({ date: DateJour }) }))
+  .input(z.object({ params: Societe, query: z.object({ date: DateJour }) }))
   .output(ReponseBareme);
 
 export const vehiculesBareme = { listerVehicules, lireBaremeIk };
