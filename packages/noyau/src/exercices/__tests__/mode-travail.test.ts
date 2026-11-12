@@ -27,10 +27,12 @@ describe('mode-travail', () => {
     }
   });
   it('exercice-herite-de-la-societe', () => {
-    const societe = { modeTravail: 'saisie_seule' } as const;
-    expect(modeDeLExercice(societe)).toBe('saisie_seule');
-    expect(modeDeLExercice(societe, {})).toBe('saisie_seule');
-    expect(modeDeLExercice(societe, { modeTravail: undefined })).toBe('saisie_seule');
+    for (const mode of ['autonome', 'saisie_seule', 'expert_complet'] as const) {
+      const societe = { modeTravail: mode };
+      expect(modeDeLExercice(societe)).toBe(mode);
+      expect(modeDeLExercice(societe, {})).toBe(mode);
+      expect(modeDeLExercice(societe, { modeTravail: undefined })).toBe(mode);
+    }
   });
   it('exercice-surcharge-la-societe', () => {
     const societe = { modeTravail: 'autonome' } as const;
