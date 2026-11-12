@@ -1,19 +1,19 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1168 (L22-T01, code). Tête relue : 44500b3d1073dc7ba891ee2757030f009b64a3b3
-Relecteur Opus, consigne LOT5 section R. L'avis précédent sur cette branche portait sur la PR de conception #1139 ; c'est la première relecture de la PR de code.
+PR #1168 (L22-T01, code), seconde relecture. Tête relue : a62c61f4a29ad7d83d45988bb0caabb9765d98c9
+Relecteur Opus, consigne LOT5 section R. Avis précédent : A CORRIGER à la tête 44500b3d1073dc7ba891ee2757030f009b64a3b3.
 
-## Vérifié
-- Fichiers : les 10 fichiers du diff sont dans `fichiers_autorises`. Taille : 220 lignes ajoutées et 3 supprimées (maximum 250), aucune ligne « - - ».
-- Les 7 tests nommés existent et passent en local : parametres 13/13, noyau 21/21. CI entièrement verte (gardes, tests, types, lint, stryker, e2e, gitleaks, licences, verifier).
-- Aucune date en dur dans `references.ts` ni dans `franchise-mention.ts`. Les bornes `fin` sont exclues. Un numéro CIBS non confirmé reste `null` et donne `reference_inconnue`.
-- Mutations tuées : `<` remplacé par `<=` sur la bascule, retrait du garde `articleCibs === null`, retrait des tolérées, retrait du test `length === 0` (une liste vide lève une exception), et `every` remplacé par `some`.
-- Aucun secret, aucun prix, aucun mot interdit. Données fictives. Journal de 8 lignes.
+## Défauts précédents : levés (vérifié par mutation)
+1. `franchise-mention.ts:65` : `source_a_verifier` vient maintenant des seules mentions trouvées. Nouveau test `tolerance-a-verifier-gardee-si-cibs-valide` (2027-02-15, tolérance CGI `a_verifier`, CIBS `valide`). Mutations rejouées : `trouvees.every` → `admises.every` fait rougir 2 tests ; `every` → `some` fait rougir 1 test.
+2. `references.ts:37` : cas `valide` avant la bascule ajouté dans `statut-repris-de-la-ligne`. Mutation `statut: ligne.statut` → `'a_verifier'` dans la branche CGI : 1 test rouge.
 
-## Défauts
-1. `packages/noyau/src/controles/regles/franchise-mention.ts:65` : `sourceAVerifier` est calculé sur toutes les mentions admises, citées et tolérées, et non sur la mention réellement trouvée. Cas reproduit en local : une facture du 2027-02-15 lit la mention CGI, la tolérance est `a_verifier` et la mention CIBS `valide`. Le résultat est `{ resultat: 'OK' }` au lieu de `source_a_verifier`. Le statut « à vérifier » de la tolérance est perdu dès que la ligne CIBS sera validée, alors que la fin de tolérance reste incertaine. Correction : quand une mention est trouvée, déduire `source_a_verifier` des seules mentions trouvées (par exemple `trouvees.every((m) => m.statut !== 'valide')`). Ajouter un test de ce cas : CIBS `valide`, tolérance `a_verifier`, CGI lu → `{ resultat: 'OK', valeur: 'source_a_verifier' }`.
-2. `packages/noyau/src/tva/references.ts:37` : on peut remplacer `statut: ligne.statut` par `statut: 'a_verifier'` dans la branche CGI sans qu'aucun test ne rougisse. Correction : dans `statut-repris-de-la-ligne`, ajoute un cas avant la bascule, par exemple `citerReference('A', '2029-12-31', t)` → `{ texte: 'art. A du CGI', statut: 'valide' }`.
+## Aucune régression
+- 10 fichiers, tous dans `fichiers_autorises` ; 236 lignes ajoutées et 8 supprimées (244, maximum 250).
+- Tests ciblés : 35/35 (is-societes, cgi-cibs, references, franchise-mention).
+- Changement d'attente dans `absente` (cas `mixte` : ANCIENNE à vérifier lue → `OK` + `source_a_verifier`) : cohérent avec la correction demandée, aucun test retiré, deux cas ajoutés.
+- Journal de 8 lignes, commence par `# Journal L22-T01`. Aucun secret, aucun prix, aucun mot interdit, données fictives.
 
 ## Remarques
-- La fiche demande des tests « sur le VRAI catalogue ». Les tests nommés de CC-T13 utilisent des textes fictifs, car `@axion/noyau` ne dépend pas de `@axion/parametres` et la fiche n'autorise aucune nouvelle dépendance. Le vrai catalogue n'est vérifié que dans `is-societes.test.ts` et `cgi-cibs.test.ts`. C'est acceptable, à signaler à Will.
+- CI : `tests` et `verifier` sont rouges à cause du seul test `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`). Il échoue aussi sur `origin/main` (347401ab, reproduit en local) et la PR ne touche pas ces fichiers : ce n'est pas un défaut de l'auteur. À corriger dans une fiche dédiée avant la fusion.
+- Inchangé : la fiche demande des tests de CC-T13 « sur le VRAI catalogue », impossible sans dépendance de `@axion/noyau` vers `@axion/parametres` (défaut de fiche, pour Will).
 - Fiche sensible : fusion par Will seul.
