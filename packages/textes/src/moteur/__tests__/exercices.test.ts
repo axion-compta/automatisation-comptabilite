@@ -6,6 +6,9 @@ describe('textes exercices', () => {
     expect(phraseDatesParDefaut(2026)).toBe('Du 1er janvier 2026 au 31 décembre 2026');
     expect(() => phraseDatesParDefaut(26)).toThrow();
     expect(() => phraseDatesParDefaut(Number.NaN)).toThrow();
+    expect(() => phraseDatesParDefaut(12026)).toThrow();
+    expect(() => phraseDatesParDefaut(-2026)).toThrow();
+    expect(() => phraseDatesParDefaut(2026.5)).toThrow();
   });
 
   it('phrases-courtes-sans-mot-interdit', () => {

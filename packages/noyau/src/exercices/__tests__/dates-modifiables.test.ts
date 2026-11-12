@@ -24,5 +24,12 @@ describe('dates-modifiables', () => {
 
   it('dates-par-defaut', () => {
     expect(datesParDefaut(2026)).toEqual({ debut: '2026-01-01', fin: '2026-12-31' });
+    // Bornes acceptées.
+    expect(datesParDefaut(1000)).toEqual({ debut: '1000-01-01', fin: '1000-12-31' });
+    expect(datesParDefaut(9999)).toEqual({ debut: '9999-01-01', fin: '9999-12-31' });
+    // Années invalides refusées.
+    for (const mauvaise of [Number.NaN, Infinity, -Infinity, 2026.5, 999, 10000, -2026, 0]) {
+      expect(() => datesParDefaut(mauvaise)).toThrow();
+    }
   });
 });
