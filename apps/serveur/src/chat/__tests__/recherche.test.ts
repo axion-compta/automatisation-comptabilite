@@ -14,10 +14,14 @@ describe('recherche dans les conversations', () => {
     i.indexer(msg('m1', 'Facture du fournisseur Dupré'));
     i.indexer(msg('m2', 'Rien à voir ici', A, 'conv-2'));
     i.indexer(msg('m3', 'Autre facture fournisseur', A, 'conv-3', '2026-03-02T10:00:00.000Z'));
+    i.indexer(msg('m4', 'Dupré a appelé', A, 'conv-4', '2026-03-03T10:00:00.000Z'));
     const r = i.rechercher(A, 'facture');
     expect(ids(r)).toEqual(['m3', 'm1']);
     expect(r[0]).toEqual({ messageId: 'm3', conversationId: 'conv-3', le: '2026-03-02T10:00:00.000Z' });
     expect(ids(i.rechercher(A, 'facture fournisseur dupré'))).toEqual(['m1']);
+    // Tous les mots sont requis : m4 contient « dupré » sans « facture », m3 l'inverse.
+    expect(ids(i.rechercher(A, 'dupré facture'))).toEqual(['m1']);
+    expect(ids(i.rechercher(A, 'facture dupré'))).toEqual(['m1']);
     expect(i.rechercher(A, 'inexistant')).toEqual([]);
     expect(ids(i.rechercher(A, 'facture', 1))).toEqual(['m3']);
   });
