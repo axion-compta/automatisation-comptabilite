@@ -47,7 +47,8 @@ function fuseauOk(fuseau: string): void {
   }
 }
 function carteOk(c: CartePile): void {
-  const mauvais = !Number.isFinite(c.groupe) || !Number.isFinite(c.tvaEnJeu) || c.tvaEnJeu < 0;
+  const mauvais = !Number.isFinite(c.groupe) || !Number.isInteger(c.tvaEnJeu) || c.tvaEnJeu < 0;
+  if (c.masqueJusqu !== undefined && !Number.isFinite(c.masqueJusqu)) throw new ErreurPile('carte_invalide');
   if (mauvais || c.propositions.some((p) => !Number.isFinite(p.confiance))) throw new ErreurPile('carte_invalide');
 }
 

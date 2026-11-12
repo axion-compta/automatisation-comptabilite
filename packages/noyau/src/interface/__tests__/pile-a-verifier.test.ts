@@ -93,5 +93,14 @@ describe('pile « À vérifier »', () => {
     expect(code(() => pile([carte('a', { tvaEnJeu: 0 })]))).toBeUndefined();
     expect(code(() => pile([carte('a', { groupe: Number.NaN })]))).toBe('carte_invalide');
     expect(code(() => pile([carte('a', { propositions: [prop('p', Number.NaN)] })]))).toBe('carte_invalide');
+    const inf = Number.POSITIVE_INFINITY;
+    const moinsInf = Number.NEGATIVE_INFINITY;
+    expect(code(() => pile([carte('a', { groupe: inf }), carte('b', { groupe: inf })]))).toBe('carte_invalide');
+    expect(code(() => pile([carte('a', { tvaEnJeu: inf })]))).toBe('carte_invalide');
+    expect(code(() => pile([carte('a', { propositions: [prop('p', inf)] })]))).toBe('carte_invalide');
+    expect(code(() => pile([carte('a', { tvaEnJeu: 0.5 })]))).toBe('carte_invalide');
+    expect(code(() => pile([carte('a', { tvaEnJeu: 1000 })]))).toBeUndefined();
+    for (const v of [Number.NaN, inf, moinsInf]) expect(code(() => pile([carte('a', { masqueJusqu: v })]))).toBe('carte_invalide');
+    expect(code(() => pile([carte('a', { masqueJusqu: T })]))).toBeUndefined();
   });
 });
