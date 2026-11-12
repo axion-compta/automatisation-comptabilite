@@ -70,7 +70,7 @@ test('rapport-mal-forme-refuse', () => {
   assert.throws(() => lireSeuils(`${ENTETE}\n,a,1,1,1\n`), /5 colonnes/);
   assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,1,x,1\n`), /gestes_max/);
   assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,1,1,x\n`), /pieges_min_pct/);
-  assert.throws(() => cloturer('P1', [rap()], seuils, { correction: 'hier' }), /correction/);
+  for (const c of ['hier', '2026-1-5']) assert.throws(() => cloturer('P1', [rap()], seuils, { correction: c }), /AAAA-MM-JJ/);
   assert.deepEqual(lireRapport(JSON.stringify(rap())).parcours, 'P1');
   // version non texte, lignes à 6 colonnes, seuils négatifs
   assert.throws(() => lireRapport(JSON.stringify(rap({ version: 2 }))), /version/);
@@ -86,6 +86,9 @@ test('rapport-frontieres-pieges-et-nan', () => {
     assert.throws(() => lireRapport(JSON.stringify(mes(o))), /mal formé/);
   }
   assert.equal(lireRapport(JSON.stringify(mes({ duree_s: 0 }))).mesures.duree_s, 0);
+  assert.equal(lireRapport(JSON.stringify(mes({ gestes: 0 }))).mesures.gestes, 0);
+  const brut = '{"parcours":"P1","date":"2026-11-12","version":"v1","mesures":{"duree_s":1e999,"gestes":1,"pieges_pct":50}}';
+  assert.throws(() => lireRapport(brut), /duree_s/);
 });
 
 test('sortie-tableau-par-parcours', () => {
