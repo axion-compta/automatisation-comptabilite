@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { genererAnomalies, lancerBanc, NB_PROPRES, verdictBanc } from './banc-donnees.js';
+import { genererAnomalies, genererCasConnus, lancerBanc, NB_PROPRES, verdictBanc } from './banc-donnees.js';
 
 // Critère de qualité du banc (V3-CTL-079) : 5 % de 200 pièces propres.
 const MAX_FAUSSES_ALERTES = 10;
@@ -42,5 +42,26 @@ describe('banc d anomalies injectées', () => {
     const r = lancerBanc(['CC-K05']);
     expect(r.detectees).toBe(19);
     expect(verdictBanc({ ...r, maxFaussesAlertes: MAX_FAUSSES_ALERTES })).toBe('rouge');
+  });
+
+  it('ht-pris-pour-ttc-detecte', () => {
+    const cas = genererCasConnus().find((c) => c.id === 'K01');
+    expect(cas?.famille).toBe('montants');
+    expect(cas?.executer([]).some((t) => t.regleId === 'CC-K06' && t.resultat === 'ALERTE')).toBe(true);
+    // sans la règle attendue, le cas n'est plus détecté
+    expect(cas?.executer(['CC-K06'])).toEqual([]);
+  });
+
+  it('remboursement-non-lie-detecte', () => {
+    const cas = genererCasConnus().find((c) => c.id === 'K02');
+    expect(cas?.famille).toBe('paiements');
+    expect(cas?.executer([]).some((t) => t.regleId === 'CC-K13' && t.resultat === 'ALERTE')).toBe(true);
+    expect(cas?.executer(['CC-K13'])).toEqual([]);
+  });
+
+  it('cas-connus-sans-effet-sur-le-banc-de-base', () => {
+    expect(genererCasConnus()).toHaveLength(2);
+    expect(genererAnomalies()).toHaveLength(20);
+    expect(lancerBanc().attendues).toBe(20);
   });
 });
