@@ -15,7 +15,7 @@ const rempl = (modele: string, cle: string, valeur: string | number) => modele.r
 const LIBELLES_ACTION = {
   mention: e25.carte.mentionAvant, mentionValidee: (personne: string, date: string) => rempl(rempl(e25.carte.mentionApres, 'personne', personne), 'date', date),
   objets: (n: number) => rempl(e25.carte.objetsNombre, 'n', n), periode: (p: string) => rempl(e25.carte.periodeDe, 'periode', p),
-  appliquer: e25.carte.appliquer, confirmer: e25.carte.confirmer, ouvrirEcran: e25.carte.ouvrirEcran, pourquoi: e25.pourquoi.bouton,
+  valider: e25.carte.valider, modifier: e25.carte.modifier, refuser: e25.carte.refuser, plusTard: e25.carte.plusTard, rouvrir: e25.carte.rouvrir, confirmer: e25.carte.confirmer, ouvrirEcran: e25.carte.ouvrirEcran, pourquoi: e25.pourquoi.bouton,
 };
 const rien = () => undefined;
 export type ReponsePourquoi = { decision: DecisionIa; appel: AppelIa };
@@ -24,7 +24,7 @@ export type ActionsMessage = {
   etats: Record<string, EtatCarteAction>;
   pourquoi: Record<string, ReponsePourquoi>;
   enCours: boolean;
-  onAppliquer: (id: string) => void; onPourquoi: (id: string) => void; onChoix: (code: string) => void;
+  onAppliquer: (id: string) => void; onModifier: (id: string) => void; onRefuser: (id: string) => void; onRouvrir: (id: string) => void; onPourquoi: (id: string) => void; onChoix: (code: string) => void;
   onRegenerer: () => void; onCopier: (texte: string) => void; onOuvrirVue: () => void;
 };
 
@@ -47,6 +47,10 @@ export function MessageDiscussion({ message, actions }: { message: MessageEtat; 
             libelles={LIBELLES_ACTION}
             etat={actions.etats[pr.proposition_id] ?? 'a_valider'}
             onAppliquer={() => actions.onAppliquer(pr.proposition_id)}
+            contexte="chat"
+            onModifier={() => actions.onModifier(pr.proposition_id)}
+            onRefuser={() => actions.onRefuser(pr.proposition_id)}
+            onRouvrir={() => actions.onRouvrir(pr.proposition_id)}
             onOuvrirEcran={actions.onOuvrirVue}
             onPourquoi={() => actions.onPourquoi(pr.proposition_id)}
           />
