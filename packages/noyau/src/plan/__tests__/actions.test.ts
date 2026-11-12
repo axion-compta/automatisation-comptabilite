@@ -131,6 +131,7 @@ describe('actions du plan', () => {
     expect(codePlan(() => fusionner(PLAN, [...ECRITURES, ecr('e9', ['6064', '401'])], apercu, true))).toBe(
       'apercu_perime',
     );
+    expect(codePlan(() => fusionner(PLAN, ECRITURES.slice(1), apercu, true))).toBe('apercu_perime');
   });
 
   it('correspondance-categorie-compte', () => {
