@@ -25,22 +25,15 @@ export interface OptionsBrouillon {
   stockage?: StockageBrouillon;
 }
 
-const NOM_BASE = 'axion-brouillons';
+type Magasin = 'brouillons' | 'cles';
 
-function ouvrir(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const demande = indexedDB.open(NOM_BASE, 1);
-    demande.onupgradeneeded = () => {
-      demande.result.createObjectStore('brouillons');
-      demande.result.createObjectStore('cles');
-    };
+async function operer<R>(magasin: Magasin, mode: IDBTransactionMode, f: (m: IDBObjectStore) => IDBRequest<R>): Promise<R> {
+  const base = await new Promise<IDBDatabase>((resolve, reject) => {
+    const demande = indexedDB.open('axion-brouillons', 1);
+    demande.onupgradeneeded = () => (['brouillons', 'cles'] as const).forEach((n) => demande.result.createObjectStore(n));
     demande.onsuccess = () => resolve(demande.result);
     demande.onerror = () => reject(demande.error);
   });
-}
-
-async function operer<R>(magasin: 'brouillons' | 'cles', mode: IDBTransactionMode, f: (m: IDBObjectStore) => IDBRequest<R>): Promise<R> {
-  const base = await ouvrir();
   try {
     return await new Promise<R>((resolve, reject) => {
       const requete = f(base.transaction(magasin, mode).objectStore(magasin));
@@ -55,23 +48,11 @@ async function operer<R>(magasin: 'brouillons' | 'cles', mode: IDBTransactionMod
 /** Adaptateur IndexedDB par défaut. */
 export function stockageIndexedDb(): StockageBrouillon {
   return {
-    async lire(cle) {
-      const v = await operer<Uint8Array | undefined>('brouillons', 'readonly', (m) => m.get(cle));
-      return v ?? null;
-    },
-    async ecrire(cle, octets) {
-      await operer('brouillons', 'readwrite', (m) => m.put(octets, cle));
-    },
-    async effacer(cle) {
-      await operer('brouillons', 'readwrite', (m) => m.delete(cle));
-    },
-    async lireCle(cle) {
-      const v = await operer<CryptoKey | undefined>('cles', 'readonly', (m) => m.get(cle));
-      return v ?? null;
-    },
-    async ecrireCle(cle, valeur) {
-      await operer('cles', 'readwrite', (m) => m.put(valeur, cle));
-    },
+    lire: async (cle) => (await operer<Uint8Array | undefined>('brouillons', 'readonly', (m) => m.get(cle))) ?? null,
+    ecrire: async (cle, octets) => void (await operer('brouillons', 'readwrite', (m) => m.put(octets, cle))),
+    effacer: async (cle) => void (await operer('brouillons', 'readwrite', (m) => m.delete(cle))),
+    lireCle: async (cle) => (await operer<CryptoKey | undefined>('cles', 'readonly', (m) => m.get(cle))) ?? null,
+    ecrireCle: async (cle, valeur) => void (await operer('cles', 'readwrite', (m) => m.put(valeur, cle))),
   };
 }
 
