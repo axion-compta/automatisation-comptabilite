@@ -55,6 +55,7 @@ describe('cas-forme', () => {
     // entrées invalides refusées, formes inconnues refusées
     expect(() => proposerSelonForme({ montant: c(0) }, 'EI')).toThrow(ErreurCasForme);
     expect(() => proposerSelonForme({ montant: NaN as never }, 'EI')).toThrow(ErreurCasForme);
+    for (const m of [1.5, -1.5, Infinity, -Infinity]) expect(() => proposerSelonForme({ montant: m as never }, 'EI')).toThrow(ErreurCasForme);
     expect(() => proposerSelonForme({ montant: entree }, 'association')).toThrow(ErreurCasForme);
     expect(() => proposerSelonForme({ montant: entree }, '')).toThrow(ErreurCasForme);
   });
