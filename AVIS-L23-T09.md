@@ -1,28 +1,22 @@
-VERDICT: A CORRIGER
+VERDICT: OK
+b0b05c78ca08bc7b0f6080f1dd9815a68fad98e6
 
-PR n°1195, fiche L23-T09, tête relue : 68041c0d81fd117e4baede4fcce81c3a9c77e841
+Seconde relecture de la PR n°1195, fiche L23-T09, au SHA de tête b0b05c78ca08bc7b0f6080f1dd9815a68fad98e6. L'avis précédent (A CORRIGER, tête 68041c0) est levé. Fiche sensible : fusion par Will seul.
 
-## Défauts
-1. `packages/noyau/src/change/taux.ts` (`dateDuTauxApplicable`, ligne `const publie = ...`) : mutation survivante. Supprimer `&& jourInstant === m[1]!` laisse les 5 tests du banc verts. Or cette condition règle un vrai cas : une consultation un samedi ou un dimanche avant l'heure de publication. Exemple : opération du samedi 2027-05-15, consultée le 2027-05-15T10:00Z. Le code rend le vendredi 2027-05-14 ; le mutant rend le jeudi 2027-05-13.
-   Correction demandée : dans `samedi-taux-du-vendredi`, ajouter `expect(dateDuTauxApplicable('2027-05-15', '2027-05-15T10:00Z', REGLE)).toBe('2027-05-14');`.
-2. `taux.ts` (`exigerRegle`) : remplacer `regle.jourSansCotation !== 'veille_ouvree'` par `false` survit. Aucun test ne refuse une valeur inconnue de `jourSansCotation`.
-   Correction demandée : ajouter `expect(() => convertirAuCentime(100, 110000000, { ...REGLE, jourSansCotation: 'autre' as never })).toThrow(ErreurChange);`.
-3. `taux.ts` (`regleChangeAuJour`) : deux filtres ne sont pas testés.
-   - `trouvees.length !== 1` → `< 1` survit : deux lignes actives qui se chevauchent doivent lever `regle_invalide`, et le mutant prend la première en silence.
-   - Supprimer `l.cle === 'change.bce.regle' &&` survit aussi.
-   Correction demandée : dans `regle-lue-du-parametre-date`, ajouter un cas avec deux lignes non retirées qui couvrent la même date (erreur attendue), puis un cas où seule une ligne d'une autre clé couvre la date (erreur attendue).
-4. `taux.ts` (`exigerRegle`) : supprimer `regle === null ||` survit. `regleChangeAuJour` avec `valeur: 'null'` doit lever `ErreurChange` et non `TypeError`.
-   Correction demandée : ajouter `expect(() => regleChangeAuJour([{ ...lignes[0]!, valeur: 'null' }], 'FR', '2027-06-01')).toThrow(ErreurChange);`.
+## Défauts précédents, vérifiés par mutation dans `packages/noyau/src/change/taux.ts`
+1. Suppression de `&& jourInstant === m[1]!` : un test échoue (samedi 2027-05-15 consulté le 2027-05-15T10:00Z). Levé.
+2. `regle.jourSansCotation !== 'veille_ouvree'` neutralisé : un test échoue. Levé.
+3. `trouvees.length !== 1` changé en `< 1` : un test échoue (deux lignes actives). Filtre `l.cle === 'change.bce.regle'` supprimé : un test échoue (ligne d'une autre clé). Levé.
+4. Suppression de `regle === null ||` : un test échoue (`valeur: 'null'`). Levé.
 
-## Vérifié
-- Fichiers : 6, tous dans `fichiers_autorises` ; 256 lignes ajoutées sur 260 au plus. `taux.test.ts` n'est pas modifié et passe (15 tests).
-- Les 6 tests nommés passent en local (5 + 1).
-- Le banc compte 50 cas en table, dont au moins 10 demi-centimes et des montants négatifs. Conversion BigInt via `fraction`.
-- Mutations tuées : `<=` 5 → 6 (samedi ouvré), `jourInstant` sans repli sur la veille ouvrée, ainsi que les bornes `effet_debut` et `effet_fin` (frontière du 2028-01-01).
-- Paramètre en `a_verifier` ; aucun appel réseau. Aucun secret, aucun prix, aucun mot interdit ; journal de 7 lignes.
-- CI au SHA relu : 8 jobs verts, `verifier` encore en file.
+Autres mutations, toutes tuées : filtre `statut !== 'retire'` supprimé ; `date < l.effet_fin` changé en `<=`.
 
-## Remarques
-- Le `source_url` provisoire (accueil BOFiP) pour la BCE est signalé comme tel : à remplacer par la vraie page lors de la vérification.
-- L'heure de 15:00 UTC dépend de l'heure d'été ou d'hiver : à trancher au moment de la vérification (statut `a_verifier`).
-- Fiche sensible : fusion par Will seul.
+## Contrôles
+- Diff : 6 fichiers, tous dans `fichiers_autorises` ; 260 lignes sur 260.
+- `taux.ts` est inchangé depuis la première relecture. `taux.test.ts` n'est pas modifié et passe. Depuis la première relecture, le test n'a perdu que trois commentaires ; aucune assertion n'a été retirée.
+- Tests : 44 sur 44 dans `src/change` ; `change-bce.test.ts` passe. Journal : 7 lignes.
+- Aucun mot interdit, aucun secret, aucun prix.
+
+## Remarques (ne bloquent pas)
+- CI : `tests` et `verifier` sont rouges pour la seule cause `ouverture.test.mjs > onze-cases-attendues`. Ce test échoue aussi sur `origin/main`. Ce n'est pas un défaut de cette PR.
+- `source_url` est provisoire ; l'heure 15:00 UTC reste à trancher à la vérification du paramètre.
