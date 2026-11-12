@@ -1,13 +1,20 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR n°1141, tête relue : f72f8acddf11de2dbefb8250fcbb92387ad81c9b
+PR n°1141, fiche L20-T11. Seconde relecture Opus du 12/11/2026 (consigne LOT5, section R).
+SHA de tête relu : b20c3d90f02d974dcf9ad4d0e4310b2fb840a5b2
 
-## Défauts
-1. apps/serveur/src/exports/zip-exercice.ts:39-43 : le commentaire (et le journal, ligne 3) dit « un contenu différent ne reprend jamais d'anciennes parties », mais la signature du suivi ne prend que les rayons, les noms, chemins et tailles du plan, pas le contenu. Reproduit avec un test jetable : export d'un fichier « montant 100 », puis même fichier passé à « montant 900 » (même taille), second export avec le même dépôt et le même suivi : la partie ancienne est reprise et le ZIP contient toujours « montant 100 ». Un export refait après une correction de même longueur rend donc un ZIP périmé. Correction demandée : faire entrer le contenu dans la signature (par exemple l'empreinte de chaque fichier lu, ou une empreinte/date de version fournie par `SourceExercice.lister`), ou bien limiter la reprise à une même exécution interrompue ; puis corriger le commentaire et le journal pour dire exactement ce que le code assure réellement.
-2. apps/serveur/src/exports/__tests__/zip-exercice.test.ts : mutations survivantes, vérifiées : retirer le plan de la signature (ligne 40), retirer les rayons de la signature, ou supprimer le contrôle final `verifierParties` (ligne 62) laisse les 6 tests verts. Correction demandée : un test où le même suivi sert à deux exports aux rayons différents puis au contenu changé (même taille) et qui exige une partie refaite ; un test où le contrôle final échoue (par exemple dépôt qui altère les octets) et qui attend `controle_absent`.
+## Défauts précédents : levés (vérifié par mutation)
+1. Contenu hors signature du suivi : la signature inclut désormais l'empreinte de chaque fichier lu (`zip-exercice.ts:38-40`). Test `contenu-change-de-meme-taille-refait` : un contenu changé de même taille refait la partie et le ZIP contient le nouveau contenu. Mutation « empreintes retirées de la signature » : rouge. Commentaire et journal disent maintenant ce que fait le code.
+2. Mutations survivantes : « rayons retirés de la signature », « plan retiré de la signature », « contrôle final des parties supprimé », « contrôle final du manifeste supprimé » : toutes rouges (tests `signature-du-suivi-depend-des-rayons-et-du-plan` et `controle-final-echoue-si-le-depot-altere-ou-perd-une-partie-ou-le-manifeste`).
 
-## Vérifié
-- Fichiers modifiés tous dans `fichiers_autorises` ; diff 219 lignes (max 220) ; journal 6 lignes, commence par `# Journal L20-T11`.
-- Tests ciblés : 6/6 verts. Mutations qui rougissent : rayons vides acceptés, filtre exercice, filtre rayon, relecture d'empreinte.
-- Taille 0, négative, NaN refusées (par `decouper`) ; segments `../x` et `a/b` refusés.
-- Aucun secret, aucun prix, aucun mot interdit, données fictives. CI verte à la tête.
+## Aucune régression
+- Mutations rejouées, toutes rouges : relecture d'empreinte à la reprise, filtre exercice, filtre rayon, notation du suivi, rayons vides acceptés.
+- `vitest` sur `apps/serveur/src/exports/__tests__/zip-exercice.test.ts` : 9 sur 9 verts ; les 5 tests nommés de la fiche sont présents.
+- 4 fichiers, tous dans `fichiers_autorises` ; 219 lignes ajoutées et 1 retirée (max 220) ; aucune ligne « - - ». Journal de 4 lignes, commence par « # Journal L20-T11 ».
+- eslint propre ; `garde:perimetre` vert. Aucun secret, prix, nom réel ni mot interdit ; données fictives.
+- CI : `tests` et `verifier` rouges à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`, en-tête `porte_rgpd`), rouge aussi sur main ; la PR n'y touche pas : pas un défaut de l'auteur. `gardes`, `types`, `lint`, `e2e`, `gitleaks` verts.
+
+## Remarques (non bloquantes)
+- Fiche `sensible: oui` : fusion par Will seul.
+- La mutation « rayons non triés dans la signature » survit : l'ordre des rayons passés change alors le suivi (reprise perdue, jamais de ZIP faux). Un test pourra l'ajouter plus tard.
+- Tout le contenu est lu une première fois pour la signature, puis relu pour les parties à refaire : coût en lecture doublé sur un gros exercice, acceptable pour la fiche.
