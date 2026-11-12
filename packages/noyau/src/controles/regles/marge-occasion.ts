@@ -46,9 +46,12 @@ export function regleMargeOccasion(
     declencheurs: ['arrivee', 'continu', 'a_la_demande'],
     actif: true,
     evaluer({ piece }): SortieRegle {
-      if (!piece.lignes.some((l) => natures.includes(normaliser(l.nature)))) return { resultat: 'NON_APPLICABLE' };
+      const occasion = piece.lignes.filter((l) => natures.includes(normaliser(l.nature)));
+      if (occasion.length === 0) return { resultat: 'NON_APPLICABLE' };
+      // Chaque ligne d'occasion est jugée sur sa propre TVA (montant invalide : entree_invalide).
+      const tvaLignes = occasion.map((l) => exigerCentimes(l.tva));
       if (mentionLue(piece, mentions)) return { resultat: 'OK', valeur: 'MARGE' };
-      return exigerCentimes(piece.totaux.tva) === 0 ? alerte(undefined, 'marge_a_tort_ou_oubliee') : ok();
+      return tvaLignes.some((t) => t === 0) ? alerte(undefined, 'marge_a_tort_ou_oubliee') : ok();
     },
   };
 }

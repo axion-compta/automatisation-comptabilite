@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { centimes, type Centimes } from '../../../argent/index.js';
+import type { Centimes } from '../../../argent/index.js';
 import type { PieceControlee } from '../commun.js';
 import { montantsVidesLegitimes, regleMargeOccasion, tvaDeductibleMarge } from '../marge-occasion.js';
 
-const c = (n: number): Centimes => centimes(n);
+// Sans contrôle, pour pouvoir fabriquer des montants invalides (NaN, Infinity, 1.5).
+const c = (n: number): Centimes => n as Centimes;
 const MENTIONS = ['TVA sur la marge'];
 const OCCASION = ['bien_occasion'];
 const piece = (mentions: string[], ht: number, tva: number, nature = 'bien_occasion'): PieceControlee => ({
@@ -49,6 +50,41 @@ describe('TVA sur marge', () => {
     expect(montantsVidesLegitimes(piece([], 0, 0), MENTIONS)).toBe(false);
     // Une mention vide dans la liste des mentions reconnues ne reconnaît rien.
     expect(montantsVidesLegitimes(piece(['x'], 0, 0), [''])).toBe(false);
+  });
+
+  it('facture-mixte-sans-mention-carte-quel-que-soit-lordre', () => {
+    const occ = { taux: 0, nature: 'bien_occasion', ht: c(80000), tva: c(0), ttc: c(80000) };
+    const neuf = { taux: 2000, nature: 'bien_neuf', ht: c(10000), tva: c(2000), ttc: c(12000) };
+    const mixte = (lignes: PieceControlee['lignes']): PieceControlee => ({
+      ...piece([], 90000, 2000),
+      lignes,
+    });
+    const attendu = { resultat: 'ALERTE', valeur: 'marge_a_tort_ou_oubliee' };
+    expect(regle.evaluer({ piece: mixte([occ, neuf]) })).toEqual(attendu);
+    expect(regle.evaluer({ piece: mixte([neuf, occ]) })).toEqual(attendu);
+    // Deux lignes d'occasion, une seule à 0 de TVA : carte (et non « toutes »).
+    const occTva = { ...occ, taux: 2000, tva: c(16000), ttc: c(96000) };
+    expect(regle.evaluer({ piece: mixte([occTva, occ]) })).toEqual(attendu);
+    expect(regle.evaluer({ piece: mixte([occ, occTva]) })).toEqual(attendu);
+  });
+
+  it('nature-normalisee-casse-et-accents', () => {
+    const r = regleMargeOccasion(MENTIONS, ['Bien d’Occasion Rénové']);
+    expect(r.evaluer({ piece: piece([], 80000, 0, 'BIEN D’OCCASION RENOVE') })).toMatchObject({ resultat: 'ALERTE' });
+    // Et côté pièce : nature reçue accentuée, nature réglée sans accent.
+    expect(regleMargeOccasion(MENTIONS, ['bien renove']).evaluer({ piece: piece([], 80000, 0, 'Bien Rénové') })).toMatchObject({
+      resultat: 'ALERTE',
+    });
+  });
+
+  it('montants-invalides-levent-et-piece-sans-ligne-non-applicable', () => {
+    for (const mauvais of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      expect(() => regle.evaluer({ piece: piece([], 80000, mauvais) })).toThrow(expect.objectContaining({ code: 'entree_invalide' }));
+      expect(() => regle.evaluer({ piece: piece(['TVA sur la marge'], 80000, mauvais) })).toThrow(expect.objectContaining({ code: 'entree_invalide' }));
+      expect(() => tvaDeductibleMarge(piece(['TVA sur la marge'], 80000, mauvais), MENTIONS)).toThrow(expect.objectContaining({ code: 'entree_invalide' }));
+      expect(() => tvaDeductibleMarge(piece(['TVA sur la marge'], mauvais, 0), MENTIONS)).toThrow(expect.objectContaining({ code: 'entree_invalide' }));
+    }
+    expect(regle.evaluer({ piece: { ...piece([], 0, 0), lignes: [] } })).toEqual({ resultat: 'NON_APPLICABLE' });
   });
 
   it('bien-neuf-non-applicable', () => {
