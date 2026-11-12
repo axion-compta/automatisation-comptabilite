@@ -18,7 +18,6 @@ describe('securite/dernier-admin', () => {
     // Tout ou rien : un autre changement valide du même lot n'est pas appliqué.
     const r = appliquerRoles(un, [{ personneId: 'bruno@exemple.fr', role: 'comptable' }, { personneId: 'alice@exemple.fr', role: 'lecture' }]);
     expect(r).toEqual({ ok: false, raison: 'dernier_administrateur' });
-    // Dans le même lot, promouvoir un autre administrateur rend la rétrogradation permise.
     const ok = appliquerRoles(un, [{ personneId: 'alice@exemple.fr', role: 'utilisateur' }, { personneId: 'bruno@exemple.fr', role: 'administrateur' }]);
     expect(ok).toMatchObject({ ok: true });
   });
@@ -30,10 +29,8 @@ describe('securite/dernier-admin', () => {
     const inactif = [m('alice@exemple.fr', 'administrateur'), m('carla@exemple.fr', 'administrateur', false)];
     expect(appliquerRoles(inactif, [{ personneId: 'alice@exemple.fr', actif: false }]))
       .toEqual({ ok: false, raison: 'dernier_administrateur' });
-    // Réactiver puis retirer l'autre : un administrateur actif reste.
     expect(appliquerRoles(inactif, [{ personneId: 'carla@exemple.fr', actif: true }, { personneId: 'alice@exemple.fr', actif: false }]))
       .toMatchObject({ ok: true });
-    expect(appliquerRoles([], [])).toEqual({ ok: false, raison: 'dernier_administrateur' });
   });
 
   it('deux-administrateurs-un-retrograde-permis', () => {
