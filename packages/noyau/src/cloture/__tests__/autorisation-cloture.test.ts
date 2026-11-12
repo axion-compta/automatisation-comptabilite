@@ -39,7 +39,6 @@ describe('autorisation de clôture', () => {
 
   it('administrateur-sans-accord-refuse', () => {
     expect(autoriserCloture(demande())).toMatchObject({ permis: false, raison: 'accord_expert_requis' });
-    // document : empreinte mal formée, ou rattaché à un autre exercice
     expect(autoriserCloture(demande({ accord: { type: 'document', empreinte: 'abc', rattacheA: 'ex-2026' } })))
       .toMatchObject({ permis: false, raison: 'accord_expert_requis' });
     expect(autoriserCloture(demande({ accord: { type: 'document', empreinte: EMPREINTE, rattacheA: 'ex-2025' } })))
@@ -71,7 +70,6 @@ describe('autorisation de clôture', () => {
     expect(autoriserCloture({ ...d, confirmations: CONF.confirmations, responsabiliteAcceptee: false }))
       .toMatchObject({ permis: false, raison: 'confirmation_renforcee_requise' });
     expect(autoriserCloture({ ...d, ...CONF }).permis).toBe(true);
-    // un autre rôle reste refusé, même avec confirmations
     expect(autoriserCloture({ ...d, ...CONF, auteur: { personneId: 'p-u', role: 'utilisateur', reauthRecente: true } }))
       .toMatchObject({ permis: false, raison: 'role_insuffisant' });
   });
@@ -79,7 +77,6 @@ describe('autorisation de clôture', () => {
   it('chat-seul-refuse', () => {
     for (const canal of ['chat', 'voix'] as const) {
       expect(autoriserCloture(demande({ canal, auteur: expert }))).toMatchObject({ permis: false, raison: 'chat_seul' });
-      // confirmation à l'écran : le canal ne bloque plus
       expect(autoriserCloture(demande({ canal, auteur: expert, confirmeeAEcran: true })).permis).toBe(true);
     }
     for (const canal of ['inconnu', 'api', 'systeme', 'import'])

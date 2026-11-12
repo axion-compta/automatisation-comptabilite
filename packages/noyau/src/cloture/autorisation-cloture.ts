@@ -1,7 +1,5 @@
 import { type Canal, type Role } from '../securite/types.js';
 
-// Règle de qui peut clôturer et avec quel accord. Pur : ne branche rien (geste G02 hors périmètre).
-
 export type RaisonRefusCloture =
   | 'chat_seul'
   | 'role_insuffisant'
@@ -35,9 +33,7 @@ export interface DemandeCloture {
   accord?: AccordExpert;
   confirmations?: readonly Confirmation[];
   responsabiliteAcceptee?: boolean;
-  /** Confirmation faite à l'écran : seule façon de clôturer depuis le chat ou la voix. */
   confirmeeAEcran?: boolean;
-  /** Instant de la décision, fourni par l'appelant. */
   maintenant: string;
 }
 
