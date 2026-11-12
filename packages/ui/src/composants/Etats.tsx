@@ -44,3 +44,27 @@ export function EtatErreur({ message, libelleReessayer, surReessayer }: EtatErre
     </div>
   );
 }
+
+export interface EtatDouteProps {
+  /** Texte de l'état (« à vérifier »), fourni par les textes de l'appelant. */
+  message: string;
+  /** Raison du doute, toujours affichée en texte. */
+  raison: string;
+  libelleAction?: string;
+  surAction?: () => void;
+}
+
+/** État « doute » : l'information existe mais demande une vérification. Dit par le texte, jamais par la couleur seule. */
+export function EtatDoute({ message, raison, libelleAction, surAction }: EtatDouteProps) {
+  return (
+    <div className="axion-etat axion-etat--doute" role="status">
+      <p className="axion-etat__titre">{message}</p>
+      <p className="axion-etat__detail">{raison}</p>
+      {libelleAction && surAction ? (
+        <Bouton variante="discret" onClick={surAction}>
+          {libelleAction}
+        </Bouton>
+      ) : null}
+    </div>
+  );
+}
