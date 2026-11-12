@@ -17,7 +17,7 @@ export const CATALOGUE_CHANGE_BCE: ParametreSource[] = [
     source:
       'Taux de référence publiés par la BCE (heure, jour sans cotation et arrondi à confirmer à la vérification, ne pas présenter comme règle légale)',
     source_url: 'https://bofip.impots.gouv.fr/',
-    source_titre: 'Conversion des montants en devises (bofip.impots.gouv.fr), taux de la BCE',
+    source_titre: 'Source à identifier (taux de référence de la BCE) : page d’accueil du BOFiP en attendant',
     source_maj: null,
     date_releve: '2026-11-12',
   },

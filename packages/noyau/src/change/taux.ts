@@ -137,16 +137,20 @@ function veilleOuvree(date: string): string {
   return d;
 }
 
-/** Date du taux de la BCE à appliquer : le dernier jour coté publié à l'instant de consultation (UTC, AAAA-MM-JJTHH:MMZ). */
+/**
+ * Date du taux de la BCE à appliquer : le jour coté de l'opération s'il est déjà publié à l'instant de consultation
+ * (UTC, AAAA-MM-JJTHH:MMZ), sinon le dernier jour publié. Limite : seuls samedi et dimanche sont sans cotation ;
+ * les jours fériés de fermeture TARGET sont repris par `resoudreTaux` (délai en jours, taux manquant).
+ */
 export function dateDuTauxApplicable(dateOperation: string, instantConsultation: string, regle: RegleChange): string {
   exigerDate(dateOperation);
   exigerRegle(regle);
   const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})Z$/.exec(instantConsultation);
   if (m === null || !estDateValide(m[1]!) || !HEURE.test(m[2]!)) throw new ErreurChange('date_invalide');
   const jourCote = estOuvre(dateOperation) ? dateOperation : veilleOuvree(dateOperation);
-  const instant = `${m[1]!}T${m[2]!}`;
-  const publication = `${jourCote}T${regle.heurePublicationUtc}`;
-  return instant < publication ? veilleOuvree(jourCote) : jourCote;
+  const jourInstant = estOuvre(m[1]!) ? m[1]! : veilleOuvree(m[1]!);
+  const publie = m[2]! < regle.heurePublicationUtc && jourInstant === m[1]! ? veilleOuvree(jourInstant) : jourInstant;
+  return publie < jourCote ? publie : jourCote;
 }
 
 /** Montant en centimes de devise x taux (8 décimales) → centimes d'euro, arrondi selon la règle. */
