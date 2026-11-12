@@ -20,9 +20,9 @@ const dossier = (fichiers) => {
   }
   return d;
 };
-const sansVariable = () => {
-  const env = { ...process.env };
-  delete env.SPECS_DOSSIER;
+const lancer = (extra = {}) => {
+  const env = { ...process.env, ...extra };
+  if (extra.SPECS_DOSSIER === undefined) delete env.SPECS_DOSSIER;
   return spawnSync(process.execPath, [SCRIPT], { env, encoding: 'utf8' });
 };
 
@@ -34,9 +34,12 @@ describe('specs alignées', () => {
   });
 
   it('valeur-interdite-trouvee-ligne-exacte', () => {
-    const d = dossier({ 'a.md': 'ok\nok\nici valeur X trouvée\n', 'sous/b.md': 'valeur Y\n' });
+    const d = dossier({ 'a.md': 'ok\nok\nici valeur X trouvée\n', 'sous/b.md': 'valeur Y\n', 'c.bin': 'valeur X\n', 'd.txt': 'valeur X\n', 'e.json': 'valeur Y\n', 'f.md': 'VALEUR X\n' });
     expect(analyser(d, interdites)).toEqual([
       { fichier: 'a.md', ligne: 3, id: 'T-1' },
+      { fichier: 'd.txt', ligne: 1, id: 'T-1' },
+      { fichier: 'e.json', ligne: 1, id: 'T-2' },
+      { fichier: 'f.md', ligne: 1, id: 'T-1' },
       { fichier: join('sous', 'b.md'), ligne: 1, id: 'T-2' },
     ]);
     expect(analyser(dossier({ 'a.md': 'valeur Xi\n' }), interdites)).toEqual([]);
@@ -48,31 +51,31 @@ describe('specs alignées', () => {
     expect(analyser(d, interdites, { forme: 'SAS' })).toEqual([{ fichier: 'a.md', ligne: 2, id: 'T-2' }]);
     expect(analyser(d, interdites, { forme: 'EI' })).toEqual([]);
     const reel = dossier({ 'a.md': 'compte 108\n' });
-    const lancer = (forme) => spawnSync(process.execPath, [SCRIPT], { env: { ...process.env, SPECS_DOSSIER: reel, SPECS_FORME: forme }, encoding: 'utf8' });
-    expect(lancer('EI').status).toBe(0);
-    expect(lancer('SARL').status).toBe(1);
+    expect(lancer({ SPECS_DOSSIER: reel, SPECS_FORME: 'EI' }).status).toBe(0);
+    expect(lancer({ SPECS_DOSSIER: reel, SPECS_FORME: 'SARL' }).status).toBe(1);
   });
 
   it('sortie-sans-extrait', () => {
     const d = dossier({ 'a.md': 'secret-fictif compte 108 fin\n' });
-    const env = { ...process.env, SPECS_DOSSIER: d };
-    const r = spawnSync(process.execPath, [SCRIPT], { env, encoding: 'utf8' });
+    const r = lancer({ SPECS_DOSSIER: d });
     expect(r.status).toBe(1);
     expect(r.stdout).toContain('a.md');
     expect(r.stdout).toContain(':1');
     expect(r.stdout + r.stderr).not.toContain('secret-fictif');
     expect(r.stdout + r.stderr).not.toContain('compte 108');
-    const sain = spawnSync(process.execPath, [SCRIPT], { env: { ...env, SPECS_DOSSIER: dossier({ 'a.md': 'ok\n' }) }, encoding: 'utf8' });
-    expect(sain.status).toBe(0);
+    expect(lancer({ SPECS_DOSSIER: dossier({ 'a.md': 'ok\n' }) }).status).toBe(0);
   });
 
   it('sans-variable-ignore-avec-message', () => {
-    const r = sansVariable();
+    const r = lancer();
     expect(r.status).toBe(0);
     expect(r.stdout).toContain('L22-T33');
     expect(r.stdout).toContain('ignoré');
-    const env = { ...process.env, SPECS_DOSSIER: join(tmpdir(), 'dossier-absent-xyz') };
-    const absent = spawnSync(process.execPath, [SCRIPT], { env, encoding: 'utf8' });
+    const vide = lancer({ SPECS_DOSSIER: '' });
+    expect(vide.status).toBe(0);
+    expect(vide.stdout).toContain('L22-T33');
+    expect(vide.stdout).toContain('ignoré');
+    const absent = lancer({ SPECS_DOSSIER: join(tmpdir(), 'dossier-absent-xyz') });
     expect(absent.status).toBe(1);
     expect(absent.stdout).toContain('L22-T33');
     expect(absent.stderr).toBe('');
