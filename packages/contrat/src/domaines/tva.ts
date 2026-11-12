@@ -1,5 +1,6 @@
 import { oc } from '@orpc/contract';
 import { z } from 'zod';
+import { tvaEcriture } from './tva-ecriture.js';
 
 const Centimes = z.number().int();
 const Id = z.string().min(1);
@@ -77,4 +78,4 @@ export const lireDeclarationTva = oc
   .input(z.object({ params: z.object({ declaration: Id }) }))
   .output(ReponseDeclarationTva);
 
-export const tva = { listerPeriodesTva, lireEstimationTva, lireDeclarationTva };
+export const tva = { listerPeriodesTva, lireEstimationTva, lireDeclarationTva, ...tvaEcriture };
