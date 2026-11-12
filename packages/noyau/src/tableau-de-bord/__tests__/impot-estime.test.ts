@@ -11,7 +11,6 @@ const DEF: DefinitionsIndicateurs = {
   tresorerie: { prefixes: ['94'] },
 };
 const P = { debut: '2026-01-01', fin: '2026-12-31' };
-// Barème fictif passé en argument (points de base et centimes) : le code n'en contient aucun.
 const BAREME: BaremeIs = {
   tauxNormal: 2500,
   tauxReduit: 1500,
@@ -42,7 +41,6 @@ describe('impôt sur les sociétés estimé', () => {
     expect(e.montant).toBe(2075000);
     expect(e.partieReduite).toBe(4250000);
     expect(e.aVerifier).toBe(false);
-    // Arrondi explicite au centime : 33,33 x 15 % = 4,9995 donne 5,00.
     expect(estimerIs(centimes(3333), ca, BAREME, CTX).montant).toBe(500);
   });
 
@@ -50,11 +48,8 @@ describe('impôt sur les sociétés estimé', () => {
     const ca = centimes(5000000);
     expect(estimerIs(centimes(4250000), ca, BAREME, CTX).montant).toBe(637500);
     expect(estimerIs(centimes(4250100), ca, BAREME, CTX).montant).toBe(637525);
-    // Chiffre d'affaires au maximum : taux normal sur tout le résultat.
     expect(estimerIs(centimes(4250000), BAREME.chiffreAffairesMax, BAREME, CTX).montant).toBe(1062500);
-    // Détention sous le minimum : taux normal.
     expect(estimerIs(centimes(4250000), ca, BAREME, { detention: 7499 }).montant).toBe(1062500);
-    // Exercice de 6 mois : plafond proratisé (21 250,00 au taux réduit).
     const court = estimerIs(centimes(4250000), ca, BAREME, { detention: 10000, moisExercice: 6 });
     expect(court.partieReduite).toBe(2125000);
     expect(court.montant).toBe(318750 + 531250);
@@ -75,7 +70,6 @@ describe('impôt sur les sociétés estimé', () => {
   it('detention-inconnue-a-verifier', () => {
     const e = estimerIs(centimes(1000000), centimes(5000000), BAREME, { detention: null });
     expect(e.aVerifier).toBe(true);
-    // Détention inconnue : le taux réduit n'est pas retenu.
     expect(e.montant).toBe(250000);
     expect(e.raisons).toContain('detention_inconnue');
   });
