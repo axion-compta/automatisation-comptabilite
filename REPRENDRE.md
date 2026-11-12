@@ -213,6 +213,16 @@ Cas de la spec 08 (tests sous `packages/noyau/src/` sauf mention ; « bloqué pa
 | T-EXP-13 | `apps/serveur/src/exploitation/__tests__/export-complet-reel.test.ts` : t-exp-13 |
 | T-EXP-14 | `rgpd/__tests__/violations.test.ts` : exercice-t-exp-14 ; compte rendu d'exercice sur la société témoin : L08-T54 (PR #1085, non fusionnée) |
 
+## Lot 11 notes de frais (tranche 1)
+Relevé du 12/11/2026 sur main à jour (en-têtes de fiches, API de recherche des PR).
+- Fiches : 46 (T00 à T46 sauf T42) ; 40 `statut: fait`, 41 avec L11-T35. Restent `a_faire` : T38, T39, T40, T41, T45.
+- Banc NF (L11-T20) : 20 cas sur 20 au vert, attendus calculés à la main, barème inventé.
+- T39 (`bloque_par` : D43, D42) et T41 (`bloque_par` : T39) sont bloquées ; T38 et T40 sensibles, sans `bloque_par` : lire leur fiche ; T38 est citée par la PR #1061 (L00-T85), encore ouverte.
+- Écart à la consigne : T37 est déjà faite (PR #917). T45 : PR #945 fusionnée mais fiche encore `a_faire`, sans journal ; statut à passer à `fait`.
+- Décisions attendues pour les fiches bloquées : D29, J3a, D42, D43 (motif exact lu dans chaque fiche).
+- Mesures sans IA : 40 PR de fiches fusionnées (une par fiche), délai médian ouverture à fusion 22,1 min (`pilotage/calibrage.csv`, 40 lignes). Remises à jour de branche sur les fichiers communs du contrat, jetons, durée de CI, score Stryker : non mesurés.
+- Prochaine tranche : actions de E17 (« Qui a payé ? », Valider, Me rembourser), écrites contre une interface et un faux serveur.
+
 ## Lot 04
 État lu sur `origin/main` (en-têtes des fiches), avec L04-T47 elle-même.
 - Fiches : 59 au total ; 56 `statut: fait` avant cette PR (la tranche planifiée de 49 est faite, L04-T47 comprise une fois fusionnée), restent L04-T49 et L04-T51.
