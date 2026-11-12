@@ -4,6 +4,10 @@ export type RetourDepot = { status: number; json: unknown };
 /** Une cible du dépôt : le serveur en mémoire ou le faux serveur. `cle` absente = pas d'en-tête idempotency-key. */
 export type CibleDepot = () => Promise<{
   deposer: (fichiers: string[], cle: string | undefined) => Promise<RetourDepot>;
+  /** Un seul fichier sous le nom de partie donné (même corps multipart sur les deux cibles). */
+  deposerNomme: (nomPartie: string, contenu: string, cle: string | undefined) => Promise<RetourDepot>;
+  /** Plusieurs parties nommées librement (même corps multipart sur les deux cibles). */
+  deposerParties: (parties: { nom: string; contenu: string }[], cle: string | undefined) => Promise<RetourDepot>;
   etat: (id: string) => Promise<RetourDepot>;
   relancer: (id: string, cle: string | undefined) => Promise<RetourDepot>;
   fermer: () => Promise<void>;
@@ -24,6 +28,28 @@ export function suiteDepot(nom: string, cible: CibleDepot): void {
         await c.fermer();
       }
     };
+
+    it('un-fichier-sous-le-nom-fichiers-sans-crochets-refuse-400', avec(async (c) => {
+      expect((await c.deposerNomme('fichiers', '%PDF-1.4 fictif A', 'cle-fictive-090')).status).toBe(400);
+      expect((await c.deposerNomme('fichiers[0]', '%PDF-1.4 fictif A', 'cle-fictive-091')).status).toBe(200);
+    }));
+
+    it('notation-a-crochets-memes-statuts-vrai-et-faux', avec(async (c) => {
+      // Parties envoyées -> statut relevé sur le vrai serveur (oRPC, notation à crochets) ; contenus distincts.
+      const cas: [string[], number, number?][] = [
+        [['fichiers[1]'], 400], [['fichiers[0]', 'fichiers[2]'], 400], [['fichiers[0]', 'fichiers[0]'], 400], [['fichiers[01]'], 400], [['fichiers[10000]'], 400], [['fichiers[0]', 'fichiers[]'], 400],
+        [['fichiers[]', 'fichiers[0]'], 400], [['fichiers[]', 'fichiers[1]'], 400], [['fichiers[0]', 'fichiers[00]'], 400], [['fichiers[0]', 'fichiers[01]'], 400], [['fichiers[0]', 'fichiers[10000]'], 400],
+        [['fichiers[0]', 'fichiers[a]'], 400], [['fichiers[0]', 'fichiers[0][1]'], 400], [['fichiers[0]', 'fichiers['], 200, 1], [['fichiers[0]', 'fichiers[0]x'], 200, 1],
+        [['fichiers[0]', 'fichiers[0][]'], 400], [['fichiers[0]', 'fichiers[-1]'], 400], [['fichiers'], 400], [['fichiers[0]'], 200, 1], [['fichiers[]'], 200, 1], [['fichiers[]', 'fichiers[]'], 200, 2],
+        [['fichiers[0]', 'fichiers'], 200, 2], [['fichiers', 'fichiers'], 200, 2], [['fichiers[1]', 'fichiers[0]'], 200, 2], [['fichiers', 'fichiers[0]'], 200, 1], [['fichiers', 'fichiers[]'], 200, 1],
+        [['fichiers', 'fichiers', 'fichiers[0]'], 400], [['fichiers[0]', 'fichiers[9999]'], 400], [Array.from({ length: 20 }, () => 'fichiers'), 200, 20], [Array.from({ length: 21 }, () => 'fichiers'), 400],
+      ];
+      for (const [i, [noms, statut, n]] of cas.entries()) {
+        const parties = noms.map((nom, j) => ({ nom, contenu: `%PDF-1.4 fictif ${i}-${j}` }));
+        const r = await c.deposerParties(parties, `cle-fictive-2${i}`);
+        expect([noms, r.status, n === undefined ? undefined : resultats(r).length]).toEqual([noms, statut, n]);
+      }
+    }));
 
     it('trois-fichiers-trois-recues-dans-lordre', avec(async (c) => {
       const r = await c.deposer(['%PDF-1.4 fictif A', '%PDF-1.4 fictif B', '%PDF-1.4 fictif C'], 'cle-fictive-001');
