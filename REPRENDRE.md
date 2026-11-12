@@ -177,6 +177,42 @@ Limite : le texte de la spec 15 n'est pas dans ce dépôt public (le journal de 
 - Cas de sécurité (S), cités par les critères de L15-T60 : R02, R03, R04, R06b, R07, R07b, R11, R12, R15, X04 à X06, X10, X11, X13, X13b, X14, X14b, X21, T31, P24. Tous restent « en attente » : T60 est faite contre des interfaces et des faux, pas contre l'isolation réelle ; le serveur en mémoire imite ces cas sans les prouver.
 - Suite : L15-T68 donne un test par cas, nommé par son identifiant, et met ce tableau à jour.
 
+## Lot 08
+- Fiches : 57 (L08-T00 à T56). État lu sur main : `fait` pour T00 à T40, T42 à T52, T55, T56 ; `a_faire` : T41 (cette fiche), T53, T54.
+- T53 : aucun blocage écrit, dépendances faites : libre. T54 : PR #1085 ouverte (relecture Opus, fiche sensible), pas encore fusionnée.
+- Correction : T42 à T52 sont faites (les anciens blocages D29, J3a, D42, D43 ont été levés le 07/11/2026). Ce qui attend encore la console (D29) : le vrai schéma `a_compta`, T-EXP-2, 3, 4 et 6, R15.
+- Mesures (API REST, sans IA) : `pilotage/calibrage.csv`, 70 PR fusionnées titrées L08-T* (en-tête commun conservé ; lignes, minutes d'écriture et d'ouverture à fusion dans la colonne raisons) ; médiane 36,0 min.
+- Limite : « minutes d'écriture » = premier à dernier commit de la PR ; la PR #139 (création des fiches) pèse 1842 lignes.
+- Prochaine action : fusion de T41 par le portier, #1085 par Will, puis T53 ; le reste attend la console.
+
+Cas de la spec 08 (tests sous `packages/noyau/src/` sauf mention ; « bloqué par » = pas encore couvert) :
+
+| Cas | Test (fichier, titre) |
+|---|---|
+| R1 | `exploitation/__tests__/restauration-controles.test.ts` : r1-douze-equilibres-verts ; `apps/serveur/src/exploitation/__tests__/essai-mensuel.test.ts` : r1-essai-reussi-douze-equilibres |
+| R2, R3 | `exploitation/__tests__/essai-restauration.test.ts` : cle-absente-zero-ligne-r2, mauvaise-cle-dechiffrement-impossible-r3 ; essai-mensuel : r2-cle-absente-rien-ecrit, r3-mauvaise-cle |
+| R4, R5 | essai-restauration : bloc-altere-r4-et-fin-absente-r5 ; essai-mensuel : r4-r5-bloc-altere-et-fin-absente |
+| R6 | essai-mensuel : r6-r7-balance-ou-fec-differents ; restauration-controles : empreinte-balance-differente-echec |
+| R7 | restauration-controles : chaine-rompue-echec-r7 ; essai-mensuel : r6-r7-balance-ou-fec-differents |
+| R8 | `exploitation/__tests__/echantillon.test.ts` : r8-cinquante-egales, r8-piece-retiree-une-manquante |
+| R9 | essai-restauration : trop-long-echec-r9 ; essai-mensuel : r9-trop-long |
+| R10 | restauration-controles : etancheite-r10 ; essai-mensuel : r10-ligne-d-un-autre-client |
+| R11 | `exploitation/__tests__/planification-essai.test.ts` : r11-avant-dernier-sain-et-alerte |
+| R12 | `rgpd/__tests__/rejeu-effacements.test.ts` : r12-trois-rejoues |
+| R13, R14 | `exploitation/__tests__/sondes.test.ts` : essai-manquant-r13, copie-en-retard-r14, sonde-muette-r14 ; `apps/serveur/src/taches/__tests__/sondes-exploitation.test.ts` : r13-essai-absent-36-jours, r14-* |
+| R15 | bloqué par la console (D29) : retrait des anciens dumps et gel, aucune fiche écrite à ce jour |
+| T-EXP-1 | `exploitation/__tests__/deploiement.test.ts` : sante-500-retour-t-exp-1 |
+| T-EXP-2, 3, 4, 6 | bloqué par la console (D29) : fiche de suite « cas T-EXP de la recette réelle », à créer (hors périmètre de L08-T47) |
+| T-EXP-5 | `exploitation/__tests__/paquet-retour.test.ts` : toutes-les-declarations-du-faux-marquees-t-exp-5 |
+| T-EXP-7 | `rgpd/__tests__/recherche-personne.test.ts` : t-exp-7-douze-pieces ; `paquet-acces.test.ts` : t-exp-7-douze-pieces-et-csv ; `packages/contrat/src/__tests__/personnes-service.test.ts` : recherche-douze-pieces-t-exp-7 |
+| T-EXP-8 | `rgpd/__tests__/effacement.test.ts` : t-exp-8-facture-exercice-clos-refus-avec-date ; `marques.test.ts` : oubliee-jamais-lue-t-exp-8 ; passerelle-rgpd : oubliee-jamais-dans-une-requete-t-exp-8 |
+| T-EXP-9 | `apps/serveur/src/exploitation/__tests__/parcours-sans-fuite.test.ts` : t-exp-9-parcours-sans-fuite |
+| T-EXP-10 | `outils/gardes/test/sous-traitants.test.mjs` (garde) ; `apps/serveur/src/ia/__tests__/passerelle-rgpd.test.ts` : fournisseur-qui-conserve-refuse-avant-appel |
+| T-EXP-11 | `rgpd/__tests__/purge-proposee.test.ts` : t-exp-11-deux-proposees |
+| T-EXP-12 | `export-complet/__tests__/parties.test.ts` : t-exp-12-quatre-parties ; export-complet-reel : t-exp-12-reprise-reelle |
+| T-EXP-13 | `apps/serveur/src/exploitation/__tests__/export-complet-reel.test.ts` : t-exp-13 |
+| T-EXP-14 | `rgpd/__tests__/violations.test.ts` : exercice-t-exp-14 ; compte rendu d'exercice sur la société témoin : L08-T54 (PR #1085, non fusionnée) |
+
 ## Lot 11 notes de frais (tranche 1)
 Relevé du 12/11/2026 sur main à jour (en-têtes de fiches, API de recherche des PR).
 - Fiches : 46 (T00 à T46 sauf T42) ; 40 `statut: fait`, 41 avec L11-T35. Restent `a_faire` : T38, T39, T40, T41, T45.
