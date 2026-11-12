@@ -2,8 +2,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { genererFrais, type JeuFrais } from '../../../../packages/donnees-fictives/src/frais.js';
 import { creerServiceFraisValidation, ErreurValidation } from '../../../../packages/contrat/src/domaines/frais-validation-service.js';
 import { creerApp } from '../app.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../../packages/contrat/src/prefixe-routes.js';
+import { creerFauxSessions } from '../../../../packages/noyau/src/session/memoire.js';
 import { configEssai } from '../domaines/frais-validation.js';
-const apps: Array<ReturnType<typeof creerApp>> = [];
+const JETON = 'jeton-fictif-lemoine';
+const SESSION = { personneId: 'personne-fictive-1', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'], societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-saisir'], revendications: {} } as const;
+/** Vrai serveur avec jeton : chaque URL reçoit le préfixe de la société fictive et l'en-tête `authorization`. */
+function appSociete() {
+  const a = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions({ [JETON]: SESSION }) } } });
+  const inject = (o: { method: 'GET' | 'POST' | 'PATCH'; url: string; headers?: Record<string, string>; payload?: object }) =>
+    a.inject({ ...o, url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + o.url, headers: { authorization: 'Bearer ' + JETON, ...o.headers } });
+  return { inject, close: () => a.close() };
+}
+const apps: Array<ReturnType<typeof appSociete>> = [];
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()));
 });
@@ -11,7 +22,7 @@ let compteur = 0;
 const cle = (): string => 'cle-essai-' + String(++compteur).padStart(6, '0');
 const PER = 'PER-01';
 function http() {
-  const a = creerApp();
+  const a = appSociete();
   apps.push(a);
   const post = (url: string, payload: unknown, headers: Record<string, string> = {}) => a.inject({ method: 'POST', url, headers: { 'idempotency-key': cle(), ...headers }, payload: payload as object });
   return { a, post, valider: (payload: unknown, h: Record<string, string> = { 'x-personne': PER }) => post('/frais/valider', payload, h) };

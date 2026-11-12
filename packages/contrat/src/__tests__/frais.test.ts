@@ -3,6 +3,7 @@ import { genererFrais } from '../../../donnees-fictives/src/frais.js';
 import { BornesInvalides, creerServiceFrais } from '../domaines/frais-service.js';
 import { ReponseFrais, ReponseFraisDetail } from '../domaines/frais.js';
 import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../prefixe-routes.js';
 
 const jeu = genererFrais();
 const s = creerServiceFrais();
@@ -69,8 +70,8 @@ describe('frais en mémoire', () => {
 
   it('openapi-contient-les-routes-des-frais', () => {
     const doc = genererOpenapi() as { paths: Record<string, Record<string, { operationId?: string }>> };
-    expect(doc.paths['/frais']?.get?.operationId).toBe('listerFrais');
-    expect(doc.paths['/frais/{id}']?.get?.operationId).toBe('lireFrais');
+    expect(doc.paths[PREFIXE_ROUTES_SOCIETE + '/frais']?.get?.operationId).toBe('listerFrais');
+    expect(doc.paths[PREFIXE_ROUTES_SOCIETE + '/frais/{id}']?.get?.operationId).toBe('lireFrais');
     expect(routesEcritureSansEnTete()).toEqual([]);
   });
 });

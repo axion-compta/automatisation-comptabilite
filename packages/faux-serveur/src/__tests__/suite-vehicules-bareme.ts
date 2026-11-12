@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { ReponseBareme, ReponseVehicules } from '../../../contrat/src/domaines/vehicules-bareme.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import type { Cible } from './suite-contrat.js';
 
+const PREFIXE = PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine');
 type Bareme = { body: { statut: string; effetDebut: string; effetFin: string | null; source: string } };
 
 /** Suite commune « véhicules et barème au jour J » : jouée sur le vrai serveur et sur le faux. */
@@ -10,7 +12,7 @@ export function suiteVehiculesBareme(nom: string, cible: Cible): void {
     const lire = async (chemin: string) => {
       const c = await cible();
       try {
-        return await c.appeler('GET', chemin);
+        return await c.appeler('GET', PREFIXE + chemin);
       } finally {
         await c.fermer();
       }
