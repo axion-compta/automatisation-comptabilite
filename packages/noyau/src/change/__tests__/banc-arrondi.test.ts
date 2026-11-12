@@ -101,16 +101,13 @@ describe('taux applicable et arrondi', () => {
     const apres = regleChangeAuJour(lignes, 'FR', '2028-01-01');
     expect(avant).toEqual({ heurePublicationUtc: '15:00', arrondi: 'demi_loin_de_zero', jourSansCotation: 'veille_ouvree' });
     expect(apres.heurePublicationUtc).toBe('13:00');
-    // Même instant, deux règles : le résultat suit le paramètre daté.
     expect(dateDuTauxApplicable('2027-12-30', '2027-12-30T14:00Z', avant)).toBe('2027-12-29');
     expect(dateDuTauxApplicable('2027-12-30', '2027-12-30T14:00Z', apres)).toBe('2027-12-30');
     expect(convertirAuCentime(5, 110000000, avant)).toBe(6);
     expect(convertirAuCentime(4, 112500000, apres)).toBe(4);
-    // Ligne retirée ignorée ; aucune ligne : erreur ; autre pays ignoré.
     expect(regleChangeAuJour(lignes, 'FR', '2029-06-01').heurePublicationUtc).toBe('13:00');
     expect(() => regleChangeAuJour(lignes, 'FR', '2026-12-31')).toThrow(ErreurChange);
     expect(() => regleChangeAuJour(lignes, 'DE', '2027-06-01')).toThrow(ErreurChange);
-    // Valeur illisible, 'null', deux lignes actives, autre clé seule : erreur.
     const l0 = lignes[0]!;
     for (const l of [[{ ...l0, valeur: '{"arrondi":"x"}' }], [{ ...l0, valeur: 'null' }], [l0, { ...l0 }], [{ ...l0, cle: 'autre.cle' }]]) {
       expect(() => regleChangeAuJour(l, 'FR', '2027-06-01')).toThrow(ErreurChange);
