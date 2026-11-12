@@ -38,9 +38,7 @@ describe('impôt sur les sociétés estimé', () => {
     expect(resultat).toBe(10000000);
     // Référence à la main : 42 500,00 x 15 % = 6 375,00 ; 57 500,00 x 25 % = 14 375,00 ; total 20 750,00.
     const e = estimerIs(resultat, ca, BAREME, CTX);
-    expect(e.montant).toBe(2075000);
-    expect(e.partieReduite).toBe(4250000);
-    expect(e.aVerifier).toBe(false);
+    expect([e.montant, e.partieReduite, e.aVerifier]).toEqual([2075000, 4250000, false]);
     expect(estimerIs(centimes(3333), ca, BAREME, CTX).montant).toBe(500);
   });
 
@@ -52,8 +50,7 @@ describe('impôt sur les sociétés estimé', () => {
     expect(estimerIs(centimes(4250000), ca, BAREME, { detention: 7499 }).montant).toBe(1062500);
     expect(estimerIs(centimes(4250000), ca, BAREME, { detention: BAREME.detentionMin }).montant).toBe(637500);
     const court = estimerIs(centimes(4250000), ca, BAREME, { detention: 10000, moisExercice: 6 });
-    expect(court.partieReduite).toBe(2125000);
-    expect(court.montant).toBe(318750 + 531250);
+    expect([court.partieReduite, court.montant]).toEqual([2125000, 318750 + 531250]);
   });
 
   it('resultat-negatif-is-nul', () => {
@@ -73,9 +70,7 @@ describe('impôt sur les sociétés estimé', () => {
 
   it('detention-inconnue-a-verifier', () => {
     const e = estimerIs(centimes(1000000), centimes(5000000), BAREME, { detention: null });
-    expect(e.aVerifier).toBe(true);
-    expect(e.montant).toBe(250000);
-    expect(e.raisons).toContain('detention_inconnue');
+    expect([e.aVerifier, e.montant, e.raisons]).toEqual([true, 250000, ['detention_inconnue']]);
   });
 
   it('toujours-marque-estimation', () => {
