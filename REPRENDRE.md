@@ -176,3 +176,14 @@ Limite : le texte de la spec 15 n'est pas dans ce dépôt public (le journal de 
 - Total : 41 + 26 + 19 + 25 = 111.
 - Cas de sécurité (S), cités par les critères de L15-T60 : R02, R03, R04, R06b, R07, R07b, R11, R12, R15, X04 à X06, X10, X11, X13, X13b, X14, X14b, X21, T31, P24. Tous restent « en attente » : T60 est faite contre des interfaces et des faux, pas contre l'isolation réelle ; le serveur en mémoire imite ces cas sans les prouver.
 - Suite : L15-T68 donne un test par cas, nommé par son identifiant, et met ce tableau à jour.
+
+## Lot 11 notes de frais (tranche 1)
+Relevé du 12/11/2026 sur main à jour (en-têtes de fiches, API de recherche des PR).
+- Fiches : 46 (T00 à T46 sauf T42) ; 40 `statut: fait`, 41 avec L11-T35. Restent `a_faire` : T38, T39, T40, T41, T45.
+- Banc NF (L11-T20) : 20 cas sur 20 au vert, attendus calculés à la main, barème inventé.
+- T39 (`bloque_par` : D43, D42) et T41 (`bloque_par` : T39) sont bloquées ; T38 et T40 sensibles, sans `bloque_par` : lire leur fiche ; T38 est citée par la PR #1061 (L00-T85), encore ouverte.
+- Écart à la consigne : T37 est déjà faite (PR #917). T45 : PR #945 fusionnée mais fiche encore `a_faire`, sans journal ; statut à passer à `fait`.
+- Décisions attendues pour les fiches bloquées : D29, J3a, D42, D43 (motif exact lu dans chaque fiche).
+- Mesures sans IA : 40 PR de fiches fusionnées (une par fiche), délai médian ouverture à fusion 22,1 min (`pilotage/calibrage.csv`, 40 lignes). Remises à jour de branche sur les fichiers communs du contrat, jetons, durée de CI, score Stryker : non mesurés.
+- Prochaine tranche : actions de E17 (« Qui a payé ? », Valider, Me rembourser), écrites contre une interface et un faux serveur.
+- Aucune date de livraison annoncée.
