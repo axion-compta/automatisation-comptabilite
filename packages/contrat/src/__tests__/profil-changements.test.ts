@@ -4,6 +4,8 @@ import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
 import { Apercu, DemandeChangement } from '../domaines/profil-changements.js';
 import { creerServiceProfilChamps } from '../domaines/profil-champs-service.js';
 import { creerServiceProfilChangements, ErreurChangement } from '../domaines/profil-changements-service.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../prefixe-routes.js';
+const SOC = PREFIXE_ROUTES_SOCIETE;
 
 const JOUR = '2026-06-15';
 const DEMANDE = { cle: 'regime_tva', valeur: 'reel_normal', effetDebut: '2026-07-01', motif: 'Changement de régime' };
@@ -66,8 +68,8 @@ describe('profil : changements (service)', () => {
     expect(DemandeChangement.safeParse({ ...DEMANDE, effetDebut: '2026-02-30' }).success).toBe(false);
     expect(Apercu.safeParse({ apercuId: 'a', brouillonsRecalcules: 0, declarationsRecalculees: [], echeancesDeplacees: [], ecrituresValideesTouchees: 1 }).success).toBe(false);
     const doc = genererOpenapi() as { paths: Record<string, Record<string, { operationId?: string }>> };
-    expect(doc.paths['/profil/changements/apercu']?.post?.operationId).toBe('apercuChangement');
-    expect(doc.paths['/profil/changements']?.post?.operationId).toBe('confirmerChangement');
+    expect(doc.paths[SOC + '/profil/changements/apercu']?.post?.operationId).toBe('apercuChangement');
+    expect(doc.paths[SOC + '/profil/changements']?.post?.operationId).toBe('confirmerChangement');
     expect(JSON.stringify(z.toJSONSchema(Apercu))).toMatch(/"ecrituresValideesTouchees":\{[^}]*"const":0/);
     expect(routesEcritureSansEnTete()).toEqual([]);
   });

@@ -1,13 +1,25 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { Apercu } from '../../../../packages/contrat/src/domaines/profil-changements.js';
 import { creerApp } from '../app.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../../packages/contrat/src/prefixe-routes.js';
+import { creerFauxSessions } from '../../../../packages/noyau/src/session/memoire.js';
+
+/** Vrai serveur avec jeton : session fictive de `soc-lemoine`, chemins sous son préfixe, `authorization: Bearer` sur chaque appel. */
+const JETON = 'jeton-fictif-lemoine';
+const SESSION = { personneId: 'personne-fictive-1', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'], societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire'], revendications: {} } as const;
+function creerAppJeton() {
+  const a = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions({ [JETON]: SESSION }) } } });
+  const brut = a.inject.bind(a) as (o: object) => unknown;
+  a.inject = ((o: { url: string; headers?: object }) => brut({ ...o, url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + o.url, headers: { authorization: 'Bearer ' + JETON, ...o.headers } })) as typeof a.inject;
+  return a;
+}
 
 const apps: Array<ReturnType<typeof creerApp>> = [];
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()));
 });
 const neuf = () => {
-  const a = creerApp();
+  const a = creerAppJeton();
   apps.push(a);
   return a;
 };

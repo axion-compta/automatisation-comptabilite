@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { ProfilV1 } from '../../../contrat/src/domaines/profil.js';
 import { ReponseRegimesImposition, ReponseRegimesTva } from '../../../contrat/src/domaines/regimes.js';
 import { cheminSociete } from '../../../contrat/src/prefixe-routes.js';
-import type { Cible } from './suite-contrat.js';
+import type { Appeler, Cible } from './suite-contrat.js';
 
-/** Chemins du profil sous le préfixe de la société fictive. */
-const chProfil = (chemin: string) => cheminSociete(chemin).replace('{s}', 'soc-lemoine');
+/** Les chemins du profil (hors régimes) sont joués sous le préfixe de la société fictive `soc-lemoine`. */
+const sousSociete = (a: Appeler): Appeler => (m, ch, ...r) => a(m, /^\/profil(?!\/regimes)/.test(ch) ? cheminSociete(ch).replace('{s}', 'soc-lemoine') : ch, ...r);
+
 const corps = (r: { json: unknown }) => (r.json as { body: Record<string, unknown> }).body;
 
 /** Suite commune du profil : lectures seules, jouée sur le vrai serveur et sur le faux. */
@@ -14,7 +15,7 @@ export function suiteProfil(nom: string, cible: Cible): void {
     const avec = async (f: (a: Awaited<ReturnType<Cible>>['appeler']) => Promise<void>) => {
       const c = await cible();
       try {
-        await f(c.appeler);
+        await f(sousSociete(c.appeler));
       } finally {
         await c.fermer();
       }
@@ -22,23 +23,23 @@ export function suiteProfil(nom: string, cible: Cible): void {
 
     it('profil-identique-des-deux-cotes', () =>
       avec(async (a) => {
-        const r = await a('GET', chProfil('/profil?au=2026-08-01'));
+        const r = await a('GET', '/profil?au=2026-08-01');
         expect(r.status).toBe(200);
         const p = ProfilV1.parse(corps(r));
         expect(p.champs.find((c) => c.cle === 'denomination')?.valeur).toBe('Lemoine Rénovation');
         expect([p.etat, p.aConfirmer, p.manquants, p.blocages]).toEqual(['a_confirmer', ['regime_tva'], [], []]);
         expect(p.champs.find((c) => c.cle === 'regime_tva')).toMatchObject({ origine: 'proposition_ia', statut: 'a_confirmer' });
-        expect((await a('GET', chProfil('/profil'))).status).toBe(200);
+        expect((await a('GET', '/profil')).status).toBe(200);
       }));
 
     it('lecture-a-une-date', () =>
       avec(async (a) => {
-        const avant = ProfilV1.parse(corps(await a('GET', chProfil('/profil?au=2025-01-01'))));
-        const apres = ProfilV1.parse(corps(await a('GET', chProfil('/profil?au=2026-08-01'))));
+        const avant = ProfilV1.parse(corps(await a('GET', '/profil?au=2025-01-01')));
+        const apres = ProfilV1.parse(corps(await a('GET', '/profil?au=2026-08-01')));
         expect(avant.champs.some((c) => c.cle === 'regime_tva')).toBe(false);
         expect(apres.champs.some((c) => c.cle === 'regime_tva')).toBe(true);
         expect(avant.champs.length).toBeLessThan(apres.champs.length);
-        for (const mauvais of ['2026-02-30', '31%2F12%2F2026', '']) expect((await a('GET', chProfil('/profil?au=') + mauvais)).status).toBe(400);
+        for (const mauvais of ['2026-02-30', '31%2F12%2F2026', '']) expect((await a('GET', '/profil?au=' + mauvais)).status).toBe(400);
       }));
 
     it('regimes-tries', () =>
