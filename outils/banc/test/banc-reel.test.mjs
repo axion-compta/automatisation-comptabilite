@@ -3,6 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { lancerBancReel, variablesPresentes } from '../banc-reel.mjs';
+import { lignesNouvelles, numeroterOccurrences } from '../../../packages/noyau/src/banque/doublons.ts';
 
 const LIBELLE = 'LIBELLE-FICTIF-UNIQUE';
 const LIGNES = [
@@ -89,6 +90,45 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
     expect(statut(mauvais, 'reimport')).toBe('ecart');
     expect(mauvais.ok).toBe(false);
     expect(statut(doublon, 'total_debits')).toBe('ecart');
+  });
+
+  it('valeurs-non-entieres-des-deux-cotes-en-ecart', async () => {
+    // la même valeur non entière (ou une chaîne) des deux côtés ne vaut pas égalité au centime
+    for (const v of [10.5, '1000', 'abc']) {
+      const m = { ...MANIFESTE, releve: { ...MANIFESTE.releve, soldeOuverture: v, soldeCloture: v === 10.5 ? 274053.5 : v } };
+      const r = await lancerBancReel(banc(m));
+      expect(statut(r, 'solde_ouverture'), String(v)).toBe('ecart');
+      expect(r.ok).toBe(false);
+      if (v === 10.5) expect(statut(r, 'solde_cloture')).toBe('ecart');
+    }
+  });
+
+  it('reimport-reel-sur-doublons-noyau', async () => {
+    // import branché sur doublons.ts : deux lignes identiques le même jour = 2 occurrences distinctes
+    const importeur = (lignes, connus) => {
+      const lues = numeroterOccurrences(lignes.map((l, rang) => ({ compteId: 'C1', dateOperation: l.date, montant: l.montant, devise: 'EUR', libelleNormalise: l.libelle, rang })));
+      const nouvelles = lignesNouvelles([...connus], lues);
+      for (const n of nouvelles) connus.add({ empreinte: n.empreinte, occurrence: n.occurrence });
+      return nouvelles.length;
+    };
+    const jour = { date: '2026-01-05', libelle: 'ABONNEMENT FICTIF', montant: -1000 };
+    const lignes = [{ id: 'A1', ...jour }, { id: 'A2', ...jour }, { id: 'A3', date: '2026-01-06', libelle: 'VIREMENT FICTIF', montant: 500 }];
+    expect(importeur(lignes, new Set())).toBe(3);
+    const connus = new Set();
+    importeur(lignes, connus);
+    expect(importeur(lignes, connus)).toBe(0);
+    expect(importeur([...lignes, { id: 'A4', ...jour }], connus)).toBe(1);
+    const manifeste = { constats: {}, releve: { totalDebits: 2000, totalCredits: 500, soldeOuverture: 0, soldeCloture: -1500 } };
+    const r = await lancerBancReel(banc(manifeste, lignes, []), { importeur });
+    expect(r.reimport).toEqual({ lignesLues: 3, lignesCreees: 0 });
+    expect(r.ok).toBe(true);
+  });
+
+  it('reimport-importeur-aberrant-et-doublons-ecartes', async () => {
+    expect(statut(await lancerBancReel(banc(), { importeur: () => -1 }), 'reimport')).toBe('ecart');
+    const recus = [];
+    await lancerBancReel(banc(MANIFESTE, [...LIGNES, LIGNES[0]]), { importeur: (l) => (recus.push(l.length), 0) });
+    expect(recus).toEqual([3, 3]);
   });
 
   it('rapport-sans-montant-ni-libelle', async () => {
