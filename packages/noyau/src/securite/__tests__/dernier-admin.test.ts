@@ -20,7 +20,6 @@ describe('securite/dernier-admin', () => {
     const ok = appliquerRoles(un, [{ personneId: 'alice@exemple.fr', role: 'utilisateur' }, { personneId: 'bruno@exemple.fr', role: 'administrateur' }]);
     expect(ok).toMatchObject({ ok: true });
   });
-
   it('retrait-du-dernier-administrateur-refuse', () => {
     expect(appliquerRoles(un, [{ personneId: 'alice@exemple.fr', actif: false }]))
       .toEqual({ ok: false, raison: 'dernier_administrateur' });
@@ -30,7 +29,6 @@ describe('securite/dernier-admin', () => {
     expect(appliquerRoles(inactif, [{ personneId: 'carla@exemple.fr', actif: true }, { personneId: 'alice@exemple.fr', actif: false }]))
       .toMatchObject({ ok: true });
   });
-
   it('deux-administrateurs-un-retrograde-permis', () => {
     const r = appliquerRoles(deux, [{ personneId: 'alice@exemple.fr', role: 'comptable' }]);
     expect(r).toEqual({
@@ -55,7 +53,6 @@ describe('securite/dernier-admin', () => {
       expect(recupererAdministrateur(demande({ role }), un)).toMatchObject({ permis: false, raison: 'role_insuffisant' });
     }
   });
-
   it('recuperation-par-le-chat-refusee', () => {
     for (const canal of ['chat', 'voix']) {
       expect(recupererAdministrateur(demande({ canal }), un)).toMatchObject({ permis: false, raison: 'role_insuffisant' });
