@@ -1,6 +1,7 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { AppelIa, DecisionIa } from "../../../contrat/src/chat/journal-ia.js";
 import { formaterDateAffiche } from "../format/affichage.js";
+import { IconeAgent, type LibellesSpecialites } from "./IconeAgent.js";
 import { MotConfiance, type MotConfiance as Confiance } from "./MotConfiance.js";
 import "./pourquoi.css";
 
@@ -17,12 +18,16 @@ export interface PourquoiLibelles {
   nonDisponible: string;
   sources: Record<DecisionIa["source_proposition"], string>;
   mots: Record<Confiance, string>;
+  /** Libellés des spécialités ; sans eux, aucune icône n'est affichée. */
+  specialites?: LibellesSpecialites;
 }
 
 export interface PourquoiProps {
   decision: DecisionIa;
   appel?: AppelIa | undefined;
   libelles: PourquoiLibelles;
+  /** Spécialité de l'agent (liste fermée) ; inconnue = icône neutre. */
+  specialite?: string | undefined;
   onSource: (identifiant: string) => void;
 }
 
@@ -36,7 +41,7 @@ function dateOuNonDisponible(quand: unknown, absent: string): string {
 }
 
 /** Panneau « Pourquoi ? » : champs de la décision seulement, jamais le texte brut lu par l'IA. */
-export function Pourquoi({ decision, appel, libelles, onSource }: PourquoiProps) {
+export function Pourquoi({ decision, appel, libelles, specialite, onSource }: PourquoiProps) {
   const [ouvert, setOuvert] = useState(false);
   const id = useId();
   const absent = libelles.nonDisponible;
@@ -70,6 +75,7 @@ export function Pourquoi({ decision, appel, libelles, onSource }: PourquoiProps)
       <button type="button" className="axion-pourquoi__bouton" aria-expanded={ouvert} aria-controls={id} onClick={() => setOuvert(!ouvert)}>
         {libelles.bouton}
       </button>
+      {specialite !== undefined && libelles.specialites ? <IconeAgent specialite={specialite} libelles={libelles.specialites} /> : null}
       {ouvert ? (
         <dl id={id} className="axion-pourquoi__panneau">
           {lignes.map(([intitule, valeur]) => (
