@@ -4,7 +4,7 @@ Mesure du 2026-11-11 sur bases fictives, contre un faux serveur. Rien n'a été 
 
 - Bases : 200 ; lignes : 500000
 - Connexions ouvertes : 200 ; refus : 0
-- Seuil de p95 PROPOSÉ : 800 ms, à confirmer, aucun engagement.
+- Seuil de p95 PROPOSÉ : 800 ms, à confirmer, aucun engagement. Le seuil est lu dans `docs/budgets-performance.csv` (tableau unique des budgets).
 
 | Écran | Mesures | p95 (ms) |
 |---|---|---|

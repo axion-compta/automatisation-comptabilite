@@ -1,11 +1,19 @@
 // Banc de volume hors production (V3-PLA-183, V3-QUA-026, T-ISO-6). Bases fictives seulement ;
 // la connexion et les écrans sont des ports injectés (faux serveur). Aucun réseau ici.
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { performance } from 'node:perf_hooks';
 import { centile } from './evaluateur.mjs';
+import { lireTableau } from '../gardes/performance.mjs';
 
 export const ECRANS = ['tableau-de-bord', 'liste-ecritures', 'grand-livre', 'rapprochement'];
-export const SEUIL_P95_MS = 800; // PROPOSÉ, à confirmer : jamais un engagement
+
+/** Seuil de p95 lu dans le tableau unique docs/budgets-performance.csv (PROPOSÉ, à confirmer : jamais un engagement). */
+export function lireSeuil(texte, ecran = 'banc-volume', metrique = 'p95') {
+  const ligne = lireTableau(texte).find((l) => l.ecran === ecran && l.metrique === metrique);
+  if (!ligne) throw new Error(`seuil absent du tableau pour ${ecran}/${metrique}`);
+  return ligne.seuil;
+}
+export const SEUIL_P95_MS = lireSeuil(readFileSync(new URL('../../docs/budgets-performance.csv', import.meta.url), 'utf8'));
 
 const prng = (graine) => {
   let s = graine >>> 0;
@@ -65,7 +73,7 @@ export function rapport(r, date) {
     `Mesure du ${date} sur bases fictives, contre un faux serveur. Rien n'a été mesuré chez l'hébergeur (feu vert J10 attendu).`, '',
     `- Bases : ${r.bases} ; lignes : ${r.lignes}`,
     `- Connexions ouvertes : ${r.connexions_ouvertes} ; refus : ${r.refus}`,
-    `- Seuil de p95 PROPOSÉ : ${r.seuil_propose_ms} ms, à confirmer, aucun engagement.`, '',
+    `- Seuil de p95 PROPOSÉ : ${r.seuil_propose_ms} ms, à confirmer, aucun engagement. Le seuil est lu dans `docs/budgets-performance.csv` (tableau unique des budgets).`, '',
     '| Écran | Mesures | p95 (ms) |', '|---|---|---|', ...lignes, '',
   ].join('\n');
 }
