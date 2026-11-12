@@ -9,12 +9,9 @@ async function atteindre(page: Page, cible: Locator, maxTab = 80): Promise<void>
   throw new Error('élément non atteignable au clavier en ' + maxTab + ' Tab');
 }
 
-// Fiche L19-T02 : parcours au clavier seul (aucun clic), en mode simulé.
 test('parcours-clavier-seul', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('navigation', { name: 'Navigation principale' })).toBeVisible();
-
-  // Palette Ctrl+K, puis Mes documents.
   await page.keyboard.press('Control+k');
   const champ = page.getByRole('dialog').getByRole('textbox');
   await expect(champ).toBeFocused();
