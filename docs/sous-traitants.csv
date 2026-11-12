@@ -5,3 +5,5 @@ IA-1,fournisseur d'intelligence artificielle,oui,non,non,,,,non
 IA-2,fournisseur d'intelligence artificielle,oui,non,non,,,,non
 MEL-1,envoi de courriels,oui,non,non,,,,non
 FEL-1,plateforme de facture électronique,oui,non,non,,,,non
+REC-1,réception des courriels de pièces,oui,non,non,,,,non
+TRA-1,transcription de la voix,oui,non,non,,,,non
