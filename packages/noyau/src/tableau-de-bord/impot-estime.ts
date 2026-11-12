@@ -1,29 +1,18 @@
-// Estimation de l'impôt sur les sociétés à partir du résultat comptable (centimes).
-// Aucun taux, plafond ni seuil n'est écrit ici : le barème est un argument (points de base, centimes).
-// Ce n'est jamais un montant dû : le résultat est toujours marqué « estimation ».
+// Estimation de l'IS depuis le résultat comptable (centimes) ; barème en argument, jamais un montant dû.
 import { centimes, fraction, pourcentage, soustraire, ajouter, type Centimes } from '../argent/index.js';
 
 export interface BaremeIs {
-  /** Taux normal, en points de base. */
   tauxNormal: number;
-  /** Taux réduit, en points de base. */
   tauxReduit: number;
-  /** Part de résultat soumise au taux réduit, pour un exercice de référence. */
   plafondBeneficeReduit: Centimes;
-  /** Le taux réduit n'est retenu que si le chiffre d'affaires est strictement inférieur. */
   chiffreAffairesMax: Centimes;
-  /** Détention minimale par des personnes physiques, en points de base. */
   detentionMin: number;
-  /** Nombre de mois de l'exercice de référence (le plafond est proratisé au-delà ou en deçà). */
   moisReference: number;
-  /** Faux tant que les paramètres du catalogue ne sont pas vérifiés. */
   verifie: boolean;
 }
 
 export interface ContexteIs {
-  /** Détention du capital par des personnes physiques, en points de base ; `null` si inconnue. */
   detention: number | null;
-  /** Durée de l'exercice en mois ; par défaut, celle du barème. */
   moisExercice?: number;
 }
 
@@ -32,7 +21,6 @@ export type RaisonIs = 'bareme_non_verifie' | 'detention_inconnue';
 export interface EstimationIs {
   mot: 'estimation';
   montant: Centimes;
-  /** Part du résultat au taux réduit. */
   partieReduite: Centimes;
   aVerifier: boolean;
   raisons: RaisonIs[];
@@ -56,7 +44,6 @@ export function estimerIs(
   });
   if (resultat <= 0) return sortie(centimes(0), centimes(0));
 
-  // Détention inconnue : le taux réduit n'est pas retenu (l'estimation reste prudente).
   const eligible =
     contexte.detention !== null &&
     contexte.detention >= bareme.detentionMin &&

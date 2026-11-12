@@ -1,5 +1,4 @@
-// Point mort recalculé depuis les écritures validées (centimes).
-// Les classes de comptes sont un argument : aucun numéro de compte n'est écrit ici.
+// Point mort recalculé depuis les écritures validées ; classes de comptes en argument.
 import { centimes, fraction, proportionPointsDeBase, soustraire, type Centimes } from '../argent/index.js';
 import type { Ecriture } from '../ecritures/modele.js';
 import { balance } from '../livres/balance.js';
@@ -7,7 +6,6 @@ import type { Periode } from './chiffres.js';
 
 export interface ClassesPointMort {
   ca: { prefixes: string[]; deduire: string[] };
-  /** Préfixes des comptes de charges fixes. */
   fixes: string[];
   /** Préfixes des comptes de charges variables. */
   variables: string[];
@@ -15,12 +13,10 @@ export interface ClassesPointMort {
 
 export interface PointMort {
   mot: 'estimation';
-  /** `vide` : aucune écriture validée sur la période ; `impossible` : marge sur coûts variables nulle ou négative. */
   statut: 'calcule' | 'impossible' | 'vide';
   chiffreAffaires: Centimes;
   chargesFixes: Centimes;
   chargesVariables: Centimes;
-  /** Taux de marge sur coûts variables, en points de base ; `null` s'il n'existe pas. */
   tauxMarge: number | null;
   pointMort: Centimes | null;
 }
@@ -41,7 +37,6 @@ export function calculerPointMort(ecritures: readonly Ecriture[], periode: Perio
 
   const marge = soustraire(ca, variables);
   if (ca <= 0 || marge <= 0) return { ...base, statut: 'impossible', tauxMarge: null, pointMort: null };
-  // Point mort = charges fixes / taux de marge = charges fixes x CA / marge (un seul arrondi, par excès).
   return {
     ...base,
     statut: 'calcule',
