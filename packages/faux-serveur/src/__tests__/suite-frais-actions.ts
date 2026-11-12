@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import type { Appeler, Cible } from './suite-contrat.js';
 
+const PREFIXE = PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine');
 type Corps = { body: Record<string, unknown> };
 const PER = 'PER-01';
 let n = 0;
@@ -13,7 +15,7 @@ export function suiteFraisActions(nom: string, cible: Cible): void {
     const avec = async (f: (a: Appeler) => Promise<void>) => {
       const c = await cible();
       try {
-        await f(c.appeler);
+        await f((methode, chemin, ...reste) => c.appeler(methode, PREFIXE + chemin, ...reste));
       } finally {
         await c.fermer();
       }

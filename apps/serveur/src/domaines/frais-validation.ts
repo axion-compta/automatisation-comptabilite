@@ -1,5 +1,6 @@
 import { implement } from '@orpc/server';
 import { contrat } from '../../../../packages/contrat/src/routes.js';
+import { exigerSociete, type ContexteProfil } from './profil.js';
 import { creerServiceFraisValidation, ErreurValidation, type ConfigValidation } from '../../../../packages/contrat/src/domaines/frais-validation-service.js';
 /** Entier lu dans l'environnement (un seul endroit), sinon valeur d'essai fictive. */
 const reglage = (nom: string, essai: string): number => {
@@ -22,7 +23,7 @@ export function configEssai(): ConfigValidation {
 }
 /** Routes de validation des frais, sur le jeu partagé créé dans `app.ts`. */
 export function routesFraisValidation(service: ReturnType<typeof creerServiceFraisValidation>) {
-  const os = implement(contrat.fraisValidation);
+  const os = implement(contrat.fraisValidation).$context<ContexteProfil>();
   const traduire = <T>(calcul: () => T, errors: Record<string, (o?: { data: unknown }) => Error>): T => {
     try {
       return calcul();
@@ -33,9 +34,9 @@ export function routesFraisValidation(service: ReturnType<typeof creerServiceFra
     }
   };
   return {
-    proposerFrais: os.proposerFrais.handler(({ input: { params, headers: h }, errors }) => traduire(() => ({ body: service.proposer(params.id, h['idempotency-key']) }), errors)),
-    validerFrais: os.validerFrais.handler(({ input: { body, headers: h }, errors }) => traduire(() => ({ body: service.valider(body, h['x-personne'], h['idempotency-key']) }), errors as never)),
-    preparerRemboursement: os.preparerRemboursement.handler(({ input: { body, headers: h }, errors }) => traduire(() => ({ body: service.preparer(body, h['idempotency-key']) }), errors)),
+    proposerFrais: os.proposerFrais.handler(({ input: { params, headers: h }, errors, context }) => traduire(() => (exigerSociete(context, params.s), { body: service.proposer(params.id, h['idempotency-key']) }), errors)),
+    validerFrais: os.validerFrais.handler(({ input: { params, body, headers: h }, errors, context }) => traduire(() => (exigerSociete(context, params.s), { body: service.valider(body, h['x-personne'], h['idempotency-key']) }), errors as never)),
+    preparerRemboursement: os.preparerRemboursement.handler(({ input: { params, body, headers: h }, errors, context }) => traduire(() => (exigerSociete(context, params.s), { body: service.preparer(body, h['idempotency-key']) }), errors)),
   };
 }
 export { creerServiceFraisValidation };
