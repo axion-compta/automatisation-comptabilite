@@ -1,13 +1,17 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR n°1152, fiche L26-T12, relue au SHA de tête 77e55ff1f19ea11aed7fc6cd4338dc3be00ed694.
+PR n°1152, fiche L26-T12, seconde relecture au SHA de tête 27384e8d1134fa8d6d8b8d3510b1a1814abee326 (avis précédent : A CORRIGER au SHA 77e55ff1f19ea11aed7fc6cd4338dc3be00ed694).
 
-Contrôles passés : 5 fichiers, tous dans `fichiers_autorises` ; 137 lignes ajoutées (plafond 250) ; aucun secret, aucun prix, aucun mot interdit ; journal de 6 lignes commençant par `# Journal L26-T12` ; les 5 tests nommés sont présents ; `node --test outils/gardes/test/manifeste-ecrans.test.mjs` : 6/6 au vert ; `node outils/gardes/manifeste-ecrans.mjs` : vert. Les 24 routes du manifeste correspondent au `chemin` de chaque `route.tsx` ; la fusion avec main est propre ; la CI est au vert.
+## Défaut précédent : levé
+1. Branche « ligne sans nom d'écran » (`outils/gardes/manifeste-ecrans.mjs:29`) : nouveau test `ligne-sans-nom-rouge` (ecran absent, `'  '`, `42`). Mutation `{ pb.push(…); continue; }` -> `continue;` : rouge. Mutation `texte(l?.ecran)` -> `typeof l?.ecran === 'string'` : rouge.
 
-## Défaut
-1. `outils/gardes/manifeste-ecrans.mjs:29` : la branche « ligne sans nom d'écran » n'est pas testée. La mutation `{ pb.push('ligne sans nom d’écran'); continue; }` -> `continue;` laisse les 6 tests au vert : une ligne `{ route: '/x', outil_chat: 'vue.ouvrir', jeu: 'commun' }` sans `ecran` serait alors ignorée et la garde resterait verte. Correction demandée dans `outils/gardes/test/manifeste-ecrans.test.mjs` : un cas `rouge((m) => { delete m.manifeste[0].ecran; }, 'ligne sans nom')`. Ajouter aussi `ecran: '  '` et `ecran: 42`.
+## Pas de régression
+- Depuis la relecture précédente, seuls le fichier de test et le journal ont changé ; la garde n'a pas bougé.
+- `node --test outils/gardes/test/manifeste-ecrans.test.mjs` : 7/7 au vert ; `node outils/gardes/manifeste-ecrans.mjs` : vert. Mutations relancées (retrait de `!Array.isArray(ecrans)`, jeu jamais contrôlé) : rouges.
+- 5 fichiers, tous dans `fichiers_autorises` ; 145 lignes (plafond 250) ; journal de 6 lignes ; aucun secret, aucun prix, aucun mot interdit.
 
 ## Remarques (non bloquantes)
-- Mutations équivalentes ou sans effet sur le résultat : `outils.length === 0` -> `false` (chaque outil devient « inconnu », donc rouge quand même) ; retrait de `!Array.isArray(ecrans)` (l'exception est captée et donne rouge). Un test `analyserManifeste([], null, ['vue.ouvrir'])` qui attend le message « illisibles » les fermerait.
-- Le journal et le corps de la PR annoncent « 23 écrans ». Le manifeste et `apps/web/src/ecrans/` en comptent 24 (e38, sans `route.tsx`, est exclu à juste titre).
-- La garde ne compare pas `route` au `chemin` de `route.tsx`. La fiche ne le demande pas ; c'est cohérent aujourd'hui (vérifié à la main).
+- La mutation `|| outils.length === 0` -> retrait survit toujours. Elle est équivalente : chaque outil devient alors « inconnu », donc la garde reste rouge.
+- Le journal annonce encore « 6 tests node:test » (il y en a 7). Le corps de la PR annonce encore « 23 écrans » (il y en a 24).
+- CI : `tests` et `verifier` sont rouges à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`). Ce test est rouge aussi sur `main` (vérifié en local) et la PR ne le touche pas. Ce n'est pas un défaut de l'auteur. Tous les autres jobs sont verts.
+- Fiche sensible : la fusion revient à Will seul.
