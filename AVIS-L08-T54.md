@@ -1,25 +1,22 @@
-VERDICT: OK
-SHA: 33e6de975747a809f0404b4217ef827b06b5019f
-PR: #1082
+VERDICT: A CORRIGER
+SHA: 62de13a6c6875af61a5e180789c581001ff2079a
+PR: #1085
 
-Fiche L08-T54 (sensible : fusion par Will seul). Nouvelle relecture : la tête a changé depuis l'avis OK au SHA 44916debca673110160506f5fb2907be2456c471. Fiche lue sur origin/main. `pilotage/ARRET` absent.
+Fiche L08-T54 (sensible : fusion par Will seul), relue au SHA de tête 62de13a6c6875af61a5e180789c581001ff2079a (relecteur Opus). L'avis précédent était OK au SHA 33e6de975747a809f0404b4217ef827b06b5019f (PR #1082, branche `lot-08/L08-T54-reprise`). `pilotage/ARRET` absent sur origin/main.
 
-## Ce qui a changé depuis l'avis OK
-- Un seul commit, 33e6de97 : fusion de `origin/main` (parents 44916deb et 599f7b33). Pas de rebase, pas de force-push.
-- Les 4 fichiers de la fiche sont identiques entre 44916deb et 33e6de97 : `exercice-violation.ts`, son test, la fiche et le journal. La fusion n'apporte que des fichiers déjà sur main. Le diff `origin/main...HEAD` ne contient plus que les 4 fichiers de la fiche : 117 + 75 + 1/1 + 6/4, soit 204 lignes sur 220. Aucune ligne « - - ».
+## Constat : le conflit n'est PAS résolu
+- La tête de `lot-08/L08-T54` n'a pas bougé : 62de13a6, commit du 08/11/2026 qui ne touche que `pilotage/fiches/L08-T54.md`. Il n'y a eu aucune fusion de main. Le correcteur l'a écrit dans la PR : `git merge origin/main` refuse (« unrelated histories »).
+- `git merge-base origin/main origin/lot-08/L08-T54` ne rend rien. L'historique de main a été réécrit, et la branche n'a plus d'ancêtre commun avec lui. GitHub marque la PR « dirty », et aucun job de CI n'a tourné sur cette tête.
+- Le corps de la PR dit « même contenu (SHA 33e6de97) ». C'est faux : la branche ne pointe pas sur 33e6de97.
 
-## Vérifications refaites au SHA de tête
-- Les tests `packages/noyau` `src/rgpd` et `securite/__tests__/arret.test.ts` passent : 13 fichiers, 107 tests (Node 22, `engine_strict=false`). Les 9 tests nommés de la fiche passent. `tsc --noEmit` passe sans message.
-- Mutations faites puis annulées, chaque fois un test rougit :
-  - retrait de la borne `finLe` → `evenement-hors-de-l-exercice-refuse` ;
-  - retrait de `reprise_absente` → `reprise-absente-ou-arret-repose-apres-reprise` ;
-  - tri par ordre d'arrivée au lieu de l'horodatage → même test.
-- Aucun mot interdit, aucun prix, aucun secret, aucun octet NUL. Données fictives seulement.
+## Fichiers propres de la fiche : PAS inchangés
+Comparaison avec la version relue OK (33e6de97) :
+- `packages/noyau/src/rgpd/exercice-violation.ts` : absent de la tête (présent dans 33e6de97, blob 7a12d4c2).
+- `packages/noyau/src/rgpd/__tests__/exercice-violation.test.ts` : absent de la tête (blob a9cee88e dans 33e6de97).
+- `pilotage/fiches/L08-T54.md` : différent (tête 99d2866e, 33e6de97 62c97c8a, main cad7a936).
+- `pilotage/journal/L08-T54.md` : différent (tête 5b5f524a = main, 33e6de97 3f221f8a).
+Le code et les 9 tests nommés relus OK ne sont donc pas dans cette PR. Comparée à main, la tête diffère sur 1555 fichiers (64 704 lignes retirées).
 
-## CI au SHA de tête
-- `gardes`, et donc `verifier`, sont rouges pour la même cause que dans l'avis précédent : `garde:perimetre` ne tire pas l'identifiant de la fiche du nom de branche `lot-08/L08-T54-reprise`. Ce n'est pas un défaut de l'auteur.
-- Le remède est un geste de Will : remplacer l'ancienne branche `lot-08/L08-T54`, qui n'a pas d'historique commun avec main, puis rouvrir la PR depuis elle.
-- Les 7 autres jobs sont verts : tests, lint, types, e2e, gitleaks, licences, stryker.
-
-## Remarques (non bloquantes, reprises)
-- Avec `evenementsArret` vide et `arretUrgenceActions: null`, un `finLe` antérieur à `debutLe` n'est pas refusé. Un `ordre_invalide` serait plus sûr.
+## Ce qui débloque (geste de Will, ce n'est pas un défaut de l'auteur)
+- `lot-08/L08-T54-reprise` (33e6de97) a bien un ancêtre commun avec l'actuel main (599f7b33). Il faut mettre `lot-08/L08-T54` sur ce contenu : soit Will remplace la branche par 33e6de97 (le relecteur et les auteurs n'ont pas le droit de forcer), soit on recrée la branche depuis origin/main avec les 4 fichiers de la fiche seulement. Ensuite, fusionner main, relancer la CI, puis demander une nouvelle relecture au nouveau SHA de tête.
+- Aucune relecture du code n'est possible à ce SHA, puisque le code n'y est pas.
