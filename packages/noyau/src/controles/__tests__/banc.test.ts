@@ -65,4 +65,3 @@ describe('banc d anomalies injectées', () => {
     expect(lancerBanc().attendues).toBe(20);
   });
 });
-

@@ -42,7 +42,8 @@ function importer(lignes, connus) {
   return creees;
 }
 
-export async function lancerBancReel(env = process.env) {
+/** `importeur(lignes, connus)` : port d'import, injectable ; renvoie le nombre de lignes créées. */
+export async function lancerBancReel(env = process.env, { importeur = importer } = {}) {
   if (!variablesPresentes(env)) return { etat: 'ignore', message: MESSAGE_IGNORE };
   let manifeste, releve, constats;
   try {
@@ -84,8 +85,8 @@ export async function lancerBancReel(env = process.env) {
     verifications.push(compare(`constats:${code}`, manifeste.constats?.[code] ?? 0, compteConstats[code] ?? 0));
   }
   const connus = new Set();
-  importer(unique, connus);
-  const lignesCreees = importer(unique, connus);
+  importeur(unique, connus);
+  const lignesCreees = importeur(unique, connus);
   verifications.push({ code: 'reimport', statut: lignesCreees === 0 ? 'ok' : 'ecart' });
   return {
     etat: 'execute',

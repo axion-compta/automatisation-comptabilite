@@ -15,9 +15,9 @@ const MANIFESTE = {
   releve: { totalDebits: 125957, totalCredits: 400000, soldeOuverture: 1000, soldeCloture: 275043 },
 };
 
-function banc(manifeste = MANIFESTE, lignes = LIGNES, constats = [{ code: 'CC-K05' }, { code: 'CC-K05' }]) {
+function banc(manifeste = MANIFESTE, lignes = LIGNES, constats = [{ code: 'CC-K05' }, { code: 'CC-K05' }], ouverture = manifeste.releve?.soldeOuverture) {
   const dossier = mkdtempSync(join(tmpdir(), 'banc-fictif-'));
-  writeFileSync(join(dossier, 'releve.json'), JSON.stringify({ lignes, soldeOuverture: manifeste.releve.soldeOuverture }));
+  writeFileSync(join(dossier, 'releve.json'), JSON.stringify({ lignes, soldeOuverture: ouverture }));
   writeFileSync(join(dossier, 'constats.json'), JSON.stringify(constats));
   const fichier = join(dossier, 'manifeste.json');
   writeFileSync(fichier, JSON.stringify(manifeste));
@@ -65,6 +65,16 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
     }
     const m = { ...MANIFESTE, constats: { 'CC-K05': 3, 'CC-K06': 0 } };
     expect(statut(await lancerBancReel(banc(m)), 'constats:CC-K05')).toBe('ecart');
+    for (const ouverture of [999, 1001]) {
+      const r = await lancerBancReel(banc(MANIFESTE, LIGNES, undefined, ouverture));
+      expect(statut(r, 'solde_ouverture')).toBe('ecart');
+      expect(statut(r, 'solde_cloture')).toBe('ecart');
+    }
+    const sans = await lancerBancReel(banc(MANIFESTE, LIGNES, undefined, null));
+    expect(statut(sans, 'solde_ouverture')).toBe('ecart');
+    expect(sans.ok).toBe(false);
+    const inattendu = await lancerBancReel(banc(MANIFESTE, LIGNES, [{ code: 'CC-K05' }, { code: 'CC-K05' }, { code: 'CC-K99' }]));
+    expect(statut(inattendu, 'constats:CC-K99')).toBe('ecart');
   });
 
   it('reimport-zero-ligne', async () => {
@@ -73,7 +83,11 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
     expect(statut(r, 'reimport')).toBe('ok');
     // des identifiants en double dans le relevé ne sont pas comptés deux fois
     const doublon = await lancerBancReel(banc(MANIFESTE, [...LIGNES, LIGNES[0]]));
-    expect(doublon.reimport.lignesCreees).toBe(0);
+    expect(doublon.reimport).toEqual({ lignesLues: 4, lignesCreees: 0 });
+    // un import qui recrée des lignes est signalé
+    const mauvais = await lancerBancReel(banc(), { importeur: (lignes) => lignes.length });
+    expect(statut(mauvais, 'reimport')).toBe('ecart');
+    expect(mauvais.ok).toBe(false);
     expect(statut(doublon, 'total_debits')).toBe('ecart');
   });
 
@@ -84,6 +98,20 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
       expect(texte).not.toContain(LIBELLE);
       for (const montant of ['123457', '125957', '400000', '275043', '2500']) expect(texte).not.toContain(montant);
     }
+  });
+
+  it('forme invalide : code forme_invalide', async () => {
+    const dossier = (releve, manifeste = MANIFESTE) => {
+      const e = banc(manifeste);
+      writeFileSync(join(e.BANC_REEL_DOSSIER, 'releve.json'), JSON.stringify(releve));
+      return e;
+    };
+    const invalides = [
+      dossier({ lignes: [{ id: 'L1', montant: 12.5 }], soldeOuverture: 0 }),
+      dossier({ soldeOuverture: 0 }),
+      banc({ ...MANIFESTE, releve: null }),
+    ];
+    for (const env of invalides) expect(await lancerBancReel(env)).toEqual({ etat: 'erreur', code: 'forme_invalide' });
   });
 
   it('refuse un dossier ou un manifeste illisible par un code, sans recopier le contenu', async () => {
