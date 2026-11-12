@@ -1,5 +1,5 @@
 // Estimation de l'IS depuis le résultat comptable (centimes) ; barème en argument, jamais un montant dû.
-import { centimes, fraction, pourcentage, soustraire, ajouter, type Centimes } from '../argent/index.js';
+import { ErreurArgent, centimes, fraction, pourcentage, soustraire, ajouter, type Centimes } from '../argent/index.js';
 
 export interface BaremeIs {
   tauxNormal: number;
@@ -32,6 +32,10 @@ export function estimerIs(
   bareme: BaremeIs,
   contexte: ContexteIs,
 ): EstimationIs {
+  const mois = contexte.moisExercice ?? bareme.moisReference;
+  const d = contexte.detention;
+  if (![bareme.moisReference, mois].every((m) => Number.isInteger(m) && m > 0) || (d !== null && !(Number.isInteger(d) && d >= 0 && d <= 10000)))
+    throw new ErreurArgent('Mois ou détention invalide.');
   const raisons: RaisonIs[] = [];
   if (!bareme.verifie) raisons.push('bareme_non_verifie');
   if (contexte.detention === null) raisons.push('detention_inconnue');
@@ -48,7 +52,6 @@ export function estimerIs(
     contexte.detention !== null &&
     contexte.detention >= bareme.detentionMin &&
     chiffreAffaires < bareme.chiffreAffairesMax;
-  const mois = contexte.moisExercice ?? bareme.moisReference;
   const limite = fraction(bareme.plafondBeneficeReduit, mois, bareme.moisReference, 'demi-superieur');
   const reduite = eligible ? centimes(Math.min(resultat, limite)) : centimes(0);
   const normale = soustraire(resultat, reduite);

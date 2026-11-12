@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { centimes } from '../../argent/index.js';
+import { ErreurArgent, centimes } from '../../argent/index.js';
 import type { Ecriture } from '../../ecritures/modele.js';
 import { chiffreAffaires, resultatProvisoire, type DefinitionsIndicateurs } from '../chiffres.js';
 import { estimerIs, type BaremeIs, type ContexteIs } from '../impot-estime.js';
@@ -50,6 +50,7 @@ describe('impôt sur les sociétés estimé', () => {
     expect(estimerIs(centimes(4250100), ca, BAREME, CTX).montant).toBe(637525);
     expect(estimerIs(centimes(4250000), BAREME.chiffreAffairesMax, BAREME, CTX).montant).toBe(1062500);
     expect(estimerIs(centimes(4250000), ca, BAREME, { detention: 7499 }).montant).toBe(1062500);
+    expect(estimerIs(centimes(4250000), ca, BAREME, { detention: BAREME.detentionMin }).montant).toBe(637500);
     const court = estimerIs(centimes(4250000), ca, BAREME, { detention: 10000, moisExercice: 6 });
     expect(court.partieReduite).toBe(2125000);
     expect(court.montant).toBe(318750 + 531250);
@@ -59,6 +60,11 @@ describe('impôt sur les sociétés estimé', () => {
     const e = estimerIs(centimes(-120000), centimes(900000), BAREME, CTX);
     expect(e.montant).toBe(0);
     expect(estimerIs(centimes(0), centimes(900000), BAREME, CTX).montant).toBe(0);
+    for (const r of [Number.NaN, Infinity, 1.5]) expect(() => estimerIs(r as never, centimes(1), BAREME, CTX)).toThrow(ErreurArgent);
+    const f = (b: BaremeIs, c: ContexteIs) => () => estimerIs(centimes(1000000), centimes(5000000), b, c);
+    for (const m of [-6, 0, 1.5, Number.NaN]) expect(f(BAREME, { detention: 10000, moisExercice: m })).toThrow(ErreurArgent);
+    expect(f({ ...BAREME, moisReference: 0 }, CTX)).toThrow(ErreurArgent);
+    for (const d of [Number.NaN, -1, 10001]) expect(f(BAREME, { detention: d })).toThrow(ErreurArgent);
   });
 
   it('bareme-non-verifie-marque-a-verifier', () => {
