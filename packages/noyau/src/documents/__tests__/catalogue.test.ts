@@ -14,14 +14,17 @@ describe('catalogue des documents préparés', () => {
   });
 
   it('catalogue-sas', () => {
-    const c = codes('SAS');
-    expect(c).toContain('acte_unanime');
-    expect(c).not.toContain('decision_associe_unique');
-    expect(c).not.toContain('rapport_gerant_sci');
-    expect(codes('EURL')).toEqual(expect.arrayContaining(['decision_associe_unique', 'bilan']));
-    expect(codes('EURL')).not.toContain('pv_ag');
-    expect(codes('SASU')).toContain('decision_associe_unique');
-    expect(codes('SASU')).not.toContain('pv_ag');
+    expect(codes('SAS')).toEqual([
+      'acte_unanime', 'annexe', 'balance', 'bilan', 'compte_resultat', 'consultation_ecrite', 'convocation_ag', 'declaration_tva', 'fec',
+      'feuille_presence', 'grand_livre', 'liasse_fiscale', 'ordre_du_jour', 'pv_ag', 'pv_consultation', 'rapport_gestion',
+    ]);
+    const unique = [
+      'annexe', 'balance', 'bilan', 'compte_resultat', 'declaration_tva', 'decision_associe_unique', 'fec', 'grand_livre', 'liasse_fiscale', 'rapport_gestion',
+    ];
+    expect(codes('EURL')).toEqual(unique);
+    expect(codes('SASU')).toEqual(unique);
+    expect(catalogueFiltre('SAS', 'saisie_seule').absents.map((a) => a.code).sort()).toEqual(['annexe', 'bilan', 'compte_resultat', 'liasse_fiscale', 'rapport_gestion']);
+    expect(catalogueFiltre('SAS', 'complet').absents).toEqual([]);
   });
 
   it('catalogue-ei', () => {
