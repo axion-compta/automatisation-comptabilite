@@ -1,21 +1,21 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1126 (L16-T42), SHA de tête 6fc453ec217f5dce7ae1531cb9da41b997f0a1f9 (branche lot-16/L16-T42). Relecture du 12/11/2026, CI attendue jusqu'au bout : 9/9 verte sur ce SHA.
+PR #1126 (L16-T42), SHA de tête 7872794cd03c03a45f430d3fc11773269d81e5f9 (branche lot-16/L16-T42). Relecture du 12/11/2026 après l'avis A CORRIGER sur 6fc453ec217f5dce7ae1531cb9da41b997f0a1f9. CI 9/9 verte sur ce SHA (verifier, gardes, types, lint, tests, e2e, stryker, gitleaks, licences).
 
-Ce qui est bon
-- Périmètre : 4 fichiers, tous dans fichiers_autorises ; 121 lignes ajoutées (taille_max 200). Dépendances L12-T17 et L01-T19 « fait ».
-- Les 5 tests nommés passent. `normaliser` importé de regimes-particuliers.ts (pas copié) ; CC-T10 non modifié ; mentions et natures en arguments ; TVA déductible obtenue par `effetTraitement` (code `MARGE`), sans recalcul. Gravité M, code `marge_a_tort_ou_oubliee`.
-- Mutation rouge : retrait du filtre des mentions vides.
-- Retrait de `bloque_par` : même levée que L16-T09 (#1112). Journal : 7 lignes, commence par « # Journal L16-T42 ». Aucun mot interdit, aucun prix, données fictives.
+## Contrôles
+- 4 fichiers, tous dans `fichiers_autorises` ; 160 lignes ajoutées et 3 retirées (max 200).
+- 8 tests verts en local, dont les 5 nommés par la fiche ; eslint, tsc et garde périmètre verts.
+- Journal 7 lignes, commence par `# Journal L16-T42`. Aucun mot interdit, aucun prix, données fictives.
+- `normaliser` importé ; TVA déductible via `effetTraitement` (code `MARGE`), sans recalcul.
 
-Défauts
-1. packages/noyau/src/controles/regles/marge-occasion.ts:51 : la règle juge la TVA sur `piece.totaux.tva`, pas sur les lignes « occasion ». Une facture mixte sans mention (ligne `bien_occasion` 80 000 HT à 0 de TVA + ligne `bien_neuf` 10 000 HT et 2 000 de TVA) rend `OK` au lieu de la carte `marge_a_tort_ou_oubliee`. Reproduit sur ce SHA.
-   Correction demandée : alerter dès qu'une ligne d'occasion est à 0 de TVA sans mention (TVA de la ligne, via `exigerCentimes(l.tva)`), avec un test sur une facture mixte, les lignes dans les deux ordres (même résultat).
-2. marge-occasion.ts:50 : `some` -> `every` laisse les 5 tests verts (toutes les pièces de test n'ont qu'une ligne). Le test de la facture mixte du défaut 1 doit aussi tuer ce mutant.
-3. marge-occasion.ts:40 : la normalisation des natures n'est pas testée (retrait de `.map(normaliser)` : 5 verts). Correction demandée : un test où la nature reçue diffère de la nature réglée par la casse ou les accents.
-4. Cas limites absents (consigne du relecteur et règles du noyau du lot 12, dont dépend la fiche) : aucun montant NaN, Infinity ou non entier. Les mutations qui retirent `exigerCentimes` (lignes 29 et 51) laissent 5 tests verts. Liste de lignes vide non testée non plus.
-   Correction demandée : `regle.evaluer` et `tvaDeductibleMarge` avec une TVA NaN, Infinity et 1.5 doivent lever (`entree_invalide`) ; une pièce sans ligne rend `NON_APPLICABLE`.
+## Défauts de l'avis précédent, vérifiés par mutation
+1. TVA jugée sur `piece.totaux.tva` : corrigé, chaque ligne d'occasion est jugée sur sa TVA. Remettre `piece.totaux.tva` : 1 test rouge (facture mixte, deux ordres de lignes).
+2. `some` -> `every` : 1 test rouge.
+3. Normalisation des natures : retrait de `.map(normaliser)` (réglage) ou de `normaliser(l.nature)` (pièce) : 1 test rouge chacun.
+4. Cas limites : retrait de `exigerCentimes` sur la TVA de ligne, sur `totaux.tva` ou `totaux.ht` de `tvaDeductibleMarge` : 1 test rouge chacun (NaN, Infinity, 1.5). Pièce sans ligne -> `NON_APPLICABLE` : retrait du garde, 2 tests rouges.
+Mutation de plus : retrait de la branche « mention lue » : 1 test rouge.
 
-Remarques
-- L'identifiant `CC-T10-OCCASION` n'est inscrit nulle part au catalogue : c'est hors périmètre (fiche), à prévoir lors de l'inscription.
-- Fiche sensible : relecture Opus, fusion par Will seul.
+## Remarques
+- `CC-T10-OCCASION` n'est pas au catalogue des contrôles (hors périmètre de la fiche, à prévoir dans une fiche).
+- Avec la mention lue, la règle rend `OK` même si une ligne d'occasion porte de la TVA ; seule `tvaDeductibleMarge` (0 déductible) couvre ce cas. Acceptable au regard de la fiche.
+- Fiche sensible : pas de fusion par le relecteur, fusion par Will seul.
