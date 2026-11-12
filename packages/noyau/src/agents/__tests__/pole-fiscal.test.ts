@@ -14,7 +14,7 @@ const decl = (p: Partial<DeclarationFiscale> = {}): DeclarationFiscale => ({
 });
 const ROLES_AVEC = [
   { role: 'administrateur' as const, id: 'admin-exemple' },
-  { role: 'comptable_invite' as const, id: 'compta-exemple' },
+  { role: 'comptable' as const, id: 'compta-exemple' },
 ];
 const ROLES_SANS = [{ role: 'administrateur' as const, id: 'admin-exemple' }];
 
@@ -42,6 +42,10 @@ describe('pole fiscal', () => {
       expect(r.motifs).toContain('montant_invalide');
     }
     expect(verifierDeclaration(decl(), { total: Number.NaN }, ROLES_AVEC).motifs).toContain('montant_invalide');
+    for (const montant of [Number.NaN, 1.5]) {
+      const l = decl({ lignes: [{ id: 'L1', montant, sources: SOURCES }] });
+      expect(verifierDeclaration(l, BALANCE, ROLES_AVEC)).toEqual({ statut: 'refusee', motifs: ['montant_invalide'], escalade: null });
+    }
   });
 
   it('ligne-sans-source-refusee', () => {
@@ -50,6 +54,8 @@ describe('pole fiscal', () => {
       const r = verifierDeclaration(d, BALANCE, ROLES_AVEC);
       expect(r).toEqual({ statut: 'refusee', motifs: ['ligne_sans_source:L1'], escalade: null });
     }
+    const melange = decl({ lignes: [{ id: 'L1', montant: 120000, sources: ['piece:P1', ''] }] });
+    expect(verifierDeclaration(melange, BALANCE, ROLES_AVEC).motifs).toEqual(['ligne_sans_source:L1']);
     // une source citée sur chaque ligne suffit
     const ok = decl({ lignes: [{ id: 'L1', montant: 120000, sources: ['piece:P9'] }] });
     expect(verifierDeclaration(ok, BALANCE, ROLES_AVEC).statut).toBe('acceptee');
@@ -57,12 +63,16 @@ describe('pole fiscal', () => {
 
   it('escalade-comptable-invite', () => {
     const r = verifierDeclaration(decl({ total: 5 }), BALANCE, ROLES_AVEC);
-    expect(r.escalade).toEqual({ vers: 'comptable_invite', destinataire: 'compta-exemple' });
+    expect(r.escalade).toEqual({ vers: 'comptable', destinataire: 'compta-exemple' });
   });
 
   it('escalade-administrateur-sans-comptable', () => {
     const r = verifierDeclaration(decl({ total: 5 }), BALANCE, ROLES_SANS);
     expect(r.escalade).toEqual({ vers: 'administrateur', destinataire: 'admin-exemple' });
+    for (const id of ['', '  ']) {
+      const roles = [{ role: 'comptable' as const, id }, ...ROLES_SANS];
+      expect(verifierDeclaration(decl({ total: 5 }), BALANCE, roles).escalade).toEqual({ vers: 'administrateur', destinataire: 'admin-exemple' });
+    }
     const aucun = verifierDeclaration(decl({ total: 5 }), BALANCE, []);
     expect(aucun.statut).toBe('refusee');
     expect(aucun.motifs).toContain('aucun_destinataire');

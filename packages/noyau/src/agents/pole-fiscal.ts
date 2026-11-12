@@ -1,10 +1,13 @@
 // Pôle fiscalité : contrôle d'une déclaration avant tout envoi. Fonction pure, aucun appel à un modèle.
 // Montants en centimes entiers. Aucun texte affiché ici : seulement des codes.
 
-export type RoleDestinataire = 'comptable_invite' | 'administrateur';
+import type { Role } from '../securite/types.js';
+
+// « Comptable invité » = rôle `comptable` du catalogue de sécurité.
+export type RoleDestinataire = Extract<Role, 'comptable' | 'administrateur'>;
 
 export interface RoleActif {
-  role: string;
+  role: Role;
   id: string;
 }
 
@@ -40,7 +43,7 @@ const sourceValide = (s: unknown): boolean => typeof s === 'string' && s.trim() 
 
 /** Comptable invité s'il existe, sinon administrateur ; rien si aucun des deux. */
 function destinataire(roles: readonly RoleActif[]): EscaladeFiscale | null {
-  for (const vers of ['comptable_invite', 'administrateur'] as const) {
+  for (const vers of ['comptable', 'administrateur'] as const) {
     const r = roles.find((x) => x.role === vers && typeof x.id === 'string' && x.id.trim() !== '');
     if (r) return { vers, destinataire: r.id };
   }
