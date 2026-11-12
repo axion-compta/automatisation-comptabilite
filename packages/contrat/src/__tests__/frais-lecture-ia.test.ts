@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { creerFauxFournisseurLecture, creerServiceLectureIa, MENTION_IA } from '../domaines/frais-lecture-ia.js';
 
 const SURE = { fournisseur: 'Café du Test', date: '2026-10-03', ttcCentimes: 2450, tvaParTaux: [{ tauxCentiemes: 1000, montantCentimes: 223 }], quatreChiffres: '4242', couverts: 2, confiance: 'sure' };
+const INCERTAINE_COMPLETE = { ...SURE, confiance: 'incertaine' };
 const INCERTAINE = { fournisseur: 'Café du Test', confiance: 'incertaine' };
 const faux = (extra: { indisponible?: boolean } = {}) =>
-  creerFauxFournisseurLecture({ tickets: { 'PIE-1': SURE, 'PIE-2': INCERTAINE, 'PIE-3': { ...SURE, quatreChiffres: '9999' } }, distances: { 'Atelier Test>Chantier Test': 123 }, ...extra });
+  creerFauxFournisseurLecture({ tickets: { 'PIE-1': SURE, 'PIE-2': INCERTAINE, 'PIE-4': INCERTAINE_COMPLETE, 'PIE-3': { ...SURE, quatreChiffres: '9999' } }, distances: { 'Atelier Test>Chantier Test': 123 }, ...extra });
 
 describe('lecture du ticket par l’IA (faux fournisseur, réponses enregistrées)', () => {
   it('lecture-sure-brouillon-rempli', async () => {
@@ -21,6 +22,13 @@ describe('lecture du ticket par l’IA (faux fournisseur, réponses enregistrée
     expect(b.manquants).toEqual(['date', 'ttcCentimes']);
     expect(b.champs.ttcCentimes).toBeUndefined();
     expect(b.champs.date).toBeUndefined();
+  });
+
+  it('lecture-incertaine-complete-a-completer', async () => {
+    const b = await creerServiceLectureIa(faux()).preparer('PIE-4');
+    expect(b.manquants).toEqual([]);
+    expect(b.confiance).toBe('incertaine');
+    expect(b.statut).toBe('a_completer');
   });
 
   it('quatre-chiffres-transmis', async () => {
@@ -52,6 +60,14 @@ describe('lecture du ticket par l’IA (faux fournisseur, réponses enregistrée
     }
     expect(f.appelsDistance).toBe(0);
     expect((await service.preparer('PIE-1', { depart: 'Ailleurs', arrivee: 'Nulle part' })).distanceProposee).toBeUndefined(); // distance inconnue : jamais inventée
+  });
+
+  it('distance-invalide-du-fournisseur-ignoree', async () => {
+    for (const km of [-1, 12.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const f = creerFauxFournisseurLecture({ tickets: { 'PIE-1': SURE }, distances: { 'Atelier Test>Chantier Test': km } });
+      const b = await creerServiceLectureIa(f).preparer('PIE-1', { depart: 'Atelier Test', arrivee: 'Chantier Test' });
+      expect(b.distanceProposee).toBeUndefined();
+    }
   });
 
   it('fournisseur-indisponible-brouillon-vide', async () => {

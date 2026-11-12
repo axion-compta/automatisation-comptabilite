@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { centimes } from '../../../noyau/src/argent/index.js';
 import { determinerPayeur, type ResultatPayeur } from '../../../noyau/src/frais/payeur.js';
 import { cheminSociete } from '../prefixe-routes.js';
+import { FENETRE_ESSAI } from './frais-actions-service.js';
 
 const Id = z.string().min(1).max(50);
 const Texte = z.string().trim().min(1).max(200);
@@ -48,7 +49,7 @@ export const fraisLectureIa = { lireTicketFrais };
 
 /** Contexte bancaire de l'essai (fictif). Le payeur vient des règles du noyau, jamais de l'IA. */
 export interface ContexteBanque { cartesSociete: readonly string[]; releveImporte: boolean; fenetreJours: number }
-const BANQUE_ESSAI: ContexteBanque = { cartesSociete: ['4242'], releveImporte: false, fenetreJours: 3 };
+const BANQUE_ESSAI: ContexteBanque = { cartesSociete: ['4242'], releveImporte: false, fenetreJours: FENETRE_ESSAI.jours };
 
 const payeurDe = (l: LectureTicket | undefined, banque: ContexteBanque): ResultatPayeur =>
   determinerPayeur({
