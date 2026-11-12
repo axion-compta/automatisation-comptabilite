@@ -9,6 +9,7 @@ import { Pastille, type EtatPastille } from '../../../../../packages/ui/src/comp
 import { Tableau, type ColonneTableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { formaterMontantAffiche } from '../../../../../packages/ui/src/format/affichage.js';
 import { useLecture } from '../../donnees/lecture.js';
+import { Indicateurs } from './Indicateurs.js';
 
 const CHEMIN_DETAIL = '/factures/vente?id=';
 type Etat = keyof typeof t.etats;
@@ -98,6 +99,7 @@ export function Ecran() {
           <input type="month" value={mois} onChange={(e) => setMois(e.target.value)} />
         </label>
       </form>
+      <Indicateurs mois={mois} />
       <Liste requete={requete} />
     </section>
   );
