@@ -129,7 +129,12 @@ describe('CC-V17 client UE sans numero de TVA verifie (A17)', () => {
     for (const manque of ['idRequete', 'horodatage', 'empreinteReponse']) {
       expect(res(V17, exo({ ...trace('valide'), [manque]: '' })), manque).toBe('ALERTE');
       expect(res(V17, exo({ ...trace('valide'), [manque]: null })), manque).toBe('ALERTE');
+      // Un champ réduit à des espaces compte comme vide.
+      expect(res(V17, exo({ ...trace('valide'), [manque]: '  ' })), manque).toBe('ALERTE');
+      expect(res(V17, exo({ ...trace('valide'), [manque]: ' x ' })), manque).toBe('OK');
     }
+    // Champ manquant : valeur = état|id|horodatage|empreinte, le champ absent restant vide.
+    expect(ev(V17, exo({ ...trace('valide'), idRequete: null })).valeur).toBe(`valide||2027-03-04T10:11:12.000Z|${'ab'.repeat(32)}`);
     expect(() => ev(V17, exo(trace('probablement')))).toThrow();
     expect(() => ev(V17, exo('x'))).toThrow();
     expect(() => ev(V17, exo(trace('valide'), { exoneree: 'oui' }))).toThrow();
