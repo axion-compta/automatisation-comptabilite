@@ -19,7 +19,7 @@ function sansCommentaires(texte) {
     const c = texte[i];
     const d = texte[i + 1];
     if (c === '/' && d === '/') {
-      while (i < texte.length && texte[i] !== '\n') (sortie += ' '), i++;
+      for (; i < texte.length && texte[i] !== '\n'; i++) sortie += ' ';
     } else if (c === '/' && d === '*') {
       const fin = texte.indexOf('*/', i + 2);
       const stop = fin === -1 ? texte.length : fin + 2;
