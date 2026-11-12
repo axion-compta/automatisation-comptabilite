@@ -1,33 +1,33 @@
-VERDICT: OK
+VERDICT: A CORRIGER
 
-PR #1133 « MVP conception : fiches L20-T01 à L20-T33 », seconde relecture au SHA de tête 0bae889d171a59314457b928363d2e3096b9d9b5 (branche pilotage/fiches-MVP-20, à jour de main 59f042c).
-Relecteur Opus, consigne LOT5 section R. Avis précédent : A CORRIGER au SHA 6ca719bed58b65a2e53aa7a15a96f26dde269e33.
+PR #1150 « L20-T01 Assemblée : organe d'approbation et mode de décision par forme, SCI comprise » (PR de code), relue au SHA de tête 3513d3d897855be3443bf6465d34bedfa00d1943.
+Relecteur Opus, consigne LOT5 section R. Cet avis remplace, pour la PR de code, l'avis de conception (#1133) qui était déjà sur cette branche.
 
-## Défauts précédents
-1. Recoupements avec des fiches bloquées de main : levé.
-   - L20-T09, T10, T13, T14 et T24 sont retirées, ainsi que T15 et T25 qui en dépendaient.
-   - garde:fiches ne signale plus aucun avertissement L20. Il reste les 11 avertissements anciens de main (L04 à L17), identiques sur #1132.
-   - Aucun recoupement avec une fiche non faite de main.
-2. Doublon L20-T28 / L24-T26 : levé. L20-T28 est retirée et L24-T26 (#1135) est gardée. Le choix du comportement du MVP revient à Will.
-3. Forme des critères : levé.
-   - Les 25 fiches écrivent « les N tests nommés de <fichier> passent : <noms> », avec un critère par fichier de test.
-   - Pour chaque critère, N est égal au nombre de noms listés, et le fichier de test figure dans `fichiers_autorises`.
-4. Recoupements avec d'autres PR de conception : accepté sans changement, comme le prévoyait l'avis si #1133 passe en premier.
-   - Restent L20-T08 et T12 (registres lot-03) avec L22-T17 (#1139) et L23-T20 (#1137), L20-T27 (e57) avec L26-T36 (#1138), et L20-T32 (Discussion.tsx, e25) avec L26-T14, T16, T17, T18 (#1138) et L25-T12 (#1136).
-   - La PR fusionnée en second devra ajouter le `depend_de`.
-- Remarque « Pièges » : traitée, avec la ligne « Recoupement vérifié le 12/11/2026 » dans chaque fiche.
+## Contrôles
+- Fichiers : les 7 fichiers modifiés sont dans `fichiers_autorises`. Diff de +276 −1, sous `taille_max_lignes` (280), aucune ligne « - - ».
+- Les 9 tests nommés sont présents (`regle_non_sourcee` est aussi testé). En local, tous sont verts : noyau 11/11 et parametres 1/1.
+- Règles : datées, sourcées par article et marquées `a_verifier` dans `parametres`. Le noyau les reçoit en argument et ne contient aucune valeur légale en dur.
+- Sources relues : L223-31 (EURL), L227-9 (SASU et SAS), L223-26 et L223-27 (consultation écrite exclue pour les comptes en SARL), articles 1853, 1854 et 1856 du Code civil (SCI). Elles correspondent aux règles.
+- `sci-sans-greffe.test.ts` utilise un catalogue fictif. J'ai vérifié qu'aucun catalogue réel d'échéances n'existe : `echeances/catalogue.ts` n'exporte que des fonctions. L'étape 5 de la fiche prévoit ce cas, et c'est noté au journal.
+- Aucun mot interdit, aucun prix, aucun secret. Journal : 6 lignes, commence par `# Journal L20-T01`.
+- CI au moment de la relecture : gardes, gitleaks et stryker sont verts ; tests, types, lint, e2e et licences sont en cours.
 
-## La correction n'a rien cassé
-- Diff : 25 fichiers, tous sous `pilotage/fiches/`, +820 −0, aucune ligne « - - ».
-- Forme : clés et ordre de L04-T56, les 4 sections présentes, `statut: a_faire`, aucun `bloque_par`.
-- `depend_de` : toutes les fiches citées existent. Aucune fiche ne cite une fiche retirée, ni dans cette PR ni dans une autre PR ouverte (T12 et T23 ont été reformulées).
-- Recoupement interne : seulement T08 et T12, qui sont chaînées.
-- Aucun recoupement avec le diff des PR de code ouvertes (#1140, #1131, #1129, #1105).
-- Gardes relancées sur la tête : fiches (1088 cohérentes), textes, fictif, termine et portes au vert.
-- Mots interdits : aucun. Aucun prix.
+## Mutations faites à la main
+- `n < 1` remplacé par `n < 0` : tué.
+- Contrôle EURL/SASU `n !== 1` retiré : tué.
+- Cas EI retiré : tué.
+- `agPrevue === true` remplacé par `!== false` : tué.
+- `<= 0` remplacé par `< 0` sur la date de la règle : tué.
+- **`Number.isSafeInteger(n)` remplacé par `Number.isFinite(n)` : le mutant SURVIT.**
+- **`g.source.trim() === ''` remplacé par `g.source === ''` : le mutant SURVIT.**
+
+## Défauts à corriger
+1. `packages/noyau/src/assemblee/organe.ts:66` : aucun test ne vérifie que `nbAssocies` est entier. Pourtant, la consigne du relecteur exige les cas limites des valeurs non entières et Infinity.
+   - À faire : dans `organe.test.ts`, test « entrées invalides », ajouter `nbAssocies: 1.5`, `nbAssocies: Number.POSITIVE_INFINITY` et `nbAssocies: -1`, chacun avec le résultat attendu `entree_invalide`.
+2. `packages/noyau/src/assemblee/organe.ts:69` : aucun test ne vérifie qu'une source faite seulement d'espaces est refusée.
+   - À faire : dans le test `regle_non_sourcee`, ajouter `avec({ source: '   ' })` avec le résultat attendu `regle_non_sourcee`.
 
 ## Remarques (non bloquantes)
-- Le corps de la PR cite encore T09, T10, T13, T14, T15, T24, T25 et T28 et annonce 33 fiches : à ajuster à la fusion.
-- Les exigences laissées sans fiche par les retraits (DOC-002, DOC-005, DOC-006 en partie, DOC-009, EXE-008 en partie, IMP-038 via L24-T26) sont à reprendre dans une conception ultérieure.
-- Remarque L20-T21 / L22-T20 (à-nouveaux) : reportée sur #1139.
-- PR de pilotage sensible : la fusion revient à Will seul.
+- Une SARL ou une SAS avec `nbAssocies: 1` aboutit à `regle_absente`, car le catalogue n'a pas de règle « associé unique » pour ces formes. Ce comportement est prudent, mais il mérite un test explicite ou une ligne au journal.
+- La date `DEBUT = '2022-12-31'` du catalogue est arbitraire et marquée « à vérifier » : à confirmer par Will.
+- Fiche sensible : la fusion revient à Will seul.
