@@ -33,12 +33,9 @@ export type ApercuReclassement = {
   readonly compteSource: string;
   readonly compteCible: string;
   readonly verrou: EtatVerrou;
-  /** Nombre d'écritures qui seront touchées, annoncé avant tout geste. */
   readonly nombre: number;
   readonly elements: readonly ElementApercu[];
-  /** Écritures d'une période verrouillée, exclues et comptées à part. */
   readonly verrouillees: number;
-  /** Écritures déjà contre-passées ou proposées, non touchées. */
   readonly ignorees: number;
 };
 export type Confirmation = { readonly nombre: number; readonly date: string; readonly motif: string };
@@ -76,7 +73,6 @@ export function apercuReclassement(
   return { compteSource: filtre.compteSource, compteCible, verrou, nombre: elements.length, elements, verrouillees, ignorees };
 }
 
-/** Brouillons seulement : un brouillon est modifié, une validée donne contre-passation et nouvelle écriture. */
 export function appliquer(apercu: ApercuReclassement, confirmation: Confirmation): ResultatReclassement {
   if (confirmation.nombre !== apercu.nombre) throw new ErreurReclassement('confirmation_differente');
   if (apercu.nombre === 0) throw new ErreurReclassement('rien_a_appliquer');

@@ -93,13 +93,11 @@ describe('correction en masse guidée', () => {
     expect(a.verrouillees).toBe(1);
     const r = appliquer(a, { nombre: 2, date: '2027-04-01', motif: 'm' });
     expect(r.brouillons.some((e) => e.id.includes('e4') || e.lienOriginale === 'e4')).toBe(false);
-    // Mois verrouillé entier (premier et dernier jour), voisins libres.
     const bornes = [ecr('d', '2027-01-01', 'valide'), ecr('f', '2027-01-31', 'valide'), ecr('h', '2027-02-01', 'valide'), ecr('g', '2026-12-31', 'valide')];
     const b = apercuReclassement(bornes, filtre, '625', verrous);
     expect(b.verrouillees).toBe(2);
     expect(b.elements.map((x) => x.ecritureId)).toEqual(['h', 'g']);
     expect(apercuReclassement(bornes, filtre, '625', libre).verrouillees).toBe(0);
-    // Exercice clos : tout est exclu.
     const clos = apercuReclassement(base, filtre, '625', { ...libre, exerciceCloture: true });
     expect([clos.nombre, clos.verrouillees]).toEqual([0, 5]);
     // La date de la contre-passation ne peut pas tomber dans une période verrouillée.
