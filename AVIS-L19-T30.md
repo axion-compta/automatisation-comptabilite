@@ -1,30 +1,34 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1218, fiche L19-T30. Première relecture Opus du 12/11/2026 (consigne LOT5, section R).
-SHA de tête relu : 1fc42f4de0328010f2e2f1e4e979bb0af91e0829
+PR #1218, fiche L19-T30. Seconde relecture Opus du 12/11/2026 (consigne LOT5, section R).
+Tête relue : 9ead9455f7eb5155286819bcee348ba60cb8ff9c
+
+## Défauts de la première relecture (au SHA 1fc42f4d)
+1. Journal « Hors menu » : défaut levé. La ligne 6 donne maintenant e39, informations et n08, avec m04 à 1 clic. J'ai recalculé le plan réel et j'obtiens la même liste.
+2. Tests sur les vrais écrans : défaut levé.
+   - Le test `chaque-ecran-a-deux-clics-au-plus` vérifie la liste exacte des 9 écrans à plus de 2 clics, la même que celle du journal ligne 5.
+   - Le test `ecran-hors-menu-signale` vérifie la liste `['e39','informations','n08']`.
+   - Mutation de contrôle : j'ai retiré e39 de `horsMenu`. Le test devient rouge.
+3. Remarques précédentes : traitées. `/reglages` et l'Accueil provisoire sont précisés au journal et en commentaire, et les apostrophes sont corrigées.
 
 ## Vérifié
-- 4 fichiers, tous dans `fichiers_autorises` ; 123 lignes ajoutées sur 180 permises ; aucune ligne « - - » ; aucune dépendance ajoutée.
-- Les 4 tests nommés de la fiche sont présents : 4 sur 4 verts. CI verte au même SHA.
-- Le plan est calculé depuis `ecransDecouverts()` (`ecrans.ts`), `MENU_BUREAU`, `BARRE_MOBILE` et `MENU_PLUS` (`menu.ts`), et `CHEMIN_DISCUSSION`.
-- Journal de 6 lignes, commence par « # Journal L19-T30 ». Aucun secret, prix, nom réel ni mot interdit.
+- Les 4 fichiers modifiés sont autorisés. Le diff fait 135 lignes pour 180 permises.
+- Le journal fait 8 lignes et commence par « # Journal L19-T30 ».
+- Les 4 tests nommés sont verts en local.
+- Aucun secret, prix, nom réel ni mot interdit.
+- Pas de régression : `plan-navigation.ts` n'a pas changé depuis la première relecture. Seuls les tests et le journal ont changé, et le diff montre un merge de main.
+- Mutations faites :
+  - « Discuter » à 2 clics : test rouge ;
+  - préfixe sans « / » : test rouge ;
+  - e39 retiré de `horsMenu` : test rouge.
 
-## Défauts
-1. `pilotage/journal/L19-T30.md:6` : la liste des écrans hors menu est fausse. Sur le plan réel, `planNavigation(ecransDecouverts()).horsMenu` vaut `["e39","informations","n08"]` (je l'ai recalculé moi-même). Le journal cite `m04`, qui est à 1 clic par « Discuter », et omet `e39` (`/demarrage/recapitulatif`).
-   Correction : « Hors menu (aucun chemin d'accès) : e39 (/demarrage/recapitulatif), informations, n08 ; la discussion (m04) est à 1 clic par « Discuter ». »
-2. `apps/web/src/socle/__tests__/plan-navigation.test.tsx:10` et `:22` : les tests ne portent que sur des écrans fictifs. Aucun test ne contrôle le plan réel de l'application : la règle « 2 clics au plus » (V3-UX-126) n'est donc pas vérifiée sur les vrais écrans, et l'erreur du défaut 1 est passée inaperçue.
-   Correction :
-   - dans `chaque-ecran-a-deux-clics-au-plus`, ajouter `expect(ecransAuDela(planNavigation(ecransDecouverts()), 2).map((n) => n.id).sort()).toEqual([...])`, avec la liste explicite des exceptions inscrites au journal (aujourd'hui `e17-frais, e44, e44-client, e45, e50, e53, n03, n04, t05`) ;
-   - dans `ecran-hors-menu-signale`, ajouter `expect([...planNavigation(ecransDecouverts()).horsMenu].sort()).toEqual(['e39', 'informations', 'n08'])`.
-   Tout nouvel écran à plus de 2 clics, ou hors menu, fera alors rougir les tests.
-
-## Mutations (toutes tuées)
-- Entrées « Plus » comptées à 1 clic au lieu de 2 : tuée.
-- Préfixe sans « / » : tuée.
-- Frontière `> max` changée en `>= max` : tuée.
-- Retrait du +1 pour un écran enfant : tuée.
+## CI
+Deux tâches sont rouges : `tests` et `verifier`, qui en découle.
+- Le seul échec est `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues`. Ce fichier n'est pas touché par la PR.
+- Je le reproduis à l'identique sur `origin/main` (61812425). Ce n'est donc pas un défaut de l'auteur : il faut corriger main, puis relancer la CI de la PR.
+- `pnpm verifier` ne tourne pas en local : le cloud a Node 22 et le dépôt demande Node 24.
 
 ## Remarques (non bloquantes)
-- `/reglages` n'a pas d'écran propre, mais ses sous-écrans sont comptés comme atteints par cette page : à préciser dans le journal.
-- L'Accueil provisoire, qui liste tous les écrans, est ignoré par le plan. C'est cohérent avec la fiche ; une phrase en tête de `plan-navigation.ts` suffirait.
-- Journal, lignes 3 et 6 : il manque l'apostrophe dans « d un » et « d accès ».
+- Une mutation survit : compter 3 clics au lieu de 4 pour `/reglages/entreprise/*` ne fait rougir aucun test. Il suffirait d'ajouter `expect(ecransAuDela(reel, 3).map((n) => n.id).sort()).toEqual(['e44','e44-client','n03','n04'])`.
+
+Pas de fusion.
