@@ -1,16 +1,18 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1166 (L25-T13), relue au SHA 5c9d640d77568d972ad965f55e903e3cd35f6732.
+PR #1166 (L25-T13), seconde relecture Opus du 12/11/2026 (consigne LOT5, section R). Fiche sensible : fusion par Will seul.
+SHA de tête relu : bc40dad82fdc3ba5adc708eef49db7731df4e7c4
 
-Vérifié : fichiers dans fichiers_autorises (6), 215 lignes <= 260, 8 tests nommés présents et verts, `node outils/gardes/migrations.mjs` rend 0, numéro 170 libre sur main, `a_compta.refuser_modification()` identique à celle de 090 et 164 (pas de changement de comportement), CHECK des 7 canaux égal à `CANAUX`, aucun mot interdit, aucun secret, aucun prix, données fictives.
-Mutations tuées : `apres` non objet, bornes `>=`/`<=`, tableau et null refusés pour `avant`, gel profond à la lecture, canal inconnu au filtre.
+## Défauts de l'avis précédent (tête 5c9d640d) : levés, vérifiés par mutation
+1. `auteurId`, `objetType` et `objetId` vides ou absents → `forme_invalide`, une assertion par champ. Retirer chaque `!texte(...)` fait rougir un test.
+2. Copie à l'ajout : retirer `structuredClone` dans `ajouter` fait rougir le test (objet `avant` modifié après l'ajout, y compris en profondeur).
 
-## Défauts (mutations survivantes ; le corps de la PR affirme que chaque comparaison a été mutée)
-1. apps/serveur/src/base/depot-action-historique.ts:47 : retirer `|| !texte(l.auteurId)`, `|| !texte(l.objetType)` ou `|| !texte(l.objetId)` laisse les 8 tests verts. Correction : dans `ajout-seul`, refuser (`forme_invalide`) une ligne avec `auteurId: ''`, `objetType: ''`, `objetId: ''` (et une valeur non texte), une assertion par champ.
-2. apps/serveur/src/base/depot-action-historique.ts:52 : retirer `structuredClone` à l'ajout laisse les tests verts. L'appelant garde alors une référence sur `avant`/`apres` stockés : modifier son objet après `ajouter` réécrit l'historique, ce qui contredit « ajout seul ». Correction : test qui modifie l'objet `avant` passé à `ajouter` puis vérifie que `lister` rend la valeur d'origine.
+## Non-régression
+- Diff : 6 fichiers, tous dans fichiers_autorises ; 224 lignes pour 260 permises. Journal : 7 lignes.
+- 8/8 tests verts. Borne `t >= min` mutée en `>` : tuée. `garde:perimetre` verte en CI.
+- Aucun mot interdit, aucun secret, aucun prix ; données fictives.
 
 ## Remarques (non bloquantes)
-- Mutations équivalentes, sans test à ajouter : `l.canal === canal` → `startsWith` (aucun canal n'est préfixe d'un autre, canal validé avant) ; retrait du départage `a.rang - b.rang` (tri stable).
-- `instant` accepte toute chaîne lisible par `Date.parse` (pas seulement ISO 8601) ; la colonne `le` est timestamptz.
-- Le déclencheur ne couvre pas TRUNCATE (cohérent avec 090 et 164).
-- CI : job `gardes` rouge pour `garde:portes` (« lot back-end de l'écran e09 sans porte maquette validée », pilotage/portes/e09.json). Ce n'est pas un défaut de l'auteur : la porte E09 relève de Will.
+- `texte()` accepte une chaîne faite d'espaces (`'   '`) ; à durcir avec `trim()` dans une fiche suivante si besoin.
+- CI : `gardes` rouge pour `garde:portes` (« lot back-end de l'écran e09 sans porte maquette validée », pilotage/portes/e09.json). La porte E09 relève de Will : pas un défaut de l'auteur.
+- CI : `tests`/`verifier` rouges pour le seul test `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues`, rouge aussi sur origin/main : pas un défaut de l'auteur.
