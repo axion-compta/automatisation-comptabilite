@@ -1,21 +1,17 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1178, fiche L21-T02, tête relue : 56edbdc9d2e236215b5f0da822996a0af5371877
+PR #1178, fiche L21-T02, tête 435087f637c518159c1e43568d4098f7369c2521 (seconde relecture, relecteur Opus, lot 5). Avis précédent : A CORRIGER sur 56edbdc9d2e236215b5f0da822996a0af5371877.
 
-## Défauts
-1. Mutant survivant sur le compte journalisé. `packages/noyau/src/securite/compte-service.ts:29` : remplacer `compte: session.personneId` par `compte: 'svc-ia-1'` laisse les 7 tests verts, car tous les tests utilisent le même identifiant `svc-ia-1`. La ligne `securite.compte_service_refuse` pourrait citer un autre compte sans qu'aucun test ne rougisse.
-   Correction demandée : dans `packages/noyau/src/securite/__tests__/compte-service.test.ts`, vérifier au moins un refus avec un second compte de service (ex. `personneId: 'svc-ia-2'`) et contrôler `ligne.compte` égal à cet identifiant.
-2. Mutant survivant sur l'horodatage journalisé. Même ligne : remplacer `horodatage` par la constante `'2026-11-12T10:00:00.000Z'` laisse les 7 tests verts, car un seul horodatage `T` est utilisé.
-   Correction demandée : vérifier au moins un refus avec un second horodatage et contrôler `ligne.horodatage`.
+## Défauts précédents : levés (vérifiés par mutation)
+1. Compte journalisé (`compte-service.ts:29`) : `compte: 'svc-ia-1'` en dur fait rougir 1 test (second compte `svc-ia-2` contrôlé).
+2. Horodatage journalisé (même ligne) : une constante en dur fait rougir 1 test (second horodatage contrôlé).
 
-## Vérifications faites
-- Fichiers : les 4 du diff sont dans `fichiers_autorises`. Taille 159 lignes (max 200).
-- 7 tests nommés présents ; 7/7 passent en local.
-- Mutations qui rougissent : `nature !== 'service'` -> `nature === 'personne'` ; garde de nature neutralisée ; masquage non récursif ; tableaux non parcourus.
-- Mutant équivalent (non bloquant) : retrait de `typeof operation === 'string' &&` (`includes` rend déjà false).
-- Aucun mot interdit, aucun prix, aucun secret ; données fictives (@exemple.fr, `FR00 FICTIF`).
+## Régressions : aucune
+- `compte-service.ts` est inchangé depuis la tête précédente. Le test a seulement reçu un ajout de 4 lignes.
+- La mutation `nature !== 'service'` remplacée par `nature === 'personne'` rougit toujours.
+- 4 fichiers, tous dans `fichiers_autorises` ; 163 lignes pour un maximum de 200 ; 7/7 tests en local ; journal de 7 lignes ; données fictives ; aucun mot interdit, aucun prix, aucun secret.
 
 ## Remarques (non bloquantes)
-- `compte-service.ts:36-43` : un objet non simple (ex. `Date`) devient `{}` dans la copie ; la correspondance des clés est sensible à la casse (`IBAN` n'est pas masqué si `iban` est listé). À documenter ou traiter au branchement.
-- CI : job `verifier` encore en attente ; les autres jobs sont verts.
-- Fiche sensible : fusion par Will seul.
+- Toujours ouvertes : un objet non simple (`Date`) devient `{}` dans la copie masquée, et la correspondance des clés est sensible à la casse. À traiter au branchement.
+- CI : `tests` est rouge à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`), qui rougit aussi sur origin/main 347401ab. `verifier` est rouge parce qu'il en dépend. Ce n'est pas un défaut de l'auteur.
+- La fiche est sensible : fusion par Will seul.
