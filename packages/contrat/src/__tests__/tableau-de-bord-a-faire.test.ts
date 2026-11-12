@@ -39,5 +39,24 @@ describe('bloc À faire : même source que la pastille du menu', () => {
       const un = await fetch(base + '/exercices/' + EXERCICE + '/tableau-de-bord/a_faire?vue=mois');
       expect(((await un.json()) as { body: { donnees?: Record<string, unknown> } }).body.donnees?.['nombre']).toBe(pastilles());
     });
+
+    it('faux-serveur-meme-compteur-apres-une-action', async () => {
+      const lister = async () => ((await (await fetch(base + '/exercices/' + EXERCICE + '/alertes')).json()) as { body: { id: string; etat: string; gravite: string; version: number }[] }).body;
+      const somme = async () => Object.values(((await (await fetch(base + '/exercices/' + EXERCICE + '/compteurs')).json()) as { body: { parEntree: Record<string, { ouvertes: number }> } }).body.parEntree).reduce((s, c) => s + c.ouvertes, 0);
+      const avant = await somme();
+      const cible = (await lister()).find((a) => a.etat === 'ouverte' && a.gravite === 'info')!;
+      const rep = await fetch(base + '/exercices/' + EXERCICE + '/alertes/' + cible.id + '/ignorer', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'idempotency-key': 'cle-essai-a-faire-1' },
+        body: JSON.stringify({ motif: 'doublon fictif', version: cible.version }),
+      });
+      expect(rep.status).toBe(200);
+      const apres = await somme();
+      expect(apres).toBe(avant - 1);
+      const t = (await (await fetch(base + '/exercices/' + EXERCICE + '/tableau-de-bord?vue=mois')).json()) as { body: { blocs: { code: string; donnees?: Record<string, unknown> }[] } };
+      expect(t.body.blocs.find((b) => b.code === 'a_faire')?.donnees?.['nombre']).toBe(apres);
+      const un = (await (await fetch(base + '/exercices/' + EXERCICE + '/tableau-de-bord/a_faire?vue=mois')).json()) as { body: { donnees?: Record<string, unknown> } };
+      expect(un.body.donnees?.['nombre']).toBe(apres);
+    });
   });
 });
