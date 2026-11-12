@@ -52,6 +52,6 @@ export function archiverReponse(o: {
     if (d === null) throw new ErreurAbonnement('document_absent');
     return { type, version: d.version, empreinte: d.empreinte };
   });
-  const corps = { organisation: o.organisation, personne: o.personne, reponses: { ...o.reponses }, documents: joints, le: o.le };
+  const corps = { organisation: o.organisation, personne: o.personne, reponses: Object.freeze({ ...o.reponses }), documents: Object.freeze(joints.map((j) => Object.freeze(j))), le: o.le };
   return Object.freeze({ ...corps, empreinte: empreinteSha256(serialiser(corps)) });
 }

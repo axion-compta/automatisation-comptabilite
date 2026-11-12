@@ -39,7 +39,7 @@ describe('qualification du client', () => {
     // un champ différent change l'empreinte
     expect(archiverReponse(entree({ personne: 'Autre Test' })).empreinte).not.toBe(empreinte);
     expect(archiverReponse(entree({ le: '2026-11-12T10:00:01Z' })).empreinte).not.toBe(empreinte);
-    expect(Object.isFrozen(a)).toBe(true); // ajout seul : pas de modification après coup
+    expect([a, a.reponses, a.documents, ...a.documents].map((x) => Object.isFrozen(x))).toEqual([true, true, true, true]); // ajout seul : gel profond
     expect(archiverReponse(entree({ reponses: rep('SAS') })).documents).toEqual([]);
   });
   it('clause-non-approuvee-refusee', () => {
@@ -57,8 +57,9 @@ describe('qualification du client', () => {
       expect(code(() => qualifier(r as Reponses)), JSON.stringify(r)).toBe('parametre_invalide');
       expect(code(() => archiverReponse(entree({ reponses: r })))).toBe('parametre_invalide');
     }
-    for (const o of [{ organisation: ' ' }, { personne: '' }, { le: 'hier' }, { le: '2026-02-30T10:00:00Z' }]) {
-      expect(code(() => archiverReponse(entree(o))), JSON.stringify(o)).not.toBeUndefined();
+    const attendus = [[{ organisation: ' ' }, 'parametre_invalide'], [{ personne: '' }, 'parametre_invalide'], [{ le: 'hier' }, 'horodatage_invalide'], [{ le: '2026-02-30T10:00:00Z' }, 'horodatage_invalide']] as const;
+    for (const [o, cause] of attendus) {
+      expect(code(() => archiverReponse(entree(o))), JSON.stringify(o)).toBe(cause);
     }
   });
 });
