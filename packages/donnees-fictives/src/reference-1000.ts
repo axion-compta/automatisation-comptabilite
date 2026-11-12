@@ -23,7 +23,7 @@ const COMPTES = ['606100', '613200', '622600', '625100', '626000', '651000'];
 const NOMS = ['Atelier des Lilas', 'Papeterie Orme', 'Garage du Vallon', 'Maison Tilleul', 'Bureau Zéphyr', 'Cuisines Rivage'];
 
 export function genererReference({ graine }: { graine: number }): JeuReference {
-  if (!Number.isSafeInteger(graine)) throw new RangeError('graine invalide');
+  if (!Number.isInteger(graine) || graine < 0 || graine > 0xffffffff) throw new RangeError('graine invalide');
   const alea = creerAlea(graine);
   const entier = (n: number): number => Math.floor(alea() * n);
   const choisir = <T>(l: readonly T[]): T => l[entier(l.length)] as T;
