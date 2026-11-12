@@ -1,22 +1,21 @@
-VERDICT: A CORRIGER
+VERDICT: OK
+PR #1213 (L19-T02), SHA de tête 02549239839e6b4d89143cb04c0a894fae2afe00
 
-PR #1213 (L19-T02). Tête relue : c2ba0a36d7c72477404395a9729bb5871a95dd63
-Relecteur Opus, consigne LOT5 section R. Seconde relecture, après l'avis A CORRIGER sur d6c81fde3ed88163dc07be50afbcf45aa4d2b9a9.
+Relecteur Opus, consigne LOT5 section R. Troisième relecture, après l'avis A CORRIGER au SHA c2ba0a36d7c72477404395a9729bb5871a95dd63.
 
-## Défauts de l'avis précédent : vérifiés par mutation
-1. Gestionnaires de l'appelant : les retraits de `reste.onFocus`, `onBlur`, `onKeyDown`, `onMouseEnter` et `onMouseLeave` sont tués, de même que le `return` d'Échap placé avant `onKeyDown`. Corrigé.
-2. Infobulle au survol : les retraits de `montrer(true)()` sur mouseenter et de `montrer(false)()` sur mouseleave sont tués. Corrigé.
-3. Remarque du doublon `toBeFocused` dans l'e2e : supprimé.
+## Suivi de l'avis précédent (vérifié par mutation)
+- Défaut 1 (`disabled={desactive}` et `type={type}` dans la branche `raccourci`) : levé. Retirer l'un ou l'autre fait rougir `raccourci-dans-aria-keyshortcuts`.
+- Pas de régression sur les défauts des tours précédents. Les mutants suivants sont toujours tués : retrait de `reste.onFocus` ; `return` d'Échap avant `reste.onKeyDown` ; retrait de `montrer(true)` au survol.
 
 ## Vérifié
-- Fichiers : les 5 fichiers du diff sont dans `fichiers_autorises`. 173 lignes ajoutées et 6 supprimées, soit 179 pour 180 permises. Aucun octet NUL.
-- Les 7 tests de `bouton-raccourci.test.tsx` passent (vitest, jsdom). L'e2e n'a pas été relancé ici.
-- Aucun secret, aucun prix, aucun mot interdit. Données fictives. Journal de 9 lignes.
-
-## Défaut (mutations survivantes, nouvelles)
-1. `packages/ui/src/composants/Bouton.tsx`, branche `raccourci`, lignes 29 et 30 : on peut retirer `disabled={desactive}`, ou `type={type}`, sans qu'aucun test de `packages/ui/src/composants` ne rougisse. Les deux mutants survivent.
-   Conséquence : un `Bouton desactive` qui a un raccourci resterait cliquable, et sans `type`, un bouton placé dans un formulaire l'enverrait (type « submit » par défaut).
-   Correction : dans `raccourci-dans-aria-keyshortcuts`, ajoute sur une seule ligne, par exemple `const d = await monter(<Bouton raccourci={raccourci} desactive>V</Bouton>); expect([bouton(d).disabled, bouton(d).type]).toEqual([true, "button"]);`. Le diff passe alors à 180 lignes sur 180 permises. Si la garde compte autrement, gagne une ligne ailleurs (par exemple en regroupant deux `expect`), sans retirer de test.
+- 5 fichiers, tous dans `fichiers_autorises`. 180 lignes pour 180 permises (garde `perimetre` verte).
+- 210 tests verts dans `packages/ui/src/composants` (vitest, Node 22).
+- Journal : 9 lignes, commence par `# Journal L19-T02`. Aucun secret, aucun prix, aucun mot interdit ; données fictives.
+- CI au SHA de tête : `e2e`, `gardes`, `lint`, `types`, `stryker`, `gitleaks` et `licences` sont verts. `tests` et `verifier` sont rouges, mais pas à cause de cette PR. Seul `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues` échoue, et ce test est aussi rouge sur `origin/main`. La PR ne touche pas `outils/exploitation/`. Il faudra rejouer la CI une fois `main` réparé, avant la fusion.
 
 ## Remarques
-- Les remarques de l'avis précédent restent valables : l'e2e dépose deux fichiers au lieu d'un, et l'anomalie du faux serveur demande une fiche de suivi ; /documents/deposer est ouvert par `page.goto`.
+- `Bouton.tsx`, branche `raccourci` : retirer `className={classes}` laisse les 210 tests verts. Ce code n'a pas changé depuis le premier avis : ce n'est pas une régression. On peut le couvrir sans ajouter de ligne, en ajoutant `bouton(d).className` au `toEqual` existant de `raccourci-dans-aria-keyshortcuts`.
+- `pilotage/journal/L19-T02.md:2` parle de 6 tests ; il y en a 7.
+- Remarques précédentes toujours valables, renvoyées à une fiche de suivi :
+  - l'e2e dépose deux fichiers, à cause de l'anomalie du faux serveur sur un seul fichier ;
+  - `/documents/deposer` est ouvert par `page.goto`.
