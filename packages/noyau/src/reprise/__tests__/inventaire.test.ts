@@ -59,12 +59,12 @@ describe('inventaire de reprise', () => {
         f('date-impossible-2025-02-30.pdf'),
         f('x.pdf', 'pas-une-date'),
         f('123456789FEC20251231.txt'),
-        f('piece-12345678-2024-03-31.pdf'),
+        f('piece-12345678-2024-03-31.pdf'), f('n12025-01-15.pdf'), f('2025011599.pdf'),
       ],
       EXERCICES,
     );
     expect(inv.lignes.map((l) => l.exercice)).toEqual([
-      'ex-2024', 'ex-2025', 'ex-2025', null, null, 'ex-2025', null, null, 'ex-2025', 'ex-2024',
+      'ex-2024', 'ex-2025', 'ex-2025', null, null, 'ex-2025', null, null, 'ex-2025', 'ex-2024', null, null,
     ]);
   });
 
@@ -79,6 +79,7 @@ describe('inventaire de reprise', () => {
     expect(classerDocument('statuts-signes.pdf', 'application/pdf')).toBe('statuts');
     expect(classerDocument('photo-vacances.jpg', 'image/jpeg')).toBe('a_classer');
     expect(classerDocument('', '')).toBe('a_classer');
+    for (const [n, m] of [['releve.jpg', 'image/jpeg'], ['bilan.mp4', 'video/mp4'], ['bilan.mp3', 'audio/mpeg']] as const) expect(classerDocument(n, m)).toBe('a_classer');
     const inv = construireInventaire([{ nom: 'mystere.bin', octets: encode('?') }], EXERCICES);
     expect(inv.lignes[0]?.type).toBe('a_classer');
     const reclasse = reclasserLigne(inv, 'mystere.bin', 'autre');
@@ -92,7 +93,7 @@ describe('inventaire de reprise', () => {
     const v = validerInventaire(inv, 'p-lea', '2026-11-12T10:00:00Z');
     expect(v.validation).toEqual({ par: 'p-lea', le: '2026-11-12T10:00:00Z' });
     expect(inv.validation).toBeNull();
-    for (const [p, h] of [['', '2026-11-12T10:00:00Z'], ['  ', '2026-11-12T10:00:00Z'], ['p-lea', ''], ['p-lea', 'hier'], ['p-lea', '2026-11-12']] as const) {
+    for (const [p, h] of [['', '2026-11-12T10:00:00Z'], ['  ', '2026-11-12T10:00:00Z'], ['p-lea', ''], ['p-lea', 'hier'], ['p-lea', '2026-11-12'], ['p-lea', '2026-13-45T99:99:99Z']] as const) {
       expect(() => validerInventaire(inv, p, h)).toThrow(ErreurInventaire);
     }
   });
@@ -108,6 +109,7 @@ describe('inventaire de reprise', () => {
     expect(() => {
       (v.lignes[0] as { type: string }).type = 'bilan';
     }).toThrow();
+    expect(() => { (v.validation as { par: string }).par = 'x'; }).toThrow();
     expect(v.validation?.par).toBe('p-lea');
   });
 });

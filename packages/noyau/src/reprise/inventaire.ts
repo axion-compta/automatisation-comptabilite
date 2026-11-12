@@ -53,7 +53,7 @@ function exerciceDe(date: string | null, exercices: readonly ExerciceReprise[]):
 }
 
 const figer = (lignes: LigneInventaire[], validation: Inventaire['validation']): Inventaire =>
-  Object.freeze({ lignes: Object.freeze(lignes.map((l) => Object.freeze({ ...l }))), validation });
+  Object.freeze({ lignes: Object.freeze(lignes.map((l) => Object.freeze({ ...l }))), validation: validation && Object.freeze({ ...validation }) });
 
 export function construireInventaire(
   fichiers: readonly FichierReprise[],
