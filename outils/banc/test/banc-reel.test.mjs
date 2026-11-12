@@ -24,6 +24,12 @@ function banc(manifeste = MANIFESTE, lignes = LIGNES, constats = [{ code: 'CC-K0
   writeFileSync(fichier, JSON.stringify(manifeste));
   return { BANC_REEL_DOSSIER: dossier, BANC_REEL_MANIFESTE: fichier };
 }
+const importeur = (lignes, connus) => {
+  const lues = numeroterOccurrences(lignes.map((l, rang) => ({ compteId: 'C1', dateOperation: l.date, montant: l.montant, devise: 'EUR', libelleNormalise: l.libelle, rang })));
+  const nouvelles = lignesNouvelles([...connus], lues);
+  for (const n of nouvelles) connus.add({ empreinte: n.empreinte, occurrence: n.occurrence });
+  return nouvelles.length;
+};
 const statut = (r, code) => r.verifications.find((v) => v.code === code)?.statut;
 
 const configure = variablesPresentes(process.env);
@@ -32,7 +38,7 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
   (configure ? it : it.skip)(
     'sans-variable-ignore-avec-message : banc réel absent en CI publique (fiche L22-T23), définir BANC_REEL_DOSSIER et BANC_REEL_MANIFESTE',
     async () => {
-      const r = await lancerBancReel(process.env);
+      const r = await lancerBancReel(process.env, { importeur });
       expect(r.etat).toBe('execute');
       expect(r.ok).toBe(true);
     },
@@ -103,12 +109,6 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
   });
 
   it('reimport-reel-sur-doublons-noyau', async () => {
-    const importeur = (lignes, connus) => {
-      const lues = numeroterOccurrences(lignes.map((l, rang) => ({ compteId: 'C1', dateOperation: l.date, montant: l.montant, devise: 'EUR', libelleNormalise: l.libelle, rang })));
-      const nouvelles = lignesNouvelles([...connus], lues);
-      for (const n of nouvelles) connus.add({ empreinte: n.empreinte, occurrence: n.occurrence });
-      return nouvelles.length;
-    };
     const jour = { date: '2026-01-05', libelle: 'ABONNEMENT FICTIF', montant: -1000 };
     const lignes = [{ id: 'A1', ...jour }, { id: 'A2', ...jour }, { id: 'A3', date: '2026-01-06', libelle: 'VIREMENT FICTIF', montant: 500 }];
     expect(importeur(lignes, new Set())).toBe(3);
