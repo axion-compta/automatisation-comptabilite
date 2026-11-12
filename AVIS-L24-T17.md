@@ -1,16 +1,19 @@
-VERDICT: A CORRIGER
+VERDICT: OK
+618670f1c33e83e5b26d49ffb344122a7e048b97
 
-PR n°1198, fiche L24-T17, tête b3570a7b89cb75ddc480ba3cea8f3f25bb8c98e8 (relecteur Opus, lot 5).
+Seconde relecture de la PR n°1198, fiche L24-T17, au SHA de tête 618670f1c33e83e5b26d49ffb344122a7e048b97. L'avis précédent (A CORRIGER, tête b3570a7) est levé. Fiche sensible : fusion par Will seul.
 
-Contrôles passés : 6 fichiers, tous dans `fichiers_autorises` ; diff de 177 lignes, limite 280 ; les 7 tests passent en local (vitest `src/emprunts`) ; écriture en brouillon ; aucun montant deviné sans tableau ; aucun secret, prix ni mot interdit ; données fictives ; journal de 8 lignes qui commence par `# Journal L24-T17`. CI verte au moment de la relecture (`verifier` encore en file d'attente). Fiche sensible : fusion par Will seul.
+## Défauts précédents, vérifiés par mutation
+1. `packages/noyau/src/emprunts/echeance.ts:37` : avec le filtre `!estDateValide(e.date) ||` retiré, un test échoue (ligne du tableau au bon montant, date `2027-02-30`). Levé.
+2. `echeance.ts:23` : avec `Number.isSafeInteger(p) &&` retiré, un test échoue (`capital: 1.5`, `interets: Infinity`). Levé.
+3. Remarque `ventilation.ts:15` : avec `!Number.isSafeInteger(ligne.montant) ||` retiré, un test échoue (NaN, -1.5, -Infinity). Levée.
 
-Mutations faites à la main : 10. Survivantes non équivalentes : 2.
+## Contrôles
+- Diff : 6 fichiers, tous dans `fichiers_autorises` ; 185 lignes sur 280.
+- Depuis la première relecture, seuls les deux fichiers de test ont changé, et uniquement par des ajouts.
+- Tests : 7 sur 7 dans `src/emprunts`. Journal : 8 lignes.
+- Aucun mot interdit, aucun secret, aucun prix ; données fictives. Le corps de la PR a été reformulé.
 
-## Défauts à corriger (tests seulement)
-1. `packages/noyau/src/emprunts/echeance.ts:37` : on peut retirer le filtre `!estDateValide(e.date) ||` sans qu'aucun test rougisse. Un tableau avec une date invalide lèverait alors l'erreur de `comparerDates` au lieu d'ignorer la ligne. Ajoute dans `echeance.test.ts` un tableau dont une ligne a le bon montant et une date invalide (par ex. `2027-02-30`), et vérifie que `reconnaitreEcheance` rend `undefined` sans lever d'erreur.
-2. `packages/noyau/src/emprunts/echeance.ts:23` : on peut retirer `Number.isSafeInteger(p) &&` sans qu'aucun test rougisse, car le NaN est déjà rejeté par `p >= 0`. Le commentaire annonce pourtant le refus d'une part « non entière ». Ajoute dans `tableau-incoherent-refuse` une part non entière (`capital: 1.5 as never`) et une part `Infinity`, avec `tableau_incoherent` attendu.
-
-## Remarques (non bloquantes)
-- `ventilation.ts:15` : on peut retirer `!Number.isSafeInteger(ligne.montant) ||` sans qu'aucun test rougisse. Un NaN lèverait alors `ErreurArgent` au lieu de `pas_un_debit`. Un cas `ligne(Number.NaN)` dans `somme-egale-au-debit` le fixerait.
-- `echeance.ts:32` : la même mutation survit, mais elle est équivalente (un débit non entier n'égale jamais un total entier).
-- Le corps de la PR emploie, à propos de `tsc` et `eslint`, une expression proscrite par la règle 12 de CLAUDE.md : à reformuler.
+## Remarques (ne bloquent pas)
+- CI : `tests` et `verifier` sont rouges pour la seule cause `ouverture.test.mjs > onze-cases-attendues`. Ce test échoue aussi sur `origin/main`. Ce n'est pas un défaut de cette PR.
+- `echeance.ts:32` : la mutation survivante est équivalente ; rien à faire.
