@@ -1,3 +1,8 @@
+import { DecodeurFlux } from '../../../packages/contrat/src/chat/flux.js';
+import type { DemandeMessage, Evenement } from '../../../packages/contrat/src/chat/evenements.js';
+import { cheminSociete } from '../../../packages/contrat/src/prefixe-routes.js';
+import { Pourquoi, PropositionVue } from '../../../packages/contrat/src/domaines/chat-propositions.js';
+import { ResultatDepot } from '../../../packages/contrat/src/domaines/depot.js';
 export type Panne = '' | '403' | '409' | '423';
 /** statut 0 = le serveur n'a pas répondu (réseau). */
 export type Reponse = { statut: number; corps: unknown };
@@ -123,3 +128,99 @@ export async function ecrire<T>(
 export type EtatLecture<T> = { etat: 'chargement' | 'erreur' | 'vide' | 'pret'; donnees?: T; erreur?: ErreurLecture };
 /** Forme de useLecture (déclarée ici : la garde textes lit mal les génériques dans un .tsx). */
 export type UseLecture = <T>(chemin: string, schema: SchemaLecture<T>) => EtatLecture<T>;
+
+export type FinTour = 'tour_fini' | 'coupe' | 'arrete';
+export type OptionsTour = { surEvenement: (e: Evenement) => void; signal?: AbortSignal; dernierId?: number };
+const codeHttp = (statut: number): CodeLecture => CODES[statut] ?? (statut >= 500 ? 'serveur' : 'reponse_invalide');
+const sansSchema: SchemaLecture<unknown> = { safeParse: (data) => ({ success: true, data }) };
+/**
+ * Flux d'un message : POST lu par fetch (EventSource ne sait pas POST). Coupure réseau = « coupe » : l'appelant
+ * relance avec le dernierId rendu (Last-Event-ID). Signal annulé = « arrete », sans exception.
+ */
+export async function ecouterTour(societe: string, demande: DemandeMessage, o: OptionsTour): Promise<{ dernierId: number; fin: FinTour }> {
+  const decodeur = new DecodeurFlux();
+  decodeur.dernierId = o.dernierId ?? 0;
+  const bilan = (fin: FinTour) => ({ dernierId: decodeur.dernierId, fin });
+  if (o.signal?.aborted) return bilan('arrete');
+  const entetes: Record<string, string> = { 'content-type': 'application/json', accept: 'text/event-stream', 'idempotency-key': demande.message_id };
+  if (o.dernierId !== undefined) entetes['last-event-id'] = String(o.dernierId);
+  const stop = new Promise<'stop'>((fini) => o.signal?.addEventListener('abort', () => fini('stop'), { once: true }));
+  const cible = new URL(chemin(societe, '/chat/messages'), location.origin).toString();
+  let lecteur: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  try {
+    const r = await Promise.race([fetch(cible, { method: 'POST', headers: entetes, body: JSON.stringify(demande), ...(o.signal ? { signal: o.signal } : {}) }), stop]);
+    if (r === 'stop') return bilan('arrete');
+    if (!r.ok) throw new ErreurLecture(r.status, codeHttp(r.status));
+    lecteur = r.body?.getReader();
+    const texte = new TextDecoder();
+    for (;;) {
+      const lu = lecteur ? await Promise.race([lecteur.read(), stop]) : { done: true as const };
+      if (lu === 'stop') return bilan('arrete');
+      if (lu.done) return bilan('coupe');
+      for (const e of decodeur.pousser(texte.decode(lu.value, { stream: true }))) {
+        o.surEvenement(e);
+        if (e.type === 'tour.fin') return bilan('tour_fini');
+      }
+    }
+  } catch (e) {
+    if (e instanceof ErreurLecture) throw e;
+    return bilan(o.signal?.aborted ? 'arrete' : 'coupe');
+  } finally {
+    void lecteur?.cancel().catch(() => undefined);
+  }
+}
+const chemin = (societe: string, suffixe: string): string => cheminSociete(suffixe).replace('{s}', encodeURIComponent(societe));
+const route = (societe: string, id: string, suite: string): string => chemin(societe, '/chat/' + suite.replace('{id}', encodeURIComponent(id)));
+/** Demande l'arrêt d'un tour ; le flux se coupe côté serveur. */
+export async function arreterTour(societe: string, id: string): Promise<void> {
+  await ecrire('POST', route(societe, id, 'tours/{id}/arreter'), undefined, sansSchema, nouvelleCle());
+}
+async function agirSurProposition(societe: string, id: string, action: 'appliquer' | 'annuler', cle: string) {
+  let r: Response;
+  try {
+    r = await fetch(new URL(route(societe, id, `propositions/{id}/${action}`), location.origin).toString(), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': cle } });
+  } catch {
+    throw new ErreurLecture(0, 'reseau');
+  }
+  if (!r.ok) throw new ErreurLecture(r.status, codeHttp(r.status));
+  const v = PropositionVue.safeParse(await r.json().catch(() => undefined));
+  if (!v.success) throw new ErreurLecture(r.status, 'reponse_invalide');
+  return v.data;
+}
+export const appliquerProposition = (societe: string, id: string, cle: string) => agirSurProposition(societe, id, 'appliquer', cle);
+export const annulerProposition = (societe: string, id: string, cle: string) => agirSurProposition(societe, id, 'annuler', cle);
+export const lirePourquoi = (societe: string, id: string, signal?: AbortSignal) => lire(route(societe, id, 'propositions/{id}/pourquoi'), Pourquoi, signal);
+
+const FICHIERS_PAR_LOT = 20;
+const HEX = (o: Uint8Array): string => Array.from(o, (b) => b.toString(16).padStart(2, '0')).join('');
+const octets = async (f: File): Promise<Uint8Array> => new Uint8Array(await f.arrayBuffer());
+/** Clé d'idempotence d'un lot : SHA-256 hexadécimal du contenu concaténé des fichiers. */
+async function cleDuLot(lot: File[]): Promise<string> {
+  const parts = await Promise.all(lot.map(octets));
+  const tout = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((debut, p) => (tout.set(p, debut), debut + p.length), 0);
+  return HEX(new Uint8Array(await crypto.subtle.digest('SHA-256', tout)));
+}
+/** Dépose des pièces par lots de 20 au plus (POST /pieces) ; résultats dans l'ordre des fichiers. */
+export async function deposer(fichiers: File[], canal: 'glisser' | 'selecteur'): Promise<ResultatDepot[]> {
+  const resultats: ResultatDepot[] = [];
+  for (let i = 0; i < fichiers.length; i += FICHIERS_PAR_LOT) {
+    const lot = fichiers.slice(i, i + FICHIERS_PAR_LOT);
+    const form = new FormData();
+    form.append('canal', canal);
+    for (const f of lot) form.append('fichiers', f);
+    let r: Response;
+    try {
+      r = await fetch(new URL('/pieces', location.origin).toString(), { method: 'POST', headers: { 'idempotency-key': await cleDuLot(lot) }, body: form });
+    } catch {
+      throw new ErreurEcriture(0, 'reseau');
+    }
+    const recu: unknown = await r.json().catch(() => undefined);
+    if (!r.ok) throw new ErreurEcriture(r.status, r.status >= 500 ? 'serveur' : 'reponse_invalide', recu);
+    const liste = (recu as { body?: { resultats?: unknown } } | null | undefined)?.body?.resultats;
+    const lus = Array.isArray(liste) ? liste.map((x) => ResultatDepot.safeParse(x)) : [];
+    if (lus.length !== lot.length || !lus.every((v) => v.success)) throw new ErreurEcriture(r.status, 'reponse_invalide');
+    for (const v of lus) if (v.success) resultats.push(v.data);
+  }
+  return resultats;
+}

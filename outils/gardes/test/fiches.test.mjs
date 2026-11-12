@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { analyserFiches, charger } from '../fiches.mjs';
+import { analyserFiches, charger, lireExceptions } from '../fiches.mjs';
 
 // Fiches fictives écrites dans un dossier temporaire puis relues par charger().
 function monter(defs) {
@@ -92,4 +92,27 @@ test('exception-sans-motif-rouge', () => {
   assert.deepEqual(sans({ motif: 'fiche privée, voir décision' }).erreurs, []);
   assert.deepEqual(analyse(defs, [{ id: [A], regle: 'dependance-inconnue', motif: 'liste d’id' }]).erreurs, []);
   assert.equal(analyse(defs, [{ id: A, regle: 'taille', motif: 'autre règle' }]).erreurs.length, 1);
+});
+
+const PORTEUSES = ['L11-T27', 'L11-T38', 'L11-T39'];
+// Paires « partage » (même lot) sans aucune exception dont la fiche porteuse est l'une des trois ; renvoie [X, Y].
+const pairesPartage = (fiches) =>
+  analyserFiches(fiches, []).erreurs
+    .map((m) => /^(\S+) et (\S+) \(même lot\) partagent /.exec(m))
+    .filter((m) => m && PORTEUSES.includes(m[1]))
+    .map((m) => [m[1], m[2]]);
+
+test('exception-partage-l11-t44-motivee', () => {
+  const trouvees = lireExceptions().filter((e) => e.regle === 'partage' && JSON.stringify(e.id) === JSON.stringify(PORTEUSES));
+  assert.equal(trouvees.length, 1);
+  assert.equal(typeof trouvees[0].motif, 'string');
+  assert.match(trouvees[0].motif, /L11-T44/);
+});
+
+test('exception-partage-l11-t44-bornee', () => {
+  const reelles = pairesPartage(charger().fiches);
+  assert.deepEqual(reelles.filter(([, y]) => y !== 'L11-T44'), [], 'une paire sans L11-T44 serait masquée par l’entrée');
+  const commun = { champs: { lot: '"11"', fichiers_autorises: '["apps/serveur/src/app.ts"]' } };
+  const etrangeres = pairesPartage(monter({ 'L11-T27': commun, 'L11-T98': commun }));
+  assert.deepEqual(etrangeres.filter(([, y]) => y !== 'L11-T44'), [['L11-T27', 'L11-T98']]);
 });

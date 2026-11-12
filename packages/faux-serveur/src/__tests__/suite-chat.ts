@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DecodeurFlux } from '../../../contrat/src/chat/flux.js';
+import { cheminSociete } from '../../../contrat/src/prefixe-routes.js';
+const CHAT = cheminSociete('/chat').replace('{s}', 'soc_a');
 
 export type RetourTexte = { status: number; texte: string; type: string };
 export type AppelerTexte = (chemin: string, entetes: Record<string, string>, corps?: unknown) => Promise<RetourTexte>;
@@ -29,7 +31,7 @@ export function suiteChat(nom: string, cible: CibleChat): void {
       }
     };
     const envoyer = (a: AppelerTexte, id = 'msg-0001', plus: Record<string, unknown> = {}, entetes: Record<string, string> = {}) =>
-      a('/chat/messages', { ...cle(id), ...entetes }, demande(id, plus));
+      a(`${CHAT}/messages`, { ...cle(id), ...entetes }, demande(id, plus));
 
     it('flux-ordonne', () =>
       avec(async (a) => {
@@ -54,19 +56,19 @@ export function suiteChat(nom: string, cible: CibleChat): void {
         for (const plus of [{ texte: 'x'.repeat(100000) }, { texte: '' }, { societe_id: 'soc_b' }]) {
           expect([Object.keys(plus)[0], (await envoyer(a, 'msg-0001', plus)).status]).toEqual([Object.keys(plus)[0], 400]);
         }
-        expect((await a('/chat/messages', cle('autre-cle-1'), demande())).status).toBe(400);
-        expect((await a('/chat/messages', {}, demande())).status).toBe(400);
+        expect((await a(`${CHAT}/messages`, cle('autre-cle-1'), demande())).status).toBe(400);
+        expect((await a(`${CHAT}/messages`, {}, demande())).status).toBe(400);
       }));
 
     it('arret-coupe-le-flux : tour connu arrêté, flux rejoué terminé par tour.fin', () =>
       avec(async (a) => {
         await envoyer(a);
-        const arret = await a('/chat/tours/msg-0001/arreter', cle('arret-0001'));
+        const arret = await a(CHAT + '/tours/msg-0001/arreter', cle('arret-0001'));
         expect(arret.status).toBe(200);
         expect(JSON.parse(arret.texte)).toEqual({ body: { tour_id: 'msg-0001', arrete: true } });
         const evts = lire((await envoyer(a)).texte);
         expect(evts.at(-1)).toMatchObject({ type: 'tour.fin' });
-        expect((await a('/chat/tours/msg-0001/arreter', {})).status).toBe(400);
+        expect((await a(CHAT + '/tours/msg-0001/arreter', {})).status).toBe(400);
       }));
 
     it('reprise-apres-coupure (T-CHT-12) : Last-Event-ID, aucun doublon, flux complet', () =>
@@ -84,7 +86,7 @@ export function suiteChat(nom: string, cible: CibleChat): void {
 
     it('tour-inconnu-404', () =>
       avec(async (a) => {
-        const r = await a('/chat/tours/inconnu/arreter', cle('arret-0001'));
+        const r = await a(CHAT + '/tours/inconnu/arreter', cle('arret-0001'));
         expect(r.status).toBe(404);
         expect(JSON.parse(r.texte)).toMatchObject({ defined: true, code: 'TOUR_INCONNU', status: 404 });
       }));

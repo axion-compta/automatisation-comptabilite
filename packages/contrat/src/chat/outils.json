@@ -1,8 +1,9 @@
 [
-  { "nom": "exercices.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "acces_refuse"] },
-  { "nom": "plan.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "acces_refuse", "introuvable"] },
-  { "nom": "tiers.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "acces_refuse"] },
-  { "nom": "ecritures.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "acces_refuse", "introuvable"] },
-  { "nom": "vue.ouvrir", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lire", "exigences": ["V3-CHT-005", "V3-CHT-052"], "codes_erreur": ["parametre_invalide", "acces_refuse"] },
-  { "nom": "proposer_validation", "niveau": "B", "permission": "compta-saisir", "outil_registre": "outil_proposer", "exigences": ["V3-CHT-005", "V3-CHT-052", "V3-AGT-048"], "codes_erreur": ["parametre_invalide", "acces_refuse", "introuvable", "desequilibre"] }
+  { "nom": "exercices.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] },
+  { "nom": "plan.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] },
+  { "nom": "tiers.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] },
+  { "nom": "ecritures.lister", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lister", "exigences": ["V3-CHT-005", "V3-CHT-022"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] },
+  { "nom": "vue.ouvrir", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lire", "exigences": ["V3-CHT-005", "V3-CHT-052"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] },
+  { "nom": "proposer_validation", "niveau": "B", "permission": "compta-saisir", "outil_registre": "outil_proposer", "exigences": ["V3-CHT-005", "V3-CHT-052", "V3-AGT-048"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] },
+  { "nom": "change.expliquer_ecart", "niveau": "L", "permission": "compta-lire", "outil_registre": "outil_lire", "exigences": ["V3-MOT-097"], "codes_erreur": ["parametre_invalide", "droit_insuffisant"] }
 ]

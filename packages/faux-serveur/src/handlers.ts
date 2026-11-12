@@ -10,7 +10,37 @@ import { creerHandlersRecherche } from './domaines/recherche.js';
 import { creerHandlersExports } from './domaines/exports.js';
 import { creerHandlersCalendrier } from './domaines/calendrier.js';
 import { creerHandlersNotifications } from './domaines/notifications.js';
+import { creerHandlersBanque } from './domaines/banque.js';
+import { creerHandlersPrincipes } from './domaines/principes.js';
+import { creerHandlersTva } from './domaines/tva.js';
+import { creerHandlersChange } from './domaines/change.js';
+import { creerHandlersFrais } from './domaines/frais.js';
+import { creerHandlersVehiculesBareme } from './domaines/vehicules-bareme.js';
+import { creerHandlersCapacites } from './domaines/capacites.js';
+import { creerHandlersFec } from './domaines/fec.js';
+import { creerHandlersSante } from './domaines/sante.js';
+import { creerHandlersJuridique } from './domaines/juridique.js';
+import { creerHandlersProfil } from './domaines/profil.js';
+import { creerHandlersTresorerie } from './domaines/tresorerie.js';
+import { creerHandlersBloquants } from './domaines/bloquants.js';
+import { creerHandlersSources } from './domaines/sources.js';
+import { creerHandlersEcheances } from './domaines/echeances.js';
 import { creerHandlersChat, type OptionsChatFaux } from './domaines/chat.js';
+import { creerHandlersChatPropositions, type OptionsPropositionsFaux } from './domaines/chat-propositions.js';
+import type { OptionsAbonnementFaux } from './domaines/options-abonnement.js';
+import { handlersAcces } from './domaines/acces.js';
+import { handlersVolume } from './domaines/volume.js';
+import { handlersPalier } from './domaines/palier.js';
+import { handlersFinContrat } from './domaines/fin-contrat.js';
+import { handlersAcceptations } from './domaines/acceptations.js';
+import { handlersSante } from './domaines/sante.js';
+import { handlersPersonnes } from './domaines/personnes.js';
+import { handlersGardeAcces } from './garde-acces.js';
+import { handlersModules } from './registres/index.js';
+import type { OptionsExploitationFaux } from './domaines/options-exploitation.js';
+
+/** Réglages FICTIFS des personnes pour le mode simulé : jamais une valeur légale. */
+const REGLAGES_FICTIFS_PERSONNES = { moisReponse: 2, joursRappel: 3 };
 
 /** Format des erreurs : celui du vrai serveur (codes oRPC, `defined` vrai pour les erreurs déclarées au contrat). */
 const erreur = (code: string, status: number, data?: unknown) =>
@@ -28,6 +58,14 @@ export type OptionsFauxServeur = {
   base?: string;
   /** Chat : coupure après N événements, suspension d'un tour (tests). */
   chat?: OptionsChatFaux;
+  /** Propositions du chat : acteur, horloge et durées injectés (scénarios « compte de service », « horloge avancée »). */
+  propositions?: OptionsPropositionsFaux;
+  /** Abonnement : scénario simulé par défaut (l'en-tête x-scenario-abonnement l'emporte). */
+  scenarioAbonnement?: string;
+  /** Abonnement : horloge injectée (horodatage ISO). */
+  horloge?: () => string;
+  /** Exploitation : date de référence fictive (ISO, jour) ; par défaut le jour de l'horloge. */
+  dateReferenceExploitation?: string;
 };
 
 const MESSAGES: Record<403 | 423, string> = {
@@ -50,6 +88,23 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     if (options.latenceMs && options.latenceMs > 0) await delay(options.latenceMs);
   };
 
+  const abonnement: OptionsAbonnementFaux = {
+    base,
+    horloge: options.horloge ?? (() => new Date().toISOString()),
+    scenarioParDefaut: options.scenarioAbonnement ?? null,
+    attendre,
+  };
+
+  const horloge = abonnement.horloge;
+  const exploitation: OptionsExploitationFaux = {
+    base,
+    horloge,
+    dateReference: options.dateReferenceExploitation ?? horloge().slice(0, 10),
+    attendre,
+    reglagesPersonnes: REGLAGES_FICTIFS_PERSONNES,
+    reglesConservation: [],
+  };
+
   const refus = (panne: Panne, versionActuelle = 1) =>
     panne === 409 ? erreur('CONFLIT_VERSION', 409, { versionActuelle }) : erreur(MESSAGES[panne], panne);
 
@@ -58,6 +113,8 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     EnTeteEcriture.safeParse({ 'idempotency-key': request.headers.get('idempotency-key') ?? undefined });
 
   return [
+    ...handlersGardeAcces(abonnement),
+    ...handlersModules({ base, attendre, options, abonnement, exploitation, erreur }),
     http.get(base + '/ecritures', async ({ request }) => {
       await attendre();
       const q = new URL(request.url).searchParams;
@@ -105,5 +162,24 @@ export function creerHandlers(options: OptionsFauxServeur = {}): HttpHandler[] {
     ...creerHandlersCalendrier(base, attendre, options),
     ...creerHandlersNotifications(base, attendre, options),
     ...creerHandlersChat(base, attendre, options.chat),
+    ...creerHandlersChatPropositions(base, attendre, options.propositions),
+    ...creerHandlersBanque(base, attendre),
+    ...creerHandlersPrincipes(base, attendre),
+    ...creerHandlersTva(base, attendre),
+    ...creerHandlersChange(base, attendre),
+    ...creerHandlersFrais(base, attendre),
+    ...creerHandlersVehiculesBareme(base, attendre),
+    ...creerHandlersCapacites(base, attendre),
+    ...creerHandlersFec(base, attendre),
+    ...creerHandlersSante(base, attendre),
+    ...creerHandlersJuridique(base, attendre),
+    ...creerHandlersProfil(base, attendre),
+    ...creerHandlersTresorerie(base, attendre),
+    ...creerHandlersBloquants(base, attendre),
+    ...creerHandlersSources(base, attendre),
+    ...creerHandlersEcheances(base, attendre),
+    ...handlersSante(exploitation),
+    ...handlersPersonnes(exploitation),
+    ...[handlersAcces, handlersVolume, handlersPalier, handlersFinContrat, handlersAcceptations].flatMap((f) => f(abonnement)),
   ];
 }

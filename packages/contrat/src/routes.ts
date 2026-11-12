@@ -8,19 +8,50 @@ import {
   NouvelleEcriture,
 } from './schemas.js';
 import { plan } from './domaines/plan.js';
+import { principes } from './domaines/principes.js';
 import { tiers } from './domaines/tiers.js';
+import { banque } from './domaines/banque.js';
 import { tableauDeBord } from './domaines/tableau-de-bord.js';
 import { alertes } from './domaines/alertes.js';
 import { preferences } from './domaines/preferences.js';
 import { recherche } from './domaines/recherche.js';
 import { exports } from './domaines/exports.js';
 import { calendrier } from './domaines/calendrier.js';
+import { tva } from './domaines/tva.js';
 import { notifications } from './domaines/notifications.js';
 import { lireAcces } from './domaines/acces.js';
 import { lireVolume } from './domaines/volume.js';
 import { demanderPalier } from './domaines/palier.js';
 import { chat } from './domaines/chat.js';
 import { chatPropositions } from './domaines/chat-propositions.js';
+import { profil } from './domaines/profil.js';
+import { profilChamps } from './domaines/profil-champs.js';
+import { profilChangements } from './domaines/profil-changements.js';
+import { fec } from './domaines/fec.js';
+import { controles } from './domaines/controles.js';
+import { controlesActions } from './domaines/controles-actions.js';
+import { change } from './domaines/change.js';
+import { identite } from './domaines/identite.js';
+import { regimes } from './domaines/regimes.js';
+import { frais } from './domaines/frais.js';
+import { fraisActions } from './domaines/frais-actions.js';
+import { fraisValidation } from './domaines/frais-validation.js';
+import { personnes } from './domaines/personnes.js';
+import { vehiculesBareme } from './domaines/vehicules-bareme.js';
+import { sante } from './domaines/sante.js';
+import { santeExploitation } from './domaines/sante-exploitation.js';
+import { echeances } from './domaines/echeances.js';
+import { bloquants } from './domaines/bloquants.js';
+import { juridique } from './domaines/juridique.js';
+import { parametres } from './domaines/parametres.js';
+import { finContrat } from './domaines/fin-contrat.js';
+import { acceptations } from './domaines/acceptations.js';
+import { sources } from './domaines/sources.js';
+import { ventes } from './domaines/ventes.js';
+import { pieces } from './domaines/pieces.js';
+import { capacites } from './domaines/capacites.js';
+import { domaineFournisseurs, domaineTresorerie } from './domaines/tresorerie.js';
+import { contratModules } from './registres/index.js';
 
 /** Contrat partagé : 3 routes. Les routes d'écriture exigent l'en-tête Idempotency-Key. */
 export const lister = oc
@@ -48,19 +79,52 @@ export const modifier = oc
   .input(z.object({ params: z.object({ id: z.string().min(1) }), headers: EnTeteEcriture, body: ModificationEcriture }))
   .output(z.object({ body: Ecriture }));
 
-export const contrat = {
+export const contratSocle = {
   ecritures: { lister, creer, modifier },
   plan,
+  principes,
   tiers,
+  banque,
   tableauDeBord,
   alertes,
   preferences,
   recherche,
   exports,
   calendrier,
+  tva,
   notifications,
   abonnement: { lireAcces, lireVolume, demanderPalier },
+  profil,
+  profilChamps,
+  profilChangements,
+  fec,
+  controles,
+  controlesActions,
+  regimes,
+  identite,
+  change,
+  frais,
+  fraisActions,
+  fraisValidation,
+  sante,
+  vehiculesBareme,
+  santeExploitation,
+  personnes,
+  echeances,
+  bloquants,
+  juridique,
+  parametres,
+  sources,
+  ventes,
+  pieces,
+  tresorerie: domaineTresorerie,
+  fournisseurs: domaineFournisseurs,
+  finContrat,
+  acceptations,
+  capacites,
 };
+/** Contrat complet : socle puis modules (un par lot, voir registres/). Les clés doivent rester disjointes. */
+export const contrat = { ...contratSocle, ...contratModules };
 /** Domaine du chat, séparé de `contrat` : les clés de `contrat` sont figées par un test existant. */
 export const contratChat = { chat, chatPropositions };
 export type Contrat = typeof contrat;

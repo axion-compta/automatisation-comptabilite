@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyserPerimetre, collecter, estAutorise, estPRPilotage, lireRaw, evaluer, idDeBranche, lireFiche } from '../perimetre.mjs';
+import { PLAFOND_OPENAPI, analyserPerimetre, collecter, estAutorise, estPRPilotage, lireRaw, evaluer, idDeBranche, lireFiche } from '../perimetre.mjs';
 
 const fiche = {
   fichiers_autorises: ['outils/gardes/perimetre*', 'outils/gardes/test/{perimetre,fictif}*', 'pilotage/journal/L00-T03.md'],
@@ -392,10 +392,10 @@ test('T38-2 132 lignes d’openapi + 101 de code, taille 100 : rouge, le code ne
   assert.match(pb[0], /taille 101 lignes > 100/);
 });
 
-test('T38-3 openapi.json au-delà de 300 lignes : rouge', () => {
-  assert.deepEqual(evaluer(gitOA([[OA, 300]], 100), env, genere).pb, []);
-  assert.match(evaluer(gitOA([[OA, 301]], 100), env, genere).pb[0], /openapi\.json : 301 lignes > 300/);
-  assert.match(analyserPerimetre(fiche, { fichiers: [], lignes: 1, lignesOpenapi: 301 })[0], /openapi\.json : 301 lignes > 300/);
+test('T38-3 openapi.json au-delà de 600 lignes : rouge', () => {
+  assert.deepEqual(evaluer(gitOA([[OA, 600]], 100), env, genere).pb, []);
+  assert.match(evaluer(gitOA([[OA, 601]], 100), env, genere).pb[0], /openapi\.json : 601 lignes > 600/);
+  assert.match(analyserPerimetre(fiche, { fichiers: [], lignes: 1, lignesOpenapi: 601 })[0], /openapi\.json : 601 lignes > 600/);
 });
 
 test('T38-4 collecte : exemption confirmée, message avec les lignes d’openapi', () => {
@@ -446,10 +446,64 @@ test('T38-10 cas de la PR 625 : 258 + 132, taille 300 : vert', () => {
   assert.deepEqual(evaluer(gitOA([[OA, 132], ['a.txt', 258]], 300), env, genere).pb, []);
 });
 
-test('T38-11 les suppressions d’openapi.json comptent : 200 + 101 = 301, rouge', () => {
-  assert.match(evaluer(gitOA([[OA, 200, 101]], 100), env, genere).pb[0], /openapi\.json : 301 lignes > 300/);
+test('T38-11 les suppressions d’openapi.json comptent : 400 + 201 = 601, rouge', () => {
+  assert.match(evaluer(gitOA([[OA, 400, 201]], 100), env, genere).pb[0], /openapi\.json : 601 lignes > 600/);
 });
 
-test('T38-12 openapi.json : 150 ajoutées + 150 supprimées = 300, vert', () => {
-  assert.deepEqual(evaluer(gitOA([[OA, 150, 150]], 100), env, genere).pb, []);
+test('T38-12 openapi.json : 300 ajoutées + 300 supprimées = 600, vert', () => {
+  assert.deepEqual(evaluer(gitOA([[OA, 300, 300]], 100), env, genere).pb, []);
+});
+
+test('T63-1 le plafond vaut 600', () => {
+  assert.equal(PLAFOND_OPENAPI, 600);
+});
+
+test('T63-2 600 lignes d’openapi : vert', () => {
+  assert.deepEqual(evaluer(gitOA([[OA, 600]], 100), env, genere).pb, []);
+});
+
+test('T63-3 601 lignes d’openapi : rouge, message « 601 lignes > 600 »', () => {
+  const pb = evaluer(gitOA([[OA, 601]], 100), env, genere).pb;
+  assert.equal(pb.length, 1);
+  assert.match(pb[0], /601 lignes > 600/);
+});
+
+test('T63-4 469 lignes d’openapi + 280 de code, taille 340 : vert', () => {
+  assert.deepEqual(evaluer(gitOA([[OA, 469], ['a.txt', 280]], 340), env, genere).pb, []);
+});
+
+test('T63-5 469 lignes sans confirmation « généré » : tout compté, rouge', () => {
+  for (const outils of [undefined, { estGenere: () => false }]) {
+    const pb = evaluer(gitOA([[OA, 469], ['a.txt', 280]], 340), env, outils).pb;
+    assert.equal(pb.length, 1);
+    assert.match(pb[0], /taille 749 lignes > 340/);
+  }
+});
+
+test('T63-6 469 lignes avec packages/contrat/scripts/ touché : rouge', () => {
+  const s = 'packages/contrat/scripts/diff.mjs';
+  const pb = evaluer(gitOA([[OA, 469], [s, 1]], 340, [s]), env, genere).pb;
+  assert.equal(pb.length, 1);
+  assert.match(pb[0], /taille 470 lignes > 340/);
+});
+
+// T68 : fragments openapi/lot-NN/openapi.json comptés avec openapi.json, plafond total.
+const FR = 'packages/contrat/openapi/lot-03/openapi.json';
+test('T68-1 un fragment de lot est compté à part avec openapi.json et exempté si généré', () => {
+  const r = evaluer(gitOA([[OA, 100], [FR, 200], ['a.txt', 50]], 50, [FR]), env, genere);
+  assert.deepEqual(r.pb, []);
+  assert.match(r.msg, /300 ligne\(s\) d'openapi\.json/);
+});
+
+test('T68-2 fragment sans confirmation « généré » : tout compté, rouge', () => {
+  const pb = evaluer(gitOA([[FR, 200], ['a.txt', 50]], 50, [FR]), env, { estGenere: () => false }).pb;
+  assert.match(pb[0], /taille 250 lignes > 50/);
+});
+
+test('T68-3 plafond 600 sur le total socle + fragments, pas par fichier ; faux noms comptés en entier', () => {
+  assert.deepEqual(evaluer(gitOA([[OA, 300], [FR, 300]], 50, [FR]), env, genere).pb, []);
+  assert.match(evaluer(gitOA([[OA, 300], [FR, 301]], 50, [FR]), env, genere).pb[0], /601 lignes > 600/);
+  for (const n of ['packages/contrat/openapi/lot-3/openapi.json', 'packages/contrat/openapi/lot-03/x.json', 'packages/contrat/openapi/lot-03/a/openapi.json']) {
+    assert.match(evaluer(gitOA([[n, 132]], 100, [n]), env, genere).pb[0], /taille 132 lignes > 100/);
+  }
 });

@@ -1,0 +1,6 @@
+/* T08 cloche : mise en page seulement, jetons de packages/ui/src/jetons.css. */
+.cloche { position: fixed; inset: 0 0 0 auto; width: min(26rem, 100%); overflow-y: auto; padding: var(--espace-m); background: var(--fond, Canvas); color: var(--texte, CanvasText); border-left: 1px solid currentcolor; }
+.cloche__entete { display: flex; align-items: center; justify-content: space-between; }
+.cloche__message:empty { display: none; }
+.cloche ul { list-style: none; padding: 0; }
+.cloche__non-lue { font-weight: 600; }

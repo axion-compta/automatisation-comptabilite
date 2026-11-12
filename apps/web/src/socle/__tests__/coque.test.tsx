@@ -3,9 +3,14 @@
 import { RouterProvider, createMemoryHistory } from '@tanstack/react-router';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { demarrerNoeud } from '../../../../../packages/faux-serveur/src/noeud.js';
+import { acceptation } from '../../../../../packages/textes/src/ecrans/acceptation.js';
+import { ouvrirPalette } from '../../commandes/Palette.js';
 import { socle } from '../../../../../packages/textes/src/ecrans/socle.js';
 import { BARRE_MOBILE, LIBELLES_MENU, MENU_BUREAU, MENU_PLUS } from '../menu.js';
+import { route as routeM04 } from '../../ecrans/m04/route.js';
+import { ContexteBailSupport, type BailSupportAffiche } from '../Coque.js';
 import { creerRouteur } from '../routeur.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -17,13 +22,13 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-async function afficher(url: string): Promise<HTMLElement> {
-  const routeur = creerRouteur([], createMemoryHistory({ initialEntries: [url] }));
+async function afficher(url: string, bail: BailSupportAffiche | null = null): Promise<HTMLElement> {
+  const routeur = creerRouteur([routeM04], createMemoryHistory({ initialEntries: [url] }));
   const hote = document.createElement('div');
   document.body.append(hote);
   racine = createRoot(hote);
   await act(async () => {
-    racine?.render(<RouterProvider router={routeur} />);
+    racine?.render(<ContexteBailSupport.Provider value={bail}><RouterProvider router={routeur} /></ContexteBailSupport.Provider>);
   });
   return hote;
 }
@@ -31,6 +36,8 @@ const texte = (els: Iterable<Element>): (string | null)[] => [...els].map((e) =>
 const bureau = (h: HTMLElement): Element => h.querySelector('nav.menu-bureau') as Element;
 const barre = (h: HTMLElement): Element => h.querySelector('.barre-mobile nav') as Element;
 const boutonPlus = (h: HTMLElement): HTMLButtonElement => barre(h).querySelector('button') as HTMLButtonElement;
+const discuter = (h: HTMLElement): Element => [...h.querySelectorAll('.barre-discuter')].find((b) => b.textContent === socle.discuter) as Element;
+const bascule = (h: HTMLElement): HTMLButtonElement => h.querySelector('.colonne-bascule') as HTMLButtonElement;
 const cliquer = (el: Element): void => {
   act(() => {
     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
@@ -87,19 +94,97 @@ describe('coque', () => {
     expect(h.querySelector('#barre-plus')).toBeNull();
   });
 
-  it('discuter-ouvre-la-palette', async () => {
+  it('discuter-ouvre-m04', async () => {
     const h = await afficher('/');
+    expect(h.querySelector('.m04-plein-ecran')).toBeNull();
+    cliquer(discuter(h));
+    await act(async () => {});
+    expect(h.querySelector('.m04-plein-ecran')).not.toBeNull();
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    const discuter = [...h.querySelectorAll('button')].find((b) => b.textContent === socle.discuter);
-    expect(discuter).toBeDefined();
-    cliquer(discuter as Element);
+  });
+
+  it('ctrl-k-ouvre-toujours-la-palette', async () => {
+    await afficher('/');
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+    });
     expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
+  it('colonne-visible-sur-bureau', async () => {
+    const h = await afficher('/');
+    const col = h.querySelector('aside.colonne-discussion') as Element;
+    expect(col.querySelector('section.axion-discussion')).not.toBeNull();
+    expect(bascule(h).getAttribute('aria-expanded')).toBe('true');
+    expect((h.querySelector('#colonne-discussion-corps') as HTMLElement).hidden).toBe(false);
+  });
+
+  it('pas-de-colonne-sur-l-ecran-d-essai', async () => {
+    const h = await afficher('/essai');
+    expect(h.querySelector('aside.colonne-discussion')).toBeNull();
+    expect(h.querySelectorAll('main').length).toBe(1);
+  });
+
+  it('colonne-repliable-au-clavier', async () => {
+    const h = await afficher('/');
+    const b = bascule(h);
+    expect(b.tagName).toBe('BUTTON');
+    b.focus();
+    expect(document.activeElement).toBe(b);
+    cliquer(b);
+    expect(bascule(h).getAttribute('aria-expanded')).toBe('false');
+    expect((h.querySelector('#colonne-discussion-corps') as HTMLElement).hidden).toBe(true);
+    cliquer(bascule(h));
+    expect(bascule(h).getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('etat-replie-memorise', async () => {
+    const ecritureLocale = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      const h = await afficher('/');
+      cliquer(bascule(h));
+      expect(bascule(h).getAttribute('aria-expanded')).toBe('false');
+      cliquer(bascule(h));
+      expect(bascule(h).getAttribute('aria-expanded')).toBe('true');
+      expect(ecritureLocale).not.toHaveBeenCalled();
+      expect(window.localStorage.length).toBe(0);
+      expect(window.sessionStorage.length).toBe(0);
+    } finally {
+      ecritureLocale.mockRestore();
+    }
+  });
+
+  it('stockage-indisponible-sans-plantage', async () => {
+    const lecture = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('stockage refusé');
+    });
+    const ecriture = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('stockage refusé');
+    });
+    try {
+      const h = await afficher('/');
+      expect(bascule(h).getAttribute('aria-expanded')).toBe('true');
+      cliquer(bascule(h));
+      expect(bascule(h).getAttribute('aria-expanded')).toBe('false');
+    } finally {
+      lecture.mockRestore();
+      ecriture.mockRestore();
+    }
+  });
+
+  it('un-seul-main', async () => {
+    for (const url of ['/', '/discussion']) {
+      const h = await afficher(url);
+      expect(h.querySelectorAll('main')).toHaveLength(1);
+      act(() => racine?.unmount());
+      document.body.innerHTML = '';
+    }
   });
 
   it('palette-navigue-par-le-routeur', async () => {
     const h = await afficher('/');
-    const discuter = [...h.querySelectorAll('button')].find((b) => b.textContent === socle.discuter);
-    cliquer(discuter as Element);
+    act(() => ouvrirPalette());
     const choix = [...document.querySelectorAll('[role="dialog"] li button')].find((b) => b.textContent === 'Ma banque');
     cliquer(choix as Element);
     await act(async () => {});
@@ -114,5 +199,65 @@ describe('coque', () => {
     expect(rendus.length).toBe(MENU_BUREAU.length + BARRE_MOBILE.length + 1 + MENU_PLUS.length + 1);
     for (const r of rendus) expect(LIBELLES_MENU).toContain(r);
     expect(new Set(MENU_BUREAU.map((e) => e.id)).size).toBe(MENU_BUREAU.length);
+  });
+});
+
+describe('coque et porte d’acceptation', () => {
+  it('menu-toujours-visible', async () => {
+    const serveur = demarrerNoeud({ scenarioAbonnement: 'cgv=a_accepter' });
+    try {
+      const h = await afficher('/banque');
+      await act(async () => void (await new Promise((r) => setTimeout(r, 200))));
+      expect(h.querySelector('main')?.textContent).toContain(acceptation.titre);
+      expect(bureau(h).querySelectorAll('a')).toHaveLength(MENU_BUREAU.length);
+    } finally {
+      serveur.fermer();
+    }
+  });
+});
+
+describe('coque : menu mémorisé et palette', () => {
+  const CLE = 'axion.preferences.v1';
+  afterEach(() => localStorage.clear());
+
+  it('menu-reduit-memorise', async () => {
+    const h = await afficher('/');
+    const groupe = h.querySelector('.menu-groupe') as HTMLElement;
+    expect(groupe.getAttribute('data-etat')).toBe('ouvert');
+    const b = h.querySelector('.menu-reduire') as HTMLButtonElement;
+    expect(b.textContent).toBe(socle.navigation.reduire);
+    cliquer(b);
+    expect(groupe.getAttribute('data-etat')).toBe('reduit');
+    expect(JSON.parse(localStorage.getItem(CLE) ?? '{}').bureau.menu_etat).toBe('reduit');
+    expect(b.textContent).toBe(socle.navigation.agrandir);
+  });
+
+  it('palette-ctrl-k-toujours-active', async () => {
+    localStorage.setItem(CLE, JSON.stringify({ bureau: { raccourcis: { actifs: false, remap: {} } } }));
+    await afficher('/');
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+});
+
+describe('coque et bail de support', () => {
+  const sel = '.axion-bandeau-support';
+  it('bandeau-visible-pendant-le-bail', async () => {
+    const h = await afficher('/', { actif: true, texte: 'Texte fictif : le support lit votre dossier.' });
+    const b = h.querySelectorAll(sel);
+    expect(b).toHaveLength(1);
+    expect(b[0]?.textContent).toBe('Texte fictif : le support lit votre dossier.');
+  });
+  it('bandeau-absent-sans-bail-ou-bail-echu', async () => {
+    expect((await afficher('/')).querySelector(sel)).toBeNull();
+    act(() => racine?.unmount());
+    document.body.innerHTML = '';
+    expect((await afficher('/', { actif: false, texte: 'Texte fictif' })).querySelector(sel)).toBeNull();
   });
 });
