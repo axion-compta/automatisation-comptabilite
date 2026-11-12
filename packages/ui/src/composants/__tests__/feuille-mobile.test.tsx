@@ -29,14 +29,12 @@ async function monter(ouverteAuDepart = true): Promise<HTMLElement> {
   await act(async () => racine.render(<Essai ouverteAuDepart={ouverteAuDepart} />));
   return el;
 }
-const touche = (cible: Element, key: string, shiftKey = false) =>
-  act(async () => void cible.dispatchEvent(new KeyboardEvent("keydown", { key, shiftKey, bubbles: true, cancelable: true })));
+const touche = (cible: Element, key: string, shiftKey = false) => act(async () => void cible.dispatchEvent(new KeyboardEvent("keydown", { key, shiftKey, bubbles: true, cancelable: true })));
 const feuille = (el: HTMLElement) => el.querySelector('[role="dialog"]') as HTMLElement;
 afterEach(() => {
   for (const m of montes.splice(0)) { act(() => m.racine.unmount()); m.el.remove(); }
   surFermer.mockClear();
 });
-
 describe("FeuilleMobile", () => {
   it("feuille-focus-piege", async () => {
     const el = await monter();
@@ -51,10 +49,10 @@ describe("FeuilleMobile", () => {
     expect(document.activeElement).toBe(fermer);
     await touche(fermer, "Tab", true);
     expect(document.activeElement).toBe(dernier);
-    const premier = el.querySelector("#premier") as HTMLButtonElement;
-    premier.focus();
+    const milieu = el.querySelector("#premier") as HTMLButtonElement;
+    milieu.focus();
     const evt = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
-    premier.dispatchEvent(evt);
+    milieu.dispatchEvent(evt);
     expect(evt.defaultPrevented).toBe(false);
   });
   it("feuille-echap-ferme", async () => {
@@ -67,11 +65,10 @@ describe("FeuilleMobile", () => {
   });
   it("feuille-voile-ferme", async () => {
     const el = await monter();
+    await act(async () => (el.querySelector("#premier") as HTMLElement).click());
+    expect(surFermer).not.toHaveBeenCalled();
     await act(async () => (el.querySelector(".axion-feuille-mobile__voile") as HTMLElement).click());
     expect(surFermer).toHaveBeenCalledTimes(1);
-    surFermer.mockClear();
-    await act(async () => (feuille(el).querySelector("#premier") as HTMLElement).click());
-    expect(surFermer).not.toHaveBeenCalled();
   });
   it("feuille-focus-rendu", async () => {
     const el = await monter(false);
