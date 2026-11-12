@@ -79,6 +79,20 @@ describe('visite guidée', () => {
     await monter(0);
     expect(document.querySelector('[role=dialog]')).toBeNull();
   });
+  it('terminer-ferme-a-l-etape-trois', async () => {
+    await monter(0);
+    await clic(socleVisite.actions.suivant);
+    await clic(socleVisite.actions.suivant);
+    await clic(socleVisite.actions.terminer);
+    expect(document.querySelector('[role=dialog]')).toBeNull();
+    expect(sessionStorage.getItem('visite-guidee-ignoree')).toBe('1');
+    expect(document.activeElement).toBe(document.getElementById('stable'));
+  });
+  it('valeur-de-session-autre-que-1-visite-affichee', async () => {
+    sessionStorage.setItem('visite-guidee-ignoree', '0');
+    await monter(0);
+    expect(document.querySelector('[role=dialog]')).not.toBeNull();
+  });
   it('echap-ferme', async () => {
     await monter(0);
     const autre = new KeyboardEvent('keydown', { key: 'a', bubbles: true });
