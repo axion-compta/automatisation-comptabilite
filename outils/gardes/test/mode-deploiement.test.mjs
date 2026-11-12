@@ -10,7 +10,8 @@ test('comparaison-de-mode-refusee', () => {
     }
   }
   assert.deepEqual(codes('const a = 1;\nconst b = config.modeDeploiement===y;'), ['2:branche_par_mode']);
-  // Lire ou affecter le réglage n'est pas une branche.
+  assert.deepEqual(codes('if (x === config.modeDeploiement) {}'), ['1:branche_par_mode']);
+  assert.deepEqual(codes('if (modeDeploiementActif === x) {}\nif (x === modeDeploiementActif) {}'), []);
   assert.deepEqual(codes('const m = modeDeploiement;\nlireReglage(MODE_DEPLOIEMENT);\nmode_deploiement = 1;'), []);
   assert.deepEqual(analyser('if (modeDeploiement === 1) {}', 'apps/web/src/a.tsx')[0], {
     chemin: 'apps/web/src/a.tsx',
@@ -59,6 +60,7 @@ test('fichier-de-test-ignore', () => {
   assert.equal(concerne('outils/gardes/x.mjs'), false);
   assert.equal(concerne('packages/noyau/src/x.json'), false);
   assert.equal(concerne('docs/x.ts'), false);
+  assert.equal(concerne('docs/apps/x.ts'), false);
   assert.equal(concerne('packages/noyau/node_modules/a/x.ts'), false);
   // Exception unique : le fichier de lecture du réglage.
   assert.equal(typeof FICHIER_REGLAGE, 'string');

@@ -2,18 +2,16 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-// Exception unique : le fichier qui lit le réglage (il n'existe pas encore).
 export const FICHIER_REGLAGE = 'packages/parametres/src/reglage-mode-deploiement.ts';
-const [NOM, OP, LIT] = ['(?:MODE_DEPLOIEMENT|modeDeploiement|mode_deploiement)', '(?:===|!==|==|!=)', '(installation|heberge|installe)'];
+const [NOM, OP, LIT] = ['(?:MODE_DEPLOIEMENT|modeDeploiement|mode_deploiement)', '(?:[!=]=)=?', '(installation|heberge|installe)'];
 const REGLES = [
   new RegExp(`\\b${NOM}\\b\\s*${OP}`),
-  new RegExp(`${OP}\\s*${NOM}\\b`),
+  new RegExp(`${OP}\\s*[\\w.$?]*\\b${NOM}\\b`),
   new RegExp(`\\bswitch\\s*\\([^)]*\\b${NOM}\\b`),
   new RegExp(`\\bcase\\s+[\\w.]*\\b${NOM}\\b`),
   new RegExp(`${OP}\\s*(['"\`])${LIT}\\1`),
   new RegExp(`(['"\`])${LIT}\\1\\s*${OP}`),
 ];
-/** Remplace les commentaires par des blancs, sans toucher aux chaînes ni aux sauts de ligne. */
 function sansCommentaires(texte) {
   let sortie = '';
   let i = 0;
