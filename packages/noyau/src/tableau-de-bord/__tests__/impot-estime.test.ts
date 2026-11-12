@@ -41,7 +41,6 @@ describe('impôt sur les sociétés estimé', () => {
     expect([e.montant, e.partieReduite, e.aVerifier]).toEqual([2075000, 4250000, false]);
     expect(estimerIs(centimes(3333), ca, BAREME, CTX).montant).toBe(500);
   });
-
   it('taux-reduit-jusqu-au-plafond', () => {
     const ca = centimes(5000000);
     expect(estimerIs(centimes(4250000), ca, BAREME, CTX).montant).toBe(637500);
@@ -52,7 +51,6 @@ describe('impôt sur les sociétés estimé', () => {
     const court = estimerIs(centimes(4250000), ca, BAREME, { detention: 10000, moisExercice: 6 });
     expect([court.partieReduite, court.montant]).toEqual([2125000, 318750 + 531250]);
   });
-
   it('resultat-negatif-is-nul', () => {
     expect(estimerIs(centimes(-120000), centimes(900000), BAREME, CTX).montant).toBe(0);
     expect(estimerIs(centimes(0), centimes(900000), BAREME, CTX).montant).toBe(0);
@@ -62,7 +60,6 @@ describe('impôt sur les sociétés estimé', () => {
     expect(f({ ...BAREME, moisReference: 0 }, CTX)).toThrow(ErreurArgent);
     for (const d of [Number.NaN, -1, 10001]) expect(f(BAREME, { detention: d })).toThrow(ErreurArgent);
   });
-
   it('bareme-non-verifie-marque-a-verifier', () => {
     const e = estimerIs(centimes(1000000), centimes(5000000), { ...BAREME, verifie: false }, CTX);
     expect([e.aVerifier, e.montant]).toEqual([true, 150000]);
