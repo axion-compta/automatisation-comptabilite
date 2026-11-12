@@ -44,6 +44,7 @@ describe('correction en masse guidée', () => {
     expect(code(() => apercuReclassement(base, filtre, '606 ', verrous))).toBe('compte_invalide');
     expect(code(() => apercuReclassement(base, { compteSource: '606 ' }, '625', verrous))).toBe('compte_invalide');
     expect(code(() => apercuReclassement(base, { ...filtre, dateDebut: '2027-02-30' }, '625', verrous))).toBe('date_invalide');
+    expect(code(() => apercuReclassement(base, { ...filtre, dateFin: '2027-02-30' }, '625', verrous))).toBe('date_invalide');
   });
 
   it('avant-apres-par-ecriture', () => {
