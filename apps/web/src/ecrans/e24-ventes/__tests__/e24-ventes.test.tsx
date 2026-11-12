@@ -22,6 +22,10 @@ const vente = (id: string, etat: string, extra: Record<string, unknown> = {}) =>
   id, numero: 'FA-' + id, type: 'facture', client: { code: 'CLI-' + id, nom: 'Client ' + id }, dateFacture: '2026-03-12',
   ttcCentimes: 12000, resteDuCentimes: 12000, etat, avoirsLies: [], ...extra,
 });
+const piece = { montantCentimes: 0, pieces: [] };
+const indicateursVides = {
+  chiffreAffaires: piece, aEncaisser: piece, enRetard: { ...piece, clients: 0 }, tvaCollectee: piece, tvaEnAttente: piece, provisoire: false,
+};
 const liste = (body: unknown[]) => ({ body, decalage: 0, total: body.length });
 
 /** Faux serveur : renvoie les ventes qui passent les filtres de la requête reçue. */
@@ -29,6 +33,9 @@ function simuler(toutes: ReturnType<typeof vente>[], statut = 200) {
   const requetes: URL[] = [];
   vi.stubGlobal('fetch', (u: string) => {
     const url = new URL(String(u), 'http://x');
+    if (url.pathname === '/ventes/indicateurs') {
+      return Promise.resolve(statut === 200 ? Response.json({ body: indicateursVides }) : Response.json({ code: 'X' }, { status: statut }));
+    }
     requetes.push(url);
     if (statut !== 200) return Promise.resolve(Response.json({ code: 'X' }, { status: statut }));
     const e = url.searchParams.get('etat');
