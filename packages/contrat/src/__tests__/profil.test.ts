@@ -3,6 +3,8 @@ import { genererProfils } from '../../../donnees-fictives/src/profil.js';
 import { ChampProfilV1, ProfilV1, QueryProfil } from '../domaines/profil.js';
 import { creerServiceProfil } from '../domaines/profil-service.js';
 import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../prefixe-routes.js';
+const SOC = PREFIXE_ROUTES_SOCIETE;
 
 const AUJOURDHUI = '2026-11-08';
 const lire = (soc: string, au?: string) => creerServiceProfil(soc).lire(au, AUJOURDHUI);
@@ -74,8 +76,8 @@ describe('profil.v1 en mémoire', () => {
 
   it('openapi-contient-lire-profil', () => {
     const doc = genererOpenapi() as { paths: Record<string, Record<string, { operationId?: string; parameters?: Array<{ name: string }> }>> };
-    expect(doc.paths['/profil']?.get?.operationId).toBe('lireProfil');
-    expect(doc.paths['/profil']?.get?.parameters?.map((p) => p.name)).toContain('au');
+    expect(doc.paths[SOC + '/profil']?.get?.operationId).toBe('lireProfil');
+    expect(doc.paths[SOC + '/profil']?.get?.parameters?.map((p) => p.name)).toContain('au');
     expect(routesEcritureSansEnTete()).toEqual([]);
   });
 });

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { ChampProfilV1, ProfilV1 } from '../../../contrat/src/domaines/profil.js';
+import { cheminSociete } from '../../../contrat/src/prefixe-routes.js';
 import type { Appeler, Cible } from './suite-contrat.js';
 
 const idem = (n: string) => ({ 'idempotency-key': 'cle-fictive-profil-' + n });
 const AJOUT = { valeur: 'SAS', origine: 'saisie_personne', effetDebut: '2026-01-01' };
 const CHANGEMENT = { cle: 'regime_tva', valeur: 'reel_normal', effetDebut: '2026-08-01', motif: 'Changement fictif de régime' };
+/** Les chemins du profil (hors régimes) sont joués sous le préfixe de la société fictive `soc-lemoine`. */
+const sousSociete = (a: Appeler): Appeler => (m, ch, ...r) => a(m, /^\/profil(?!\/regimes)/.test(ch) ? cheminSociete(ch).replace('{s}', 'soc-lemoine') : ch, ...r);
+
 const corps = (r: { json: unknown }) => (r.json as { body: Record<string, unknown> }).body;
 const code = (r: { json: unknown }) => (r.json as { code: string }).code;
 
@@ -14,7 +18,7 @@ export function suiteProfilEcriture(nom: string, cible: Cible): void {
     const avec = async (f: (a: Appeler) => Promise<void>) => {
       const c = await cible();
       try {
-        await f(c.appeler);
+        await f(sousSociete(c.appeler));
       } finally {
         await c.fermer();
       }
