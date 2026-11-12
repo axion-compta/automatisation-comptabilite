@@ -1,30 +1,25 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1221, fiche L23-T12 (sensible : fusion par Will seul). Première relecture Opus du 12/11/2026 (consigne LOT5, section R).
-SHA de tête relu : c5fa183eda191a35a8d39cfc6198371c9e5d44fa
+PR #1221, fiche L23-T12 (sensible : fusion par Will seul). Seconde relecture Opus du 12/11/2026 (consigne LOT5, section R).
+SHA de tête relu : 6b0269ef3d68ac3176aa8c863d74a2db962ad861
+Avis précédent : A CORRIGER au SHA c5fa183eda191a35a8d39cfc6198371c9e5d44fa.
 
-## Vérifié
-- 5 fichiers, tous dans `fichiers_autorises` ; 236 lignes ajoutées sur 260 permises ; aucune ligne « - - » ; `calcul-is.ts` n'est pas modifié ; aucune dépendance ajoutée.
-- Les 6 tests nommés de la fiche sont présents : 6 sur 6 verts. Les 85 tests de `profil/fiscal` passent. tsc et eslint ne remontent rien.
-- Aucun taux, plafond ni arrondi en dur : tout vient de `ParametresIs`.
-- Le plafond est appliqué en entier à chaque période, sans prorata (banc de 16 mois). Les résultats sont toujours `a_verifier`, avec leurs sources.
-- Solde et excédent sont calculés au centime, en entiers. NaN, négatif, non entier et infini sont refusés.
-- Journal de 7 lignes, commence par « # Journal L23-T12 ». Aucun secret, prix, nom réel ni mot interdit.
+## Défauts précédents : tous levés (vérifiés par mutation)
+1. Arrondi (`is-periodes.ts:58-59`) : nouveau cas à 0,5 et 0,75 centime. Avec `'inferieur'` à la place de `p.arrondi`, à la ligne 58 ou à la ligne 59, un test rougit.
+2. Solde nul (`releve-2572.ts:28`) : avec `solde <= 0`, un test rougit grâce à l'assertion `nul.cases.at(-1)?.code === 'solde_a_payer'`.
+3. Journal ligne 7 : corrigé. Le texte décrit maintenant les mutations rejouées.
 
-## Défauts (deux mutations survivantes, rejouées par moi : 6 sur 6 verts)
-1. `packages/noyau/src/profil/fiscal/is-periodes.ts:58-59` : forcer `'inferieur'` à la place de `p.arrondi` laisse tous les tests verts. Le seul montant fractionnaire du jeu (0,25 centime) donne 0 avec toutes les règles.
-   Correction : dans `plafond-applique-par-periode`, ajouter une période dont la part fractionnaire atteint au moins 0,5 centime. Par exemple, une période éligible à 4 250 002, dont la part au taux normal donne 0,5 centime : attendre `c(1)` avec `demi-superieur` et `c(0)` avec `inferieur`.
-2. `packages/noyau/src/profil/fiscal/releve-2572.ts:28` : `solde < 0` remplacé par `solde <= 0` laisse tous les tests verts. Le relevé à solde nul afficherait alors une case « excédent » à 0.
-   Correction : dans `releve-2572-solde-au-centime`, ajouter `expect(nul.cases.at(-1)?.code).toBe('solde_a_payer')`.
-3. `pilotage/journal/L23-T12.md:7` : « survivantes équivalentes (arrondi à la frontière, zéro) » est inexact, puisque les survivantes 1 et 2 ne sont pas équivalentes. À corriger une fois les tests ajoutés.
+## Régressions : aucune
+- Le commit de correction ne touche que le test et le journal. Le code n'a pas changé depuis la première relecture, à part la fusion de main.
+- `git diff origin/main...HEAD` : 5 fichiers, tous dans `fichiers_autorises`. 242 lignes ajoutées et 1 retirée, pour un maximum de 260. Aucune ligne « - - ».
+- Tests : 6 sur 6 pour `is-periodes.test.ts`, 85 sur 85 pour `profil/fiscal`. Aucune assertion n'a été retirée.
+- Autres mutations : plafond non appliqué, tuée. `solde < 0` changé en `<=` pour l'excédent (ligne 23), survit, mais elle est équivalente : l'excédent vaut 0 quand le solde est nul.
+- Aucun mot interdit, aucun prix, aucun secret. Le journal fait 7 lignes et commence par l'en-tête attendu.
 
-## Autres mutations
-- Plafond proratisé : tuée.
-- Perte non bornée à 0 : tuée.
-- NaN et non entier acceptés : tuée.
-- `a_confirmer` au taux réduit : tuée.
-- Plafond `<` changé en `<=` : survit, mais elle est équivalente.
+## CI (à signaler, ce n'est pas un défaut de l'auteur)
+- `tests` et `verifier` sont rouges à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Le même échec se reproduit sur `origin/main` 6181242502ba460ea74a102050ff6bbd1dbd2bb0 (conflit entre #1146 et #1215). Ce fichier n'est pas dans le diff de la PR. La PR sera verte une fois main réparée et fusionnée dans la branche.
+- `gardes`, `types`, `lint`, `e2e`, `gitleaks`, `licences` et `stryker` sont verts.
 
-## Remarques (non bloquantes)
-- La contiguïté des périodes n'est pas vérifiée. Ce n'est pas demandé par la fiche (à voir en L23-T14).
+## Remarques (non bloquantes, inchangées)
+- La contiguïté des périodes n'est pas vérifiée (à voir en L23-T14).
 - Les sources sont des libellés fixes, sans la version datée des paramètres.
