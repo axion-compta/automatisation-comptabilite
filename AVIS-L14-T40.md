@@ -1,22 +1,26 @@
 VERDICT: A CORRIGER
+f12923489015c7f89ce39141615019ff6543bc44
 
-PR #1081 (L14-T40, fiche sensible), relue au SHA de tête d336feae6ac16f60b76f7b583179445570a805c9. Fiche lue sur origin/main ; aucune PR de pilotage ouverte ne la modifie.
+PR #1081, fiche L14-T40 (sensible), SHA de tête relu : f12923489015c7f89ce39141615019ff6543bc44
+Seconde relecture, après l'avis A CORRIGER du SHA d336feae. Fiche lue sur origin/main ; aucune PR de pilotage ouverte ne la modifie.
 
-Le code est juste. Le blocage vient de la fiche : seul Will peut le lever.
+Le code reste juste. Le blocage vient toujours de la fiche : seul Will peut le lever.
 
-## Défaut bloquant (défaut de fiche, geste de Will)
-1. `packages/contrat/src/__tests__/tva.test.ts:88`, cas `openapi-contient-les-routes-tva` : rouge (le job `tests`, donc `verifier`, échoue). Il attend `['get','get','get']` sur les chemins `/tva/` et reçoit en plus `put, post, post, put`, c'est-à-dire les 4 routes d'écriture que la fiche demande d'ajouter au domaine `tva`. Reproduit en local (1 échec sur 6). Ce fichier n'est pas dans `fichiers_autorises`, et l'auteur a eu raison de ne pas le toucher.
-   Correction : Will ajoute `packages/contrat/src/__tests__/tva.test.ts` aux `fichiers_autorises` de L14-T40 (PR de pilotage). L'auteur met ensuite l'attente à `['get','get','get','put','post','post','put']`, ou mieux, filtre ce cas sur les routes de lecture et ajoute une assertion séparée pour les 4 routes d'écriture.
+## Défaut bloquant : NON corrigé (défaut de fiche, geste de Will)
+1. `packages/contrat/src/__tests__/tva.test.ts:88`, cas `openapi-contient-les-routes-tva` : toujours rouge. Il attend `['get','get','get']` et reçoit en plus `put, post, post, put` (les 4 routes d'écriture demandées par la fiche). Reproduit en local (1 échec sur 6) et dans le job `tests` de la CI (seul échec du job), donc `verifier` rouge.
+   - Ce fichier n'est toujours pas dans `fichiers_autorises` de L14-T40 sur origin/main ; l'auteur a eu raison de ne pas le toucher.
+   - Correction : Will ajoute `packages/contrat/src/__tests__/tva.test.ts` aux `fichiers_autorises` (PR de pilotage). L'auteur filtre ensuite ce cas sur les routes de lecture et ajoute une assertion séparée pour les 4 routes d'écriture (ou met l'attente à `['get','get','get','put','post','post','put']`).
 
-## À ajouter lors de la reprise (non bloquant seul)
-2. `apps/serveur/src/__tests__/tva-ecriture.test.ts` : la fiche (§5, cas limites) exige « identifiant vide », qui n'a pas de test. Ajouter par exemple `inject` sur `/exercices/exercice-fictif/tva/lignes//sous-reserve` et `.../pieces//rattachement` avec un statut 4xx attendu, sans aucune ligne de journal.
+## Défaut non bloquant de l'avis précédent : corrigé
+2. Identifiant vide : **corrigé**. `apps/serveur/src/__tests__/tva-ecriture.test.ts:99` et `:122` : ligne `''` et pièce `''` refusées en 400, sans ligne de journal ni changement d'état.
+   - Mutation : `Identifiant` accepte la chaîne vide (`{0,64}`, `packages/contrat/src/domaines/tva-ecriture.ts:4`) → `sous-reserve-ligne-solide-409` et `rattachement-periode-deposee-409` rougissent.
 
-## Vérifications faites
-- Périmètre : 8 fichiers, tous autorisés. `garde:perimetre` vert en local (299 lignes + 262 lignes d'openapi.json, limite 300). `garde:termine` vert. Fusion avec main sans conflit.
-- Critères : 13 tests nommés verts ; routes-paiement-interdites, routes-sans-virement et routes-interdites verts (51 tests) ; `pnpm contrat:diff` identique ; `routesEcritureSansEnTete()` reste `[]` (identite.test.ts vert) ; tsc propre.
-- Mutations (annulées ensuite) : écriture de la ligne de refus retirée → `t1-reglage-refuse-quel-que-soit-le-role` et `reglage-valeur-false-aussi-refuse` rougissent (critère de la fiche) ; contrôle `DEJA_FAIT` retiré → `payee-autre-cle-409` ; refus IA retiré → `sous-reserve-par-ia-403` ; rejeu de clé retiré → `payee-meme-cle-meme-reponse` ; `PERIODE_BLOQUEE` retiré → `payee-periode-en-doute-409` ; 401 retiré → `serveur-par-defaut-refuse-401`. Chacune rougit.
-- Le refus du réglage ne dépend d'aucun rôle ni d'aucune option. L'acteur vient du port de session, jamais d'un en-tête. Aucune route ni aucun operationId ne contient paiement, payer ou virer. Données fictives, aucun montant réel, aucun mot interdit.
+## Vérifications au SHA de tête (Node 22)
+- `tva-ecriture.test.ts` : 13/13. `garde:perimetre` vert en local (8 fichiers, 299 lignes + 262 lignes d'openapi.json). Gardes vertes en CI. Fusion avec main sans conflit.
+- Le dernier commit ne touche que le test (et regroupe deux `creerApp(); apps.push(a);` sur une ligne). La fusion de main n'apporte que des fichiers déjà sur main.
+- Aucun mot interdit, aucun prix, aucun secret ; données fictives.
 
-## Remarques
-- Le service garde un seul état pour tous les exercices (le paramètre `exercice` ne sert qu'à l'empreinte). C'est acceptable pour un état fictif injecté, à revoir avec la vraie persistance.
-- Une même `Idempotency-Key` réutilisée sur une autre route donne `DEJA_FAIT` : comportement prudent, à documenter dans la fiche de suite du faux serveur.
+## Remarques (reprises)
+- État du service commun à tous les exercices (acceptable pour un état fictif injecté).
+- Même `Idempotency-Key` sur une autre route → `DEJA_FAIT` : à documenter.
+- Le test d'identifiant vide passe par `call()` (validation du contrat), pas par `inject` HTTP : suffisant pour la règle, l'URL `lignes//sous-reserve` n'est pas exercée.
