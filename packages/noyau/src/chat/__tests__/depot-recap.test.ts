@@ -53,6 +53,7 @@ describe('récapitulatif d’un dépôt de pièces', () => {
   it('compteur-a-valider-plus-n', () => {
     const r = recapDepot([...lot(2), piece(3, { confiance: 'douteux' }), piece(4, { lue: false }), piece(5, { confiance: 'a_verifier' })]);
     expect(r.message).toEqual({ code: 'bien_recu', aValider: 4 });
+    expect(r.questions.map((q) => q.pieceId)).toEqual(['p3', 'p4']);
     expect(recapDepot([piece(1)]).message).toEqual({ code: 'bien_recu', aValider: 1 });
     expect(recapDepot([piece(1, { lue: false })]).message.aValider).toBe(0);
     expect(JSON.stringify(r)).not.toMatch(/valide[^r]/);
