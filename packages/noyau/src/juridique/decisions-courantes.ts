@@ -49,6 +49,12 @@ export type SuiteActe =
   | { suite: 'convention_prete_archivage'; decisionId: string; pieceId: string }
   | { suite: 'date_fin_a_suivre'; decisionId: string; dateFin: string };
 
+function dateReelle(v: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
+
 const renseigne = (v: string | undefined): v is string => v !== undefined && v.trim() !== '';
 
 export function preparerDecision(
@@ -56,7 +62,17 @@ export function preparerDecision(
   modele: ModeleDecision,
   donnees: DonneesDecision,
 ): DecisionCourante {
-  if (!renseigne(donnees.id) || donnees.debut > donnees.fin) throw new ErreurDecisionCourante('donnees_invalides');
+  const m = donnees.montantMaxCentimes;
+  const montantOk = m === null || (Number.isSafeInteger(m) && m >= 0);
+  if (
+    !renseigne(donnees.id) ||
+    !montantOk ||
+    !dateReelle(donnees.debut) ||
+    !dateReelle(donnees.fin) ||
+    donnees.debut > donnees.fin
+  ) {
+    throw new ErreurDecisionCourante('donnees_invalides');
+  }
   if (modele.type !== type || !modele.approuve || !renseigne(modele.version) || !renseigne(modele.dateModele)) {
     throw new ErreurDecisionCourante('modele_a_faire_valider', type);
   }

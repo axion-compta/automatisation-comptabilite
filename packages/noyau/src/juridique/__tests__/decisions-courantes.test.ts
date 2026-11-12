@@ -47,6 +47,18 @@ describe('decisions courantes', () => {
   });
 
   it('modele-non-approuve-refuse', () => {
+    const invalide = (parties: Partial<DonneesDecision>) =>
+      code(() => preparerDecision('mandat', modele({ type: 'mandat' }), { ...DONNEES, ...parties }));
+    expect(invalide({ debut: '2026-12-31', fin: '2026-01-01' })).toBe('donnees_invalides');
+    expect(invalide({ id: ' ' })).toBe('donnees_invalides');
+    for (const montantMaxCentimes of [Number.NaN, Infinity, -1, 1.5]) {
+      expect(invalide({ montantMaxCentimes })).toBe('donnees_invalides');
+    }
+    expect(invalide({ montantMaxCentimes: null })).toBeUndefined();
+    expect(invalide({ montantMaxCentimes: 0 })).toBeUndefined();
+    expect(invalide({ debut: 'abc', fin: 'abd' })).toBe('donnees_invalides');
+    expect(invalide({ fin: '2026-02-31' })).toBe('donnees_invalides');
+    expect(invalide({ debut: '2026-1-01' })).toBe('donnees_invalides');
     expect(code(() => preparerDecision('mandat', modele({ type: 'mandat', approuve: false }), DONNEES))).toBe(
       'modele_a_faire_valider',
     );
