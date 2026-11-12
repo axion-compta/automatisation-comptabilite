@@ -20,7 +20,8 @@ const SAISIE = { libelle: 'Achat de fournitures Dupond-Exemple', montant: '1234,
 const nouveau = (m: Memoire, societeId = 's1', personneId = 'p1') => creerBrouillon({ formulaire: 'ecriture', societeId, personneId, stockage: m.stockage });
 // WebCrypto reste réel (hors horloges simulées) : on laisse finir ses promesses après l'avance du temps.
 const finir = async () => {
-  for (let i = 0; i < 300; i++) await new Promise<void>((r) => setImmediate(r));
+  const fin = Date.now() + 100;
+  while (Date.now() < fin) await new Promise<void>((r) => setImmediate(r));
 };
 const attendre = async (ms: number) => {
   await vi.advanceTimersByTimeAsync(ms);
@@ -37,7 +38,6 @@ describe('brouillon local chiffré', () => {
     await attendre(1999);
     expect(m.brouillons.size).toBe(0);
   });
-
   it('ecrit-2-s-apres-la-derniere-frappe', async () => {
     const m = stockageMemoire();
     const b = nouveau(m);
@@ -50,14 +50,12 @@ describe('brouillon local chiffré', () => {
     expect(m.brouillons.size).toBe(1);
     expect(await b.reprendre()).toEqual(SAISIE);
   });
-
   it('repris-apres-fermeture', async () => {
     const m = stockageMemoire();
     nouveau(m).modifier(SAISIE);
     await attendre(2000);
     expect(await nouveau(m).reprendre()).toEqual(SAISIE);
   });
-
   it('stockage-sans-clair', async () => {
     const m = stockageMemoire();
     const espion = vi.spyOn(console, 'log');
@@ -74,7 +72,6 @@ describe('brouillon local chiffré', () => {
     await attendre(2000);
     expect(Array.from([...m.brouillons.values()][0]!)).not.toEqual(Array.from(octets));
   });
-
   it('autre-societe-ne-lit-pas', async () => {
     const m = stockageMemoire();
     nouveau(m).modifier(SAISIE);
@@ -86,7 +83,6 @@ describe('brouillon local chiffré', () => {
     await attendre(2000);
     expect(m.cles.size).toBe(3);
   });
-
   it('brouillon-altere-efface', async () => {
     const m = stockageMemoire();
     nouveau(m).modifier(SAISIE);
@@ -102,7 +98,6 @@ describe('brouillon local chiffré', () => {
     expect(await b.reprendre()).toBeNull();
     expect(m.brouillons.size).toBe(0);
   });
-
   it('efface-apres-envoi', async () => {
     const m = stockageMemoire();
     const b = nouveau(m);
@@ -117,7 +112,6 @@ describe('brouillon local chiffré', () => {
     await attendre(5000);
     expect(m.brouillons.size).toBe(0);
   });
-
   it('efface-pendant-le-chiffrement', async () => {
     const m = stockageMemoire();
     const b = nouveau(m);

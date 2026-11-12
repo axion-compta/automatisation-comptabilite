@@ -11,18 +11,12 @@ export interface StockageBrouillon {
   lireCle(cle: string): Promise<CryptoKey | null>;
   ecrireCle(cle: string, valeur: CryptoKey): Promise<void>;
 }
-
 export interface Brouillon<T = unknown> {
   modifier(valeur: T): void;
   reprendre(): Promise<T | null>;
   effacer(): Promise<void>;
 }
-export interface OptionsBrouillon {
-  formulaire: string;
-  societeId: string;
-  personneId: string;
-  stockage?: StockageBrouillon;
-}
+export interface OptionsBrouillon { formulaire: string; societeId: string; personneId: string; stockage?: StockageBrouillon }
 
 async function operer<R>(magasin: 'brouillons' | 'cles', mode: IDBTransactionMode, f: (m: IDBObjectStore) => IDBRequest<R>): Promise<R> {
   const base = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -64,12 +58,11 @@ async function cleDe(stockage: StockageBrouillon, idCle: string): Promise<Crypto
 export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId, stockage = stockageIndexedDb() }: OptionsBrouillon): Brouillon<T> {
   const idCle = JSON.stringify([societeId, personneId]);
   const idBrouillon = JSON.stringify([societeId, personneId, formulaire]);
-  let minuterie: ReturnType<typeof setTimeout> | null = null;
+  let minuterie: ReturnType<typeof setTimeout> | undefined;
   let version = 0;
-
   const annuler = () => {
     version += 1;
-    clearTimeout(minuterie ?? undefined);
+    clearTimeout(minuterie);
   };
 
   const ecrire = async (valeur: T, ma: number) => {
@@ -93,7 +86,6 @@ export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId,
       return null;
     }
   };
-
   return {
     modifier(valeur) {
       annuler();
