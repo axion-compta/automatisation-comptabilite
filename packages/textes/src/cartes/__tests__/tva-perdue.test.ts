@@ -12,7 +12,6 @@ describe('carte TVA perdue', () => {
     expect(carte?.detail).toContain('4,00 €');
     expect(carte?.detail).toContain('véhicule de tourisme');
     expect(carte?.detail).not.toMatch(/[{}]/);
-    // Frontière : 1 centime produit la carte ; 0, négatif et NaN non.
     expect(produireCarteTvaPerdue(1, '0,01 €', 'x')).not.toBeNull();
     expect(produireCarteTvaPerdue(0, '0,00 €', 'x')).toBeNull();
     expect(produireCarteTvaPerdue(-1, '0,01 €', 'x')).toBeNull();
