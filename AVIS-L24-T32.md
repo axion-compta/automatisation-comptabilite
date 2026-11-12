@@ -13,6 +13,6 @@ Fiche `sensible: oui` : fusion par Will seul.
 - Mutations tuées (10/11) : `!== true` → `=== false`, `isSafeInteger` → `isFinite`, contrôle de `balance.total` retiré, `sources.length === 0` retiré, `Array.isArray` retiré, `trim()` retiré, ordre comptable/administrateur inversé, contrôle d'identifiant vide retiré, tolérance d'un centime, `===` → `>=`.
 
 ## Remarques (non bloquantes)
-- Mutant survivant : `refus(['ecart_balance', 'aucun_destinataire'])` → `refus(['aucun_destinataire'])` ; `pole-fiscal.test.ts:77` utilise `toContain`. Remplacer par `toEqual(['ecart_balance', 'aucun_destinataire'])`.
+- Mutant survivant : `refus(['ecart_balance', 'aucun_destinataire'])` → `refus(['aucun_destinataire'])` ; `pole-fiscal.test.ts:78` utilise `toContain`. Remplacer par `toEqual(['ecart_balance', 'aucun_destinataire'])`.
 - La somme des lignes n'est pas comparée à `declaration.total` : une déclaration dont le total égale la balance mais dont les lignes ne s'additionnent pas est acceptée. La fiche ne l'exige pas ; à prévoir dans une fiche suivante.
 - Une déclaration sans aucune ligne est acceptée si le total égale la balance (non testé).
