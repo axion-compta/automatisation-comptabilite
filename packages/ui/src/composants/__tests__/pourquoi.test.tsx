@@ -121,4 +121,21 @@ describe("pourquoi", () => {
       expect(c.textContent).not.toContain("Invalid");
     }
   });
+
+  it("pourquoi-affiche-l-icone", async () => {
+    const lib = { ...LIB, specialites: { lecture: "L", banque: "B", tva: "T", controle: "C", chat: "H", neutre: "N" } };
+    const rendu = async (specialite?: string) => {
+      const c = await monter(<Pourquoi decision={decision} appel={appel} libelles={lib} specialite={specialite} onSource={() => {}} />);
+      await act(async () => c.querySelector("button")!.click());
+      return c;
+    };
+    expect((await rendu("tva")).querySelector("[role=img]")?.getAttribute("aria-label")).toBe("T");
+    expect((await rendu("inconnue")).querySelector("[role=img]")?.getAttribute("aria-label")).toBe("N");
+    const sans = await rendu();
+    expect(sans.querySelector("[role=img]")).toBeNull();
+    expect(Object.keys(valeurs(sans))).toHaveLength(7);
+    // libellés de spécialités absents : pas d'icône (pas de texte inventé)
+    const c = await monter(<Pourquoi decision={decision} libelles={LIB} specialite="tva" onSource={() => {}} />);
+    expect(c.querySelector("[role=img]")).toBeNull();
+  });
 });
