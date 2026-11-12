@@ -1,20 +1,18 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1157, fiche L24-T34, tête relue : d974427cb3ede199e298ca96fa7a1f03b3f9ec01
+PR #1157, fiche L24-T34 (sensible : fusion par Will seul), seconde relecture, tête relue : b13b5cbd01730119c0c4ddf73eae6b6e0c1e3ad1
 
-## Défauts
-1. packages/noyau/src/agents/pole-rgpd.ts:15 : mutant survivant. Remplacer `forme(l.finalite) === f` par `forme(l.finalite).startsWith(f)` laisse passer les 3 tests : une finalité tronquée (préfixe strict d'une finalité inscrite, par ex. ses premiers mots) serait acceptée sans être au registre. Correction demandée, dans pole-rgpd.test.ts (`traitement-hors-registre-refuse`) : un préfixe strict et une sous-chaîne d'une finalité du registre sont refusés et escaladés.
-2. apps/serveur/src/ia/__tests__/banc-sensibles.test.ts:12-17 : le banc ne couvre que les mots-clés. Deux des quatre motifs qui rendent une pièce sensible dans `deciderSensibilite` ne sont jamais exercés : on peut retirer la MRZ (`contientMrz(texte) ||`) ou la règle NIR (`motifs.push('nir')`) dans `pieces/sensibles/identite.ts` sans que `banc-zero-donnee-sensible-envoyee` échoue (mutants survivants). Correction demandée : ajouter au banc des pièces fictives avec une ligne MRZ fictive à chiffre de contrôle juste et un NIR fictif à clé valide (construit comme dans `chiffres.test.ts`, `nir-cle-valide-masque`).
-3. banc-sensibles.test.ts:12 : le banc est calculé à partir de `MOTIFS_SENSIBLES`, la liste même qu'utilise le détecteur. Si l'on retire un motif de `motifs.ts` (essayé avec `'payslip'`), le banc perd simplement 3 cas (39 -> 36) et reste vert. Correction demandée : au moins une partie du banc (10 pièces ou plus) écrite à la main, indépendamment de la liste, pour qu'un motif retiré fasse rougir le test.
+## Défauts précédents (avis sur d974427c) : levés
+1. Préfixe ou sous-chaîne d'une finalité : levé. `traitement-hors-registre-refuse` teste 4 formes partielles. Mutants tués : `forme(l.finalite).startsWith(f)`, `.includes(f)`, `f.startsWith(forme(l.finalite))`.
+2. MRZ et NIR dans le banc : levé. Le banc contient une ligne MRZ fictive (spécimen L898902C3, chiffre de contrôle 6) et un NIR à clé calculée. Mutants tués : `contientMrz(texte) ||` retiré, `motifs.push('nir')` retiré (identite.ts:52 et 54).
+3. Banc dépendant de MOTIFS_SENSIBLES : levé. 13 pièces sont écrites à la main, et leur nombre est vérifié (au moins 10). Mutants tués : retrait de 'payslip', 'ordonnance medicale', 'titre de sejour' ou 'medical certificate' dans motifs.ts.
 
 ## Contrôles passés
-- Fichiers : les 5 du diff sont dans fichiers_autorises ; 111 lignes sur 280 au plus ; aucune ligne « - - » ; le lien node_modules ajouté par erreur a bien été retiré.
-- Tests nommés : les 4 passent (vitest, packages/noyau et apps/serveur).
-- Mutants tués : `f !== ''` retiré, `trim` retiré, `toLowerCase` retiré, `some` remplacé par `every`, finalité de l'escalade vidée, `texteTransmissible: masque` dans etape-preparation.
-- Témoin non sensible présent (1 appel). Noms fictifs (Alice Fictive, Bruno Inventé). Aucun secret, prix ni mot interdit. Journal : 5 lignes.
-- La catégorie `secrets` est exclue du banc à juste titre : elle donne un masquage, pas une pièce sensible.
+- Les 5 fichiers du diff sont dans fichiers_autorises ; 128 lignes sur 280 au plus ; aucune ligne « - - ».
+- Les 4 tests nommés passent (pole-rgpd 3/3, banc-sensibles 1/1).
+- Journal : 5 lignes, commence par « # Journal L24-T34 ». Noms fictifs. Aucun secret, prix ni mot interdit.
+- Aucune régression : la correction ne touche que les deux fichiers de test.
 
 ## Remarques
-- CI : à la relecture, tous les jobs de cette tête étaient encore en file d'attente.
-- Le banc réécrit la barrière d'`etape-lecture.ts:43` (`texteTransmissible === null` -> pas d'appel) au lieu de l'appeler. Ce n'est pas bloquant, car l'assertion sur `prep` porte sur le code réel.
-- Fiche `sensible: oui` : la fusion revient à Will.
+- CI : les jobs `tests` et `verifier` sont rouges, mais pas à cause de cette PR. L'échec vient de `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues` (en-tête `porte` contre `porte_rgpd`), et ce test échoue aussi sur origin/main 347401ab. Il faut le réparer sur main avant la fusion.
+- La fiche passe à `statut: fait` dans la PR.
