@@ -1,35 +1,30 @@
-VERDICT: A CORRIGER
-7089fca215a2259e8e215a32b755f043c4bfa856
+VERDICT: OK
+SHA: c88d12a3ee8e260a656c3b3748c5a05152401750
+PR: #1071
 
-Fiche: L06-T48 (SENSIBLE) - PR #1071 - SHA de tête relu : 7089fca215a2259e8e215a32b755f043c4bfa856
-Troisième relecture (relecteur Opus, lot 5 section R, 12/11/2026), après l'avis A CORRIGER du SHA a03de4b9554f0058b2beba9444d5529a8e1922b3. La fiche est sensible : la fusion revient à Will seul.
+Fiche L06-T48, SENSIBLE (purge, RGPD) : fusion par Will seul, après #1052. 4e relecture, après l'avis A CORRIGER au SHA 7089fca215a2259e8e215a32b755f043c4bfa856 (commit ea55b46 sur `avis/L06-T48`). Fiche lue sur origin/main. `pilotage/ARRET` absent.
 
-## Défaut de l'avis précédent : taille, corrigé
-- Lignes propres à la fiche : `signalements.ts` 97, `signalements.test.ts` 133, fiche 2, journal 8. Total **240 ≤ 250**.
-- Aucun test retiré : les 11 mêmes tests, 29 `expect` avant comme après. Le changement `ligneParam(NB_JOURS)` sans `dateEffet` est équivalent (la valeur par défaut est `2026-01-01`).
-- `vitest run apps/serveur/src/__tests__/signalements.test.ts` : 11/11 verts.
+## Suivi de l'avis précédent
+1. `signalements.ts:45` : la décomposition `...demande` recopiait toute clé en trop. **CORRIGÉ.**
+   - `signalements.ts:45-46` recopie de nouveau les champs un par un : `societeId`, `personneId`, `nature`, `correlationId`, plus `signalementId`, `etat` et `creeLe`.
+   - Le test `erreur-et-signalement-meme-correlation` (`signalements.test.ts:46-53`) envoie une demande avec la clé en trop `ecritureId: 'ecr-1'`. Il vérifie que les clés de la ligne stockée sont exactement les 7 attendues.
+   - Mutation « `...demande` remis devant les champs » : ce test rougit (1 échec sur 11).
+   - Mutation « clé `ecritureId` ajoutée à l'objet » : il rougit aussi.
+   - Les deux mutations ont été annulées.
 
-## Défaut bloquant (nouveau, introduit par la réduction de taille)
-1. `apps/serveur/src/securite/signalements.ts:45` : `const s: Signalement = { ...demande, signalementId: ..., etat: 'ouvert', creeLe: ... }`.
-   - Avant (a03de4b9), les 4 champs étaient recopiés un par un. Maintenant, **toute clé en trop de la demande est enregistrée** dans le signalement. TypeScript ne l'empêche pas quand la demande vient d'une variable d'un type plus large.
-   - Sonde : une demande avec `ecritureId: 'ecr-1'` donne un signalement stocké avec la clé `ecritureId`. Cela casse la règle de la fiche « aucune clé vers les écritures » (spec 06, P8).
-   - Le test `erreur-et-signalement-meme-correlation` ne le voit pas : il n'envoie que les 4 champs. La mutation qui ajoute une clé au spread fait bien rougir ce test, mais une clé venue de la demande passe.
-   - Une mise à niveau ne doit pas changer le comportement.
-   - Correction demandée :
-     - revenir à la recopie explicite `societeId: demande.societeId, personneId: demande.personneId, nature: demande.nature, correlationId: demande.correlationId` ;
-     - dans `erreur-et-signalement-meme-correlation`, ajouter un appel avec une demande portant une clé en trop (par exemple `ecritureId`), puis vérifier que les clés de la ligne restent exactement les 7 attendues. Ce test doit rougir avec le spread.
-   - Taille : environ +3 lignes, il reste de la marge (240 sur 250).
+## Contrôles
+- `signalements.test.ts` et `migration-securite.test.ts` : 2 fichiers, 28 tests verts (Node 22, `engine_strict=false`). `tsc --noEmit` dans `apps/serveur` passe sans message.
+- Fichiers propres à la fiche : 4, tous dans `fichiers_autorises` : `signalements.ts` 98, test 134, fiche 1/1, journal 8. Total 242 lignes sur 250.
+- La tête de #1052 (93eed593) est contenue dans cette branche.
+- Aucune durée en dur, aucun prix, aucun secret, aucun mot interdit, aucun octet NUL. Données fictives.
+- Journal : 8 lignes, commence par `# Journal L06-T48`.
 
 ## CI au SHA de tête
-- `gardes` et `verifier` sont rouges pour la seule `garde:perimetre`. Reproduit en local : fichiers hors liste de L06-T39 et taille 391 > 250. Tout vient de L06-T39 (#1052, empilée, encore ouverte) : ce n'est pas un défaut de l'auteur. Une fois #1052 fusionnée, il reste 240 lignes.
-- `garde:termine` est verte. tests, lint, types, e2e, gitleaks, licences et stryker sont verts.
-
-## Autres contrôles
-- Fichiers propres : 4, tous dans `fichiers_autorises`. Journal 8 lignes, commence par « # Journal L06-T48 ».
-- Aucune durée en dur, aucun prix, aucun secret, aucun mot interdit ; données fictives.
+- `gardes`, et donc `verifier`, sont rouges pour la seule `garde:perimetre`. Reproduit en local : les 4 fichiers de L06-T39 sont hors liste et la taille fait 439 lignes, au-delà de 250.
+- Tout vient de #1052, empilée et encore ouverte. Ce n'est pas un défaut de l'auteur. Après la fusion de #1052 puis une mise à niveau sur main, il reste 242 lignes.
+- Les 7 autres jobs sont verts.
 
 ## Remarques (non bloquantes, reprises)
-- Si `parametre.lire`, `alerter` ou `lister` lève pour une société, la purge s'arrête pour les sociétés suivantes.
-- `societes` est figé au moment de l'inscription.
-- `dateEffet` est comparé en texte.
-- Pas d'interface pour les Demandes du portail (V3-SUP-010) ; pas de colonne `correlation_id` dans la table 092.
+- Si `parametre.lire`, `alerter` ou `lister` lève une erreur pour une société, la purge s'arrête pour les sociétés suivantes.
+- `societes` est figé à l'inscription. `dateEffet` est comparé comme du texte.
+- Il n'y a pas d'interface pour les Demandes du portail (V3-SUP-010), ni de colonne `correlation_id` dans la table 092.
