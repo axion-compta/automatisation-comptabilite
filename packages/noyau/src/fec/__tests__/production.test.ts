@@ -1,4 +1,8 @@
 import { createHash } from 'node:crypto';
+import type { Ecriture } from '../../ecritures/modele.js';
+import { centimes } from '../../argent/index.js';
+import { REGLES_EQUILIBRE } from '../controles-equilibre.js';
+import { REGLES_STRUCTURE } from '../controles-structure.js';
 import { describe, expect, it } from 'vitest';
 import { messagesDeclarations } from '../../../../textes/src/documents/declarations.js';
 import { preparerFecExercice, type EntreePreparationFec, type ProfilFec } from '../production.js';
@@ -78,6 +82,24 @@ describe('préparation du FEC d’un exercice', () => {
     if (!hors.ok) throw new Error('refus inattendu');
     expect(hors.rapport.ecartsParRegle.map((e) => e.regleId)).toContain('FEC-E03');
     expect(hors.rapport.telechargementAutorise).toBe(false);
+    expect(r.rapport.reglesVerifiees).toBe(REGLES_STRUCTURE.length + REGLES_EQUILIBRE.length);
+    // Un centime d'écart dans une écriture : déséquilibre signalé, téléchargement refusé.
+    const [premiere, ...suite] = fecA.ecritures as Ecriture[];
+    const [l0, ...lignes] = premiere!.lignes;
+    const decale = [{ ...premiere!, lignes: [{ ...l0!, debit: centimes(l0!.debit + 1) }, ...lignes] }, ...suite];
+    const desequilibre = preparerFecExercice({ ...entreeA(), ecritures: decale });
+    if (!desequilibre.ok) throw new Error('refus inattendu');
+    expect(desequilibre.rapport.ecartsParRegle.map((e) => e.regleId)).toContain('FEC-E01');
+    expect(desequilibre.rapport.telechargementAutorise).toBe(false);
+    // Une écriture sans numéro : champ obligatoire vide (FEC-S05) signalé, téléchargement refusé.
+    const sansNumero = preparerFecExercice({ ...entreeA(), ecritures: fecA.ecritures.map((e) => {
+      const copie = { ...e };
+      delete copie.numero;
+      return copie;
+    }) });
+    if (!sansNumero.ok) throw new Error('refus inattendu');
+    expect(sansNumero.rapport.ecartsParRegle.map((e) => e.regleId)).toContain('FEC-S05');
+    expect(sansNumero.rapport.telechargementAutorise).toBe(false);
   });
 
   it('texte-chaine-rompue-present', () => {
