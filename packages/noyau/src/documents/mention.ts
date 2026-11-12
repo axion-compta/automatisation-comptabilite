@@ -1,6 +1,8 @@
 // Codes seulement : les phrases affichées vivent dans packages/textes.
 
-export type ModeTravail = 'autonome' | 'assiste' | 'saisie_seule';
+import { MODES_TRAVAIL, type ModeTravail } from '../exercices/mode-travail.js';
+
+export type { ModeTravail };
 export type NatureDocument = 'officiel' | 'indicatif' | 'travail';
 export type StatutExercice = 'ouvert' | 'en_cloture' | 'cloture' | 'rouvert';
 export type TypeEtat = 'fec' | 'etat' | 'declaration' | 'paquet';
@@ -22,7 +24,7 @@ export type ResultatNature =
   | { ok: true; nature: NatureDocument }
   | { ok: false; code: 'mode_saisie_seule' | 'exercice_non_cloture' };
 
-const MODES: readonly string[] = ['autonome', 'assiste', 'saisie_seule'];
+const MODES: readonly string[] = MODES_TRAVAIL;
 const NATURES: readonly string[] = ['officiel', 'indicatif', 'travail'];
 const EXERCICES: readonly string[] = ['ouvert', 'en_cloture', 'cloture', 'rouvert'];
 const TYPES: readonly string[] = ['fec', 'etat', 'declaration', 'paquet'];

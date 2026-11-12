@@ -25,7 +25,7 @@ describe('mention', () => {
       ['saisie_seule', 'cloture', 'declaration', OK],
       ['saisie_seule', 'cloture', 'paquet', OK],
       ['autonome', 'cloture', 'etat', OK],
-      ['assiste', 'cloture', 'etat', OK],
+      ['expert_complet', 'cloture', 'etat', OK],
       ['saisie_seule', 'ouvert', 'etat', refus('mode_saisie_seule')],
     ];
     for (const [mode, ex, type, attendu] of cas) {
@@ -35,16 +35,16 @@ describe('mention', () => {
   it('officiel-refuse-exercice-ouvert', () => {
     for (const ex of ['ouvert', 'en_cloture', 'rouvert']) {
       for (const type of ['etat', 'fec']) {
-        expect(n('assiste', ex, 'officiel', type)).toEqual(refus('exercice_non_cloture'));
+        expect(n('expert_complet', ex, 'officiel', type)).toEqual(refus('exercice_non_cloture'));
       }
       for (const type of ['declaration', 'paquet']) {
-        expect(n('assiste', ex, 'officiel', type)).toEqual(OK);
+        expect(n('expert_complet', ex, 'officiel', type)).toEqual(OK);
       }
     }
     expect(n('autonome', 'cloture', 'officiel', 'fec')).toEqual(OK);
   });
   it('indicatif-toujours-permis', () => {
-    for (const mode of ['autonome', 'assiste', 'saisie_seule']) {
+    for (const mode of ['autonome', 'expert_complet', 'saisie_seule']) {
       for (const ex of ['ouvert', 'en_cloture', 'cloture', 'rouvert']) {
         for (const type of ['fec', 'etat', 'declaration', 'paquet']) {
           for (const d of ['indicatif', 'travail']) {
@@ -55,7 +55,7 @@ describe('mention', () => {
     }
   });
   it('valeur-inconnue-refusee', () => {
-    const args = ['assiste', 'cloture', 'officiel', 'etat'];
+    const args = ['expert_complet', 'cloture', 'officiel', 'etat'];
     for (let i = 0; i < 4; i++) {
       const a = args.map((v, j) => (j === i ? 'x' : v));
       expect(code(() => n(a[0]!, a[1]!, a[2]!, a[3]!))).toBe('valeur_inconnue');
@@ -99,5 +99,11 @@ describe('mention', () => {
       { validePar: '', valideLe: '' },
     ];
     for (const c of cas) expect(code(() => m({ ...base, ...c }))).toBe('validation_incomplete');
+  });
+  it('mention-expert-complet-officiel-permis', () => {
+    expect(n('expert_complet', 'cloture', 'officiel', 'etat')).toEqual(OK);
+    expect(n('expert_complet', 'cloture', 'officiel', 'fec')).toEqual(OK);
+    expect(n('expert_complet', 'ouvert', 'officiel', 'etat')).toEqual(refus('exercice_non_cloture'));
+    expect(code(() => n('assiste', 'cloture', 'officiel', 'etat'))).toBe('valeur_inconnue');
   });
 });
