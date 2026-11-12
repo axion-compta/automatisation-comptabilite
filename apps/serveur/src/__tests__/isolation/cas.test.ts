@@ -16,8 +16,6 @@ describe('cas C01 à C25 @isolation', () => {
     expect(ENONCE_ABSENT).toEqual(['C08', 'C15', 'C16', 'C18', 'C21']);
   });
 
-  for (const c of ENONCE_ABSENT) it.todo(`${c} : énoncé absent du dépôt (défaut de fiche, Will doit le fournir)`);
-
   it('C23', () => {
     const e = { session: sessionDuRole('comptable'), chemin: `/api/compta/v1/societes/${SOC_MIENNE}/ecritures` };
     // Un appel qui mélange deux sociétés est refusé net, avec ou sans la société de la session.
