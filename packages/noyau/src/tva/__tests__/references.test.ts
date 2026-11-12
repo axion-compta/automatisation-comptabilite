@@ -32,6 +32,7 @@ describe('citerReference', () => {
   it('statut-repris-de-la-ligne', () => {
     const t: LigneCorrespondance[] = [{ articleCgi: 'A', articleCibs: 'B', debut: '2030-01-01', statut: 'valide' }];
     expect(citerReference('A', '2030-01-01', t)).toEqual({ texte: 'art. B du CIBS', statut: 'valide' });
+    expect(citerReference('A', '2029-12-31', t)).toEqual({ texte: 'art. A du CGI', statut: 'valide' });
   });
 
   it('date-invalide-exception', () => {

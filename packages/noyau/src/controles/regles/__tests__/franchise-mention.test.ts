@@ -74,7 +74,10 @@ describe('CC-T13 mention de franchise', () => {
     expect(evaluer('2030-06-15', ['autre'], seule)).toEqual({ resultat: 'ALERTE', valeur: 'source_a_verifier' });
     expect(evaluer('2030-06-15', [ANCIENNE], seule)).toEqual({ resultat: 'OK', valeur: 'source_a_verifier' });
     const mixte = [...seule, { texte: NOUVELLE, debut: '2020-01-01', fin: null, statut: 'valide' as const }];
-    expect(evaluer('2030-06-15', [ANCIENNE], mixte)).toEqual(OK);
+    // Le statut est celui de la mention trouvée : ANCIENNE (à vérifier) reste à vérifier, NOUVELLE (valide) est OK.
+    expect(evaluer('2030-06-15', [ANCIENNE], mixte)).toEqual({ resultat: 'OK', valeur: 'source_a_verifier' });
+    expect(evaluer('2030-06-15', [NOUVELLE], mixte)).toEqual(OK);
+    expect(evaluer('2030-06-15', [ANCIENNE, NOUVELLE], mixte)).toEqual(OK);
     expect(evaluer('2030-06-15', ['autre'], mixte)).toEqual({ resultat: 'ALERTE', valeur: 'non_admise_a_cette_date' });
   });
 
@@ -142,6 +145,12 @@ describe('CC-T13 mention de franchise', () => {
     it('tolerance-invalide-exception', () => {
       expect(code(() => ev('2027-02-15', [CGI], [{ ...toleree[0]!, debut: '2027-02-30' }]))).toBe('entree_invalide');
       expect(code(() => ev('2027-02-15', [CGI], [{ ...toleree[0]!, fin: '2027-01-01' }]))).toBe('entree_invalide');
+    });
+    it('tolerance-a-verifier-gardee-si-cibs-valide', () => {
+      const cibsValide: MentionDatee[] = citee.map((m) => (m.texte === CIBS ? { ...m, statut: 'valide' as const } : m));
+      const r = (lues: string[]): unknown => regleCCT13.evaluer({ dateFacture: '2027-02-15', mentionsLues: lues, liste: cibsValide, toleree });
+      expect(r([CGI])).toEqual(AV);
+      expect(r([CIBS])).toEqual(OK);
     });
     it('tolerance-valide-rend-ok-complet', () => {
       const t: MentionDatee[] = [{ ...toleree[0]!, statut: 'valide' }];
