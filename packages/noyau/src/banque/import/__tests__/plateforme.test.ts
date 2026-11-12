@@ -12,6 +12,8 @@ describe('plateforme', () => {
     expect(detecterPlateforme(entetesPlateforme, lignesFictives).reconnu).toBe(true);
     // casse, accents et séparateurs sans importance
     expect(detecterPlateforme(['DATE', 'BRUT', 'Frais de transaction', 'Net versé'], lignesFictives).reconnu).toBe(true);
+    expect(detecterPlateforme(['Date', 'Montant_brut', 'Frais(EUR)', 'Net-versé'], lignesFictives).reconnu).toBe(true);
+    expect(detecterPlateforme(['Date', 'Brut', 'Frais', 'NÉT'], lignesFictives).reconnu).toBe(true);
     // une colonne manquante : pas reconnu (chacune des trois est nécessaire)
     expect(detecterPlateforme(['Date', 'Brut', 'Frais'], lignesFictives).reconnu).toBe(false);
     expect(detecterPlateforme(['Date', 'Brut', 'Net'], lignesFictives).reconnu).toBe(false);
