@@ -49,6 +49,9 @@ describe('contrats des agents de reprise', () => {
     expect(refus('chef_dossier', { decision: 'au_hasard', motifs: [] })).toEqual({ ok: false, code: 'hors_contrat', chemin: 'decision' });
     expect(refus('chef_dossier', { decision: 'continuer', motifs: 'aucun' })).toEqual({ ok: false, code: 'hors_contrat', chemin: 'motifs' });
     expect(refus('chef_dossier', { decision: 'continuer', motifs: [3] })).toEqual({ ok: false, code: 'hors_contrat', chemin: 'motifs[0]' });
+    for (const element of [null, 3, []]) {
+      expect(refus('soldes', { soldes: [element] }), String(element)).toEqual({ ok: false, code: 'hors_contrat', chemin: 'soldes[0]' });
+    }
     for (const racine of [null, undefined, 3, 'texte', [], [valides['soldes']]]) {
       expect(refus('soldes', racine), String(racine)).toEqual({ ok: false, code: 'hors_contrat', chemin: '$' });
     }
@@ -74,6 +77,7 @@ describe('contrats des agents de reprise', () => {
     expect(trancherChiffre(propositions, () => centimes(1250))).toEqual({ valeur: 1250, source: 'recalcul', accord: false });
     expect(trancherChiffre(propositions, () => centimes(777))).toEqual({ valeur: 777, source: 'recalcul', accord: false });
     expect(trancherChiffre([{ agent: 'soldes', valeur: centimes(0) }], () => centimes(0))).toEqual({ valeur: 0, source: 'recalcul', accord: true });
+    expect(trancherChiffre([{ agent: 'soldes', valeur: centimes(1000) }], () => centimes(0))).toEqual({ valeur: 0, source: 'recalcul', accord: false });
     expect(trancherChiffre([], () => centimes(5))).toEqual({ valeur: 5, source: 'recalcul', accord: true });
     expect(() => trancherChiffre(propositions, () => Number.NaN as never)).toThrow();
   });
