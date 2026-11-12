@@ -27,13 +27,11 @@ describe('à-nouveaux de N+1', () => {
   it('a-nouveaux-marques-provisoires', () => {
     const a = aNouveauxProvisoires(SOLDES_N, PLAN);
     expect(a.statut).toBe('provisoire');
-    // bilan seulement : ni 606000 ni 706000
     expect(a.lignes.map((l) => l.compte)).toEqual(['101000', '120000', '215000', '401000', '411000', '512000']);
     // le résultat de N (25 000 - 20 000 = 5 000 de bénéfice) passe au compte 120000, au crédit
     expect(a.lignes.find((l) => l.compte === '120000')).toEqual({ compte: '120000', debit: 0, credit: 5000 });
     expect(a.lignes.find((l) => l.compte === '411000')).toEqual({ compte: '411000', debit: 30000, credit: 0 });
     expect(a.lignes.find((l) => l.compte === '401000')).toEqual({ compte: '401000', debit: 0, credit: 15000 });
-    // équilibre débit = crédit
     expect(somme(a.lignes, 'debit')).toBe(somme(a.lignes, 'credit'));
     expect(a.totalDebit).toBe(somme(a.lignes, 'debit'));
     expect(a.totalCredit).toBe(somme(a.lignes, 'credit'));
@@ -48,6 +46,9 @@ describe('à-nouveaux de N+1', () => {
     expect(perte.lignes.some((l) => l.compte === '411000')).toBe(false);
     expect(somme(perte.lignes, 'debit')).toBe(somme(perte.lignes, 'credit'));
     expect(aNouveauxProvisoires([], PLAN).lignes).toEqual([]);
+    // un solde déjà présent au 120000 s'additionne au résultat de N
+    const deja = aNouveauxProvisoires([{ compte: '120000', solde: -3000 }, { compte: '512000', solde: 8000 }, { compte: '706000', solde: -5000 }], PLAN);
+    expect(deja.lignes.find((l) => l.compte === '120000')).toEqual({ compte: '120000', debit: 0, credit: 8000 });
   });
 
   it('refus-balance-desequilibree-compte-hors-plan-montant-invalide', () => {
@@ -70,7 +71,6 @@ describe('à-nouveaux de N+1', () => {
       { compte: '411000', avant: { debit: 30000, credit: 0 }, apres: { debit: 42000, credit: 0 } },
     ]);
     expect(r.nouveau.statut).toBe('provisoire');
-    // sans changement : aucune différence
     const identique = recalculer(ancien, aNouveauxProvisoires(SOLDES_N, PLAN));
     expect(identique.modifie).toBe(false);
     expect(identique.differences).toEqual([]);
@@ -83,10 +83,8 @@ describe('à-nouveaux de N+1', () => {
     expect(r.trace).toEqual({ avant: { totalDebit: 120000, totalCredit: 120000 }, apres: { totalDebit: 130000, totalCredit: 130000 }, cause: 'ecriture_validee_en_n' });
     expect(recalculer(ancien, nouveau).trace.cause).toBe('ecriture_validee_en_n');
     expect(recalculer(ancien, nouveau, 'ecriture_modifiee_en_n').trace.cause).toBe('ecriture_modifiee_en_n');
-    // un compte qui disparaît des à-nouveaux est une différence (après = 0)
-    const sans = aNouveauxProvisoires(SOLDES_N.filter((s) => s.compte !== '411000' && s.compte !== '706000').map((s) => (s.compte === '512000' ? { ...s, solde: 75000 } : s.compte === '606000' ? { ...s, solde: 0 } : s)), PLAN);
-    const d = recalculer(ancien, sans).differences.find((x) => x.compte === '411000');
-    expect(d).toEqual({ compte: '411000', avant: { debit: 30000, credit: 0 }, apres: { debit: 0, credit: 0 } });
+    const sans = aNouveauxProvisoires([{ compte: '101000', solde: -100000 }, { compte: '215000', solde: 40000 }, { compte: '401000', solde: -15000 }, { compte: '512000', solde: 75000 }], PLAN);
+    expect(recalculer(ancien, sans).differences.find((x) => x.compte === '411000')).toEqual({ compte: '411000', avant: { debit: 30000, credit: 0 }, apres: { debit: 0, credit: 0 } });
   });
 
   it('n-cloture-a-nouveaux-definitifs', () => {
@@ -95,7 +93,6 @@ describe('à-nouveaux de N+1', () => {
     const f = definitifSiCloture(a, 'cloture');
     expect(f.statut).toBe('definitif');
     expect(f.lignes).toEqual(a.lignes);
-    // N clôturé : plus de recalcul
     expect(code(() => recalculer(f, a))).toBe('a_nouveaux_definitifs');
     expect(code(() => definitifSiCloture(a, 'autre' as never))).toBe('statut_inconnu');
   });
@@ -106,7 +103,6 @@ describe('à-nouveaux de N+1', () => {
       expect(fecOfficielAutorise(n1, { fin: '2026-12-31', statut })).toEqual({ ok: false, code: 'exercice_precedent_ouvert' });
     }
     expect(fecOfficielAutorise(n1, { fin: '2026-12-31', statut: 'cloture' })).toEqual({ ok: true });
-    // premier exercice : pas de précédent
     expect(fecOfficielAutorise(n1, undefined)).toEqual({ ok: true });
     // N doit finir avant le début de N+1 (frontière : même jour refusé)
     expect(code(() => fecOfficielAutorise(n1, { fin: '2027-01-01', statut: 'cloture' }))).toBe('exercices_non_consecutifs');

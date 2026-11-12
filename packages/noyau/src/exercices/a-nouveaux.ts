@@ -54,9 +54,9 @@ const STATUTS: readonly string[] = ['ouvert', 'en_cloture', 'cloture', 'rouvert'
 const COMPTE_BENEFICE = '120000';
 const COMPTE_PERTE = '129000';
 
-function statutConnu(statut: string): void {
+const statutConnu = (statut: string): void => {
   if (!STATUTS.includes(statut)) throw new ErreurANouveaux('statut_inconnu');
-}
+};
 
 function classeOuErreur(compte: string): number {
   try {
@@ -81,7 +81,10 @@ export function aNouveauxProvisoires(soldesN: readonly SoldeCompte[], plan: read
     else throw new ErreurANouveaux('compte_invalide');
   }
   if (!Number.isSafeInteger(total) || total !== 0) throw new ErreurANouveaux('balance_desequilibree');
-  if (resultat !== 0) parCompte.set(resultat < 0 ? COMPTE_BENEFICE : COMPTE_PERTE, resultat);
+  if (resultat !== 0) {
+    const c = resultat < 0 ? COMPTE_BENEFICE : COMPTE_PERTE;
+    parCompte.set(c, (parCompte.get(c) ?? 0) + resultat);
+  }
   const lignes: LigneANouveau[] = [...parCompte.entries()]
     .filter(([, solde]) => solde !== 0)
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
