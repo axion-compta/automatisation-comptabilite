@@ -89,7 +89,7 @@ describe('personnes : accès réservé à compta-parametrer', () => {
   it('rectification-sans-reauth', async () => {
     const vieux = identiteDe('adms-a', { revendications: { acr: 'mfa', authTime: VIEUX } });
     const id = (await identifiants(monter(vieux))).find((d) => d.type === 'rectification' && d.etat !== 'traitee')!.id;
-    expect((await traiter(monter(vieux), id, 'rectification_faite')).statusCode).not.toBe(401);
+    expect((await traiter(monter(vieux), id, 'rectifiee')).statusCode).toBe(200);
     expect((await lister(monter(vieux))).statusCode).toBe(200);
   });
   it('sans-double-facteur-401', async () => {
