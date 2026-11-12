@@ -62,6 +62,11 @@ describe('acquisition intracommunautaire', () => {
     for (const t of [Number.NaN, -1, 1.5]) expect(() => qualifierAcquisition(acq({ tauxPdb: t }))).toThrow();
     expect(() => qualifierAcquisition(acq({ nature: 'autre' as 'bien' }))).toThrow(expect.objectContaining({ code: 'entree_invalide' }));
     const q = qualifierAcquisition(acq());
+    expect(lignesAutoliquidation({ code: 'A_VERIFIER', collectee: c(100), deductible: c(100) }, COMPTES)).toEqual([]);
+    for (const [col, ded] of [[0, 100], [100, 0], [100, 50], [Number.NaN, Number.NaN], [-5, -5], [1.5, 1.5]]) {
+      const mal = { code: 'AUTOLIQUIDATION' as const, collectee: col as Centimes, deductible: ded as Centimes };
+      expect(() => lignesAutoliquidation(mal, COMPTES)).toThrow(expect.objectContaining({ code: 'entree_invalide' }));
+    }
     for (const comptes of [
       { collectee: '', deductible: 'B' },
       { collectee: 'A', deductible: '  ' },

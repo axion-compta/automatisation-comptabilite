@@ -67,7 +67,11 @@ export function lignesAutoliquidation(q: QualificationAcquisition, comptes: Comp
   if (comptes.collectee.trim() === '' || comptes.deductible.trim() === '' || comptes.collectee === comptes.deductible) {
     throw new ErreurIntracom();
   }
-  if (q.code !== 'AUTOLIQUIDATION' || (q.collectee === 0 && q.deductible === 0)) return [];
+  if (q.code !== 'AUTOLIQUIDATION') return [];
+  const entier = (n: number): boolean => Number.isSafeInteger(n) && n >= 0;
+  // Une autoliquidation a toujours collectée = déductible : sinon les lignes seraient déséquilibrées.
+  if (!entier(q.collectee) || !entier(q.deductible) || q.collectee !== q.deductible) throw new ErreurIntracom();
+  if (q.collectee === 0) return [];
   return [
     { compte: comptes.deductible, debit: q.deductible, credit: 0 as Centimes },
     { compte: comptes.collectee, debit: 0 as Centimes, credit: q.collectee },
