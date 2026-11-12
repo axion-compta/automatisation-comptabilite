@@ -1,18 +1,19 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1087, fiche L02-T68, SHA de tête relu : 06cca869b4858e352f23d36f291f839b92c6aa86
+PR #1087, fiche L02-T68, SHA de tête relu : 22cd8fecbc5aad7a5cbab522c22bcb50024b1345 (deuxième relecture, après l'avis A CORRIGER au SHA 06cca869).
+
+## Défaut de l'avis précédent : corrigé
+1. ImportReleve.tsx:77 (date absente) : `phraseDejaImporte` (ImportReleve.tsx:31-33) renvoie `dejaImporteSansDate` (« Ce relevé est déjà importé. », clé ajoutée dans e03-releve.ts) quand la date manque ou est illisible. Pas d'aperçu ni de bouton Confirmer (`montreApercu` faux pour `deja_importe`). Le test `deja-importe-zero-ligne` couvre `dejaImporteLe` absent et `'pas-une-date'`.
+   Mutations, toutes rouges puis annulées : repli remplacé par une exception ; repli remplacé par une chaîne vide ; date par défaut inventée quand elle manque.
+
+## Remarques de l'avis précédent
+- :88 (date d'aperçu mal formée) : traitée. `dateSure` affiche la date brute ; le test `apercu-date-mal-formee-reste-affiche` rougit quand on retire `dateSure` (mutation faite).
+- :98 (`key={choix}`) : NON traitée, contrairement à ce que dit le commentaire de correction. ImportReleve.tsx:94 porte toujours `key={choix}`. Reste non bloquant : remplacer par `key={i}` dans une fiche de suite ou au passage.
 
 ## Vérifications
-- Fichiers : les 5 du diff sont dans `fichiers_autorises` ; `Ecran.tsx`, `route.tsx`, `e03.test.tsx`, `api.ts` et le faux serveur ne sont pas touchés.
-- Taille : 298 lignes ajoutées, 1 retirée (limite 300).
-- Les 10 tests nommés sont présents et verts ; `apps/web/src/ecrans/e03` et `packages/textes` : 21 fichiers, 134 tests verts. CI : 9 jobs verts.
-- Mutations (toutes rouges, puis annulées) : aperçu limité à 11 lignes, verrou contre le double clic retiré, Confirmer actif malgré une question restante, contrôle « IMPOSSIBLE » affiché comme « vérifié ».
-- Textes dans e03-releve.ts, vouvoiement ; aucun mot interdit, aucun IBAN, données fictives.
+- Fichiers : les 5 du diff sont dans `fichiers_autorises`. Taille : 295 lignes ajoutées, 1 retirée (limite 300). Garde périmètre verte.
+- Tests ciblés e03 + textes : 21 fichiers, 135 tests verts. CI au SHA de tête : 9 jobs verts.
+- Aucun mot interdit, aucun prix, aucun IBAN, données fictives. Journal : 6 lignes, commence par « # Journal L02-T68 ».
 
-## Défaut
-1. apps/web/src/ecrans/e03/ImportReleve.tsx:77 : `formaterDateAffiche((rapport.dejaImporteLe ?? '').slice(0, 10))` lève « Date invalide : » quand `dejaImporteLe` est absent. Ce champ est optionnel dans `RapportReleve`, donc un rapport `{ etat: 'deja_importe' }` sans date est un cas valable pour le type. Constaté avec un test de sonde (non poussé) : le rendu lève et l'écran entier disparaît, sans message. Le `?? ''` montre que le cas était prévu, mais il mène à l'exception.
-   Correction demandée : sans date (ou avec une date illisible), afficher une phrase sans date, par exemple une clé `dejaImporteSansDate` dans `packages/textes/src/ecrans/e03-releve.ts` (« Ce relevé est déjà importé. »), sans aperçu ni bouton Confirmer. Ajouter dans `deja-importe-zero-ligne` un cas sans `dejaImporteLe` qui échoue avant la correction.
-
-## Remarques (non bloquantes)
-- ImportReleve.tsx:88 : même risque si le service renvoie une ligne d'aperçu dont la date est mal formée (sonde : l'écran lève sur `31/03/2026`). Le serveur fait foi, mais un repli (date brute affichée) éviterait de perdre l'écran.
-- ImportReleve.tsx:98 : `key={choix}` donne des clés en double si deux choix portent le même texte ; `key={i}` suffit.
+## Remarque (non bloquante)
+- Le journal dit « 10 tests nommés » ; il y en a 11 depuis la correction.
