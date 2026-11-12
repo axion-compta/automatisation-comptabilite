@@ -72,7 +72,7 @@ describe('journal de reprise', () => {
     expect(j.mentionsAcceptees).toHaveLength(2);
     expect(j.mentionsAcceptees[1]).toEqual({ mention: 'Écart de pied accepté', par: 'Camille Test', horodatage: '2026-11-05T09:31:00Z' });
     const ok = { mention: 'm', par: 'p', horodatage: '2026-11-05T09:30:00Z' };
-    for (const mauvais of [{ mention: '' }, { par: '  ' }, { horodatage: 'pas une date' }, { horodatage: '2026-13-45T00:00:00Z' }]) {
+    for (const mauvais of [{ mention: '' }, { par: '  ' }, { horodatage: 'pas une date' }, { horodatage: '2026-13-45T00:00:00Z' }, { horodatage: '2026-02-30T00:00:00Z' }]) {
       refus(() => accepterMention(j, { ...ok, ...mauvais }), 'mention_invalide');
     }
   });
