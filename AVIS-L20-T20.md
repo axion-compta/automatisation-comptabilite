@@ -1,14 +1,18 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1160, tête relue : b27d01c18ceeddab4cdbf632f17e1dd3a08e9f8b
+PR #1160, fiche L20-T20, seconde relecture, tête relue : c3fc3a259b8caf422b900b586b0f131072f645f9
 
-Vérifié : 6 fichiers, tous dans `fichiers_autorises` ; 153 lignes (max 200) ; les 3 tests nommés (et la variante « après une action ») sont verts ; schéma inchangé ; profil vide : bloc `a_faire` à l'état `vide` ; aucun mot interdit, secret ni prix ; journal de 7 lignes. CI verte (verifier en attente).
-Mutations tuées : relecture `/compteurs` retirée du faux serveur, somme décalée de 1 (service et faux serveur).
+## Défaut précédent (avis sur b27d01c1) : levé
+1. `packages/faux-serveur/src/domaines/tableau-de-bord.ts:43` : levé. `faux-serveur-meme-compteur` vérifie que chaque bloc autre que `a_faire` a exactement les `donnees` du service et ne porte pas `nombre`. Le mutant (retrait de `b.code === 'a_faire' &&` dans le `map`) est tué.
 
-## Défauts
-1. Mutation survivante, `packages/faux-serveur/src/domaines/tableau-de-bord.ts:43` : retirer `b.code === 'a_faire' &&` dans le `map` laisse les 4 tests verts ; le faux serveur ajoute alors `nombre` dans les `donnees` de tous les blocs (trésorerie, résultat…).
-   Correction demandée dans `packages/contrat/src/__tests__/tableau-de-bord-a-faire.test.ts` (`faux-serveur-meme-compteur`) : vérifier qu'aucun bloc autre que `a_faire` ne porte `nombre` (ou que leurs `donnees` sont identiques à celles du service).
+## Contrôles passés
+- Les 6 fichiers sont dans fichiers_autorises ; 155 lignes sur 200 au plus ; aucune ligne « - - ».
+- Les 3 tests nommés (et la variante « après une action ») sont verts : contrat 3/3, web 1/1.
+- Mutants également tués : somme initialisée à 1, relecture `/compteurs` neutralisée, `nombre` retiré du bloc `a_faire`.
+- Journal : 7 lignes, commence par « # Journal L20-T20 ». Aucun secret, prix ni mot interdit.
+- Aucune régression : la correction ne touche que le fichier de test.
 
-## Remarques (non bloquantes)
-- Fiche contredite par le code réel : `apps/web/src/ecrans/e01/Ecran.tsx:44` affiche encore `enAttente.nombre` dans le bloc « À faire », et « Voir tout (N) » (ligne 81) est calculé directement depuis `/compteurs`. L'assertion DOM de `e01-compteur-egal-pastille` compare donc `/compteurs` à lui-même ; seule l'assertion réseau sur `nombre` porte la règle. V3-TDB-009 n'est pas visible à l'écran : une fiche de suite autorisant `Ecran.tsx` est nécessaire (limite déjà signalée par l'auteur, hors de son périmètre).
-- Branche d'échec du `fetch` interne (`catch`) non testée.
+## Remarques (non bloquantes, déjà signalées)
+- L'écran E01 (`Ecran.tsx`) affiche encore `enAttente.nombre`. V3-TDB-009 n'est donc pas visible à l'écran, et il faut une fiche de suite qui autorise `Ecran.tsx`.
+- La branche `catch` du `fetch` interne n'est pas testée.
+- CI : les jobs `tests` et `verifier` sont rouges, mais pas à cause de cette PR. Le test en échec est `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues`, qui échoue aussi sur origin/main 347401ab.
