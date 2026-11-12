@@ -71,6 +71,20 @@ test('rapport-mal-forme-refuse', () => {
   assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,1,1,x\n`), /pieges_min_pct/);
   assert.throws(() => cloturer('P1', [rap()], seuils, { correction: 'hier' }), /correction/);
   assert.deepEqual(lireRapport(JSON.stringify(rap())).parcours, 'P1');
+  // version non texte, lignes à 6 colonnes, seuils négatifs
+  assert.throws(() => lireRapport(JSON.stringify(rap({ version: 2 }))), /version/);
+  assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,1,1,1,1\n`), /5 colonnes/);
+  assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,-1,1,1\n`), /duree_max_s/);
+  assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,1,-1,1\n`), /gestes_max/);
+  assert.throws(() => lireSeuils(`${ENTETE}\nP1,a,1,1,-1\n`), /pieges_min_pct/);
+});
+
+test('rapport-frontieres-pieges-et-nan', () => {
+  for (const p of [0, 100]) assert.equal(lireRapport(JSON.stringify(mes({ pieges_pct: p }))).mesures.pieges_pct, p);
+  for (const o of [{ duree_s: '1' }, { gestes: '1' }, { pieges_pct: '1' }, { pieges_pct: null }]) {
+    assert.throws(() => lireRapport(JSON.stringify(mes(o))), /mal formé/);
+  }
+  assert.equal(lireRapport(JSON.stringify(mes({ duree_s: 0 }))).mesures.duree_s, 0);
 });
 
 test('sortie-tableau-par-parcours', () => {
