@@ -3,6 +3,7 @@ import { genererFrais } from '../../../donnees-fictives/src/frais.js';
 import { creerServiceVehiculesBareme, ErreurBareme } from '../domaines/vehicules-bareme-service.js';
 import { LigneBareme, ReponseBareme, ReponseVehicules, Vehicule } from '../domaines/vehicules-bareme.js';
 import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../prefixe-routes.js';
 
 const jeu = genererFrais();
 const s = creerServiceVehiculesBareme();
@@ -73,8 +74,8 @@ describe('véhicules et barème en mémoire', () => {
 
   it('openapi-contient-les-routes', () => {
     const doc = genererOpenapi() as { paths: Record<string, Record<string, { operationId?: string }>> };
-    expect(doc.paths['/vehicules']?.get?.operationId).toBe('listerVehicules');
-    expect(doc.paths['/parametres/bareme_ik_voiture']?.get?.operationId).toBe('lireBaremeIk');
+    expect(doc.paths[PREFIXE_ROUTES_SOCIETE + '/vehicules']?.get?.operationId).toBe('listerVehicules');
+    expect(doc.paths[PREFIXE_ROUTES_SOCIETE + '/parametres/bareme_ik_voiture']?.get?.operationId).toBe('lireBaremeIk');
     expect(routesEcritureSansEnTete()).toEqual([]);
   });
 });
