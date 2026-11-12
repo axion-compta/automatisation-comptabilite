@@ -8,7 +8,6 @@ import { e03Releve } from '../../../../../../packages/textes/src/ecrans/e03-rele
 import { controleSolde, dejaImporte, questionImport } from '../../../../../../packages/textes/src/banque/mots.js';
 import { LIGNES_APERCU, ImportReleve, type RapportReleve, type ServiceImportReleve } from '../ImportReleve.js';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
 let racine: Root | null = null;
 afterEach(() => {
   act(() => racine?.unmount());
@@ -35,7 +34,6 @@ async function monter(service: ServiceImportReleve) {
 const texte = () => document.body.textContent ?? '';
 const bouton = (nom: string) => [...document.querySelectorAll('button')].find((b) => b.textContent === nom);
 const clic = (b: HTMLElement | undefined) => act(async () => void b?.click());
-
 describe('ImportReleve', () => {
   it('apercu-dix-lignes-au-plus', async () => {
     expect(LIGNES_APERCU).toBe(10);
@@ -49,7 +47,6 @@ describe('ImportReleve', () => {
     expect(document.querySelector('table')).toBeNull();
     expect(document.querySelector('tbody tr')).toBeNull();
   });
-
   it('question-format-date-deux-reponses', async () => {
     const f = faux({ ...base, questions: [{ code: 'format_date', choix: ['a', 'b'] }] });
     await monter(f.service);
@@ -60,14 +57,12 @@ describe('ImportReleve', () => {
     await clic(bouton(q.reponses[1]!));
     expect(f.appels.repondre).toEqual(['b']);
   });
-
   it('quel-compte-un-bouton-par-compte', async () => {
     await monter(faux({ ...base, questions: [{ code: 'quel_compte', choix: ['Compte courant', 'Compte épargne', 'Caisse'] }] }).service);
     expect(texte()).toContain(questionImport('quel_compte').question);
     for (const nom of ['Compte courant', 'Compte épargne', 'Caisse']) expect(bouton(nom)).toBeDefined();
     expect(document.querySelectorAll('button[data-choix]')).toHaveLength(3);
   });
-
   it('confirmer-bloque-tant-qu-une-question-reste', async () => {
     const avec = faux({ ...base, questions: [{ code: 'quel_compte', choix: [] }] });
     await monter(avec.service);
@@ -81,7 +76,6 @@ describe('ImportReleve', () => {
     await clic(bouton(e03Releve.boutons.confirmer));
     expect(sans.appels.confirmer).toBe(1);
   });
-
   it('rapport-lues-importees-rejetees', async () => {
     await monter(faux({ ...base, compteurs: { lues: 5, importees: 3, rejetees: 2 } }).service);
     const zone = document.querySelector('[role=status]:not([aria-busy])');
@@ -90,7 +84,6 @@ describe('ImportReleve', () => {
     await monter(faux(base).service);
     expect(document.querySelector('[role=status]')?.textContent).toContain('rejetées : 0');
   });
-
   it('solde-impossible-ou-ecart-annonce', async () => {
     await monter(faux({ ...base, controle: 'IMPOSSIBLE' }).service);
     expect(texte()).toContain(controleSolde('impossible'));
@@ -102,14 +95,23 @@ describe('ImportReleve', () => {
     await monter(faux({ ...base, controle: 'ECART' }).service);
     expect(texte()).toContain(controleSolde('ecart'));
   });
-
   it('deja-importe-zero-ligne', async () => {
     await monter(faux({ ...base, etat: 'deja_importe', apercu: [], compteurs: { lues: 0, importees: 0, rejetees: 0 }, dejaImporteLe: '2026-03-31T10:00:00Z' }).service);
     expect(texte()).toContain(dejaImporte('31/03/2026'));
     expect(document.querySelector('table')).toBeNull();
     expect(bouton(e03Releve.boutons.confirmer)).toBeUndefined();
+    for (const dejaImporteLe of [undefined, 'pas-une-date']) {
+      act(() => racine?.unmount());
+      document.body.innerHTML = '';
+      await monter(faux({ ...base, etat: 'deja_importe', apercu: [], dejaImporteLe }).service);
+      expect(texte()).toContain(e03Releve.dejaImporteSansDate);
+      expect(bouton(e03Releve.boutons.confirmer)).toBeUndefined();
+    }
   });
-
+  it('apercu-date-mal-formee-reste-affiche', async () => {
+    await monter(faux({ ...base, apercu: [{ date: '31/03/2026', montant: 100 as never, libelle: 'Libellé fictif' }] }).service);
+    expect(texte()).toContain('31/03/2026');
+  });
   it('annuler-cet-import-un-seul-appel', async () => {
     const f = faux(base);
     await monter(f.service);
@@ -125,7 +127,6 @@ describe('ImportReleve', () => {
     expect(texte()).toContain(e03Releve.annule);
     expect(bouton(e03Releve.boutons.annuler)).toBeUndefined();
   });
-
   it('refus-et-vide-en-mots', async () => {
     for (const motif of ['solde_pdf_faux', 'format_inconnu', 'xml_refuse'] as const) {
       await monter(faux({ ...base, etat: 'refuse', motifRefus: motif, apercu: [] }).service);
@@ -137,7 +138,6 @@ describe('ImportReleve', () => {
     expect(texte()).toContain(e03Releve.vide);
     expect(bouton(e03Releve.boutons.confirmer)).toBeUndefined();
   });
-
   it('panne-du-service-message', async () => {
     const service: ServiceImportReleve = { ...faux(base).service, deposer: () => Promise.reject(new Error('panne')) };
     await monter(service);

@@ -17,6 +17,7 @@ export const e03Releve = {
     format_inconnu: "Le format de ce fichier n'est pas reconnu : il ne peut pas être importé.",
     xml_refuse: "Ce fichier XML n'a pas pu être accepté : il ne peut pas être importé.",
   },
+  dejaImporteSansDate: 'Ce relevé est déjà importé.',
   vide: 'Ce relevé ne contient aucune ligne à importer.',
   annule: 'Cet import est annulé : aucune ligne de ce relevé ne reste dans votre comptabilité.',
   etats: {
