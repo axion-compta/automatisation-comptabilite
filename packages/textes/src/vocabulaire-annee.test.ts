@@ -23,12 +23,26 @@ for (const f of fichiers) {
 }
 
 const EXERCICE = /exercice/i;
-const ANNEE_COMPTABLE = /ann[ée]e comptable/gi;
+const ANNEE_COMPTABLE = /ann[ée]es?[\s\u00a0\u202f]+comptables?/gi;
 // « année comptable » doit être suivie de ses dates : « (du {debut} au {fin}) ».
 const DATES = /^( précédente)? \(du \{debut\} au \{fin\}\)/;
-// Mentions génériques qui existaient avant cette règle (aucune année précise visée) : toute nouvelle mention doit être datée.
-const GENERIQUES = new Set([
-  'e19.ts', 'e39.ts', 'e45.ts', 'n03.ts', 'n04.ts',
+// Mentions (fichier + chemin) qui existaient avant cette règle, hors périmètre de la fiche.
+const GENERIQUES = new Set<string>([
+  'e19.ts e19.etats.aucuneAnnee',
+  'e39.ts e39.champs.exercice_debut',
+  'e39.ts e39.champs.exercice_fin',
+  'e45.ts e45.champs.exercice_debut',
+  'e45.ts e45.champs.exercice_fin',
+  'e45.ts e45.annees',
+  'n03.ts n03.titre',
+  'n03.ts n03.legende',
+  'n03.ts n03.chargement',
+  'n03.ts n03.vide',
+  'n03.ts n03.videDetail',
+  'n03.ts n03.erreur.acces',
+  'n03.ts n03.erreur.autre',
+  'n04.ts n04.etats.aucuneAnnee',
+  'n04.ts n04.etats.introuvable',
 ]);
 
 function titres(): Feuille[] {
@@ -46,8 +60,13 @@ describe('vocabulaire année comptable', () => {
   });
 
   it('annee-comptable-avec-dates', () => {
-    const fautives = toutes.filter((t) => !GENERIQUES.has(t.fichier) && sansDates(t));
+    const fautives = toutes.filter((t) => !GENERIQUES.has(`${t.fichier} ${t.chemin}`) && sansDates(t));
     expect(fautives.map((t) => `${t.fichier} ${t.chemin}`)).toEqual([]);
+    // Liste exacte : une entrée qui n'existe plus ou ne dit plus « année comptable » doit être retirée.
+    for (const cle of GENERIQUES) {
+      const t = toutes.find((x) => `${x.fichier} ${x.chemin}` === cle);
+      expect(t !== undefined && new RegExp(ANNEE_COMPTABLE.source, 'i').test(t.texte), cle).toBe(true);
+    }
     // La règle détecte bien une mention non datée, et accepte une mention datée.
     expect(sansDates({ fichier: 'x', chemin: 'x', texte: 'Votre année comptable est ouverte' })).toBe(true);
     expect(sansDates({ fichier: 'x', chemin: 'x', texte: 'Année comptable (du {debut} au {fin})' })).toBe(false);
