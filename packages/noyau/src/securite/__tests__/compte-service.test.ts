@@ -30,6 +30,10 @@ describe('securite/compte-service', () => {
     expect(decisionPrestataireIa(service(), 'valider', T)).toEqual(refus('valider'));
     expect(decisionPrestataireIa(service(), 'parametrer', T)).toEqual(refus('parametrer'));
     expect(decisionPrestataireIa(service(), 'voir_piece_sensible', T)).toEqual(refus('voir_piece_sensible'));
+    // Le compte et l'horodatage journalisés viennent de l'appel, pas de constantes.
+    const autre = decisionPrestataireIa(service({ personneId: 'svc-ia-2' }), 'valider', '2026-12-01T08:30:00.000Z');
+    expect(autre).toHaveProperty('ligne.compte', 'svc-ia-2');
+    expect(autre).toHaveProperty('ligne.horodatage', '2026-12-01T08:30:00.000Z');
   });
 
   it('cloture-envoi-refuses', () => {
