@@ -13,7 +13,14 @@ export class ErreurConservation extends Error {
 
 export type CategorieConservation =
   | 'pieces' | 'ecritures_livres' | 'fec_declarations' | 'etats_pv'
-  | 'journal_actions' | 'sauvegardes' | 'conversations' | 'signalements';
+  | 'journal_actions' | 'sauvegardes' | 'conversations' | 'signalements'
+  | 'releves_bancaires' | 'rapprochements';
+/** Catégories comptables : une purge demandée depuis la console n'y touche pas pendant la conservation. */
+export const CATEGORIES_COMPTABLES: readonly CategorieConservation[] = [
+  'pieces', 'ecritures_livres', 'fec_declarations', 'etats_pv', 'releves_bancaires', 'rapprochements',
+];
+export const estCategorieComptable = (c: CategorieConservation): boolean => CATEGORIES_COMPTABLES.includes(c);
+
 export type PointDepart = 'cloture_exercice' | 'date_document' | 'fin_contrat';
 export interface RegleConservation {
   pays: string;
@@ -86,4 +93,17 @@ export function purgePossible(
   }
   if (resultat.etat === 'a_confirmer') return { ok: false, code: 'a_confirmer' };
   return comparerDates(resultat.date, contexte.aujourdhui) < 0 ? { ok: true } : { ok: false, code: 'trop_tot' };
+}
+
+const DERIVEES: readonly CategorieConservation[] = ['releves_bancaires', 'rapprochements'];
+
+/** Relevés et rapprochements prennent la durée et le point de départ des pièces, par pays. Une règle explicite est conservée telle quelle. */
+export function etendreReglesBancaires(regles: readonly RegleConservation[]): RegleConservation[] {
+  const derivees: RegleConservation[] = [];
+  for (const categorie of DERIVEES) {
+    for (const r of regles) {
+      if (r.categorie === 'pieces' && !regles.some((x) => x.categorie === categorie && x.pays === r.pays)) derivees.push({ ...r, categorie });
+    }
+  }
+  return [...regles, ...derivees];
 }

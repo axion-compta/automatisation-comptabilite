@@ -3,7 +3,7 @@ import { libelleReverifier, refusEcart, titreRefus } from '../garde-fou.js';
 import { textesTva, type ValeursTva } from '../tva.js';
 
 const IDS = [
-  ...Array.from({ length: 19 }, (_, i) => `CC-T${String(i + 1).padStart(2, '0')}`),
+  ...Array.from({ length: 20 }, (_, i) => `CC-T${String(i + 1).padStart(2, '0')}`),
   'CC-T03A', 'CC-T12M', 'CC-T18M',
 ];
 const V: ValeursTva = { montant: '140,00 €', seuil: '37 500 €', mois: "octobre", nom: 'Garage Fontaine', pays: 'aux États-Unis', nombre: '2', aVerifier: false };
@@ -28,6 +28,14 @@ describe('textes de TVA et garde-fou', () => {
       expect(textesTva[id]?.(v)).toContain(', à vérifier)');
       expect(textesTva[id]?.({ ...v, aVerifier: false })).not.toContain('vérifier');
     }
+  });
+
+  it('texte-cc-t20-expert', () => {
+    const t = textesTva['CC-T20']?.(V) ?? '';
+    expect(t).toContain('octobre');
+    expect(t).toContain("l'expert");
+    expect(t).toContain('suspendue');
+    expect(t).not.toMatch(/\d/);
   });
 
   it('garde-fou-pluriel', () => {
