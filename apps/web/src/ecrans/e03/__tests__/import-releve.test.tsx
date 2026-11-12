@@ -103,7 +103,7 @@ describe('ImportReleve', () => {
     for (const dejaImporteLe of [undefined, 'pas-une-date']) {
       act(() => racine?.unmount());
       document.body.innerHTML = '';
-      await monter(faux({ ...base, etat: 'deja_importe', apercu: [], dejaImporteLe }).service);
+      await monter(faux({ ...base, etat: 'deja_importe', apercu: [], ...(dejaImporteLe === undefined ? {} : { dejaImporteLe }) }).service);
       expect(texte()).toContain(e03Releve.dejaImporteSansDate);
       expect(bouton(e03Releve.boutons.confirmer)).toBeUndefined();
     }
