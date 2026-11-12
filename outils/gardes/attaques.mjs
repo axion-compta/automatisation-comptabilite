@@ -12,7 +12,8 @@ const ID = /^ATK-(\d{2})$/;
 
 // Titres des tests (it / test) d'un fichier, sans les alias.
 export function titresDeTests(texte) {
-  return [...texte.matchAll(/(?<![\w.$])(?:it|test)\s*\(\s*(['"`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]);
+  const code = texte.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' ')).replace(/(^|[^:\w'"`])\/\/.*$/gm, '$1');
+  return [...code.matchAll(/(?<![\w.$])(?:it|test)\s*\(\s*(['"`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]);
 }
 
 export function analyserCatalogue(csv, lire = (f) => readFileSync(f, 'utf8')) {

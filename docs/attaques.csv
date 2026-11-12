@@ -29,6 +29,6 @@ ATK-27,,majeure,a_decrire,,
 ATK-28,,majeure,a_decrire,,
 ATK-29,,majeure,a_decrire,,
 ATK-30,,majeure,a_decrire,,
-ATK-31,PDF au contenu actif ou texte cache,critique,decrite,pdf-avec-javascript-non-execute,apps/serveur/src/pieces/adaptateurs/__tests__/extracteur-pdf.test.ts
-ATK-32,Chaine de CI modifiee par une contribution externe,critique,decrite,rouge : pull_request_target,outils/gardes/test/ci.test.mjs
-ATK-33,Abus de la recuperation du double facteur,critique,decrite,recuperation-recente-bloque,apps/serveur/src/__tests__/reauthentification.test.ts
+ATK-31,PDF au contenu actif ou texte caché,critique,decrite,pdf-avec-javascript-non-execute,apps/serveur/src/pieces/adaptateurs/__tests__/extracteur-pdf.test.ts
+ATK-32,Chaîne de CI modifiée par une contribution externe,critique,decrite,rouge : pull_request_target,outils/gardes/test/ci.test.mjs
+ATK-33,Abus de la récupération du double facteur,critique,decrite,recuperation-recente-bloque,apps/serveur/src/__tests__/reauthentification.test.ts
