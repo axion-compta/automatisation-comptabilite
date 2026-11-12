@@ -41,7 +41,6 @@ test('parcours-clavier-seul', async ({ page }) => {
   await expect(bouton).toBeVisible();
   await atteindre(page, bouton);
   await expect(bouton).toBeFocused();
-  await expect(bouton).toBeFocused();
   const selecteur = page.waitForEvent('filechooser');
   await page.keyboard.press('Enter');
   const fichier = await selecteur;
