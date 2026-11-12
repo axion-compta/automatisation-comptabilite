@@ -38,4 +38,5 @@ export const textesTva: Record<string, TexteTva> = {
   'CC-T18': (v) => `Votre chiffre d'affaires de services approche du seuil (${v.montant} sur ${v.seuil}${verif(v)}).`,
   'CC-T18M': (v) => `Votre chiffre d'affaires de services dépasse le seuil (${v.montant} sur ${v.seuil}${verif(v)}).`,
   'CC-T19': (v) => `La période ${v.mois} contient une opération ${v.pays} à confirmer (${v.montant}).`,
+  'CC-T20': (v) => `La période ${v.mois} comporte des ventes exonérées ou une activité mixte : la préparation de la déclaration de TVA est suspendue et votre dossier est transmis à l'expert, qui la traitera avec vous.`,
 };
