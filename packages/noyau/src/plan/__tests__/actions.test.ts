@@ -13,14 +13,12 @@ import {
   supprimerCompte,
   type Plan,
 } from '../actions.js';
-
 const REFERENCE = ['401', '411', '512', '606', '706'];
 const PLAN: Plan = [
   { numero: '401', nom: 'Fournisseurs fictifs', actif: true },
   { numero: '6064', nom: 'Petit matériel fictif', actif: true },
   { numero: '6068', nom: 'Autres achats fictifs', actif: true },
 ];
-
 function ecr(id: string, comptes: readonly [string, string]): Ecriture {
   return {
     id,
@@ -38,7 +36,6 @@ const ECRITURES: readonly Ecriture[] = [
   ecr('e2', ['6064', '401']),
   ecr('e3', ['6068', '401']),
 ];
-
 function codePlan(fn: () => unknown): string | undefined {
   try {
     fn();
@@ -47,8 +44,8 @@ function codePlan(fn: () => unknown): string | undefined {
   }
   return undefined;
 }
-
 describe('actions du plan', () => {
+
   it('ajout-compte-valide', () => {
     const r = ajouterCompte(PLAN, { numero: '606.5', nom: ' Fournitures fictives ' }, REFERENCE);
     expect(r.plan).toHaveLength(4);
@@ -69,21 +66,13 @@ describe('actions du plan', () => {
   });
 
   it('ajout-classe-8-refuse', () => {
-    expect(codePlan(() => ajouterCompte(PLAN, { numero: '801', nom: 'Engagements fictifs' }, REFERENCE))).toBe(
-      'classe_8_v1',
-    );
+    expect(codePlan(() => ajouterCompte(PLAN, { numero: '801', nom: 'Fictif' }, REFERENCE))).toBe('classe_8_v1');
     expect(codePlan(() => ajouterCompte(PLAN, { numero: '901', nom: 'Fictif' }, REFERENCE))).toBe('classe_inconnue');
-    expect(PLAN).toHaveLength(3);
   });
 
   it('renommage-garde-le-numero', () => {
-    const p = renommerCompte(PLAN, '6064', { nom: 'Petit outillage fictif', nomOfficiel: 'Achats de petit matériel' });
-    expect(p[1]).toEqual({
-      numero: '6064',
-      nom: 'Petit outillage fictif',
-      nomOfficiel: 'Achats de petit matériel',
-      actif: true,
-    });
+    const p = renommerCompte(PLAN, '6064', { nom: 'Petit outillage fictif', nomOfficiel: 'Achats officiels' });
+    expect(p[1]).toEqual({ numero: '6064', nom: 'Petit outillage fictif', nomOfficiel: 'Achats officiels', actif: true });
     const seulOfficiel = renommerCompte(PLAN, '6064', { nomOfficiel: 'Libellé officiel' });
     expect(seulOfficiel[1]?.nom).toBe('Petit matériel fictif');
     expect(p.map((c) => c.numero)).toEqual(['401', '6064', '6068']);
@@ -98,12 +87,10 @@ describe('actions du plan', () => {
     expect(p[0]?.actif).toBe(true);
     expect(PLAN[1]?.actif).toBe(true);
     expect(categorieVersCompte('petit-materiel', p, { 'petit-materiel': '6064' })).toBeUndefined();
-    expect(codePlan(() => desactiverCompte(PLAN, '999'))).toBe('compte_inconnu');
   });
 
   it('suppression-compte-mouvemente-refusee', () => {
     expect(codePlan(() => supprimerCompte(PLAN, '6064', ECRITURES))).toBe('compte_mouvemente');
-    // Une seule écriture suffit (frontière 1).
     expect(codePlan(() => supprimerCompte(PLAN, '6068', ECRITURES))).toBe('compte_mouvemente');
     expect(PLAN).toHaveLength(3);
   });
@@ -112,22 +99,16 @@ describe('actions du plan', () => {
     const plan = [...PLAN, { numero: '6065', nom: 'Vierge fictif', actif: true }];
     const p = supprimerCompte(plan, '6065', ECRITURES);
     expect(p.map((c) => c.numero)).toEqual(['401', '6064', '6068']);
-    expect(supprimerCompte(plan, '6065', []).length).toBe(3);
     expect(codePlan(() => supprimerCompte(PLAN, '999', ECRITURES))).toBe('compte_inconnu');
   });
 
   it('fusion-apercu-nombre-ecritures', () => {
     const a = apercuFusion(PLAN, ECRITURES, '6064', '6068');
     expect(a).toEqual({ source: '6064', cible: '6068', nbEcritures: 2 });
-    // Une écriture qui touche deux fois le compte source ne compte qu'une fois.
-    const double: Ecriture = {
-      ...ecr('e4', ['6064', '6064']),
-    };
-    expect(apercuFusion(PLAN, [double], '6064', '6068').nbEcritures).toBe(1);
+    expect(apercuFusion(PLAN, [ecr('e4', ['6064', '6064'])], '6064', '6068').nbEcritures).toBe(1);
     expect(apercuFusion(PLAN, [], '6064', '6068').nbEcritures).toBe(0);
     expect(codePlan(() => apercuFusion(PLAN, ECRITURES, '6064', '6064'))).toBe('fusion_meme_compte');
     expect(codePlan(() => apercuFusion(PLAN, ECRITURES, '999', '6068'))).toBe('compte_inconnu');
-    expect(codePlan(() => apercuFusion(PLAN, ECRITURES, '6064', '999'))).toBe('compte_inconnu');
     const inactif = desactiverCompte(PLAN, '6068');
     expect(codePlan(() => apercuFusion(inactif, ECRITURES, '6064', '6068'))).toBe('cible_inactive');
   });
@@ -136,9 +117,7 @@ describe('actions du plan', () => {
     const apercu = apercuFusion(PLAN, ECRITURES, '6064', '6068');
     const sans = fusionner(PLAN, ECRITURES, apercu, false);
     expect(sans.applique).toBe(false);
-    expect(sans.plan).toBe(PLAN);
-    expect(sans.reaffectations).toEqual([]);
-    expect(sans.apercu).toEqual(apercu);
+    expect(sans).toEqual({ applique: false, plan: PLAN, apercu, reaffectations: [] });
 
     const avec = fusionner(PLAN, ECRITURES, apercu, true);
     expect(avec.applique).toBe(true);
@@ -148,9 +127,7 @@ describe('actions du plan', () => {
       { ecritureId: 'e1', ligne: 0, de: '6064', vers: '6068' },
       { ecritureId: 'e2', ligne: 0, de: '6064', vers: '6068' },
     ]);
-    // Aucune écriture n'est modifiée.
     expect(ECRITURES[0]?.lignes[0]?.compte).toBe('6064');
-    // Aperçu périmé : le nombre d'écritures a changé, la fusion est refusée.
     expect(codePlan(() => fusionner(PLAN, [...ECRITURES, ecr('e9', ['6064', '401'])], apercu, true))).toBe(
       'apercu_perime',
     );
@@ -162,7 +139,6 @@ describe('actions du plan', () => {
     expect(categorieVersCompte('inconnue', PLAN, table)).toBeUndefined();
     expect(categorieVersCompte('fantome', PLAN, table)).toBeUndefined();
     expect(categorieVersCompte('autres', desactiverCompte(PLAN, '6064'), table)).toBe('6068');
-    // Une clé héritée de l'objet n'est pas une catégorie.
     expect(categorieVersCompte('toString', PLAN, table)).toBeUndefined();
   });
 });

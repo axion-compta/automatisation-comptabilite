@@ -1,7 +1,6 @@
 // Actions sur le plan comptable : fonctions pures sur un plan immuable. Aucune action ne modifie une écriture.
 import type { Ecriture } from '../ecritures/modele.js';
 import { normaliserCompte, verifierCompteMvp } from './comptes.js';
-
 export interface CompteDuPlan {
   numero: string;
   nom: string;
@@ -9,9 +8,7 @@ export interface CompteDuPlan {
   nomOfficiel?: string;
   actif: boolean;
 }
-
 export type Plan = readonly CompteDuPlan[];
-
 export type CodeErreurPlan =
   | 'compte_existant'
   | 'compte_inconnu'
@@ -20,7 +17,6 @@ export type CodeErreurPlan =
   | 'fusion_meme_compte'
   | 'cible_inactive'
   | 'apercu_perime';
-
 export class ErreurPlan extends Error {
   override name = 'ErreurPlan';
   readonly code: CodeErreurPlan;
@@ -29,44 +25,26 @@ export class ErreurPlan extends Error {
     this.code = code;
   }
 }
-
 export type Avertissement = 'hors_plan_reference';
-
-export interface ApercuFusion {
-  source: string;
-  cible: string;
-  nbEcritures: number;
-}
-
-export interface Reaffectation {
-  ecritureId: string;
-  ligne: number;
-  de: string;
-  vers: string;
-}
-
+export interface ApercuFusion { source: string; cible: string; nbEcritures: number }
+export interface Reaffectation { ecritureId: string; ligne: number; de: string; vers: string }
 function nomPropre(nom: string): string {
-  const net = nom.trim();
-  if (net === '') throw new ErreurPlan('nom_vide');
-  return net;
+  if (nom.trim() === '') throw new ErreurPlan('nom_vide');
+  return nom.trim();
 }
-
 function trouver(plan: Plan, numero: string): CompteDuPlan {
   const compte = plan.find((c) => c.numero === numero);
   if (compte === undefined) throw new ErreurPlan('compte_inconnu');
   return compte;
 }
-
 function remplacer(plan: Plan, numero: string, change: Partial<CompteDuPlan>): Plan {
   trouver(plan, numero);
   return plan.map((c) => (c.numero === numero ? { ...c, ...change } : c));
 }
-
-/** Nombre d'écritures distinctes qui touchent le compte. */
+/** Écritures qui touchent le compte (chacune une seule fois). */
 function ecrituresDuCompte(ecritures: readonly Ecriture[], numero: string): Ecriture[] {
   return ecritures.filter((e) => e.lignes.some((l) => l.compte === numero));
 }
-
 /** Ajoute un compte. Un numéro hors de la liste de référence est accepté avec un avertissement. */
 export function ajouterCompte(
   plan: Plan,
@@ -83,7 +61,6 @@ export function ajouterCompte(
     avertissements: connu ? [] : ['hors_plan_reference'],
   };
 }
-
 /** Renomme (nom simple, nom officiel ou les deux) ; le numéro ne change jamais. */
 export function renommerCompte(
   plan: Plan,
@@ -95,18 +72,15 @@ export function renommerCompte(
   if (noms.nomOfficiel !== undefined) change.nomOfficiel = nomPropre(noms.nomOfficiel);
   return remplacer(plan, numero, change);
 }
-
 export function desactiverCompte(plan: Plan, numero: string): Plan {
   return remplacer(plan, numero, { actif: false });
 }
-
 /** Refus codé `compte_mouvemente` dès qu'une écriture touche le compte. */
 export function supprimerCompte(plan: Plan, numero: string, ecritures: readonly Ecriture[]): Plan {
   trouver(plan, numero);
   if (ecrituresDuCompte(ecritures, numero).length > 0) throw new ErreurPlan('compte_mouvemente');
   return plan.filter((c) => c.numero !== numero);
 }
-
 export function apercuFusion(
   plan: Plan,
   ecritures: readonly Ecriture[],
@@ -118,7 +92,6 @@ export function apercuFusion(
   if (!trouver(plan, cible).actif) throw new ErreurPlan('cible_inactive');
   return { source, cible, nbEcritures: ecrituresDuCompte(ecritures, source).length };
 }
-
 /**
  * Sans confirmation, rend l'aperçu et rien d'autre. Confirmée, désactive le compte source et liste les
  * réaffectations de lignes à faire ; les écritures elles-mêmes ne sont pas modifiées.
@@ -142,7 +115,6 @@ export function fusionner(
   }
   return { applique: true, plan: desactiverCompte(plan, apercu.source), apercu: courant, reaffectations };
 }
-
 /** Compte actif correspondant à une catégorie de dépense ; jamais un compte désactivé ou absent du plan. */
 export function categorieVersCompte(
   categorie: string,
