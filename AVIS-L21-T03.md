@@ -1,23 +1,17 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1192, fiche L21-T03, tête relue : 93da07626a7670aa51514299b3f333d82986b91a
+PR n°1192 (L21-T03), seconde relecture au SHA de tête bbc77c784af7e2890397f8bdd5fd4ced73ad8fad.
 
-## Défauts
-1. Mutant survivant, contrôle du type de `actif`. `packages/noyau/src/securite/dernier-admin.ts:29` : supprimer `if (typeof c.actif !== 'boolean') invalide();` laisse les 7 tests verts. Avec cette mutation, `{ personneId: 'alice@exemple.fr', actif: 'false' }` sur le dernier administrateur est accepté et rend un état corrompu (`actif: 'false'`, valeur vraie), ce qui contourne la protection.
-   Correction demandée : test qui attend `ErreurSecurite` pour `actif` non booléen (`'false'`, `0`, `null`).
-2. Mutant survivant, motif ou référence absents ou non textuels. `dernier-admin.ts:57` : retirer `typeof v !== 'string' ||` dans `vide` laisse les tests verts. `motif: undefined` lèverait alors une `TypeError` au lieu de rendre `entree_invalide`.
-   Correction demandée : ajouter `{ motif: undefined }`, `{ reference: null }` et `{ motif: 3 }` aux cas de `recuperation-sans-motif-refusee`, avec le résultat `entree_invalide`.
-3. Mutant survivant, rôle du demandeur invalide. `dernier-admin.ts:61` : retirer `|| !estRole(demande.role)` laisse les tests verts (un rôle inconnu rend `role_insuffisant` au lieu de lever `argument_invalide`).
-   Correction demandée : test avec `role: 'roi'` qui attend `ErreurSecurite`.
+## Défauts précédents (tous levés, vérifiés par mutation)
+1. Les valeurs non booléennes de `actif` (`'false'`, `0`, `null`) sont testées. Retirer `dernier-admin.ts:29` fait échouer le test.
+2. Les cas `motif: undefined`, `reference: null` et `motif: 3` sont testés. Retirer `typeof v !== 'string' ||` (ligne 57) fait échouer le test.
+3. Le rôle `'roi'` du demandeur est testé. Retirer `|| !estRole(demande.role)` (ligne 61) fait échouer le test.
 
-## Vérifications faites
-- Fichiers : les 4 du diff sont dans `fichiers_autorises`. Taille 179 lignes (max 180).
-- 7 tests nommés présents ; 7/7 passent en local.
-- Mutations qui rougissent : `x.actif &&` retiré ; `estRole(c.role)` retiré ; `trim()` retiré ; `canal === 'voix'` retiré ; `cible.actif = true` retiré ; `estCanal` retiré.
-- Ajout du champ `beneficiaire` : justifié (la fiche le cite dans la trace sans le fournir), noté au journal.
-- Aucun mot interdit, aucun prix, aucun secret ; données fictives (@exemple.fr).
+## Remarque précédente
+- Prise en compte : les entrées `null` sont testées. Les mutations des gardes `Array.isArray(etat)`, `Array.isArray(changements)` et `demande === null` font échouer le test.
 
-## Remarques (non bloquantes)
-- Les gardes `Array.isArray(etat/changements)` et `demande === null` survivent aussi aux mutations (une `TypeError` serait levée de toute façon) ; un test sur `null` les fixerait.
-- CI : job `verifier` encore en attente ; les autres jobs sont verts.
-- Fiche sensible : fusion par Will seul.
+## Pas de régression
+- Le dernier commit (« wip: taille ») ne retire que des commentaires et des lignes vides du test, aucune assertion.
+- 7 tests sur 7 réussissent en local. Le diff fait 180 lignes, soit pile le maximum ; le job `gardes` est vert. Les fichiers sont dans `fichiers_autorises`. Le journal fait 4 lignes. Les données sont fictives (@exemple.fr).
+- CI : tous les jobs sont verts sauf `tests` (et donc `verifier`). Le seul test en échec est `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Il échoue de la même façon sur `origin/main` (conflit entre L22-T30 n°1215 et L25-T01 n°1146) : ce n'est pas un défaut de l'auteur. Il faut réparer main, puis relancer la CI.
+- La fiche est sensible : seul Will peut la fusionner.
