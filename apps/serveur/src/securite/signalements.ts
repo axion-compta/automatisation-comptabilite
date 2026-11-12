@@ -42,7 +42,8 @@ export async function enregistrerSignalement(
     if (typeof v !== 'string' || v.trim() === '') throw new ErreurSignalement('champ_vide');
   }
   const s: Signalement = {
-    ...demande, signalementId: nouvelId(), etat: 'ouvert', creeLe: maintenant.toISOString(),
+    signalementId: nouvelId(), societeId: demande.societeId, personneId: demande.personneId,
+    nature: demande.nature, correlationId: demande.correlationId, etat: 'ouvert', creeLe: maintenant.toISOString(),
   };
   await depot.ajouter(s);
   return s;

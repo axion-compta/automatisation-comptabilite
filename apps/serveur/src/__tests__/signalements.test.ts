@@ -4,7 +4,7 @@ import { creerFauxAlertes } from '../../../../packages/noyau/src/exploitation/po
 import { rapportOutilErreurs } from '../../../../packages/noyau/src/securite/signalements.js';
 import {
   ErreurSignalement, TEXTES_SIGNALEMENT, dureeEnVigueur, enregistrerSignalement, inscrirePurgeSignalements, purgerSignalements,
-  type AlerteSignalements, type LigneParametre, type Signalement,
+  type AlerteSignalements, type DemandeSignalement, type LigneParametre, type Signalement,
 } from '../securite/signalements.js';
 
 const CORR = '123e4567-e89b-42d3-a456-426614174000';
@@ -44,7 +44,8 @@ describe('signalements', () => {
     const { p, lignes } = monde([], {});
     const rapport = rapportOutilErreurs({ correlation_id: CORR, route: '/ecritures/{id}', code: 'ERREUR' });
     const s = await enregistrerSignalement(
-      p.depot, { societeId: 'societe-a', personneId: 'personne-1', nature: 'affichage', correlationId: rapport.correlation_id },
+      p.depot, { societeId: 'societe-a', personneId: 'personne-1', nature: 'affichage', correlationId: rapport.correlation_id,
+        ecritureId: 'ecr-1' } as DemandeSignalement, // clé en trop : ne doit pas être enregistrée
       new Date(MAINTENANT), () => 'sig-1',
     );
     expect(s.correlationId).toBe(rapport.correlation_id);
