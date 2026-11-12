@@ -8,8 +8,11 @@ import { calculerChiffres, type Chiffres } from '../../../noyau/src/tableau-de-b
 import { assemblerTableau, blocTva, type EnveloppeBloc } from '../../../noyau/src/tableau-de-bord/blocs.js';
 import { calculerAnneau, type SousIndicateur } from '../../../noyau/src/tableau-de-bord/anneau.js';
 import { BLOCS } from './tableau-de-bord.js';
+import { creerServiceAlertes } from './alertes-service.js';
 
 export type Profil = 'pleine' | 'vide';
+/** Source du nombre « à faire » : par défaut les alertes ouvertes des compteurs du menu (même fonction que `/compteurs`). */
+export type OptionsServiceTableau = { nombreAFaire?: () => number };
 export type OptionsTableau = { vue?: Vue | undefined; profil?: Profil | undefined };
 const eur = (c: number) => ({ centimes: c as number, devise: 'EUR' as const });
 const montants = (c: Chiffres) => ({ ca: eur(c.ca), charges: eur(c.charges), resultatProvisoire: eur(c.resultatProvisoire), tresorerie: eur(c.tresorerie), enAttente: { nombre: c.enAttente.nombre, montant: eur(c.enAttente.montant) } });
@@ -20,9 +23,11 @@ const versNoyau = (e: EcritureCompta): Ecriture => ({
 });
 
 /** Service en mémoire pur : tous les calculs viennent du noyau (TB-R1). Le « jour » est celui du jeu fictif. */
-export function creerServiceTableauDeBord() {
+export function creerServiceTableauDeBord(options: OptionsServiceTableau = {}) {
   const compta = genererCompta().societes;
   const interfaces = genererInterface().profils;
+  const alertes = creerServiceAlertes();
+  const nombreAFaire = options.nombreAFaire ?? ((): number => Object.values(alertes.compteurs().body.parEntree).reduce((somme, c) => somme + c.ouvertes, 0));
   const societe = (p: Profil): SocieteCompta => {
     const s = compta.find((x) => x.profil === p);
     if (!s) throw new Error('PROFIL_ABSENT');
@@ -51,7 +56,7 @@ export function creerServiceTableauDeBord() {
       tresorerie: sur(() => ({ tresorerie: eur(chiffres.tresorerie) })),
       argent_entrant_sortant: sur(() => ({ ca: eur(chiffres.ca), charges: eur(chiffres.charges) })),
       resultat: sur(() => ({ resultatProvisoire: eur(chiffres.resultatProvisoire) })),
-      a_faire: sur(() => ({ enAttente: { nombre: chiffres.enAttente.nombre, montant: eur(chiffres.enAttente.montant) } })),
+      a_faire: sur(() => ({ nombre: nombreAFaire(), enAttente: { nombre: chiffres.enAttente.nombre, montant: eur(chiffres.enAttente.montant) } })),
     };
     const blocs = (assemblerTableau(periode, calculs) as EnveloppeBloc<Record<string, unknown>>[]).map((b) =>
       b.code === 'tva_impots' ? blocTva(periode, 0, () => undefined) : b,
