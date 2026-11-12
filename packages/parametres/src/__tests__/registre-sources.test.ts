@@ -65,6 +65,8 @@ describe('registre-sources', () => {
     expect(alertesConsultation(reg, '2026-01-01', 0)).toEqual([]);
     expect(() => alertesConsultation(reg, '2026-04-01', -1)).toThrow();
     expect(() => alertesConsultation(reg, '2026-04-01', NaN)).toThrow();
+    expect(() => alertesConsultation(reg, '2026-04-01', Infinity)).toThrow();
+    expect(() => alertesConsultation(reg, '2026-04-01', -Infinity)).toThrow();
     expect(() => alertesConsultation(reg, 'x', SEUIL)).toThrow();
   });
   it('chaque-source-de-catalogue-a-son-entree', () => {
