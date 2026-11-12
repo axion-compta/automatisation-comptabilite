@@ -1,21 +1,19 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1191, fiche L20-T29 (sensible : fusion par Will seul), relue au SHA de tête 3415d4401f20373bae593b08c687045be90052d1.
+PR n°1191 (L20-T29), seconde relecture au SHA de tête 1b40ee901c9c6516c2e6ec91a4cf23cdd4723a4a.
 
-## Vérifié
-- Fichiers : les 4 du diff sont dans `fichiers_autorises`. Taille : 192 lignes, pour une limite de 200.
-- Tests ciblés : 5 tests sur 5 réussis. `controles-structure.ts` n'est pas modifié et le contrôle FEC-S07 de l'export est testé.
-- Aucun mot interdit, aucun secret, aucun prix, données fictives. Le journal fait 8 lignes.
-- CI : tous les jobs sont verts, sauf `verifier` encore en file.
-- Mutation qui fait échouer un test : retrait du contrôle `colonnesIdentiques`.
+## Défauts précédents (tous levés, vérifiés par mutation)
+1. Borne C0 : les refus de 0x0B, 0x0C et 0x1F, et l'acceptation de 0x20, sont testés. Les mutations `code < 32` → `< 2` et → `< 31` font échouer le test.
+2. Borne DEL : le refus de 0x7F et l'acceptation de 0x7E sont testés. Les mutations `>= 127` → `>= 128` et → `>= 126` font échouer le test.
+3. Borne C1 : le refus de 0x9F et l'acceptation de 0xA0 sont testés. Les mutations `<= 159` → `<= 158` et → `<= 160` font échouer le test.
+4. Table Latin-9 : les 8 octets sont décodés. Retirer n'importe laquelle des 8 entrées fait échouer `latin9-accepte`.
+5. Séparateur ambigu : l'en-tête `x\ty|z` est testé. Trois mutations font chacune échouer le test : `=== 1` → `>= 1`, `find` → `return undefined`, `find` → `compatibles[0]`.
 
-## Défauts (mutations qui survivent : les 5 tests restent verts)
-1. `packages/noyau/src/fec/lecture-tiers.ts:23` (`estControle`), borne C0. Remplacer `code < 32` par `code < 2` ne fait échouer aucun test : seuls les octets 0x00 et 0x01 sont testés. Ajouter un cas de refus avec 0x1F (et 0x0B ou 0x0C), et un cas accepté avec 0x20.
-2. Même ligne, borne DEL. Remplacer `code >= 127` par `code >= 128` ne fait échouer aucun test : 0x7F n'est pas testé. Ajouter un refus avec 0x7F et un cas accepté avec 0x7E (`~`).
-3. Même ligne, borne haute C1. Remplacer `code <= 159` par `code <= 158` ne fait échouer aucun test : seul 0x80 est testé. Ajouter un refus avec 0x9F et un cas Latin-9 accepté avec 0xA0.
-4. `lecture-tiers.ts:29` (table `LATIN9`) : seul 0xA4 (€) est testé. Retirer `0xbd: 'œ'` (ou toute autre entrée sauf €) ne fait échouer aucun test. Le test `latin9-accepte` doit décoder les 8 octets propres au Latin-9 (Š š Ž ž Œ œ Ÿ €).
-5. `lecture-tiers.ts:47-48` (`detecterSeparateur`) : le cas où la tabulation et la barre verticale donnent toutes deux le bon nombre de colonnes n'est pas testé. Remplacer `compatibles.length === 1` par `>= 1`, ou remplacer la ligne `find` par `return undefined`, ne fait échouer aucun test. Ajouter un en-tête ambigu : avec la bonne lecture, le séparateur attendu doit être retenu ; sinon, refus `format_fec_inconnu`.
+## Pas de régression
+- Les octets 0x00 et 0x01 restent testés, désormais dans la boucle. Le commentaire sur la double marque d'ordre est corrigé.
+- 5 tests sur 5 réussissent en local. Le diff fait 197 lignes pour un maximum de 200. Les fichiers sont dans `fichiers_autorises`. Le journal fait 8 lignes. Aucun mot interdit (« Prix » est un libellé de test).
+- CI : tous les jobs sont verts sauf `tests` (et donc `verifier`). Le seul test en échec est `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Il échoue de la même façon sur `origin/main` (conflit entre L22-T30 n°1215 et L25-T01 n°1146) : ce n'est pas un défaut de l'auteur. Il faut réparer main, puis relancer la CI.
 
 ## Remarques (ne bloquent pas)
-- Une double marque d'ordre est refusée par le contrôle des en-têtes (U+FEFF n'est pas classé comme contrôle), pas par une règle à part. Le comportement attendu est obtenu, mais le commentaire de la ligne 55 le présente comme un cas de `estControle`.
-- Le journal dit déjà « bornes des contrôles » vérifiées à la main, ce que les mutations 1 à 3 démentent.
+- Un en-tête ambigu dont aucune lecture ne donne les en-têtes exacts n'est pas testé (le refus attendu est `format_fec_inconnu`).
+- La fiche est sensible : seul Will peut la fusionner.
