@@ -1,8 +1,8 @@
+import { implementerFraisLectureIa } from '../domaines/frais-lecture-ia.js';
 import type { OptionsModules, OptionsRouteur, OsContrat } from './types.js';
 
-/** Implémentation des modules du lot 11 (rien pour l'instant). */
+/** Implémentation des modules du lot 11 : lecture du ticket par l'IA (faux fournisseur). */
 export function implementerLot11(os: OsContrat, options: OptionsRouteur & OptionsModules) {
-  void os;
   void options;
-  return {};
+  return { fraisLectureIa: implementerFraisLectureIa(os) };
 }
