@@ -26,6 +26,7 @@ export interface RegleOrgane {
 export interface SocieteOrgane {
   forme: Forme;
   nbAssocies: number;
+  /** Vrai seulement si l'associé unique est une personne physique, seul dirigeant (gérant ou président). */
   dirigeantAssocie?: boolean;
   dateReference: string;
 }

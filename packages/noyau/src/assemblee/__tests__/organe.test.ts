@@ -10,9 +10,9 @@ const REGLES: RegleOrgane[] = [
   r({ forme: 'EI', cas: 'defaut', organe: 'exploitant' }),
   r({ forme: 'EURL', cas: 'associe_unique_dirigeant', organe: 'associe_unique', modes: ['decision_associe_unique'], depotVautApprobation: true }),
   r({ forme: 'EURL', cas: 'associe_unique_non_dirigeant', organe: 'associe_unique', modes: ['decision_associe_unique'] }),
-  r({ forme: 'SASU', cas: 'associe_unique_dirigeant', organe: 'associe_unique', modes: ['decision_associe_unique'] }),
+  r({ forme: 'SASU', cas: 'associe_unique_dirigeant', organe: 'associe_unique', modes: ['decision_associe_unique'], depotVautApprobation: true }),
   r({ forme: 'SASU', cas: 'associe_unique_non_dirigeant', organe: 'associe_unique', modes: ['decision_associe_unique'] }),
-  r({ forme: 'SARL', cas: 'defaut', organe: 'assemblee_generale', modes: ['assemblee', 'consultation_ecrite'] }),
+  r({ forme: 'SARL', cas: 'defaut', organe: 'assemblee_generale', modes: ['assemblee'] }),
   r({ forme: 'SAS', cas: 'defaut', organe: 'collectivite_associes', modes: ['assemblee', 'consultation_ecrite', 'acte_unanime'], selonStatuts: true }),
   r({ forme: 'SCI', cas: 'sans_ag', organe: 'gerant', modes: ['rapport_gerant'] }),
   r({ forme: 'SCI', cas: 'avec_ag', organe: 'assemblee_generale', modes: ['assemblee', 'consultation_ecrite'], selonStatuts: true }),
@@ -32,7 +32,7 @@ describe("organe d'approbation des comptes", () => {
   it('sarl-assemblee-annuelle', () => {
     const o = organeApprobation(soc({ forme: 'SARL' }), sans, REGLES);
     expect(o.organe).toBe('assemblee_generale');
-    expect(o.modes).toEqual(['assemblee', 'consultation_ecrite']);
+    expect(o.modes).toEqual(['assemblee']);
     expect(o.source).toBe('source-SARL-defaut');
   });
 
@@ -54,7 +54,8 @@ describe("organe d'approbation des comptes", () => {
   it('associe-unique-dirigeant-depot-vaut-approbation-selon-cas', () => {
     expect(organeApprobation(soc({ forme: 'EURL', nbAssocies: 1, dirigeantAssocie: true }), sans, REGLES).depotVautApprobation).toBe(true);
     expect(organeApprobation(soc({ forme: 'EURL', nbAssocies: 1, dirigeantAssocie: false }), sans, REGLES).depotVautApprobation).toBe(false);
-    expect(organeApprobation(soc({ forme: 'SASU', nbAssocies: 1, dirigeantAssocie: true }), sans, REGLES).depotVautApprobation).toBe(false);
+    expect(organeApprobation(soc({ forme: 'SASU', nbAssocies: 1, dirigeantAssocie: true }), sans, REGLES).depotVautApprobation).toBe(true);
+    expect(organeApprobation(soc({ forme: 'SASU', nbAssocies: 1 }), sans, REGLES).depotVautApprobation).toBe(false);
   });
 
   it('sci-sans-ag-rapport-du-gerant', () => {
@@ -75,7 +76,7 @@ describe("organe d'approbation des comptes", () => {
 
   it('visioconference-propose-si-statuts', () => {
     const s = soc({ forme: 'SARL' });
-    expect(organeApprobation(s, { visioconference: true }, REGLES).modes).toEqual(['assemblee', 'consultation_ecrite', 'visioconference']);
+    expect(organeApprobation(s, { visioconference: true }, REGLES).modes).toEqual(['assemblee', 'visioconference']);
     expect(organeApprobation(s, { visioconference: false }, REGLES).modes).not.toContain('visioconference');
     expect(organeApprobation(s, sans, REGLES).modes).not.toContain('visioconference');
     const sasConsult = organeApprobation(soc({ forme: 'SAS' }), { modesPrevus: ['consultation_ecrite'], visioconference: true }, REGLES);

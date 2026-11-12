@@ -13,7 +13,7 @@ describe("catalogue de l'organe d'approbation", () => {
     const cles = REGLES_ASSEMBLEE.map((g) => `${g.forme}/${g.cas}`);
     expect(new Set(cles).size).toBe(cles.length);
     for (const f of ['EI', 'EURL', 'SASU', 'SARL', 'SAS', 'SCI']) expect(cles.some((c) => c.startsWith(`${f}/`))).toBe(true);
-    expect(REGLES_ASSEMBLEE.filter((g) => g.depotVautApprobation).map((g) => `${g.forme}/${g.cas}`)).toEqual(['EURL/associe_unique_dirigeant']);
+    expect(REGLES_ASSEMBLEE.filter((g) => g.depotVautApprobation).map((g) => `${g.forme}/${g.cas}`)).toEqual(['EURL/associe_unique_dirigeant', 'SASU/associe_unique_dirigeant']);
     expect(REGLES_ASSEMBLEE.find((g) => g.forme === 'SCI' && g.cas === 'sans_ag')?.modes).toEqual(['rapport_gerant']);
   });
 });
