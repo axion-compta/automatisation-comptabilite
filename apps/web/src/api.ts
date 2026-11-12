@@ -2,6 +2,7 @@ import { DecodeurFlux } from '../../../packages/contrat/src/chat/flux.js';
 import type { DemandeMessage, Evenement } from '../../../packages/contrat/src/chat/evenements.js';
 import { cheminSociete } from '../../../packages/contrat/src/prefixe-routes.js';
 import { Pourquoi, PropositionVue } from '../../../packages/contrat/src/domaines/chat-propositions.js';
+import { ResultatDepot } from '../../../packages/contrat/src/domaines/depot.js';
 export type Panne = '' | '403' | '409' | '423';
 /** statut 0 = le serveur n'a pas répondu (réseau). */
 export type Reponse = { statut: number; corps: unknown };
@@ -189,3 +190,37 @@ async function agirSurProposition(societe: string, id: string, action: 'applique
 export const appliquerProposition = (societe: string, id: string, cle: string) => agirSurProposition(societe, id, 'appliquer', cle);
 export const annulerProposition = (societe: string, id: string, cle: string) => agirSurProposition(societe, id, 'annuler', cle);
 export const lirePourquoi = (societe: string, id: string, signal?: AbortSignal) => lire(route(societe, id, 'propositions/{id}/pourquoi'), Pourquoi, signal);
+
+const FICHIERS_PAR_LOT = 20;
+const HEX = (o: Uint8Array): string => Array.from(o, (b) => b.toString(16).padStart(2, '0')).join('');
+const octets = async (f: File): Promise<Uint8Array> => new Uint8Array(await f.arrayBuffer());
+/** Clé d'idempotence d'un lot : SHA-256 hexadécimal du contenu concaténé des fichiers. */
+async function cleDuLot(lot: File[]): Promise<string> {
+  const parts = await Promise.all(lot.map(octets));
+  const tout = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  parts.reduce((debut, p) => (tout.set(p, debut), debut + p.length), 0);
+  return HEX(new Uint8Array(await crypto.subtle.digest('SHA-256', tout)));
+}
+/** Dépose des pièces par lots de 20 au plus (POST /pieces) ; résultats dans l'ordre des fichiers. */
+export async function deposer(fichiers: File[], canal: 'glisser' | 'selecteur'): Promise<ResultatDepot[]> {
+  const resultats: ResultatDepot[] = [];
+  for (let i = 0; i < fichiers.length; i += FICHIERS_PAR_LOT) {
+    const lot = fichiers.slice(i, i + FICHIERS_PAR_LOT);
+    const form = new FormData();
+    form.append('canal', canal);
+    for (const f of lot) form.append('fichiers', f);
+    let r: Response;
+    try {
+      r = await fetch(new URL('/pieces', location.origin).toString(), { method: 'POST', headers: { 'idempotency-key': await cleDuLot(lot) }, body: form });
+    } catch {
+      throw new ErreurEcriture(0, 'reseau');
+    }
+    const recu: unknown = await r.json().catch(() => undefined);
+    if (!r.ok) throw new ErreurEcriture(r.status, r.status >= 500 ? 'serveur' : 'reponse_invalide', recu);
+    const liste = (recu as { body?: { resultats?: unknown } } | null | undefined)?.body?.resultats;
+    const lus = Array.isArray(liste) ? liste.map((x) => ResultatDepot.safeParse(x)) : [];
+    if (lus.length !== lot.length || !lus.every((v) => v.success)) throw new ErreurEcriture(r.status, 'reponse_invalide');
+    for (const v of lus) if (v.success) resultats.push(v.data);
+  }
+  return resultats;
+}
