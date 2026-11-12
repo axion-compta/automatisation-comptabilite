@@ -17,7 +17,7 @@ const monter = (avecJeton: boolean) => {
   return a;
 };
 
-const ECRITURE = { 'idempotency-key': 'cle-fictive-isolation-01', 'content-type': 'application/json' };
+const ECRITURE = { 'idempotency-key': 'valeur-factice-de-test', 'content-type': 'application/json' };
 /** Les cinq routes du profil : méthode, suffixe, corps valide (pour que le refus vienne de la société, pas de la validation). */
 const ROUTES: ReadonlyArray<readonly [string, string, object | undefined]> = [
   ['GET', '/profil', undefined],

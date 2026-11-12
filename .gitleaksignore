@@ -1,0 +1,2 @@
+# Faux positif confirmé : clé d idempotence fictive d un test, remplacée au commit suivant
+77471fd530405740fd8e564fdec82337315a2202:apps/serveur/src/__tests__/profil-isolation.test.ts:generic-api-key:20
