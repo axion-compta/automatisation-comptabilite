@@ -1,10 +1,11 @@
 // Essais de parcours (V3-UX-086) : lit des rapports JSON d'essai menés hors du dépôt, calcule vert ou rouge.
-// Aucune IA lancée ici. Usage : node outils/essais/parcours.mjs <rapport.json>... [--clore P1]
+// Aucune IA lancée ici. Usage : node outils/essais/parcours.mjs <rapport.json>... [--clore P1 [--correction AAAA-MM-JJ]]
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 export const ENTETE = 'parcours,ecran_depart,duree_max_s,gestes_max,pieges_min_pct';
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const dateValide = (d) => typeof d === 'string' && DATE.test(d) && new Date(d).toISOString().slice(0, 10) === d;
 const nombre = (v) => typeof v === 'number' && Number.isFinite(v);
 
 export function lireSeuils(texte) {
@@ -29,7 +30,7 @@ export function lireRapport(texte) {
   try { r = JSON.parse(texte); } catch { throw new Error('rapport mal formé (JSON)'); }
   if (r === null || typeof r !== 'object' || Array.isArray(r)) throw new Error('rapport mal formé (objet attendu)');
   if (typeof r.parcours !== 'string' || r.parcours === '') throw new Error('rapport mal formé : parcours');
-  if (typeof r.date !== 'string' || !DATE.test(r.date) || Number.isNaN(Date.parse(r.date))) throw new Error('rapport mal formé : date AAAA-MM-JJ');
+  if (!dateValide(r.date)) throw new Error('rapport mal formé : date AAAA-MM-JJ');
   if (typeof r.version !== 'string' || r.version === '') throw new Error('rapport mal formé : version');
   const m = r.mesures;
   if (m === null || typeof m !== 'object') throw new Error('rapport mal formé : mesures');
@@ -61,6 +62,7 @@ export function cloturer(parcours, rapports, seuils, { correction } = {}) {
   if (vert === undefined) throw new Error(`${parcours} : essai rouge, nouvel essai obligatoire`);
   if (dernierRouge !== undefined && vert < dernierRouge) throw new Error(`${parcours} : dernier essai rouge, nouvel essai obligatoire`);
   if (dernierRouge !== undefined && vert === dernierRouge) throw new Error(`${parcours} : l'essai vert doit être plus récent que le rouge`);
+  if (correction !== undefined && !dateValide(correction)) throw new Error('correction : date AAAA-MM-JJ attendue');
   if (correction !== undefined && vert <= correction) throw new Error(`${parcours} : l'essai vert doit suivre la correction`);
   return { parcours, clos: true, date: vert };
 }
@@ -69,20 +71,27 @@ export function tableau(rapports, seuils) {
   const ids = [...new Set(rapports.map((r) => r.parcours))].sort();
   return ids.map((id) => {
     const e = rapports.filter((r) => r.parcours === id).map((r) => evaluer(r, seuils));
-    const dernier = e.reduce((a, b) => (b.date >= a.date ? b : a));
+    const dernier = e.reduce((a, b) => (b.date > a.date || (b.date === a.date && b.etat === 'rouge') ? b : a));
     return { parcours: id, etat: dernier.etat, date: dernier.date, essais: e.length };
   });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  const i = args.indexOf('--clore');
-  const clore = i >= 0 ? args.splice(i, 2)[1] : undefined;
+  const option = (nom) => {
+    const i = args.indexOf(nom);
+    if (i < 0) return undefined;
+    const v = args.splice(i, 2)[1];
+    if (v === undefined || v.startsWith('--')) { console.error(`${nom} attend une valeur`); process.exit(1); }
+    return v;
+  };
+  const clore = option('--clore');
+  const correction = option('--correction');
   try {
-    const seuils = lireSeuils(readFileSync('docs/essais-parcours.csv', 'utf8'));
+    const seuils = lireSeuils(readFileSync(new URL('../../docs/essais-parcours.csv', import.meta.url), 'utf8'));
     const rapports = args.map((f) => lireRapport(readFileSync(f, 'utf8')));
     for (const l of tableau(rapports, seuils)) console.log(`${l.parcours}\t${l.etat}\t${l.date}\t${l.essais}`);
-    if (clore) console.log(JSON.stringify(cloturer(clore, rapports, seuils)));
+    if (clore) console.log(JSON.stringify(cloturer(clore, rapports, seuils, { correction })));
   } catch (e) {
     console.error(e.message);
     process.exit(1);

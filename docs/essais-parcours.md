@@ -7,5 +7,5 @@ Les essais sont menés hors du dépôt ; l'outil ne lance aucune IA et ne lit qu
 3. Données fictives seulement dans les rapports.
 4. `node outils/essais/parcours.mjs rapport1.json rapport2.json` affiche une ligne par parcours (vert ou rouge).
 5. Un parcours rouge reste ouvert : il faut un nouvel essai vert, plus récent.
-6. `--clore P1` vérifie la clôture du parcours et échoue sinon.
+6. `--clore P1` vérifie la clôture du parcours et échoue sinon ; `--correction AAAA-MM-JJ` exige un essai vert postérieur à cette date.
 7. Les seuils sont proposés, à confirmer.
