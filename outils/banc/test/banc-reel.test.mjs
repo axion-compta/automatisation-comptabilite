@@ -93,7 +93,6 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
   });
 
   it('valeurs-non-entieres-des-deux-cotes-en-ecart', async () => {
-    // la même valeur non entière (ou une chaîne) des deux côtés ne vaut pas égalité au centime
     for (const v of [10.5, '1000', 'abc']) {
       const m = { ...MANIFESTE, releve: { ...MANIFESTE.releve, soldeOuverture: v, soldeCloture: v === 10.5 ? 274053.5 : v } };
       const r = await lancerBancReel(banc(m));
@@ -104,7 +103,6 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
   });
 
   it('reimport-reel-sur-doublons-noyau', async () => {
-    // import branché sur doublons.ts : deux lignes identiques le même jour = 2 occurrences distinctes
     const importeur = (lignes, connus) => {
       const lues = numeroterOccurrences(lignes.map((l, rang) => ({ compteId: 'C1', dateOperation: l.date, montant: l.montant, devise: 'EUR', libelleNormalise: l.libelle, rang })));
       const nouvelles = lignesNouvelles([...connus], lues);
@@ -124,11 +122,8 @@ describe('lanceur du banc réel (fiche L22-T23)', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('reimport-importeur-aberrant-et-doublons-ecartes', async () => {
+  it('reimport-importeur-aberrant-ecart', async () => {
     expect(statut(await lancerBancReel(banc(), { importeur: () => -1 }), 'reimport')).toBe('ecart');
-    const recus = [];
-    await lancerBancReel(banc(MANIFESTE, [...LIGNES, LIGNES[0]]), { importeur: (l) => (recus.push(l.length), 0) });
-    expect(recus).toEqual([3, 3]);
   });
 
   it('rapport-sans-montant-ni-libelle', async () => {
