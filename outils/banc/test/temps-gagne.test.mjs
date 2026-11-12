@@ -22,6 +22,11 @@ describe('temps gagné', () => {
       expect(() => genererBanc({ graine: 1, pieces: 60, lignes: mauvais })).toThrow('parametres_invalides');
     }
     expect(genererBanc({ graine: 1, pieces: 1, lignes: 1 }).pieces).toHaveLength(1);
+    for (const g of [NaN, 2.5, Infinity]) expect(() => genererBanc({ graine: g })).toThrow('parametres_invalides');
+    const montants = b.pieces.concat(b.lignes).map((x) => x.montant_centimes);
+    expect(montants.every((m) => Number.isInteger(m) && m >= 100 && m <= 99999)).toBe(true);
+    expect(new Set(montants).size).toBeGreaterThan(1);
+    expect(new Set(b.pieces.map((p) => p.libelle)).size).toBeGreaterThan(1);
   });
 
   it('meme-graine-meme-banc', () => {
@@ -55,6 +60,11 @@ describe('temps gagné', () => {
     expect(lignes.find((l) => l.includes('preparer-tva'))).toContain('NON MESURÉ');
     expect(lignes.find((l) => l.includes('rapprocher-releve'))).not.toContain('NON MESURÉ');
     expect(lignes.find((l) => l.includes('rapprocher-releve'))).toContain('| 0 ');
+    const inf = (() => { const v = [0, Infinity]; return () => v.shift(); })();
+    expect((await chronometrer(['x'], { x: async () => {} }, inf)).x).toBeNull();
+    const r2 = rapport({ 'classer-valider': -1, 'rapprocher-releve': NaN, 'preparer-tva': 2.5 }, {});
+    expect(r2.split('\n').filter((l) => l.includes('NON MESURÉ'))).toHaveLength(3);
+    for (const mauvais of [-5, Infinity, '12', null, undefined]) expect(rapport({ 'classer-valider': mauvais }, {})).toMatch(/classer-valider \| NON MESURÉ/);
     const nan = await chronometrer(['x'], { x: async () => {} }, () => NaN);
     expect(nan.x).toBeNull();
   });
@@ -70,6 +80,7 @@ describe('temps gagné', () => {
     expect(l2[3]).toBe('777 (estimation, non mesurée)');
     const l3 = r.split('\n').find((l) => l.includes('preparer-tva')).split('|').map((c) => c.trim());
     expect(l3[3]).toBe('aucune');
+    for (const e of [-1, 2.5, NaN, '9']) expect(rapport({}, { 'preparer-tva': e }).split('\n').find((l) => l.includes('preparer-tva'))).toMatch(/\| aucune \|$/);
     expect(r).not.toMatch(/NaN|undefined/);
   });
 
