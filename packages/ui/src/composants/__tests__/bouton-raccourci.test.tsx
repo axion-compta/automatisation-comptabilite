@@ -28,6 +28,7 @@ describe("Bouton avec raccourci", () => {
   it("raccourci-dans-aria-keyshortcuts", async () => {
     const c = await monter(<Bouton raccourci={raccourci}>Valider</Bouton>);
     expect(bouton(c).getAttribute("aria-keyshortcuts")).toBe("g");
+    const d = await monter(<Bouton raccourci={raccourci} desactive>V</Bouton>); expect([bouton(d).disabled, bouton(d).type]).toEqual([true, "button"]);
   });
   it("raccourci-visible-dans-l-infobulle", async () => {
     const c = await monter(<Bouton raccourci={raccourci}>Valider</Bouton>);
