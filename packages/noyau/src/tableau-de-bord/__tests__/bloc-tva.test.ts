@@ -38,7 +38,7 @@ describe('bloc TVA et impôts', () => {
     expect(avec('4000000', '4500000')).toMatchObject({ franchise: 'depasse_majore' });
     expect(avec('5500000', '9000000')).toMatchObject({ franchise: 'alerte' });
     expect(avec('10000000', '12000000', 'a_verifier')).toMatchObject({ franchise: 'a_verifier' });
-    expect(avec('5500000', '9000000', 'valide', 5000000, 0, 8000)).toMatchObject({ franchise: 'sous' });
+    expect(avec('5500000', '9000000', 'valide', 5000000, 0, 10000)).toMatchObject({ franchise: 'sous' });
     expect(avec('10000000', '12000000', 'valide', 0, 13000000)).toMatchObject({ franchise: 'depasse_majore' });
     expect(blocTvaImpots(base()).donnees).toMatchObject({ franchise: null });
   });
