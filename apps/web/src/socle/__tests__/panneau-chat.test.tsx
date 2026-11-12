@@ -96,6 +96,17 @@ describe('Omnibarre', () => {
     expect(document.body.textContent).toContain('Pièce loyer');
     expect(document.body.textContent).toContain('Fil loyer');
   });
+  it('reponse-ancienne-arrivee-en-retard-ignoree', async () => {
+    const fins: Record<string, (v: string[]) => void> = {};
+    const lente: Source = { nom: 'recherche', groupe: 'recherche', chercher: (q) => new Promise<string[]>((r) => { fins[q] = r; }) };
+    await monter(<Omnibarre sources={[lente]} />);
+    await saisir('lo');
+    await saisir('loyer');
+    await act(async () => fins['loyer']!(['Pièce loyer']));
+    await act(async () => fins['lo']!(['Pièce ancienne']));
+    expect(document.body.textContent).toContain('Pièce loyer');
+    expect(document.body.textContent).not.toContain('Pièce ancienne');
+  });
   it('une-source-en-panne-les-autres-restent', async () => {
     const panne: Source = { nom: 'conversations', groupe: 'conversations', chercher: async () => Promise.reject(new Error('x')) };
     await monter(<Omnibarre sources={[ok('recherche', 'Pièce loyer'), panne]} />);
