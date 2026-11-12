@@ -1,5 +1,4 @@
-// Brouillon local chiffré (AES-GCM 256) : écrit 2 s après la dernière modification, repris après fermeture.
-// Fiche L25-T08. Clé non extractible, gardée par le stockage, une par personne et par société.
+// Fiche L25-T08 : brouillon chiffré (AES-GCM 256), écrit 2 s après la dernière modification. Clé non extractible, une par personne et société.
 export const DELAI_ECRITURE_MS = 2000;
 const OCTETS_NONCE = 12;
 
@@ -44,12 +43,22 @@ export function stockageIndexedDb(): StockageBrouillon {
     ecrireCle: async (cle, valeur) => void (await operer('cles', 'readwrite', (m) => m.put(valeur, cle))),
   };
 }
-async function cleDe(stockage: StockageBrouillon, idCle: string): Promise<CryptoKey> {
-  const existante = await stockage.lireCle(idCle);
-  if (existante) return existante;
-  const nouvelle = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-  await stockage.ecrireCle(idCle, nouvelle);
-  return nouvelle;
+// Clés en cours de création, par stockage : deux formulaires de la même personne ne créent qu'une clé.
+const creations = new WeakMap<StockageBrouillon, Map<string, Promise<CryptoKey>>>();
+function cleDe(stockage: StockageBrouillon, idCle: string): Promise<CryptoKey> {
+  const enCours = creations.get(stockage) ?? new Map<string, Promise<CryptoKey>>();
+  creations.set(stockage, enCours);
+  if (enCours.has(idCle)) return enCours.get(idCle)!;
+  const p = (async () => {
+    const lue = await stockage.lireCle(idCle);
+    if (lue) return lue;
+    const nouvelle = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    await stockage.ecrireCle(idCle, nouvelle);
+    return nouvelle;
+  })();
+  enCours.set(idCle, p);
+  void p.then(() => enCours.delete(idCle), () => enCours.delete(idCle));
+  return p;
 }
 export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId, stockage = stockageIndexedDb() }: OptionsBrouillon): Brouillon<T> {
   const idCle = JSON.stringify([societeId, personneId]);
