@@ -38,6 +38,8 @@ describe('contrats des agents de reprise', () => {
     expect(refus('soldes', { soldes: [{ compte: '512', soldeCentimes: 1, pirate: true }] })).toEqual({ ok: false, code: 'hors_contrat', chemin: 'soldes[0].pirate' });
     expect(refus('chef_dossier', { decision: 'continuer' })).toEqual({ ok: false, code: 'hors_contrat', chemin: 'motifs' });
     expect(refus('soldes', { soldes: [{ compte: '512' }] })).toEqual({ ok: false, code: 'hors_contrat', chemin: 'soldes[0].soldeCentimes' });
+    expect(refus('chef_dossier', JSON.parse('{"decision":"continuer","motifs":[],"constructor":1}'))).toEqual({ ok: false, code: 'hors_contrat', chemin: 'constructor' });
+    expect(refus('chef_dossier', JSON.parse('{"decision":"continuer","motifs":[],"toString":1}'))).toEqual({ ok: false, code: 'hors_contrat', chemin: 'toString' });
   });
 
   it('type-faux-rejete', () => {
