@@ -28,6 +28,7 @@ describe('taux applicable et arrondi', () => {
     // 2027-05-15 est un samedi ; 2027-05-14 un vendredi ; 2027-05-16 un dimanche.
     expect(dateDuTauxApplicable('2027-05-15', '2027-05-20T10:00Z', REGLE)).toBe('2027-05-14');
     expect(dateDuTauxApplicable('2027-05-16', '2027-05-20T10:00Z', REGLE)).toBe('2027-05-14');
+    expect(dateDuTauxApplicable('2027-05-15', '2027-05-15T10:00Z', REGLE)).toBe('2027-05-14');
     // Le lundi suivant, consulté avant publication : le vendredi (veille ouvrée).
     expect(dateDuTauxApplicable('2027-05-17', '2027-05-17T08:00Z', REGLE)).toBe('2027-05-14');
   });
@@ -109,8 +110,11 @@ describe('taux applicable et arrondi', () => {
     expect(regleChangeAuJour(lignes, 'FR', '2029-06-01').heurePublicationUtc).toBe('13:00');
     expect(() => regleChangeAuJour(lignes, 'FR', '2026-12-31')).toThrow(ErreurChange);
     expect(() => regleChangeAuJour(lignes, 'DE', '2027-06-01')).toThrow(ErreurChange);
-    expect(() =>
-      regleChangeAuJour([{ ...lignes[0]!, valeur: '{"arrondi":"x"}' }], 'FR', '2027-06-01'),
-    ).toThrow(ErreurChange);
+    // Valeur illisible, 'null', deux lignes actives, autre clé seule : erreur.
+    const l0 = lignes[0]!;
+    for (const l of [[{ ...l0, valeur: '{"arrondi":"x"}' }], [{ ...l0, valeur: 'null' }], [l0, { ...l0 }], [{ ...l0, cle: 'autre.cle' }]]) {
+      expect(() => regleChangeAuJour(l, 'FR', '2027-06-01')).toThrow(ErreurChange);
+    }
+    expect(() => convertirAuCentime(5, 110000000, { ...avant, jourSansCotation: 'autre' as never })).toThrow(ErreurChange);
   });
 });
