@@ -9,7 +9,8 @@ export type CodeRaison =
   | 'montant_au_seuil_ou_plus'
   | 'fournisseur_hors_union'
   | 'tva_en_doute'
-  | 'compte_absent';
+  | 'compte_absent'
+  | 'paiement_non_prouve';
 
 export class ErreurCasSur extends Error {
   override name = 'ErreurCasSur';
@@ -31,6 +32,8 @@ export interface Proposition {
   compteCharge: string | null;
   montantTtcCentimes: number;
   tvaEnDoute: boolean;
+  /** Faux : aucun débit vu, jamais sûre. Absent : comportement inchangé. */
+  paiementProuve?: boolean;
 }
 
 export interface ContexteCasSur {
@@ -81,6 +84,7 @@ export function estCasSur(
   if (p.fournisseurId !== null && ctx.fournisseurHorsUnion.has(p.fournisseurId)) raisons.push('fournisseur_hors_union');
   if (p.tvaEnDoute) raisons.push('tva_en_doute');
   if (p.compteCharge === null) raisons.push('compte_absent');
+  if (p.paiementProuve === false) raisons.push('paiement_non_prouve');
 
   return { sur: raisons.length === 0, raisons };
 }
