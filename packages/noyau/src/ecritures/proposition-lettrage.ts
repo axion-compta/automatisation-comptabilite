@@ -1,4 +1,5 @@
 // Proposition de lettrage (401, 411, 455) et délettrage tracé. Montants en centimes entiers, aucune écriture modifiée.
+import { estDateValide } from '../dates/civiles.js';
 import type { LigneALettrer } from './lettrage.js';
 
 export interface LigneProposable extends LigneALettrer {
@@ -31,7 +32,6 @@ export class ErreurProposition extends Error {
 }
 
 const COMPTES = /^(401|411|455)/;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const entierValide = (n: number): boolean => Number.isSafeInteger(n) && n >= 0;
 const net = (x: LigneALettrer): number => x.debit - x.credit;
 
@@ -91,7 +91,7 @@ const vide = (t: unknown): boolean => typeof t !== 'string' || t.trim() === '';
 export function delettrer(groupe: GroupeLettre, motif: string, auteur: string, date: string): ResultatDelettrageGenerique {
   if (vide(motif)) throw new ErreurProposition('Un motif est obligatoire pour délettrer.');
   if (vide(auteur)) throw new ErreurProposition("L'auteur du délettrage est obligatoire.");
-  if (typeof date !== 'string' || !DATE.test(date)) throw new ErreurProposition('La date du délettrage doit être AAAA-MM-JJ.');
+  if (typeof date !== 'string' || !estDateValide(date)) throw new ErreurProposition('La date du délettrage doit être AAAA-MM-JJ.');
   if (groupe.lignes.length === 0) throw new ErreurProposition('Aucune ligne à délettrer.');
   if (groupe.lignes.some((x) => x.lettre !== groupe.code)) throw new ErreurProposition("Une ligne n'est pas lettrée sous ce code.");
   const rendues = groupe.lignes.map((x): LigneALettrer => {

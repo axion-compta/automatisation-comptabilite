@@ -47,7 +47,7 @@ describe('proposition de lettrage', () => {
     for (const compte of ['401', '411', '455']) {
       expect(proposerLettrages([l('a', 100, 0, { compte }), l('b', 0, 100, { compte })])).toHaveLength(1);
     }
-    for (const compte of ['512', '706', '400', '41']) {
+    for (const compte of ['512', '706', '400', '41', '6411', '5401']) {
       expect(proposerLettrages([l('a', 100, 0, { compte }), l('b', 0, 100, { compte })])).toEqual([]);
     }
   });
@@ -73,6 +73,7 @@ describe('proposition de lettrage', () => {
     }
     expect(() => delettrer(g, 'ok', ' ', '2026-11-12')).toThrow(/auteur/i);
     expect(() => delettrer(g, 'ok', 'Camille Fictif', '12/11/2026')).toThrow(/date/i);
+    expect(() => delettrer(g, 'ok', 'Camille Fictif', '2026-02-30')).toThrow(/date/i);
     expect(() => delettrer({ code: 'A', lignes: [l('a', 100, 0, { lettre: 'B' })] }, 'ok', 'Camille Fictif', '2026-11-12')).toThrow(/lettr/i);
     expect(() => delettrer({ code: 'A', lignes: [] }, 'ok', 'Camille Fictif', '2026-11-12')).toThrow();
   });
