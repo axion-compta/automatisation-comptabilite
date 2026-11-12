@@ -20,10 +20,11 @@ function monter() {
   const boite = creerBoiteEnvoiMemoire();
   const jeuCommun = jeu();
   jeuCommun.lignesBanque.push({ id: 'LIB-002', carteId: 'CAR-01', date: '2025-04-08', libelle: 'Station fictive', montantCentimes: -5200 });
-  const frais = creerFraisPublies(creerServiceFraisValidation(jeuCommun, configEssai()), boite);
+  const versionDe = (id: string): number | undefined => jeuCommun.frais.find((f) => f.id === id)?.version;
+  const frais = creerFraisPublies(creerServiceFraisValidation(jeuCommun, configEssai()), boite, versionDe);
   const actions = creerFraisActionsPublies(creerServiceFraisActions({ jeu: jeuCommun }), boite);
   const lus = async (): Promise<readonly Enveloppe[]> => boite.enAttente(100);
-  return { frais, actions, boite, lus };
+  return { frais, actions, boite, lus, jeuCommun };
 }
 const types = (l: readonly Enveloppe[]): string[] => l.map((e) => e.type);
 const TRAJET = { nature: 'trajet', personneId: PER, date: '2025-06-11', depart: 'Siège fictif', arrivee: 'Atelier Bertin', motif: 'Visite fictive', vehiculeId: 'VEH-01', kmTexte: '12,5' } as const;
@@ -53,9 +54,24 @@ describe('serveur : événements des frais sur le bus', () => {
     const { frais, actions, lus } = monter();
     await expect(frais.valider(CTX('cle-1'), { ids: ['FRA-005', 'FRA-999'] })).rejects.toThrow();
     await expect(actions.completer(CTX('cle-2'), 'FRA-999', {}, 1)).rejects.toThrow();
-    // La mutation réussit puis le dépôt échoue (acteur invalide) : la boîte reste vide.
-    await expect(actions.creer({ ...CTX('cle-3'), acteur: { type: 'personne', id: 'a@exemple.fr' } }, TRAJET)).rejects.toThrow();
+    // La mutation réussit (bon acteur) puis la construction de l'événement échoue (horodatage non UTC) : l'appel rejette, la boîte reste vide.
+    await expect(actions.creer({ ...CTX('cle-3'), horodatage: 'pas-utc' }, TRAJET)).rejects.toThrow('horodatage_non_utc');
     expect(await lus()).toEqual([]);
+  });
+
+  it('version-reelle-des-evenements', async () => {
+    const { frais, actions, lus, jeuCommun } = monter();
+    const b = await actions.creer(CTX('cle-0'), DEPENSE);
+    const p = await actions.completer(CTX('cle-1'), b.id, { declaration: 'personne', pieceId: 'PIE-ESSAI' }, b.version);
+    expect([b.statut, p.statut]).toEqual(['a_completer', 'propose']);
+    expect(p.version).toBeGreaterThan(1);
+    const t = await actions.creer(CTX('cle-3'), TRAJET);
+    await frais.valider(CTX('cle-2'), { ids: [t.id] });
+    const [propose, , valide] = await lus();
+    const reelle = jeuCommun.frais.find((f) => f.id === t.id)?.version;
+    expect([propose?.type, propose?.objet_id, propose?.version]).toEqual(['compta.frais.propose', p.id, p.version]);
+    expect([valide?.type, valide?.version]).toEqual(['compta.frais.valide', reelle]);
+    expect(reelle).toBeGreaterThan(t.version);
   });
 
   it('idempotence-pas-de-double-evenement', async () => {

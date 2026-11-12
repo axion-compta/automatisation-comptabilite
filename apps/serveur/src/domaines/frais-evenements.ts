@@ -55,15 +55,15 @@ export function ecrireEtPublier<R>(unite: UniteDeTravail, mutation: (tx: { boite
   });
 }
 
-const VERSION_INITIALE = 1;
 /** Transitions de la validation et du remboursement, chacune avec ses événements dans la même transaction. `proposer` ne change aucun état : aucun événement. */
-export function creerFraisPublies(service: ServiceFraisValidation, unite: UniteDeTravail) {
+export function creerFraisPublies(service: ServiceFraisValidation, unite: UniteDeTravail, versionDe: (fraisId: string) => number | undefined = () => undefined) {
   return {
     valider: (c: ContexteFrais, corps: z.infer<typeof CorpsValidation>) =>
       ecrireEtPublier(unite, async () => service.valider(corps, c.acteur.id, c.cleIdempotence), (lot) =>
-        lot.map((v) => evenementFraisValide(c, { fraisId: v.fraisId, ecritureId: v.ecritureId, version: VERSION_INITIALE }))),
+        // Version réelle lue après la validation ; inconnue (lecteur non branché) : pas d'événement, jamais une valeur fausse.
+        lot.flatMap((v) => { const version = versionDe(v.fraisId); return version === undefined ? [] : [evenementFraisValide(c, { fraisId: v.fraisId, ecritureId: v.ecritureId, version })]; })),
     preparer: (c: ContexteFrais, corps: z.infer<typeof CorpsRemboursement>) =>
-      ecrireEtPublier(unite, async () => service.preparer(corps, c.cleIdempotence), (r) => [evenementRemboursementPrepare(c, { remboursementId: r.id, personneId: r.personneId, version: VERSION_INITIALE })]),
+      ecrireEtPublier(unite, async () => service.preparer(corps, c.cleIdempotence), (r) => [evenementRemboursementPrepare(c, { remboursementId: r.id, personneId: r.personneId, version: 1 })]),
   };
 }
 
