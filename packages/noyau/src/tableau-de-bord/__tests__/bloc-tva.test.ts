@@ -49,6 +49,15 @@ describe('bloc TVA et impôts', () => {
     expect(e([echeance('a', '2026-05-04', true), echeance('b', '2026-07-31')])).toMatchObject({ prochaineEcheance: { id: 'b' } });
     expect(e([echeance('z', '2026-03-01'), echeance('b', '2026-04-01')])).toMatchObject({ prochaineEcheance: { id: 'b' } });
     expect(e([])).toMatchObject({ prochaineEcheance: null });
+    // du < jour : une échéance en retard (plus ancienne) ne doit jamais passer pour la prochaine.
+    const large = { ...FILTRE, du: '2026-01-01' };
+    const l = (entrees: EntreeEcheance[]) => blocTvaImpots(base({ echeances: { entrees, filtre: large } })).donnees;
+    expect(l([echeance('retard', '2026-02-15'), echeance('b', '2026-07-31')])).toMatchObject({ prochaineEcheance: { id: 'b' } });
+    expect(l([echeance('retard', '2026-02-15')])).toMatchObject({ prochaineEcheance: null });
+    // Échéance sans date : statut « inconnue », jamais la prochaine.
+    const sansDate: EntreeEcheance = { id: 'sd', societeId: 'soc-1', exerciceId: 'ex-1', type: 'tva', faite: false };
+    expect(l([sansDate])).toMatchObject({ prochaineEcheance: null });
+    expect(l([sansDate, echeance('b', '2026-07-31')])).toMatchObject({ prochaineEcheance: { id: 'b' } });
   });
 
   it('piece-en-doute-aucun-montant', () => {
