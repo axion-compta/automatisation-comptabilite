@@ -37,11 +37,12 @@ describe('temps humain', () => {
     expect(depasse.status).toBe(0);
     expect(depasse.stdout).toContain('au-dessus');
     expect(lance('--seuil-mediane-ms=999999', '--seuil-p90-ms=999999').stdout).toContain('au-dessous');
-    expect(lance('--seuil-mediane-ms=abc', '--seuil-p90-ms=1').status).not.toBe(0);
-    expect(lance('--seuil-mediane-ms=-1', '--seuil-p90-ms=1').status).not.toBe(0);
+    for (const s of ['abc', '-1', '']) expect(lance(`--seuil-mediane-ms=${s}`, '--seuil-p90-ms=1').status, s).not.toBe(0);
+    expect(lance('--seuil-mediane-ms=0', '--seuil-p90-ms=0').status).toBe(0);
     expect(lance().status).not.toBe(0);
     writeFileSync(fichier, '{pas du json');
     expect(lance('--seuil-mediane-ms=1', '--seuil-p90-ms=1').status).not.toBe(0);
+    expect(lireMesures('[{"duree_ms":0,"factureSimple":true}]')).toHaveLength(1);
     for (const t of ['[{"duree_ms":-1,"factureSimple":true}]', '[{"duree_ms":1.5,"factureSimple":true}]', '[{"duree_ms":1,"factureSimple":"oui"}]', '{}']) {
       expect(() => lireMesures(t), t).toThrow();
     }

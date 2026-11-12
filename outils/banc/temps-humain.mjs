@@ -1,6 +1,5 @@
 // Rapport du temps humain par carte (V3-QUA-007) : médiane et 90e centile des factures simples face à des seuils
 // passés en argument (réglages, pas des constantes). Jamais bloquant : code de sortie 0 sauf usage ou fichier mal formé.
-// Usage : node outils/banc/temps-humain.mjs mesures.json --seuil-mediane-ms=N --seuil-p90-ms=N
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { centile, mediane } from './evaluateur.mjs';

@@ -26,6 +26,8 @@ describe('mesure du temps humain par carte', () => {
     await m.resoudre();
     expect(Object.keys(b.emis[0]!).sort()).toEqual(['duree_ms', 'ecran_code', 'type']);
     expect(() => demarrerMesure('Facture 42 / alice@exemple.fr', b.horloge, b.options)).toThrow(RangeError);
+    for (const c of ['e', 'e123456']) expect(() => demarrerMesure(c, b.horloge, b.options), c).toThrow(RangeError);
+    expect(() => demarrerMesure('e12345', b.horloge, b.options)).not.toThrow();
   });
 
   it('mesure-desactivee-rien-emis', async () => {
@@ -33,6 +35,7 @@ describe('mesure du temps humain par carte', () => {
     const m = demarrerMesure('e17', b.horloge, b.options);
     b.avancer(500);
     await m.resoudre();
+    await demarrerMesure('e17', b.horloge, { envoyer: b.options.envoyer }).resoudre(); // défaut : désactivée
     expect(b.emis).toEqual([]);
   });
 
