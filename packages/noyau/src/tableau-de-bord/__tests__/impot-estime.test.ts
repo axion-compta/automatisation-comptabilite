@@ -57,8 +57,7 @@ describe('impôt sur les sociétés estimé', () => {
   });
 
   it('resultat-negatif-is-nul', () => {
-    const e = estimerIs(centimes(-120000), centimes(900000), BAREME, CTX);
-    expect(e.montant).toBe(0);
+    expect(estimerIs(centimes(-120000), centimes(900000), BAREME, CTX).montant).toBe(0);
     expect(estimerIs(centimes(0), centimes(900000), BAREME, CTX).montant).toBe(0);
     for (const r of [Number.NaN, Infinity, 1.5]) expect(() => estimerIs(r as never, centimes(1), BAREME, CTX)).toThrow(ErreurArgent);
     const f = (b: BaremeIs, c: ContexteIs) => () => estimerIs(centimes(1000000), centimes(5000000), b, c);
@@ -69,8 +68,7 @@ describe('impôt sur les sociétés estimé', () => {
 
   it('bareme-non-verifie-marque-a-verifier', () => {
     const e = estimerIs(centimes(1000000), centimes(5000000), { ...BAREME, verifie: false }, CTX);
-    expect(e.aVerifier).toBe(true);
-    expect(e.montant).toBe(150000);
+    expect([e.aVerifier, e.montant]).toEqual([true, 150000]);
   });
 
   it('detention-inconnue-a-verifier', () => {
@@ -81,11 +79,8 @@ describe('impôt sur les sociétés estimé', () => {
   });
 
   it('toujours-marque-estimation', () => {
-    const cas = [
-      estimerIs(centimes(1000000), centimes(5000000), BAREME, CTX),
-      estimerIs(centimes(-5), centimes(0), BAREME, CTX),
-      estimerIs(centimes(1000000), centimes(5000000), { ...BAREME, verifie: false }, { detention: null }),
-    ];
-    for (const e of cas) expect(e.mot).toBe('estimation');
+    expect(estimerIs(centimes(1000000), centimes(5000000), BAREME, CTX).mot).toBe('estimation');
+    expect(estimerIs(centimes(-5), centimes(0), BAREME, CTX).mot).toBe('estimation');
+    expect(estimerIs(centimes(1), centimes(0), { ...BAREME, verifie: false }, { detention: null }).mot).toBe('estimation');
   });
 });
