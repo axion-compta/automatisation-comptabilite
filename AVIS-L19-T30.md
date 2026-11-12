@@ -16,7 +16,7 @@ Tête relue : 9ead9455f7eb5155286819bcee348ba60cb8ff9c
 - Le journal fait 8 lignes et commence par « # Journal L19-T30 ».
 - Les 4 tests nommés sont verts en local.
 - Aucun secret, prix, nom réel ni mot interdit.
-- Pas de régression : `plan-navigation.ts` n'a pas changé depuis la première relecture. Seuls les tests et le journal ont changé, et le diff montre un merge de main.
+- Pas de régression : depuis la première relecture, `plan-navigation.ts` n'a reçu qu'une ligne de commentaire (Accueil provisoire). Le reste de l'écart vient de la fusion de main, hors périmètre de la PR.
 - Mutations faites :
   - « Discuter » à 2 clics : test rouge ;
   - préfixe sans « / » : test rouge ;
