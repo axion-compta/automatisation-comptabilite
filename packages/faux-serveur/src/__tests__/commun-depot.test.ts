@@ -13,17 +13,23 @@ afterAll(() => serveur.close());
 const FRONTIERE = 'frontiere-fictive-0001';
 const entetes = (cle: string | undefined): Record<string, string> => (cle === undefined ? {} : { 'idempotency-key': cle });
 
+/** Un seul corps multipart, construit de la même façon pour les deux cibles. */
+const corpsMultipart = (parties: { nom: string; contenu: string }[]) => {
+  const p = parties.map(({ nom, contenu }, i) => `--${FRONTIERE}\r\nContent-Disposition: form-data; name="${nom}"; filename="piece-${i}.pdf"\r\nContent-Type: application/pdf\r\n\r\n${contenu}\r\n`);
+  p.push(`--${FRONTIERE}\r\nContent-Disposition: form-data; name="canal"\r\n\r\napi\r\n--${FRONTIERE}--\r\n`);
+  return Buffer.from(p.join(''));
+};
+const corpsIndexes = (fichiers: string[]) => corpsMultipart(fichiers.map((contenu, i) => ({ nom: `fichiers[${i}]`, contenu })));
+const typeMultipart = `multipart/form-data; boundary=${FRONTIERE}`;
+
 const cibleVrai: CibleDepot = async () => {
   const app = creerApp();
-  const corps = (fichiers: string[]) => {
-    const parties = fichiers.map((c, i) => `--${FRONTIERE}\r\nContent-Disposition: form-data; name="fichiers[${i}]"; filename="piece-${i}.pdf"\r\nContent-Type: application/pdf\r\n\r\n${c}\r\n`);
-    parties.push(`--${FRONTIERE}\r\nContent-Disposition: form-data; name="canal"\r\n\r\napi\r\n--${FRONTIERE}--\r\n`);
-    return Buffer.from(parties.join(''));
-  };
   const ret = (r: { statusCode: number; json: () => unknown }) => ({ status: r.statusCode, json: r.json() });
+  const poster = async (payload: Buffer, cle: string | undefined) => ret(await app.inject({ method: 'POST', url: '/pieces', headers: { 'content-type': typeMultipart, ...entetes(cle) }, payload }));
   return {
-    deposer: async (fichiers, cle) =>
-      ret(await app.inject({ method: 'POST', url: '/pieces', headers: { 'content-type': `multipart/form-data; boundary=${FRONTIERE}`, ...entetes(cle) }, payload: corps(fichiers) })),
+    deposer: (fichiers, cle) => poster(corpsIndexes(fichiers), cle),
+    deposerNomme: (nom, contenu, cle) => poster(corpsMultipart([{ nom, contenu }]), cle),
+    deposerParties: (parties, cle) => poster(corpsMultipart(parties), cle),
     etat: async (id) => ret(await app.inject({ method: 'GET', url: `/pieces/${id}/etat` })),
     relancer: async (id, cle) => ret(await app.inject({ method: 'POST', url: `/pieces/${id}/relancer`, headers: entetes(cle) })),
     fermer: () => app.close(),
@@ -33,13 +39,11 @@ const cibleVrai: CibleDepot = async () => {
 const cibleFaux: CibleDepot = async () => {
   serveur.use(...creerHandlers({ base: H }));
   const ret = async (r: Response) => ({ status: r.status, json: await r.json() });
+  const poster = async (corps: Buffer, cle: string | undefined) => ret(await fetch(H + '/pieces', { method: 'POST', headers: { 'content-type': typeMultipart, ...entetes(cle) }, body: corps }));
   return {
-    deposer: async (fichiers, cle) => {
-      const f = new FormData();
-      fichiers.forEach((c, i) => f.append('fichiers', new File([c], `piece-${i}.pdf`, { type: 'application/pdf' })));
-      f.append('canal', 'api');
-      return ret(await fetch(H + '/pieces', { method: 'POST', headers: entetes(cle), body: f }));
-    },
+    deposer: (fichiers, cle) => poster(corpsIndexes(fichiers), cle),
+    deposerNomme: (nom, contenu, cle) => poster(corpsMultipart([{ nom, contenu }]), cle),
+    deposerParties: (parties, cle) => poster(corpsMultipart(parties), cle),
     etat: async (id) => ret(await fetch(`${H}/pieces/${id}/etat`)),
     relancer: async (id, cle) => ret(await fetch(`${H}/pieces/${id}/relancer`, { method: 'POST', headers: entetes(cle) })),
     fermer: async () => serveur.resetHandlers(),
