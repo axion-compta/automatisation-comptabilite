@@ -16,7 +16,12 @@ afterEach(() => {
 
 async function monter(nombre: number | null, idPiece?: string): Promise<void> {
   racine = createRoot(document.body.appendChild(document.createElement('div')));
-  await act(async () => racine?.render(<VisiteGuidee nombrePieces={nombre} {...(idPiece === undefined ? {} : { idPiece })} />));
+  await act(async () => racine?.render(
+    <>
+      <h1 id="stable" tabIndex={-1}>titre</h1>
+      <VisiteGuidee nombrePieces={nombre} surFermeture={() => document.getElementById('stable')?.focus()} {...(idPiece === undefined ? {} : { idPiece })} />
+    </>,
+  ));
 }
 const bouton = (t: string): HTMLButtonElement | undefined => Array.from(document.querySelectorAll('button')).find((b) => b.textContent === t);
 const clic = (t: string) => act(async () => bouton(t)?.click());
@@ -69,6 +74,7 @@ describe('visite guidée', () => {
     await clic(socleVisite.actions.ignorer);
     expect(document.querySelector('[role=dialog]')).toBeNull();
     expect(sessionStorage.getItem('visite-guidee-ignoree')).toBe('1');
+    expect(document.activeElement).toBe(document.getElementById('stable'));
     act(() => racine?.unmount());
     await monter(0);
     expect(document.querySelector('[role=dialog]')).toBeNull();
@@ -80,5 +86,6 @@ describe('visite guidée', () => {
     expect(document.querySelector('[role=dialog]')).not.toBeNull();
     await act(async () => document.querySelector('h2')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
     expect(document.querySelector('[role=dialog]')).toBeNull();
+    expect(document.activeElement).toBe(document.getElementById('stable'));
   });
 });

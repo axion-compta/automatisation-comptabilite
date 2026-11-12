@@ -17,10 +17,12 @@ export interface VisiteGuideeProps {
   nombrePieces: number | null;
   /** Pièce lue à montrer à l'étape trois (lien vers E08). */
   idPiece?: string;
+  /** Appelée à la fermeture : l'écran rend le focus à un élément stable. */
+  surFermeture?: () => void;
 }
 
 /** Visite en 3 étapes, ignorable, affichée seulement quand la société n'a aucune pièce. */
-export function VisiteGuidee({ nombrePieces, idPiece }: VisiteGuideeProps) {
+export function VisiteGuidee({ nombrePieces, idPiece, surFermeture }: VisiteGuideeProps) {
   const [etape, setEtape] = useState(0);
   const [fermee, setFermee] = useState(ignoreeDansLaSession);
   const titre = useRef<HTMLHeadingElement>(null);
@@ -38,6 +40,7 @@ export function VisiteGuidee({ nombrePieces, idPiece }: VisiteGuideeProps) {
       /* mémoire de session indisponible : la visite reste masquée jusqu'au rechargement */
     }
     setFermee(true);
+    surFermeture?.();
   }
   return (
     <section
