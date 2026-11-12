@@ -1,44 +1,35 @@
 VERDICT: A CORRIGER
-a03de4b9554f0058b2beba9444d5529a8e1922b3
+7089fca215a2259e8e215a32b755f043c4bfa856
 
-Fiche: L06-T48 (SENSIBLE) - PR #1071 - SHA de tête relu : a03de4b9554f0058b2beba9444d5529a8e1922b3
-Seconde relecture, après l'avis A CORRIGER du SHA e564ac3e (relecteur Opus, lot 5 section R, 11/11/2026). La fiche est sensible : la fusion revient à Will seul.
+Fiche: L06-T48 (SENSIBLE) - PR #1071 - SHA de tête relu : 7089fca215a2259e8e215a32b755f043c4bfa856
+Troisième relecture (relecteur Opus, lot 5 section R, 12/11/2026), après l'avis A CORRIGER du SHA a03de4b9554f0058b2beba9444d5529a8e1922b3. La fiche est sensible : la fusion revient à Will seul.
 
-## Défauts de l'avis précédent : les trois sont corrigés
-1. Cas limites de `dureeJours` : **corrigé**.
-   - `dureeEnVigueur` est testée avec NaN, Infinity et 1.5.
-   - Un test `purgerSignalements` avec Infinity vérifie qu'il n'y a aucune purge, que l'alerte part et que la société suivante est purgée.
-   - Mutations : retirer `Number.isInteger(d)` (`signalements.ts:73`), ou le remplacer par `!Number.isNaN(d)`, fait rougir 2 tests.
-2. Champs vides : **corrigé**.
-   - Un test par champ (`societeId`, `personneId`, `nature`), avec `''` et `'   '`.
-   - Mutation : retirer `|| v.trim() === ''` (`signalements.ts:57`) fait rougir 3 tests.
-3. `illisibles` : **corrigé**.
-   - L'alerte `signalements_illisibles` (société et nombre) est envoyée par `PortAlerteExploitation` (`signalements.ts:98`), et un test la vérifie.
-   - Mutation : retirer la ligne 98 fait rougir le test « date illisible ».
+## Défaut de l'avis précédent : taille, corrigé
+- Lignes propres à la fiche : `signalements.ts` 97, `signalements.test.ts` 133, fiche 2, journal 8. Total **240 ≤ 250**.
+- Aucun test retiré : les 11 mêmes tests, 29 `expect` avant comme après. Le changement `ligneParam(NB_JOURS)` sans `dateEffet` est équivalent (la valeur par défaut est `2026-01-01`).
+- `vitest run apps/serveur/src/__tests__/signalements.test.ts` : 11/11 verts.
 
-Au SHA de tête : vitest `signalements.test.ts` passe 11/11, et eslint ne signale rien. CI : tests, lint, types, e2e, gitleaks, licences et stryker sont verts.
-
-## Défaut bloquant (nouveau, causé par les tests ajoutés)
-1. La taille dépasse `taille_max_lignes`.
-   - Lignes propres à la fiche : `signalements.ts` 113, `signalements.test.ts` 151, fiche 2, journal 8. Total : **274 lignes pour une limite de 250**.
-   - La CI compte aujourd'hui 425 lignes, dont 151 de L06-T39 (#1052). Une fois #1052 fusionnée, `garde:perimetre` restera rouge (`taille 274 lignes > 250`).
-   - Correction : retirer au moins 24 lignes sans supprimer aucun test ni aucune assertion. Pistes :
-     - regrouper les scénarios « durée infinie » et « date illisible » dans un seul appel à `monde` ;
-     - compacter `TEXTES_SIGNALEMENT` et les interfaces sur une ligne ;
-     - raccourcir les commentaires d'en-tête redondants.
-   - Sinon, Will peut relever le plafond par un amendement de la fiche, mais c'est sa décision seule.
+## Défaut bloquant (nouveau, introduit par la réduction de taille)
+1. `apps/serveur/src/securite/signalements.ts:45` : `const s: Signalement = { ...demande, signalementId: ..., etat: 'ouvert', creeLe: ... }`.
+   - Avant (a03de4b9), les 4 champs étaient recopiés un par un. Maintenant, **toute clé en trop de la demande est enregistrée** dans le signalement. TypeScript ne l'empêche pas quand la demande vient d'une variable d'un type plus large.
+   - Sonde : une demande avec `ecritureId: 'ecr-1'` donne un signalement stocké avec la clé `ecritureId`. Cela casse la règle de la fiche « aucune clé vers les écritures » (spec 06, P8).
+   - Le test `erreur-et-signalement-meme-correlation` ne le voit pas : il n'envoie que les 4 champs. La mutation qui ajoute une clé au spread fait bien rougir ce test, mais une clé venue de la demande passe.
+   - Une mise à niveau ne doit pas changer le comportement.
+   - Correction demandée :
+     - revenir à la recopie explicite `societeId: demande.societeId, personneId: demande.personneId, nature: demande.nature, correlationId: demande.correlationId` ;
+     - dans `erreur-et-signalement-meme-correlation`, ajouter un appel avec une demande portant une clé en trop (par exemple `ecritureId`), puis vérifier que les clés de la ligne restent exactement les 7 attendues. Ce test doit rougir avec le spread.
+   - Taille : environ +3 lignes, il reste de la marge (240 sur 250).
 
 ## CI au SHA de tête
-- `gardes` est rouge sur la seule étape `garde:perimetre`. Les fichiers hors liste viennent de L06-T39 (#1052, encore ouverte) : ce n'est pas un défaut de l'auteur. La taille, elle, en est un (voir plus haut).
-- `garde:termine` est vert. `verifier` est rouge uniquement à cause de `gardes`.
+- `gardes` et `verifier` sont rouges pour la seule `garde:perimetre`. Reproduit en local : fichiers hors liste de L06-T39 et taille 391 > 250. Tout vient de L06-T39 (#1052, empilée, encore ouverte) : ce n'est pas un défaut de l'auteur. Une fois #1052 fusionnée, il reste 240 lignes.
+- `garde:termine` est verte. tests, lint, types, e2e, gitleaks, licences et stryker sont verts.
 
 ## Autres contrôles
-- Fichiers : 4, tous dans `fichiers_autorises`.
-- Journal : 8 lignes, commence par « # Journal L06-T48 ».
+- Fichiers propres : 4, tous dans `fichiers_autorises`. Journal 8 lignes, commence par « # Journal L06-T48 ».
 - Aucune durée en dur, aucun prix, aucun secret, aucun mot interdit ; données fictives.
 
-## Remarques (non bloquantes, reprises de l'avis précédent)
+## Remarques (non bloquantes, reprises)
 - Si `parametre.lire`, `alerter` ou `lister` lève pour une société, la purge s'arrête pour les sociétés suivantes.
-- `societes` est figé au moment de l'inscription : une société créée plus tard ne sera jamais purgée.
+- `societes` est figé au moment de l'inscription.
 - `dateEffet` est comparé en texte.
-- Les Demandes du portail (V3-SUP-010) n'ont pas d'interface. La table 092 n'a pas de colonne `correlation_id`.
+- Pas d'interface pour les Demandes du portail (V3-SUP-010) ; pas de colonne `correlation_id` dans la table 092.
