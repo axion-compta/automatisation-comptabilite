@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { setupServer } from 'msw/node';
 import { creerApp } from '../../../../apps/serveur/src/app.js';
 import { creerServicePersonnes } from '../../../contrat/src/domaines/personnes-service.js';
+import { JEU_SECURITE } from '../../../donnees-fictives/src/securite.js';
 import { creerHandlers } from '../handlers.js';
 import { handlersPersonnes } from '../domaines/personnes.js';
 import { suitePersonnes, type CiblePersonnes } from './suite-personnes.js';
@@ -11,13 +12,16 @@ vi.mock('../../../contrat/src/domaines/personnes-service.js', async (o) => { con
 const H = 'http://exemple.fr';
 const HORLOGE = () => '2026-11-09T10:00:00Z';
 const REGLAGES_FICTIFS = { moisReponse: 2, joursRappel: 3 }; // inventés : ni délai ni durée réels
+const ADMS = JEU_SECURITE.personnes.find((p) => p.id === 'adms-a')!;
+const IDENTITE_FICTIVE = { role: ADMS.role as 'administrateur', permissions: [...ADMS.permissions], revendications: { acr: 'mfa', authTime: Date.parse(HORLOGE()) / 1000 - 60 } }; // connexion récente
+const CONNEXION_FICTIVE = { reauthMaxMs: 600_000, attenteApresRecuperationMs: 300_000 }; // inventés
 const serveur = setupServer();
 beforeAll(() => serveur.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => serveur.resetHandlers());
 afterAll(() => serveur.close());
 const entetes = (cle: string | undefined) => ({ 'content-type': 'application/json', ...(cle === undefined ? {} : { 'idempotency-key': cle }) });
 const cibleVrai: CiblePersonnes = async (avecReglage) => {
-  const app = creerApp(undefined, { exploitation: { horloge: HORLOGE, dateReference: '2026-11-09', ...(avecReglage ? { reglagesPersonnes: REGLAGES_FICTIFS, reglesConservation: [] } : {}) } });
+  const app = creerApp(undefined, { exploitation: { horloge: HORLOGE, dateReference: '2026-11-09', identite: { lire: () => IDENTITE_FICTIVE }, reglagesConnexion: CONNEXION_FICTIVE, ...(avecReglage ? { reglagesPersonnes: REGLAGES_FICTIFS, reglesConservation: [] } : {}) } });
   return {
     appeler: async (methode, chemin, corps, cle) => {
       const r = await app.inject({ method: methode, url: chemin, headers: entetes(cle), ...(corps === undefined ? {} : { payload: JSON.stringify(corps) }) });
