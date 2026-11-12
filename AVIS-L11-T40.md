@@ -1,25 +1,28 @@
 VERDICT: A CORRIGER
+PR #1140, SHA de tête 63536bfb69fd61024d6ae1c4bd616abeac18da69
 
-PR #1140, fiche L11-T40, SHA de tête relu : 3adcbd16b0d68eed66c17ab1b2687ba84462db0c
-Fiche lue sur origin/main (aucune PR d'amendement ouverte). Fiche `sensible: oui` : fusion par Will seul.
+Fiche L11-T40 (sensible : argent, cohérence des états), lue sur origin/main. Fusion par Will seul. Seconde relecture, après l'avis A CORRIGER au SHA 3adcbd16b0d68eed66c17ab1b2687ba84462db0c.
 
-## Contrôles
-- Fichiers : 5, tous dans `fichiers_autorises`. Taille : 233 + 12 = 245 lignes (limite 250).
-- CI verte (verifier, tests, gardes, lint, types, e2e, gitleaks, licences, stryker).
-- 6 tests nommés présents, verts en local (vitest, Node 22).
-- Aucun mot interdit, aucun prix, aucun secret ; données fictives. Journal : 7 lignes, commence par `# Journal L11-T40`.
-- Mutations : retirer `if (d.statut === avant) return []` rougit 2 tests (bien). Deux mutations survivent (défauts 1 et 3).
+## Contrôles passés
+- 5 fichiers, tous dans `fichiers_autorises`. Taille : 238 + 12 = 250 lignes, pour une limite de 250.
+- CI verte au SHA de tête (9/9). Les 7 tests du fichier passent en local (vitest, Node 22).
+- Journal : 7 lignes, commence par `# Journal L11-T40`. Aucun mot interdit, aucun prix, aucun secret ; données fictives.
 
-## Défauts
-1. `apps/serveur/src/__tests__/frais-evenements.test.ts:57-58` (`echec-de-transaction-aucun-evenement`) : le commentaire dit « la mutation réussit puis le dépôt échoue (acteur invalide) », c'est faux. L'acteur `a@exemple.fr` ne correspond pas à `TRAJET.personneId` : le service lève `PERSONNE_DIFFERENTE` AVANT toute mutation, et `creerEnveloppe` ne contrôle pas l'`@` dans `acteur.id`. Le cas « état modifié, puis dépôt refusé » n'est donc pas testé. Preuve : la mutation qui avale l'échec de construction des événements dans `ecrireEtPublier` (`try { evts = evenements(r) } catch { evts = [] }`) laisse les 6 tests verts.
-   Correction : provoquer un échec réel après la mutation (par exemple `horodatage: 'pas-utc'` dans le contexte, avec le bon acteur), vérifier que la boîte est vide ET que l'appel rejette ; corriger le commentaire.
-2. `apps/serveur/src/domaines/frais-evenements.ts:62-66` (`VERSION_INITIALE = 1` pour `compta.frais.valide`) : la version publiée est fausse. Sonde : création d'un trajet (version 1, `compta.frais.propose` v1) puis validation ; le frais passe en version 2 mais `compta.frais.valide` part en version 1, la même que `propose`. Un consommateur qui ordonne ou dédoublonne par (objet_id, version) écartera la validation.
-   Correction : ne publier que la version réelle, par exemple un lecteur optionnel `versionDe(fraisId)` passé à `creerFraisPublies` (le test l'alimente avec le jeu commun) et un test qui exige `version` = version du frais après validation. Si c'est impossible sans fichier hors périmètre (`app.ts`, service de validation), le dire comme « défaut de fiche » plutôt que publier une valeur fausse.
-3. Test : la version des événements `propose` et `exclu_paye_societe` n'est vérifiée que pour des frais en version 1. La mutation `version: d.version` -> `version: 1` laisse les 6 tests verts. Correction : un cas où `propose` part après un complément (`a_completer` -> `propose`, version 2 ou plus) et qui vérifie `e.version === d.version`.
+## Suivi de l'avis précédent (vérifié par mutation)
+- Défaut 1 (`echec-de-transaction-aucun-evenement`) : levé. L'acteur est le bon et l'horodatage `pas-utc` fait échouer la construction après la mutation. Mutation « avaler l'échec de construction dans `ecrireEtPublier` » : 1 test rouge.
+- Défaut 2 (version de `compta.frais.valide`) : levé. `versionDe` lit la version réelle, et la mutation `const version = 1` donne 1 test rouge. Le lecteur n'est pas branché dans `app.ts` (hors périmètre) : c'est un défaut de fiche, que je confirme. `jeuFrais` n'est connu que d'`app.ts`.
+- Défaut 3 (version de `propose` après complément) : levé. La mutation `version: 1` dans `propose` donne 1 test rouge.
+- Mutations également tuées : retrait du filtre `d.statut === avant` ; statut précédent ignoré.
 
-## Remarques (non bloquantes, pour Will)
-- `creerFraisActionsPublies` : statut précédent inconnu = l'événement part. Sonde : un complément sans changement de statut d'un frais déjà `propose` du jeu publie un `compta.frais.propose` sans transition (cas de tout frais existant au démarrage).
-- `statuts.set` est fait avant la fin de la transaction : si un vrai dépôt échoue après le calcul des événements, le rejeu avec la même clé ne publiera plus rien. À déplacer après la réussite de `executer`.
-- Le service en mémoire n'est pas annulé si le dépôt échoue (« état sans événement ») ; hors fichiers autorisés, signalé par l'auteur.
-- `compta.ik.regularisation_proposee` : seul le constructeur est testé, aucune transition à brancher (signalé par l'auteur, fiche à élargir ou découper).
-- Routes : la boîte d'envoi par défaut est une boîte en mémoire propre à chaque route, non relayée ; le branchement réel est hors périmètre.
+## Défaut
+1. `apps/serveur/src/domaines/frais-evenements.ts:64` : la branche « version inconnue : aucun événement » (`version === undefined ? [] : ...`) n'est couverte par aucun test. La mutation qui la retire laisse les 7 tests verts. C'est pourtant le seul chemin des routes réelles, car `routesFraisValidation` appelle `creerFraisPublies(service, unite)` sans lecteur. Sans cette branche, `creerEnveloppe` lève `champ_manquant` APRÈS que le service a passé le frais à `valide`. La route renverrait alors une erreur, avec un état modifié et sans événement.
+   Correction : un test qui appelle `creerFraisPublies(service, boite)` sans `versionDe`, vérifie que `valider` aboutit (lot rendu) et que la boîte reste vide. La limite de 250 lignes est atteinte : regroupe des assertions existantes pour libérer la place, sans retirer de test.
+
+## Remarques
+- `pilotage/journal/L11-T40.md:6` dit encore « version de `valide` fixée à 1 », ce qui n'est plus vrai. À écrire : « `valide` non publié par les routes tant que `versionDe` n'est pas branché dans `app.ts` (défaut de fiche) ». Le point 2 du corps de la PR est à mettre à jour de la même façon.
+- Les mutations suivantes survivent, sur du code inchangé depuis la première relecture. Ce sont des renforcements possibles, pas des blocages :
+  - `version: 1` pour `exclu_paye_societe` : équivalente tant que ce statut n'existe qu'à la création ;
+  - charge de `compta.frais.valide` sans `ecriture_id` ;
+  - `personne_id` faux dans `compta.remboursement.prepare`.
+  Un `toEqual` sur la charge complète de ces deux événements suffirait.
+- Les remarques précédentes restent valables (`statuts.set` avant la fin de la transaction, statut précédent inconnu, état en mémoire non annulé, régularisation IK sans transition). Elles sont signalées par l'auteur, à trancher par Will.
