@@ -1,10 +1,13 @@
 import { oc } from '@orpc/contract';
 import { z } from 'zod';
+import { cheminSociete } from '../prefixe-routes.js';
 
 /** Liste recopiée du noyau (le contrat n'importe pas le noyau). Ajout seul, jamais de renommage. */
 export const STATUTS_FRAIS = ['brouillon', 'a_completer', 'propose', 'valide', 'rembourse', 'en_compte_courant', 'exclu_paye_societe', 'refuse', 'perso'] as const;
 
 const Centimes = z.number().int().min(0);
+const sous = (suffixe: string) => cheminSociete(suffixe) as `/${string}`;
+const Societe = z.object({ s: z.string().min(1) });
 const DateJour = z.iso.date();
 
 export const FraisResume = z.object({
@@ -52,10 +55,11 @@ export const ReponseFraisDetail = z.object({ body: FraisDetail });
 
 /** Liste filtrée (personne, période, statut) avec les trois totaux de toute la sélection. */
 export const listerFrais = oc
-  .route({ method: 'GET', path: '/frais', inputStructure: 'detailed', operationId: 'listerFrais' })
+  .route({ method: 'GET', path: sous('/frais'), inputStructure: 'detailed', operationId: 'listerFrais' })
   .errors({ BORNES_INVALIDES: { status: 400 } })
   .input(
     z.object({
+      params: Societe,
       query: z
         .object({
           personne: z.string().max(50).optional(),
@@ -71,9 +75,9 @@ export const listerFrais = oc
   .output(ReponseFrais);
 
 export const lireFrais = oc
-  .route({ method: 'GET', path: '/frais/{id}', inputStructure: 'detailed', operationId: 'lireFrais' })
+  .route({ method: 'GET', path: sous('/frais/{id}'), inputStructure: 'detailed', operationId: 'lireFrais' })
   .errors({ FRAIS_INCONNU: { status: 404 } })
-  .input(z.object({ params: z.object({ id: z.string().min(1) }) }))
+  .input(z.object({ params: Societe.extend({ id: z.string().min(1) }) }))
   .output(ReponseFraisDetail);
 
 export const frais = { listerFrais, lireFrais };
