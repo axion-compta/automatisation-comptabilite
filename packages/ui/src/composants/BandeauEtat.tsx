@@ -15,7 +15,7 @@ export function BandeauEtat({ niveau, texte, action }: BandeauEtatProps) {
   if (!(niveau in ICONES)) throw new Error("niveau_bandeau_inconnu");
   if (typeof texte !== "string" || texte.trim() === "") throw new Error("texte_bandeau_vide");
   return (
-    <div className={`axion-bandeau-etat axion-bandeau-etat--${niveau}`} role={niveau === "panne" ? "alert" : "status"}>
+    <div className={["axion-bandeau-etat", `axion-bandeau-etat--${niveau}`].join(" ")} role={niveau === "panne" ? "alert" : "status"}>
       <span className="axion-bandeau-etat__icone" data-icone={niveau} aria-hidden="true">
         {ICONES[niveau]}
       </span>

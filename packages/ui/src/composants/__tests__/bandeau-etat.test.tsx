@@ -27,7 +27,6 @@ describe("BandeauEtat", () => {
       const b = el.firstElementChild as HTMLElement;
       expect(b.className).toContain(`axion-bandeau-etat--${niveau}`);
       expect(b.textContent).toContain(`texte ${niveau}`);
-      // Jamais la couleur seule : une icône propre à chaque niveau, cachée aux lecteurs d'écran.
       const icone = b.querySelector("[data-icone]");
       expect(icone?.getAttribute("aria-hidden")).toBe("true");
       expect(icone?.textContent).not.toBe("");
@@ -36,12 +35,8 @@ describe("BandeauEtat", () => {
     expect(icones.size).toBe(3);
   });
   it("bandeau-panne-role-alert", async () => {
-    const roles: Record<string, string | null> = {};
-    for (const niveau of ["info", "attention", "panne"] as const) {
-      const el = await monter(<BandeauEtat niveau={niveau} texte="t" />);
-      roles[niveau] = (el.firstElementChild as HTMLElement).getAttribute("role");
-    }
-    expect(roles).toEqual({ info: "status", attention: "status", panne: "alert" });
+    const role = async (niveau: "info" | "attention" | "panne") => (await monter(<BandeauEtat niveau={niveau} texte="t" />)).firstElementChild?.getAttribute("role");
+    expect([await role("info"), await role("attention"), await role("panne")]).toEqual(["status", "status", "alert"]);
   });
   it("bandeau-action-facultative", async () => {
     const sans = await monter(<BandeauEtat niveau="info" texte="t" />);

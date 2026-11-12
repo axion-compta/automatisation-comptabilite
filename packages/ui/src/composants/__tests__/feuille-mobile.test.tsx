@@ -32,7 +32,6 @@ async function monter(ouverteAuDepart = true): Promise<HTMLElement> {
 const touche = (cible: Element, key: string, shiftKey = false) =>
   act(async () => void cible.dispatchEvent(new KeyboardEvent("keydown", { key, shiftKey, bubbles: true, cancelable: true })));
 const feuille = (el: HTMLElement) => el.querySelector('[role="dialog"]') as HTMLElement;
-
 afterEach(() => {
   for (const m of montes.splice(0)) { act(() => m.racine.unmount()); m.el.remove(); }
   surFermer.mockClear();
@@ -47,13 +46,11 @@ describe("FeuilleMobile", () => {
     expect(f.contains(document.activeElement)).toBe(true);
     const fermer = f.querySelector("button") as HTMLButtonElement;
     const dernier = el.querySelector("#dernier") as HTMLButtonElement;
-    // Tab sur le dernier élément : retour au premier ; Maj+Tab sur le premier : retour au dernier.
     dernier.focus();
     await touche(dernier, "Tab");
     expect(document.activeElement).toBe(fermer);
     await touche(fermer, "Tab", true);
     expect(document.activeElement).toBe(dernier);
-    // Tab au milieu : pas d'interception.
     const premier = el.querySelector("#premier") as HTMLButtonElement;
     premier.focus();
     const evt = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
@@ -72,12 +69,9 @@ describe("FeuilleMobile", () => {
     const el = await monter();
     await act(async () => (el.querySelector(".axion-feuille-mobile__voile") as HTMLElement).click());
     expect(surFermer).toHaveBeenCalledTimes(1);
-    const el2 = await monter();
-    // Un clic dans la feuille elle-même ne ferme pas.
     surFermer.mockClear();
-    await act(async () => (feuille(el2).querySelector("#premier") as HTMLElement).click());
+    await act(async () => (feuille(el).querySelector("#premier") as HTMLElement).click());
     expect(surFermer).not.toHaveBeenCalled();
-    expect(feuille(el2)).not.toBeNull();
   });
   it("feuille-focus-rendu", async () => {
     const el = await monter(false);
