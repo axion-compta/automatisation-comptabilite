@@ -1,15 +1,16 @@
 VERDICT: OK
+c0d3518d4cc656773418eb48145e040d4cae543f
 
-PR #1092, fiche L11-T35, relue au SHA de tête f7928bf0aa13d63b5a11a3b0505056310a346a5d (première relecture, relecteur Opus).
+PR #1092, fiche L11-T35, relue au SHA de tête ci-dessus (seconde relecture, relecteur Opus). La première relecture a rendu OK au SHA f7928bf0aa13d63b5a11a3b0505056310a346a5d. Depuis, le seul nouveau commit est la fusion de main (85127b8f) dans la branche.
 
 ## Vérifié
-- Périmètre : 4 fichiers, tous dans `fichiers_autorises` ; diff de 58 lignes pour une limite de 120. Aucun code.
-- `REPRENDRE.md` : section du lot 11 seule, 10 lignes ; aucun autre bloc touché.
-- Faits recoupés sur main : 46 fiches L11 ; `a_faire` = T35, T38, T39, T40, T41, T45. `bloque_par` de T39 = D43, D42 et `bloque_par` de T41 = T39, comme écrit dans les fiches. Banc NF 20 sur 20 confirmé par le journal de L11-T20.
-- `pilotage/calibrage.csv` : en-tête et colonnes existantes conservés (consigne de la fiche) ; 40 lignes ; médiane recalculée à 22,05 min, cohérent avec les 22,1 annoncés.
-- Mesures non faites marquées « non mesurés » ; aucune date de livraison annoncée ; aucun prix, aucun mot interdit, aucun nom réel. Journal de 5 lignes, commence par `# Journal L11-T35`.
+- Fichiers propres de la fiche entre f7928bf0 et c0d3518d : `pilotage/calibrage.csv`, `pilotage/fiches/L11-T35.md` et `pilotage/journal/L11-T35.md` sont identiques octet pour octet (`git diff` vide).
+- `REPRENDRE.md` : la section « Lot 11 notes de frais (tranche 1) » est identique, à une ligne près (voir les remarques). La section « Lot 04 » venue de main suit, intacte. Aucun autre bloc n'est touché.
+- Diff par rapport à main : 4 fichiers, tous autorisés ; 56 lignes ajoutées et 1 retirée, pour une limite de 120 ; 40 lignes de calibrage ; la section compte 8 lignes non vides (10 au plus).
+- `garde:textes` vert ; aucun mot interdit, aucun prix, aucun nom réel.
+- CI verte au SHA relu (run 43155078738 : verifier, tests, e2e, gardes, types, lint, licences, gitleaks, stryker).
 
 ## Remarques (non bloquantes)
-- Colonne `decision` : `fusionnee` alors que `ligneCalibrage` (portier) écrit `fusion`. À harmoniser plus tard.
-- L11-T45 (PR #945 fusionnée) n'a pas de ligne. C'est cohérent avec « une ligne par fiche faite », mais il faudra l'ajouter quand son statut passera à `fait`.
-- Conflit attendu avec la PR #1089 (L08-T41), qui remplace l'en-tête de ce même fichier. L'avis A CORRIGER de #1089 lui demande de garder l'en-tête : la version de cette PR fait foi.
+- En résolvant le conflit, la ligne « - Aucune date de livraison annoncée. » a disparu de la section du lot 11. La section n'annonce toujours aucune date, donc la consigne de la fiche reste tenue, mais le commentaire « sans changement de fond » n'est pas tout à fait exact. Les autres sections de `REPRENDRE.md` gardent cette ligne : à remettre si possible.
+- Nouveau conflit avec main actuel (0291c86f) : `REPRENDRE.md` et `pilotage/calibrage.csv`, deux ajouts en fin de fichier venus de la PR #1089 (L08-T41) depuis sa fusion. L'en-tête de `calibrage.csv` est le même des deux côtés. Il faudra encore fusionner main (rôle M) et garder les deux ajouts. Ce n'est pas un défaut de l'auteur.
+- Remarques de la première relecture toujours valables : colonne `decision` à `fusionnee` alors que le portier écrit `fusion` ; il faudra ajouter la ligne de L11-T45 quand sa fiche passera à `fait` (PR #1093).
