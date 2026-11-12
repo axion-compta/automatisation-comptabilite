@@ -67,9 +67,9 @@ describe('part non déductible passée en charge', () => {
     expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...effet(CARBURANT), perdue: c(1) }, COMPTES))).toBe('effet_incoherent');
     expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, ttcCentimes: c(9999) }, effet(CARBURANT), COMPTES))).toBe('montant_invalide');
     const e = effet(CARBURANT);
-    const mauvais = [{ ...e, deductible: c(-100), perdue: c(2100) }, { ...e, deductible: c(2100), perdue: c(-100) }];
+    const mauvais = [-100, NaN, Infinity, 0.5].flatMap((v) => [{ ...e, deductible: v as typeof e.perdue, perdue: c(2100) }, { ...e, deductible: c(2100), perdue: v as typeof e.perdue }]);
     for (const m of mauvais) expect(code(() => lignesAvecPartPerdue(CARBURANT, m, COMPTES))).toBe('montant_invalide');
-    for (const champ of ['htCentimes', 'ttcCentimes'] as const) for (const v of [100.5, -1]) expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, [champ]: v as typeof e.perdue }, e, COMPTES))).toBe('montant_invalide');
+    for (const champ of ['htCentimes', 'ttcCentimes'] as const) for (const v of [100.5, -1, 12000.5, NaN, Infinity]) expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, [champ]: v as typeof e.perdue }, e, COMPTES))).toBe('montant_invalide');
     const marge = effetTraitement({ code: 'MARGE', sens: 'achat', base: c(10000), tvaLue: c(0), franchise: false });
     expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, ttcCentimes: CARBURANT.htCentimes }, marge, COMPTES))).toBe('effet_incoherent');
     for (const champ of ['collectee', 'sousReserve'] as const) expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...e, [champ]: c(1) }, COMPTES))).toBe('effet_incoherent');
