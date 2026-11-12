@@ -83,11 +83,14 @@ describe('Omnibarre', () => {
   };
   it('assemble-deux-sources-en-parallele', async () => {
     const lancees: string[] = [];
-    const a: Source = { nom: 'recherche', groupe: 'recherche', chercher: async (q) => (lancees.push('a'), [`Pièce ${q}`]) };
+    let finA: (v: string[]) => void = () => {};
+    const a: Source = { nom: 'recherche', groupe: 'recherche', chercher: (q) => (lancees.push('a'), new Promise<string[]>((r) => { finA = () => r([`Pièce ${q}`]); })) };
     const b: Source = { nom: 'conversations', groupe: 'conversations', chercher: async (q) => (lancees.push('b'), [`Fil ${q}`]) };
     await monter(<Omnibarre sources={[a, b]} />);
     await saisir('loyer');
-    expect(lancees.sort()).toEqual(['a', 'b']);
+    // La source A est encore en attente : la source B doit déjà avoir été appelée.
+    expect(lancees).toEqual(['a', 'b']);
+    await act(async () => finA([]));
     const titres = [...document.querySelectorAll('h3')].map((h) => h.textContent);
     expect(titres).toEqual([chat.omnibarre.groupes.recherche, chat.omnibarre.groupes.conversations]);
     expect(document.body.textContent).toContain('Pièce loyer');
