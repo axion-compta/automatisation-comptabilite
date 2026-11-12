@@ -17,7 +17,6 @@ export interface Brouillon<T = unknown> {
   reprendre(): Promise<T | null>;
   effacer(): Promise<void>;
 }
-
 export interface OptionsBrouillon {
   formulaire: string;
   societeId: string;
@@ -25,9 +24,7 @@ export interface OptionsBrouillon {
   stockage?: StockageBrouillon;
 }
 
-type Magasin = 'brouillons' | 'cles';
-
-async function operer<R>(magasin: Magasin, mode: IDBTransactionMode, f: (m: IDBObjectStore) => IDBRequest<R>): Promise<R> {
+async function operer<R>(magasin: 'brouillons' | 'cles', mode: IDBTransactionMode, f: (m: IDBObjectStore) => IDBRequest<R>): Promise<R> {
   const base = await new Promise<IDBDatabase>((resolve, reject) => {
     const demande = indexedDB.open('axion-brouillons', 1);
     demande.onupgradeneeded = () => (['brouillons', 'cles'] as const).forEach((n) => demande.result.createObjectStore(n));
@@ -72,8 +69,7 @@ export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId,
 
   const annuler = () => {
     version += 1;
-    if (minuterie !== null) clearTimeout(minuterie);
-    minuterie = null;
+    clearTimeout(minuterie ?? undefined);
   };
 
   const ecrire = async (valeur: T, ma: number) => {
@@ -82,13 +78,19 @@ export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId,
       const nonce = crypto.getRandomValues(new Uint8Array(OCTETS_NONCE));
       const clair = new TextEncoder().encode(JSON.stringify(valeur));
       const chiffre = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, cle, clair));
-      if (ma !== version) return; // effacé ou remplacé pendant le chiffrement
-      const sortie = new Uint8Array(OCTETS_NONCE + chiffre.length);
-      sortie.set(nonce, 0);
-      sortie.set(chiffre, OCTETS_NONCE);
-      await stockage.ecrire(idBrouillon, sortie);
+      if (ma === version) await stockage.ecrire(idBrouillon, new Uint8Array([...nonce, ...chiffre]));
     } catch {
       // stockage indisponible : le brouillon est perdu, la saisie continue.
+    }
+  };
+  const dechiffrer = async (octets: Uint8Array): Promise<T | null> => {
+    try {
+      const cle = await stockage.lireCle(idCle);
+      if (!cle || octets.length <= OCTETS_NONCE) throw new Error('illisible');
+      const clair = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: octets.slice(0, OCTETS_NONCE) }, cle, octets.slice(OCTETS_NONCE));
+      return JSON.parse(new TextDecoder().decode(clair)) as T;
+    } catch {
+      return null;
     }
   };
 
@@ -96,36 +98,22 @@ export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId,
     modifier(valeur) {
       annuler();
       const ma = version;
-      minuterie = setTimeout(() => {
-        minuterie = null;
-        void ecrire(valeur, ma);
-      }, DELAI_ECRITURE_MS);
+      minuterie = setTimeout(() => void ecrire(valeur, ma), DELAI_ECRITURE_MS);
     },
     async reprendre() {
       try {
         const octets = await stockage.lire(idBrouillon);
         if (!octets) return null;
-        try {
-          if (octets.length <= OCTETS_NONCE) throw new Error('trop court');
-          const cle = await stockage.lireCle(idCle);
-          if (!cle) throw new Error('clé absente');
-          const clair = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: octets.slice(0, OCTETS_NONCE) }, cle, octets.slice(OCTETS_NONCE));
-          return JSON.parse(new TextDecoder().decode(clair)) as T;
-        } catch {
-          await stockage.effacer(idBrouillon);
-          return null;
-        }
+        const valeur = await dechiffrer(octets);
+        if (valeur === null) await stockage.effacer(idBrouillon);
+        return valeur;
       } catch {
         return null;
       }
     },
     async effacer() {
       annuler();
-      try {
-        await stockage.effacer(idBrouillon);
-      } catch {
-        // rien à effacer
-      }
+      await stockage.effacer(idBrouillon).catch(() => undefined);
     },
   };
 }
