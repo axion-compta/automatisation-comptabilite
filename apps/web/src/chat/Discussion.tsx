@@ -76,6 +76,10 @@ export function Discussion({ societe, onOuvrirVue, dureeAnnulationMs = 0 }: Disc
   const actions = {
     etats, pourquoi, enCours, onOuvrirVue,
     onAppliquer: (id: string) => void appliquer(id),
+    // Refuser range la carte dans « Plus tard » : elle reste affichée, rien n'est supprimé.
+    onRefuser: (id: string) => setEtats((s) => ({ ...s, [id]: 'plus_tard' })),
+    onModifier: (id: string) => setEtats((s) => ({ ...s, [id]: 'modification' })),
+    onRouvrir: (id: string) => setEtats((s) => ({ ...s, [id]: 'a_valider' })),
     onPourquoi: (id: string) => void lirePourquoi(soc, id).then((r) => setPourquoi((p) => ({ ...p, [id]: r })), () => setAlerte(e25.pourquoi.nonDisponible)),
     onChoix: (code: string) => void lancer(code, true),
     onRegenerer: () => void lancer(dernierTexte.current, false),
