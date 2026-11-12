@@ -20,7 +20,7 @@ export function lireModeTravail(valeur: unknown): ModeTravail {
 
 export function modeDeLExercice(
   societe: { modeTravail: ModeTravail },
-  exercice?: { modeTravail?: ModeTravail },
+  exercice?: { modeTravail?: ModeTravail | undefined },
 ): ModeTravail {
   return exercice?.modeTravail ?? societe.modeTravail;
 }
