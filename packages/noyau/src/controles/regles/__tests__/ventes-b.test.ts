@@ -123,6 +123,8 @@ describe('CC-V17 client UE sans numero de TVA verifie (A17)', () => {
   });
   it('valide-trace-permet-exoneration', () => {
     expect(res(V17, exo(trace('valide')))).toBe('OK');
+    // Le statut enregistré reste contrôlé : une trace valide ne l'emporte pas sur un statut non vérifié.
+    for (const statut of ['invalide', 'non_verifie']) expect(res(V17, exo(trace('valide'), { statutVies: statut }))).toBe('ALERTE');
     // Une trace valide mais incomplète ne permet pas l'exonération.
     for (const manque of ['idRequete', 'horodatage', 'empreinteReponse']) {
       expect(res(V17, exo({ ...trace('valide'), [manque]: '' })), manque).toBe('ALERTE');

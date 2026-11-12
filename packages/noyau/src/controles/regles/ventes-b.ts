@@ -32,7 +32,7 @@ export interface TraceVerification {
   etat: 'valide' | 'invalide' | 'a_confirmer';
   idRequete: string;
   horodatage: string;
-  empreinteReponse: string;
+  empreinteReponse: string | null;
 }
 
 const ARRIVEE: Declencheur[] = ['arrivee', 'a_la_demande'];
@@ -78,8 +78,9 @@ export const regleCCV17 = regle<ObjetClientUe>('CC-V17', 'M', [], ARRIVEE, (o) =
   const listeValide = Array.isArray(o.paysUe) && o.paysUe.every((p) => typeof p === 'string');
   if (typeof o.pays !== 'string' || !listeValide || !STATUTS_VIES.includes(o.statutVies)) return invalide();
   if (o.exoneree !== undefined && typeof o.exoneree !== 'boolean') return invalide();
-  if (o.exoneree === true) return traceExoneration(o);
-  return signal(o.paysUe.includes(o.pays) && o.statutVies !== 'verifie');
+  const historique = o.paysUe.includes(o.pays) && o.statutVies !== 'verifie';
+  if (o.exoneree === true) return historique ? alerte(undefined, `statut_vies:${o.statutVies}`) : traceExoneration(o);
+  return signal(historique);
 });
 export const regleCCV18 = regle<EntreeEcritureEncaissement>('CC-V18', 'M', [], ARRIVEE, (o) => signal(ecritureEncaissement(o).cartes.includes('A18')));
 export const regleCCV19 = regle<EntreeBalanceAgee>('CC-V19', 'B', ['cloture'], ARRIVEE, (o) => {
