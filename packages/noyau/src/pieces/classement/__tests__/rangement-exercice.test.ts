@@ -25,6 +25,10 @@ describe('rangement par année comptable', () => {
     expect(q).toMatchObject({ motif: 'a_cheval', propose: 'ex1', autre: 'ex2' });
     // Veille du changement d'année : encore à cheval seulement si la fin passe la frontière.
     expect(questionRangement({ id: 'p2', date: '2025-12-15', dateFin: '2025-12-31' }, EXERCICES)?.motif).toBe('exercice_precedent');
+    // Fin hors de tout exercice : pas de plantage, pas de question pour la pièce de l'exercice en cours.
+    expect(questionRangement({ id: 'p3', date: '2026-12-15', dateFin: '2027-01-14' }, EXERCICES)).toBeUndefined();
+    // Pièce de l'exercice précédent qui finit hors de tout exercice.
+    expect(questionRangement({ id: 'p4', date: '2025-12-15', dateFin: '2027-01-14' }, EXERCICES)?.motif).toBe('exercice_precedent');
     expect(code(() => questionRangement({ id: 'p2', date: '2026-02-01', dateFin: '2026-01-01' }, EXERCICES))).toBe('dates_invalides');
     expect(code(() => questionRangement({ id: 'p2', date: '2026-02-30' }, EXERCICES))).toBe('dates_invalides');
   });
