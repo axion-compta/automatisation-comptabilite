@@ -1,14 +1,15 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR n°1187, tête relue : effc6c94360db481ac35bb7863a868148a129114
+PR n°1187 (L24-T27), seconde relecture au SHA de tête 0ff2155a10659832898945df10df3b27db08095b.
 
-## Défauts
-1. `packages/noyau/src/banque/sans-piece/__tests__/cas-forme.test.ts:57` : le cas limite non entier n'est pas testé. La mutation de `packages/noyau/src/banque/sans-piece/cas-forme.ts:36` `Number.isSafeInteger(m)` en `Number.isFinite(m)` survit : un montant de 1,5 centime donnerait alors une proposition en 108. Correction demandée : dans `brouillon-seulement`, ajouter `expect(() => proposerSelonForme({ montant: 1.5 as never }, 'EI')).toThrow(ErreurCasForme)` et le cas Infinity (`{ montant: Infinity as never }`).
+## Défaut précédent
+1. Levé : `cas-forme.test.ts:58` teste 1.5, -1.5, Infinity et -Infinity. La mutation `Number.isSafeInteger(m)` → `Number.isFinite(m)` (`cas-forme.ts:36`) fait maintenant échouer `brouillon-seulement`.
 
-## Vérifié
-- Fichiers : les 4 du diff sont dans `fichiers_autorises` ; 110 lignes, sous `taille_max_lignes` (180).
-- 5 tests nommés présents et verts en local (vitest, Node 22).
-- `FORMES` (`profil/types.ts`) = EI, EURL, SARL, SASU, SAS, SCI : seule l'EI reçoit 108, toutes les sociétés sont testées.
-- Mutations tuées : garde du montant invalide retirée, garde du montant nul retirée, condition `m < 0` de la restitution retirée, `=== true` en `!== false`, `Math.abs` retiré, EURL traitée comme une EI.
-- Mutations `m > 0` → `m >= 0` et `m < 0` → `m <= 0` : équivalentes (zéro refusé avant).
-- Toujours brouillon, `valide: false` ; aucun secret, aucun prix, aucun mot interdit, données fictives ; journal de 6 lignes commençant par `# Journal L24-T27`.
+## Pas de régression
+- Le commit de correction n'ajoute qu'une ligne de test. Le code n'a pas changé depuis la première relecture.
+- 5 tests sur 5 réussissent en local. Le diff fait 112 lignes pour un maximum de 180. Les 4 fichiers sont dans `fichiers_autorises`. Le journal fait 6 lignes. Aucun mot interdit.
+- CI : tous les jobs sont verts sauf `tests` (et donc `verifier`). Le seul test en échec est `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Il échoue de la même façon sur `origin/main` (conflit entre L22-T30 n°1215 et L25-T01 n°1146) : ce n'est pas un défaut de l'auteur. Il faut réparer main, puis relancer la CI.
+
+## Remarques (ne bloquent pas)
+- La mutation `isSafeInteger` → `isInteger` survit, car aucun montant au-delà de 2^53 n'est testé.
+- La fiche est sensible : seul Will peut la fusionner.
