@@ -69,6 +69,8 @@ describe('autorisation de clôture', () => {
       .toMatchObject({ permis: false, raison: 'confirmation_renforcee_requise' });
     expect(autoriserCloture({ ...d, confirmations: CONF.confirmations, responsabiliteAcceptee: false }))
       .toMatchObject({ permis: false, raison: 'confirmation_renforcee_requise' });
+    for (const mauvaises of [[{ id: '', horodatage: HORO }, { id: 'x', horodatage: HORO }], [{ id: 'a', horodatage: '' }, { id: 'b', horodatage: HORO }], [{ id: 'a', horodatage: HORO }, { id: 'b', horodatage: '' }]])
+      expect(autoriserCloture({ ...d, confirmations: mauvaises, responsabiliteAcceptee: true })).toMatchObject({ permis: false, raison: 'confirmation_renforcee_requise' });
     expect(autoriserCloture({ ...d, ...CONF }).permis).toBe(true);
     expect(autoriserCloture({ ...d, ...CONF, auteur: { personneId: 'p-u', role: 'utilisateur', reauthRecente: true } }))
       .toMatchObject({ permis: false, raison: 'role_insuffisant' });
@@ -84,15 +86,16 @@ describe('autorisation de clôture', () => {
   });
 
   it('trace-auteur-et-accord', () => {
-    const a = approbation();
-    const r = autoriserCloture(demande({ accord: a }));
-    expect(r).toMatchObject({ permis: true, trace: { auteur: 'p-admin', accord: a, horodatage: HORO } });
-    const sans = autoriserCloture(demande({ expertActif: false, ...CONF }));
-    expect(sans).toMatchObject({ permis: true, trace: { auteur: 'p-admin', confirmations: CONF.confirmations } });
-    const doc = autoriserCloture(demande({ accord: { type: 'document', empreinte: EMPREINTE, rattacheA: 'ex-2026' } }));
-    expect(doc).toMatchObject({ permis: true, trace: { horodatage: HORO } });
-    const exp = autoriserCloture(demande({ auteur: expert }));
-    expect(exp).toMatchObject({ permis: true, trace: { auteur: 'p-expert', horodatage: HORO } });
+    const [T1, T2, T3] = ['2026-11-12T09:00:00Z', '2026-11-12T09:30:00Z', '2026-11-12T11:00:00Z'];
+    const a = approbation({ horodatage: T1 });
+    expect(autoriserCloture(demande({ accord: a, maintenant: T3 }))).toMatchObject({ permis: true, trace: { auteur: 'p-admin', accord: a, horodatage: T1 } });
+    const confirmations = [{ id: 'c1', horodatage: T2 }, { id: 'c2', horodatage: T1 }];
+    const sans = autoriserCloture(demande({ expertActif: false, confirmations, responsabiliteAcceptee: true, maintenant: T3 }));
+    expect(sans).toMatchObject({ permis: true, trace: { auteur: 'p-admin', confirmations, horodatage: T2 } }); // la plus tardive
+    const doc = autoriserCloture(demande({ accord: { type: 'document', empreinte: EMPREINTE, rattacheA: 'ex-2026' }, maintenant: T3 }));
+    expect(doc).toMatchObject({ permis: true, trace: { horodatage: T3 } });
+    const exp = autoriserCloture(demande({ auteur: expert, maintenant: T3 }));
+    expect(exp).toMatchObject({ permis: true, trace: { auteur: 'p-expert', horodatage: T3 } });
   });
 
   it('accord-d-une-autre-societe-refuse', () => {
