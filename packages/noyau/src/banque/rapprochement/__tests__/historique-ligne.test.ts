@@ -40,7 +40,7 @@ describe('historique d’une ligne bancaire', () => {
   });
 
   it('reconstitution-egale-etat-courant', () => {
-    for (const [etat, attendu] of [['propose', 'proposee'], ['valide', 'rapprochee'], ['defait', 'defaite']] as const) {
+    for (const [etat, attendu] of [['propose', 'proposee'], ['valide', 'rapprochee'], ['defait', 'defaite'], ['refuse', 'defaite']] as const) {
       expect(etatDuLien(lien({ etat }))).toBe(attendu);
     }
     const journal = [
@@ -55,5 +55,8 @@ describe('historique d’une ligne bancaire', () => {
 
   it('refuse un horodatage invalide', () => {
     expect(() => historiqueLigne([entree('proposer', 'propose', 'pas-une-date')], 'l1')).toThrow(ErreurHistorique);
+    expect(() => historiqueLigne([entree('proposer', 'propose', '2025-03-01T10:00:00Z'), entree('valider', 'valide', 'pas-une-date')], 'l1')).toThrow(ErreurHistorique);
+    // Horodatage invalide sur une autre ligne : ignoré.
+    expect(historiqueLigne([entree('proposer', 'propose', 'pas-une-date', { ligneId: 'l2' })], 'l1')).toHaveLength(1);
   });
 });
