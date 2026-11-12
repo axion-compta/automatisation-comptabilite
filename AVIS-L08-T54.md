@@ -1,22 +1,25 @@
 VERDICT: A CORRIGER
-SHA: 62de13a6c6875af61a5e180789c581001ff2079a
+SHA: 42169633daa957b2e80b0141880aa855135e8112
 PR: #1085
 
-Fiche L08-T54 (sensible : fusion par Will seul), relue au SHA de tête 62de13a6c6875af61a5e180789c581001ff2079a (relecteur Opus). L'avis précédent était OK au SHA 33e6de975747a809f0404b4217ef827b06b5019f (PR #1082, branche `lot-08/L08-T54-reprise`). `pilotage/ARRET` absent sur origin/main.
+Fiche L08-T54 (**sensible** : fusion par Will seul), relue au SHA de tête 42169633daa957b2e80b0141880aa855135e8112 (relecteur Opus). L'avis précédent était A CORRIGER au SHA 62de13a6 : historique sans ancêtre commun avec main, code absent. `pilotage/ARRET` absent sur origin/main.
 
-## Constat : le conflit n'est PAS résolu
-- La tête de `lot-08/L08-T54` n'a pas bougé : 62de13a6, commit du 08/11/2026 qui ne touche que `pilotage/fiches/L08-T54.md`. Il n'y a eu aucune fusion de main. Le correcteur l'a écrit dans la PR : `git merge origin/main` refuse (« unrelated histories »).
-- `git merge-base origin/main origin/lot-08/L08-T54` ne rend rien. L'historique de main a été réécrit, et la branche n'a plus d'ancêtre commun avec lui. GitHub marque la PR « dirty », et aucun job de CI n'a tourné sur cette tête.
-- Le corps de la PR dit « même contenu (SHA 33e6de97) ». C'est faux : la branche ne pointe pas sur 33e6de97.
+## Défaut du 62de13a6 : corrigé
+- 8feca732 fusionne origin/main (fb2f2ff4) avec `--allow-unrelated-histories`. Depuis, `git merge-base origin/main HEAD` rend fb2f2ff4, c'est-à-dire main actuel. Mergeable « clean ».
+- `git diff origin/main HEAD` porte sur 3 fichiers seulement, tous dans `fichiers_autorises`. Taille 198 + 4 = 202 lignes, pour une limite de 220. Aucune ligne binaire.
+- CI verte à cette tête (run 43164723960) : verifier, tests, e2e, gardes, types, lint, licences, gitleaks, stryker.
 
-## Fichiers propres de la fiche : PAS inchangés
-Comparaison avec la version relue OK (33e6de97) :
-- `packages/noyau/src/rgpd/exercice-violation.ts` : absent de la tête (présent dans 33e6de97, blob 7a12d4c2).
-- `packages/noyau/src/rgpd/__tests__/exercice-violation.test.ts` : absent de la tête (blob a9cee88e dans 33e6de97).
-- `pilotage/fiches/L08-T54.md` : différent (tête 99d2866e, 33e6de97 62c97c8a, main cad7a936).
-- `pilotage/journal/L08-T54.md` : différent (tête 5b5f524a = main, 33e6de97 3f221f8a).
-Le code et les 9 tests nommés relus OK ne sont donc pas dans cette PR. Comparée à main, la tête diffère sur 1555 fichiers (64 704 lignes retirées).
+## Comparaison fichier par fichier avec la version relue OK (33e6de97, `lot-08/L08-T54-reprise`, PR #1082)
+- `packages/noyau/src/rgpd/exercice-violation.ts` : identique.
+- `packages/noyau/src/rgpd/__tests__/exercice-violation.test.ts` : identique.
+- `pilotage/journal/L08-T54.md` : identique (7 lignes, commence par `# Journal L08-T54`).
+- `pilotage/fiches/L08-T54.md` : **différent**. Dans 33e6de97, la fiche passait à `statut: fait`. À cette tête, elle est restée celle de main (`statut: a_faire`), et la PR ne la modifie plus.
 
-## Ce qui débloque (geste de Will, ce n'est pas un défaut de l'auteur)
-- `lot-08/L08-T54-reprise` (33e6de97) a bien un ancêtre commun avec l'actuel main (599f7b33). Il faut mettre `lot-08/L08-T54` sur ce contenu : soit Will remplace la branche par 33e6de97 (le relecteur et les auteurs n'ont pas le droit de forcer), soit on recrée la branche depuis origin/main avec les 4 fichiers de la fiche seulement. Ensuite, fusionner main, relancer la CI, puis demander une nouvelle relecture au nouveau SHA de tête.
-- Aucune relecture du code n'est possible à ce SHA, puisque le code n'y est pas.
+## Défauts à corriger
+1. `pilotage/fiches/L08-T54.md:8` : remettre `statut: fait` (étape 5 de la fiche ; `pilotage/consignes/auteur.md` point 5). Sinon, une fois la PR fusionnée, la fiche reste `a_faire` et `garde:termine` bloque les fiches qui en dépendent (voir la consigne S du lot 5). Correction d'une ligne, sur la branche, par une fusion normale : pas de force-push.
+2. Corps de la PR : il manque la ligne `Fiche: L08-T54` et les IDs d'exigences (V3-PLA-126, V3-PLA-129, V3-PLA-179, V3-SEC-004), exigés par CLAUDE.md. Le corps renvoie aussi à « même contenu (SHA 33e6de97) », ce qui n'est vrai qu'une fois le point 1 corrigé.
+
+## Vérifié sur le code (inchangé par rapport à la relecture OK)
+- Tests ciblés à cette tête : `exercice-violation.test.ts`, `violations.test.ts` et `securite/__tests__/arret.test.ts`, soit 3 fichiers et 25 tests au vert. Les 9 tests nommés de la fiche sont présents.
+- Quatre mutations, toutes annulées, chacune rougit 1 test : retrait du refus global ou d'une autre société (l. 43) ; retrait de `reprise_absente` (l. 70) ; borne de l'exercice décalée de 1 s (l. 49) ; retrait du refus « actions sans événement d'arrêt » (l. 53).
+- Aucun « 24 » dans `src` (la limite est passée en argument ; seul le test l'écrit). Aucun mot interdit, aucun prix, aucun nom réel ni e-mail.
