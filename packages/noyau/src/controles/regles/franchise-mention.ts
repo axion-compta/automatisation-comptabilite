@@ -17,6 +17,8 @@ export interface ObjetMention {
   dateFacture: string;
   mentionsLues: readonly string[];
   liste: readonly MentionDatee[];
+  /** Mentions tolérées après leur remplacement (même forme, fins datées et exclues) ; absente ou vide = aucune. */
+  toleree?: readonly MentionDatee[];
 }
 
 const FORME_DATE = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
@@ -56,13 +58,15 @@ function normaliser(s: string): string {
 }
 
 function evaluerMention(o: ObjetMention): SortieRegle {
-  const admises = mentionsAdmises(o.liste, o.dateFacture);
+  const tolerees = o.toleree === undefined || o.toleree.length === 0 ? [] : mentionsAdmises(o.toleree, o.dateFacture);
+  const admises = [...mentionsAdmises(o.liste, o.dateFacture), ...tolerees];
   const lues = o.mentionsLues.map(normaliser).filter((t) => t !== '');
   if (lues.length === 0) return alerte(undefined, 'absente');
-  const sourceAVerifier = admises.length > 0 && admises.every((m) => m.statut !== 'valide');
-  const trouvee = admises.some((m) => lues.includes(normaliser(m.texte)));
-  if (trouvee) return sourceAVerifier ? { resultat: 'OK', valeur: 'source_a_verifier' } : ok();
-  return alerte(undefined, sourceAVerifier ? 'source_a_verifier' : 'non_admise_a_cette_date');
+  const nonValide = (m: MentionDatee): boolean => m.statut !== 'valide';
+  const trouvees = admises.filter((m) => lues.includes(normaliser(m.texte)));
+  // Le statut « à vérifier » est celui de la mention trouvée, pas celui des autres mentions admises.
+  if (trouvees.length > 0) return trouvees.every(nonValide) ? { resultat: 'OK', valeur: 'source_a_verifier' } : ok();
+  return alerte(undefined, admises.length > 0 && admises.every(nonValide) ? 'source_a_verifier' : 'non_admise_a_cette_date');
 }
 
 export const regleCCT13: RegleControle<ObjetMention> = {

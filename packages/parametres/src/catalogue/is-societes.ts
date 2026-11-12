@@ -130,6 +130,17 @@ const DEFS: Def[] = [
     note: true,
   },
   {
+    cle: 'tva.franchise.mention_toleree',
+    valeur: 'TVA non applicable, art. 293 B du CGI',
+    debut: '2027-01-01',
+    fin: '2028-07-01',
+    statut: 'a_verifier',
+    url: SERVICE_PUBLIC + 'F21746',
+    titre: 'Mention du CGI (art. 293 B) tolérée après la bascule, jusqu’au 30/06/2028 inclus (BOI-RES-TVA-000253-20261007)',
+    source: 'Fin de tolérance 30/06/2028 inclus, donc fin exclue au 01/07/2028 ; relecture par l’expert-comptable (D25)',
+    note: true,
+  },
+  {
     cle: 'tva.franchise.mention',
     valeur: 'TVA non applicable, article L. 233-3 du CIBS',
     debut: '2027-01-01',

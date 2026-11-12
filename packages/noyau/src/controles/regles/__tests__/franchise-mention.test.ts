@@ -74,7 +74,10 @@ describe('CC-T13 mention de franchise', () => {
     expect(evaluer('2030-06-15', ['autre'], seule)).toEqual({ resultat: 'ALERTE', valeur: 'source_a_verifier' });
     expect(evaluer('2030-06-15', [ANCIENNE], seule)).toEqual({ resultat: 'OK', valeur: 'source_a_verifier' });
     const mixte = [...seule, { texte: NOUVELLE, debut: '2020-01-01', fin: null, statut: 'valide' as const }];
-    expect(evaluer('2030-06-15', [ANCIENNE], mixte)).toEqual(OK);
+    // Le statut est celui de la mention trouvée : ANCIENNE (à vérifier) reste à vérifier, NOUVELLE (valide) est OK.
+    expect(evaluer('2030-06-15', [ANCIENNE], mixte)).toEqual({ resultat: 'OK', valeur: 'source_a_verifier' });
+    expect(evaluer('2030-06-15', [NOUVELLE], mixte)).toEqual(OK);
+    expect(evaluer('2030-06-15', [ANCIENNE, NOUVELLE], mixte)).toEqual(OK);
     expect(evaluer('2030-06-15', ['autre'], mixte)).toEqual({ resultat: 'ALERTE', valeur: 'non_admise_a_cette_date' });
   });
 
@@ -104,5 +107,55 @@ describe('CC-T13 mention de franchise', () => {
     const accent: MentionDatee[] = [{ texte: 'Exonéré d’impôt', debut: '2020-01-01', fin: null, statut: 'valide' }];
     expect(evaluer('2030-06-15', ["exonere d'impot"], accent)).toEqual(OK);
     expect(evaluer('2030-06-15', ['exonéré d impôt'], accent)).toEqual({ resultat: 'ALERTE', valeur: 'non_admise_a_cette_date' });
+  });
+
+  // Cas de la bascule, avec des dates et des textes fictifs (le catalogue réel est vérifié dans le paquet des paramètres).
+  describe('tolérance après remplacement', () => {
+    const CGI = 'TVA non applicable, art. fictif du code ancien';
+    const CIBS = 'TVA non applicable, art. fictif du code nouveau';
+    const citee: MentionDatee[] = [
+      { texte: CGI, debut: '2026-01-01', fin: '2027-01-01', statut: 'a_verifier' },
+      { texte: CIBS, debut: '2027-01-01', fin: null, statut: 'a_verifier' },
+    ];
+    const toleree: MentionDatee[] = [{ texte: CGI, debut: '2027-01-01', fin: '2028-07-01', statut: 'a_verifier' }];
+    const ev = (d: string, lues: string[], t?: MentionDatee[]): unknown =>
+      regleCCT13.evaluer({ dateFacture: d, mentionsLues: lues, liste: citee, ...(t === undefined ? {} : { toleree: t }) });
+    const AV = { resultat: 'OK', valeur: 'source_a_verifier' };
+    const ALERTE = { resultat: 'ALERTE', valeur: 'source_a_verifier' };
+
+    it('facture-decembre-2026-cgi-acceptee', () => {
+      expect(ev('2026-12-31', [CGI], toleree)).toEqual(AV);
+      expect(ev('2026-12-31', [CGI])).toEqual(AV);
+    });
+    it('facture-fevrier-2027-cgi-toleree-acceptee', () => {
+      expect(ev('2027-02-15', [CGI], toleree)).toEqual(AV);
+      expect(ev('2027-01-01', [CGI], toleree)).toEqual(AV);
+      expect(ev('2028-06-30', [CGI], toleree)).toEqual(AV);
+      expect(ev('2027-02-15', [CGI])).toEqual(ALERTE);
+      expect(ev('2027-02-15', [CGI], [])).toEqual(ALERTE);
+    });
+    it('facture-apres-fin-tolerance-cgi-alerte', () => {
+      expect(ev('2028-07-01', [CGI], toleree)).toEqual(ALERTE);
+      expect(ev('2029-01-01', [CGI], toleree)).toEqual(ALERTE);
+    });
+    it('facture-2027-cibs-acceptee', () => {
+      expect(ev('2027-02-15', [CIBS], toleree)).toEqual(AV);
+      expect(ev('2026-12-31', [CIBS], toleree)).toEqual(ALERTE);
+    });
+    it('tolerance-invalide-exception', () => {
+      expect(code(() => ev('2027-02-15', [CGI], [{ ...toleree[0]!, debut: '2027-02-30' }]))).toBe('entree_invalide');
+      expect(code(() => ev('2027-02-15', [CGI], [{ ...toleree[0]!, fin: '2027-01-01' }]))).toBe('entree_invalide');
+    });
+    it('tolerance-a-verifier-gardee-si-cibs-valide', () => {
+      const cibsValide: MentionDatee[] = citee.map((m) => (m.texte === CIBS ? { ...m, statut: 'valide' as const } : m));
+      const r = (lues: string[]): unknown => regleCCT13.evaluer({ dateFacture: '2027-02-15', mentionsLues: lues, liste: cibsValide, toleree });
+      expect(r([CGI])).toEqual(AV);
+      expect(r([CIBS])).toEqual(OK);
+    });
+    it('tolerance-valide-rend-ok-complet', () => {
+      const t: MentionDatee[] = [{ ...toleree[0]!, statut: 'valide' }];
+      const toutes: MentionDatee[] = citee.map((m) => ({ ...m, statut: 'valide' as const }));
+      expect(regleCCT13.evaluer({ dateFacture: '2027-02-15', mentionsLues: [CGI], liste: toutes, toleree: t })).toEqual(OK);
+    });
   });
 });
