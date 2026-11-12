@@ -7,12 +7,16 @@ import { PREFIXE_ROUTES_SOCIETE } from '../../../../packages/contrat/src/prefixe
 import { creerFauxSessions } from '../../../../packages/noyau/src/session/memoire.js';
 
 const JETON = 'jeton-fictif-lemoine';
-const SESSION = { personneId: 'personne-fictive-1', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'], societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-saisir'], revendications: {} } as const;
+/** L'identité vient de la session : une session fictive par personne (le paramètre `x-personne` des appels choisit le jeton, l'en-tête n'est plus envoyé). */
+const sessionDe = (personneId: string) => ({ personneId, nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'], societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-deposer'], revendications: {} }) as const;
+const SESSIONS = Object.fromEntries(['PER-01', 'PER-02'].map((p) => [JETON + '-' + p, sessionDe(p)]));
 /** Vrai serveur avec jeton : chaque URL reçoit le préfixe de la société fictive et l'en-tête `authorization`. */
 function appSociete() {
-  const a = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions({ [JETON]: SESSION }) } } });
-  const inject = (o: { method: 'GET' | 'POST' | 'PATCH'; url: string; headers?: Record<string, string>; payload?: object }) =>
-    a.inject({ ...o, url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + o.url, headers: { authorization: 'Bearer ' + JETON, ...o.headers } });
+  const a = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions(SESSIONS) } } });
+  const inject = (o: { method: 'GET' | 'POST' | 'PATCH'; url: string; headers?: Record<string, string>; payload?: object }) => {
+    const { 'x-personne': personne = 'PER-01', ...autres } = o.headers ?? {};
+    return a.inject({ ...o, url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + o.url, headers: { authorization: 'Bearer ' + JETON + '-' + personne, ...autres } });
+  };
   return { inject, close: () => a.close() };
 }
 const apps: Array<ReturnType<typeof appSociete>> = [];

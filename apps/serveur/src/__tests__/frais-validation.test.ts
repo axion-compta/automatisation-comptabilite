@@ -6,12 +6,16 @@ import { PREFIXE_ROUTES_SOCIETE } from '../../../../packages/contrat/src/prefixe
 import { creerFauxSessions } from '../../../../packages/noyau/src/session/memoire.js';
 import { configEssai } from '../domaines/frais-validation.js';
 const JETON = 'jeton-fictif-lemoine';
-const SESSION = { personneId: 'personne-fictive-1', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'], societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-saisir'], revendications: {} } as const;
+/** L'identité vient de la session : une session fictive par personne (le paramètre `x-personne` des appels choisit le jeton, l'en-tête n'est plus envoyé). */
+const sessionDe = (personneId: string) => ({ personneId, nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'], societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-deposer', 'compta-valider'], revendications: {} }) as const;
+const SESSIONS = Object.fromEntries(['PER-01', 'PER-02'].map((p) => [JETON + '-' + p, sessionDe(p)]));
 /** Vrai serveur avec jeton : chaque URL reçoit le préfixe de la société fictive et l'en-tête `authorization`. */
 function appSociete() {
-  const a = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions({ [JETON]: SESSION }) } } });
-  const inject = (o: { method: 'GET' | 'POST' | 'PATCH'; url: string; headers?: Record<string, string>; payload?: object }) =>
-    a.inject({ ...o, url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + o.url, headers: { authorization: 'Bearer ' + JETON, ...o.headers } });
+  const a = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions(SESSIONS) } } });
+  const inject = (o: { method: 'GET' | 'POST' | 'PATCH'; url: string; headers?: Record<string, string>; payload?: object }) => {
+    const { 'x-personne': personne = 'PER-01', ...autres } = o.headers ?? {};
+    return a.inject({ ...o, url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + o.url, headers: { authorization: 'Bearer ' + JETON + '-' + personne, ...autres } });
+  };
   return { inject, close: () => a.close() };
 }
 const apps: Array<ReturnType<typeof appSociete>> = [];
@@ -68,9 +72,12 @@ describe('serveur : proposer, valider un lot, préparer un remboursement', () =>
     expect(code(() => service(j).proposer('FRA-999', cle()))).toBe('FRAIS_INCONNU');
     expect(statut(j, 'FRA-005')).toBe('propose');
   });
-  it('valider-sans-personne-400', async () => {
-    const r = await http().valider({ ids: ['FRA-005'] }, {});
-    expect(r.statusCode).toBe(400);
+  it('valider-sans-personne-401', async () => {
+    // la personne vient de la session : sans session, aucune identité, donc refus avant tout appel au service
+    const a = creerApp();
+    const r = await a.inject({ method: 'POST', url: PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine') + '/frais/valider', headers: { 'idempotency-key': cle() }, payload: { ids: ['FRA-005'] } });
+    await a.close();
+    expect([r.statusCode, r.json().code]).toEqual([401, 'NON_AUTHENTIFIE']);
   });
   it('valider-refuse-frais-paye-societe', () => {
     const j = jeu();

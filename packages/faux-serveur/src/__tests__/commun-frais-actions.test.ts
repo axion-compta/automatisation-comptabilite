@@ -13,8 +13,8 @@ const json = { 'content-type': 'application/json' };
 
 const JETON = 'jeton-fictif-lemoine';
 const SESSION: Session = {
-  personneId: 'personne-fictive-1', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'],
-  societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-saisir'], revendications: {},
+  personneId: 'PER-01', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'],
+  societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-deposer', 'compta-valider'], revendications: {},
 };
 const vrai: Cible = async () => {
   const app = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions({ [JETON]: SESSION }) } } });
