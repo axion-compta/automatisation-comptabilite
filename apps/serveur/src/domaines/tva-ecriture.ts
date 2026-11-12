@@ -73,8 +73,8 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
           etat.lignes = etat.lignes.map((x) => (x.id === ligne ? r.ligne : x));
           return { reponse: r, ligne: { type: 'passage_sous_reserve', ligne, motif, pieceId: l.pieceId } };
         } catch (e) {
-          if (e instanceof ErreurSousReserve && e.code === 'ia_non_autorisee') return { erreur: 'ACTEUR_NON_HUMAIN' };
-          if (e instanceof ErreurSousReserve && e.code === 'transition_interdite') return { erreur: 'TRANSITION_INTERDITE' };
+          const code = e instanceof ErreurSousReserve ? ({ ia_non_autorisee: 'ACTEUR_NON_HUMAIN', transition_interdite: 'TRANSITION_INTERDITE' } as Record<string, Code>)[e.code] : undefined;
+          if (code !== undefined) return { erreur: code };
           throw e;
         }
       }),
@@ -86,9 +86,8 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
           const reponse = { ancien_mois: r.journal.ancienMois, nouveau_mois: r.journal.nouveauMois, par: a.id, le, periodes_a_recalculer: r.periodesARecalculer };
           return { reponse, ligne: { type: 'rattachement_modifie', piece, ancien_mois: r.journal.ancienMois, nouveau_mois: r.journal.nouveauMois } };
         } catch (e) {
-          if (e instanceof ErreurRattachement && e.code === 'piece_inconnue') return { erreur: 'OBJET_INCONNU' };
-          if (e instanceof ErreurRattachement && e.code === 'periode_deposee') return { erreur: 'PERIODE_DEPOSEE' };
-          if (e instanceof ErreurRattachement && e.code === 'mois_identique') return { erreur: 'MOIS_IDENTIQUE' };
+          const code = e instanceof ErreurRattachement ? ({ piece_inconnue: 'OBJET_INCONNU', periode_deposee: 'PERIODE_DEPOSEE', mois_identique: 'MOIS_IDENTIQUE' } as Record<string, Code>)[e.code] : undefined;
+          if (code !== undefined) return { erreur: code };
           throw e;
         }
       }),

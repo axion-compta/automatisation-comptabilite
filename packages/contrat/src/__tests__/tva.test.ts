@@ -86,7 +86,6 @@ describe('tva en lecture : service et routes', () => {
     expect(Object.keys(doc.paths['/tva/declarations/{declaration}']?.['get']?.responses ?? {})).toContain('404');
     const verbes = Object.entries(doc.paths).filter(([c]) => c.includes('/tva/')).flatMap(([, ops]) => Object.keys(ops));
     expect(verbes.filter((v) => v === 'get')).toEqual(['get', 'get', 'get']);
-    // routes d'écriture TVA, déclarées hors du domaine en lecture
     expect(verbes.filter((v) => v !== 'get')).toEqual(['put', 'post', 'post', 'put']);
   });
 });
