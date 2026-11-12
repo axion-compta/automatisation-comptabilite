@@ -54,4 +54,15 @@ describe('TVA française facturée à tort', () => {
     // Facture reçue illisible : jamais de levée par défaut.
     expect(() => leverBlocage(blocage, { tvaFranceCentimes: Number.NaN })).toThrow();
   });
+
+  it('montants-invalides-refuses', () => {
+    const blocage = { pieceId: 'piece-1', tvaBloquee: centimes(20000) };
+    // Avoir à TVA négative : jamais de blocage à montant négatif.
+    expect(() => detecterTvaATort(piece({ tvaFranceCentimes: -20000 }), contexte)).toThrow();
+    expect(() => leverBlocage(blocage, { tvaFranceCentimes: -1 })).toThrow();
+    for (const invalide of [1.5, Number.POSITIVE_INFINITY]) {
+      expect(() => leverBlocage(blocage, { tvaFranceCentimes: invalide })).toThrow();
+    }
+    expect(() => detecterTvaATort(piece({ tvaFranceCentimes: Number.POSITIVE_INFINITY }), contexte)).toThrow();
+  });
 });
