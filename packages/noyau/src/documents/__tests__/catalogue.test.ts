@@ -18,6 +18,8 @@ describe('catalogue des documents préparés', () => {
     expect(c).toContain('acte_unanime');
     expect(c).not.toContain('decision_associe_unique');
     expect(c).not.toContain('rapport_gerant_sci');
+    expect(codes('EURL')).toEqual(expect.arrayContaining(['decision_associe_unique', 'bilan']));
+    expect(codes('EURL')).not.toContain('pv_ag');
     expect(codes('SASU')).toContain('decision_associe_unique');
     expect(codes('SASU')).not.toContain('pv_ag');
   });

@@ -32,5 +32,7 @@ export const Document = z
     if (present === undefined || absent !== undefined) {
       ctx.addIssue({ code: 'custom', path: [d.rayon === 'depose' ? 'deposeLe' : 'prepareLe'], message: 'date du rayon seule attendue' });
     }
+    const incoherent = d.rayon === 'depose' ? d.source === 'prepare_produit' : d.source === 'depot_personne';
+    if (incoherent) ctx.addIssue({ code: 'custom', path: ['source'], message: 'source incohérente avec le rayon' });
   });
 export type Document = z.infer<typeof Document>;

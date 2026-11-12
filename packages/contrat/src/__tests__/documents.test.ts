@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import type { StatutDocument } from '../../../noyau/src/documents/historique.js';
 import { CATALOGUE_DOCUMENTS } from '../../../noyau/src/documents/catalogue.js';
-import { Document, TYPES_DOCUMENT } from '../domaines/documents.js';
+import { Document, STATUTS_DOCUMENT, TYPES_DOCUMENT } from '../domaines/documents.js';
 
 const HASH = 'a'.repeat(64);
 const base = {
@@ -38,6 +39,11 @@ describe('contrat document unifié', () => {
     expect(ok({ rayon: 'depose', deposeLe: undefined })).toBe(false);
     expect(ok({ rayon: 'prepare', prepareLe: undefined, deposeLe: '2026-11-12' })).toBe(false);
     expect(ok({ rayon: 'depose', deposeLe: '2026-11-12' })).toBe(false);
+    expect(ok({ rayon: 'prepare', source: 'depot_personne' })).toBe(false);
+    expect(ok({ rayon: 'depose', deposeLe: '2026-11-12', prepareLe: undefined, source: 'prepare_produit' })).toBe(false);
+    expect(ok({ rayon: 'depose', deposeLe: '2026-11-12', prepareLe: undefined, source: 'import_externe' })).toBe(true);
+    expect(ok({ source: 'import_externe' })).toBe(true);
+    expectTypeOf<(typeof STATUTS_DOCUMENT)[number]>().toEqualTypeOf<StatutDocument>();
     expect(ok({ rayon: 'autre' })).toBe(false);
     expect(ok({ prepareLe: '2026-02-30' })).toBe(false);
     expect(ok({ inconnu: 1 })).toBe(false);
