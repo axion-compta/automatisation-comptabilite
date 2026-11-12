@@ -1,15 +1,16 @@
-VERDICT: A CORRIGER
+VERDICT: OK
+1688512c9f336b6f73ae7bdfb564aff2fe53fe56
 
-PR n°1197, fiche L24-T19, tête 41c83f6fad2ab825083b0bf12de1cab4c502aaf7 (relecteur Opus, lot 5).
+Seconde relecture de la PR n°1197, fiche L24-T19, au SHA de tête 1688512c9f336b6f73ae7bdfb564aff2fe53fe56. L'avis précédent (A CORRIGER, tête 41c83f6) est levé.
 
-Contrôles passés : 4 fichiers, tous dans `fichiers_autorises` ; diff de 216 lignes, limite 220 ; les 5 tests nommés passent en local ; une écriture validée n'est jamais modifiée sur place (contre-passation et nouvelle écriture via `corriger`) ; période verrouillée exclue et comptée à part, bornes testées ; aucun secret, prix ni mot interdit ; données fictives ; journal de 8 lignes qui commence par `# Journal L24-T19`.
+## Défaut précédent, vérifié par mutation
+1. `packages/noyau/src/ecritures/reclassement.ts:54` : avec `filtre.dateFin` retiré de la validation des dates, `apercu-nombre-annonce` échoue. Le même test échoue quand on retire `filtre.dateDebut`. Levé.
 
-Mutations faites à la main : 9. Survivante : 1.
+## Contrôles
+- Diff : 4 fichiers, tous dans `fichiers_autorises` ; 218 lignes sur 220.
+- Depuis la première relecture, une seule ligne de test a été ajoutée ; le code n'a pas changé.
+- Tests : 5 tests nommés sur 5. Journal : 8 lignes.
+- Aucun mot interdit, aucun secret, aucun prix ; données fictives. Le corps de la PR a été reformulé.
 
-## Défaut à corriger (test seulement)
-1. `packages/noyau/src/ecritures/reclassement.ts:54` : on peut retirer `filtre.dateFin` de la validation des dates sans qu'aucun test rougisse. Une `dateFin` invalide filtrerait alors en silence, par comparaison de chaînes, un mauvais ensemble d'écritures annoncé à la personne. Ajoute dans `apercu-nombre-annonce` :
-   `expect(code(() => apercuReclassement(base, { ...filtre, dateFin: '2027-02-30' }, '625', verrous))).toBe('date_invalide');`
-
-## Remarques (non bloquantes)
-- Le diff est à 216 lignes pour une limite de 220 : l'ajout ci-dessus tient dans la marge.
-- Le corps de la PR emploie, à propos de `tsc` et `eslint`, une expression proscrite par la règle 12 de CLAUDE.md : à reformuler.
+## Remarques (ne bloquent pas)
+- CI : `tests` et `verifier` sont rouges pour la seule cause `ouverture.test.mjs > onze-cases-attendues` (`porte` attendu, `porte_rgpd` produit). Ce test échoue aussi sur `origin/main`. Ce n'est pas un défaut de cette PR.
