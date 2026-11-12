@@ -36,6 +36,11 @@ test('capture-manquante-refusee', () => {
   avec({ 'e01-1280.png': [1, 2, 3] }, base, (pb) => assert.deepEqual(pb, ['capture manquante au premier passage : e01-390.png']));
 });
 
+test('un-seul-dossier-vide-signale-les-manquantes', () => {
+  avec({}, base, (pb) => assert.deepEqual(pb, ['capture manquante au premier passage : e01-1280.png', 'capture manquante au premier passage : e01-390.png']));
+  avec(base, {}, (pb) => assert.deepEqual(pb, ['capture manquante au second passage : e01-1280.png', 'capture manquante au second passage : e01-390.png']));
+});
+
 test('dossier-absent-refuse', () => {
   const pb = comparerDossiers(join(tmpdir(), 'dossier-inexistant-a'), join(tmpdir(), 'dossier-inexistant-b'));
   assert.ok(pb.length > 0);
@@ -52,7 +57,7 @@ test('image-sans-empreinte-refusee', () => {
   const empreinte = '0123456789abcdef'.repeat(4);
   const ok = `exemple.fr/playwright:v1@sha256:${empreinte}`;
   assert.equal(validerImage(`${ok}\n`), ok);
-  for (const mauvaise of ['', '  ', 'exemple.fr/playwright:v1', `exemple.fr/playwright:v1@sha256:${empreinte.slice(1)}`, `exemple.fr/playwright:v1@sha256:${empreinte.toUpperCase()}`, `${ok}\nautre`, ` ${ok}`, `a@b ${ok}`, 'image@sha256:' + 'g'.repeat(64), undefined, 42]) {
+  for (const mauvaise of ['', '  ', 'exemple.fr/playwright:v1', `exemple.fr/playwright:v1@sha256:${empreinte.slice(1)}`, `exemple.fr/playwright:v1@sha256:${empreinte.toUpperCase()}`, `${ok}\nautre`, ` ${ok}`, `${ok}0`, `${ok} `, `a@${ok}`, `a@b ${ok}`, 'image@sha256:' + 'g'.repeat(64), undefined, 42]) {
     assert.throws(() => validerImage(mauvaise), /empreinte|image/, String(mauvaise));
   }
 });
