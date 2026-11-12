@@ -1,0 +1,8 @@
+/* Feuille du bas : uniquement des variables de jetons. */
+.axion-feuille-mobile { position: fixed; inset: 0; display: flex; align-items: flex-end; z-index: 100; }
+.axion-feuille-mobile__voile { position: absolute; inset: 0; background: var(--couleur-texte); opacity: 0.4; }
+.axion-feuille-mobile__feuille { position: relative; width: 100%; max-height: 85vh; overflow-y: auto; padding: var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-l) var(--rayon-l) 0 0; background: var(--couleur-surface); color: var(--couleur-texte); font-family: var(--police-texte); }
+.axion-feuille-mobile__fermer { display: block; margin-left: auto; min-height: var(--espace-xl); padding: var(--espace-xs) var(--espace-m); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-s); background: var(--couleur-fond); color: var(--couleur-texte); font: inherit; cursor: pointer; }
+.axion-feuille-mobile__contenu { margin-top: var(--espace-s); }
+@media (prefers-reduced-motion: no-preference) { .axion-feuille-mobile__feuille { animation: axion-feuille-montee 160ms ease-out; } }
+@keyframes axion-feuille-montee { from { transform: translateY(100%); } to { transform: translateY(0); } }
