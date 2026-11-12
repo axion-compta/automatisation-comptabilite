@@ -36,15 +36,20 @@ export function suiteDepot(nom: string, cible: CibleDepot): void {
 
     it('notation-a-crochets-memes-statuts-vrai-et-faux', avec(async (c) => {
       // Parties envoyées -> statut relevé sur le vrai serveur (oRPC, notation à crochets) ; contenus distincts.
-      const cas: [string[], number][] = [
+      const cas: [string[], number, number?][] = [
         [['fichiers[1]'], 400], [['fichiers[0]', 'fichiers[2]'], 400], [['fichiers[0]', 'fichiers[0]'], 400],
-        [['fichiers[01]'], 400], [['fichiers[10000]'], 400], [['fichiers[0]', 'fichiers[]'], 400], [['fichiers[]', 'fichiers[0]'], 400],
-        [['fichiers[]'], 200], [['fichiers[]', 'fichiers[]'], 200], [['fichiers[0]', 'fichiers'], 200], [['fichiers', 'fichiers'], 200],
-        [['fichiers[1]', 'fichiers[0]'], 200],
+        [['fichiers[01]'], 400], [['fichiers[10000]'], 400], [['fichiers[0]', 'fichiers[]'], 400], [['fichiers[]', 'fichiers[0]'], 400], [['fichiers[]', 'fichiers[1]'], 400],
+        [['fichiers[0]', 'fichiers[00]'], 400], [['fichiers[0]', 'fichiers[01]'], 400], [['fichiers[0]', 'fichiers[10000]'], 400],
+        [['fichiers[0]', 'fichiers[a]'], 400], [['fichiers[0]', 'fichiers[0][1]'], 400], [['fichiers[0]', 'fichiers['], 200, 1], [['fichiers[0]', 'fichiers[0]x'], 200, 1], [['fichiers[0]', 'fichiers[0][]'], 400], [['fichiers[0]', 'fichiers[-1]'], 400],
+        [['fichiers'], 400], [['fichiers[0]'], 200, 1], [['fichiers[]'], 200, 1], [['fichiers[]', 'fichiers[]'], 200, 2],
+        [['fichiers[0]', 'fichiers'], 200, 2], [['fichiers', 'fichiers'], 200, 2], [['fichiers[1]', 'fichiers[0]'], 200, 2],
+        [['fichiers', 'fichiers[0]'], 200, 1], [['fichiers', 'fichiers[]'], 200, 1], [['fichiers', 'fichiers', 'fichiers[0]'], 400],
+        [['fichiers[0]', 'fichiers[9999]'], 400], [Array.from({ length: 20 }, () => 'fichiers'), 200, 20], [Array.from({ length: 21 }, () => 'fichiers'), 400],
       ];
-      for (const [i, [noms, statut]] of cas.entries()) {
+      for (const [i, [noms, statut, n]] of cas.entries()) {
         const parties = noms.map((nom, j) => ({ nom, contenu: `%PDF-1.4 fictif ${i}-${j}` }));
-        expect([noms, (await c.deposerParties(parties, `cle-fictive-2${i}`)).status]).toEqual([noms, statut]);
+        const r = await c.deposerParties(parties, `cle-fictive-2${i}`);
+        expect([noms, r.status, n === undefined ? undefined : resultats(r).length]).toEqual([noms, statut, n]);
       }
     }));
 
