@@ -19,7 +19,7 @@ describe('catalogue des documents préparés', () => {
       'feuille_presence', 'grand_livre', 'liasse_fiscale', 'ordre_du_jour', 'pv_ag', 'pv_consultation', 'rapport_gestion',
     ]);
     const unique = [
-      'annexe', 'balance', 'bilan', 'compte_resultat', 'declaration_tva', 'decision_associe_unique', 'fec', 'grand_livre', 'liasse_fiscale', 'rapport_gestion',
+      'annexe', 'balance', 'bilan', 'compte_resultat', 'decision_associe_unique', 'declaration_tva', 'fec', 'grand_livre', 'liasse_fiscale', 'rapport_gestion',
     ];
     expect(codes('EURL')).toEqual(unique);
     expect(codes('SASU')).toEqual(unique);
