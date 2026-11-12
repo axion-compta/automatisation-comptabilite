@@ -20,7 +20,12 @@ export function lireCitation(texte: string): Citation | null {
   return m?.[1] !== undefined && m[2] !== undefined ? { registre: 'DEC-001', id: m[1], version: m[2] } : null;
 }
 
+function borneValide(b: string | undefined): boolean {
+  return b === undefined || estDateValide(b);
+}
+
 function couvre(e: EntreeRegistre, date: string): boolean {
+  if (!estDateValide(date) || !borneValide(e.debutValidite) || !borneValide(e.finValidite)) return false;
   if (e.debutValidite !== undefined && date < e.debutValidite) return false;
   return e.finValidite === undefined || date < e.finValidite;
 }
