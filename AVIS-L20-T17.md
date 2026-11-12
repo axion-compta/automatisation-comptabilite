@@ -1,14 +1,16 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1164, tête relue : 724219d99b839de4332d23350db9eb96aa9dc36c
+PR #1164 (L20-T17), seconde relecture Opus du 12/11/2026 (consigne LOT5, section R). Fiche sensible : fusion par Will seul.
+SHA de tête relu : d7095153b00cec70937c9b99bfdcbcb69f25056d
 
-Vérifié : 4 fichiers, tous dans `fichiers_autorises` ; 106 lignes (max 180) ; 4 tests nommés verts ; aucun seuil en dur (seuils lus par `seuilsAu(periode.fin)`) ; pièce en doute : aucun appel ni montant ; aucun mot interdit, secret ni prix ; journal de 5 lignes. CI verte (verifier en attente).
-Mutations tuées : `seuilsAu(debut)`, garde `estimation === undefined` retirée, `caServices` remplacé par `caVentes`, exercice figé.
+## Défaut de l'avis précédent (tête 724219d9) : levé, vérifié par mutation
+1. `echeance-la-plus-proche` couvre un filtre avec `du` < `jour`, une échéance en retard et une échéance sans date. Mutations désormais tuées : `l.statut === 'a_venir'` → `!== 'faite'`, puis la même en excluant seulement `inconnue`, puis seulement `en_retard`.
 
-## Défauts
-1. Mutation survivante, `packages/noyau/src/tableau-de-bord/bloc-tva.ts:30` : remplacer `l.statut === 'a_venir'` par `l.statut !== 'faite'` laisse les 4 tests verts. Une échéance `en_retard` (date entre `filtre.du` et `filtre.jour`) ou `inconnue` (sans date) pourrait alors être montrée comme « prochaine échéance ».
-   Correction demandée dans `__tests__/bloc-tva.test.ts` (test `echeance-la-plus-proche`) : un filtre avec `du` < `jour`, une échéance en retard plus ancienne que l'échéance à venir, et attendre l'échéance à venir. Ajouter aussi un cas avec seulement une échéance sans date : `prochaineEcheance` vaut `null`.
+## Non-régression
+- Diff : 4 fichiers, tous dans fichiers_autorises ; 114 lignes pour 180 permises. Journal : 5 lignes.
+- 4/4 tests verts. Mutations encore tuées : `seuilsAu(debut)`, garde `estimation === undefined` retirée.
+- Aucun seuil en dur, aucun mot interdit, aucun secret, aucun prix ; données fictives.
 
 ## Remarques (non bloquantes)
-- `prorata` de `positionFranchise` n'est pas transmis (première année d'activité) ; la fiche ne le demande pas, à prévoir dans une fiche suivante.
-- Fiche sensible : fusion par Will seul.
+- `prorata` de `positionFranchise` toujours non transmis (première année) : à prévoir dans une fiche suivante.
+- CI : `tests`/`verifier` rouges pour le seul test `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues`, rouge aussi sur origin/main : pas un défaut de l'auteur.
