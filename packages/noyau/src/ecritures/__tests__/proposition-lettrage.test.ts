@@ -80,8 +80,7 @@ describe('proposition de lettrage', () => {
 
   it('cas-limites-montants', () => {
     expect(proposerLettrages([])).toEqual([]);
-    expect(proposerLettrages([l('a', 0, 0), l('b', 0, 0)])).toEqual([]);
-    expect(proposerLettrages([l('a', 0, 0, { reference: 'R' }), l('b', 0, 0, { reference: 'R' })])).toEqual([]);
+    for (const x of [{}, { reference: 'R' }]) expect(proposerLettrages([l('a', 0, 0, x), l('b', 0, 0, x)])).toEqual([]);
     expect(proposerLettrages([lb('a', Number.NaN, 0), lb('b', 0, Number.NaN)])).toEqual([]);
     expect(proposerLettrages([lb('a', 10.5, 0), lb('b', 0, 10.5)])).toEqual([]);
     expect(proposerLettrages([lb('a', -100, 0), lb('b', 0, -100)])).toEqual([]);
