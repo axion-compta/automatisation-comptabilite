@@ -55,6 +55,7 @@ import { implementerModules } from './registres/index.js';
 import type { OptionsApp, OptionsModules, OptionsRouteur } from './registres/types.js';
 import { corpsEtatAcces, creerGardeAcces, STATUT_ETAT_ACCES } from './garde-acces.js';
 import { brancherSecurite } from './securite/index.js';
+import type { ContexteProfil } from './domaines/profil.js';
 import { sessionDeRequete, versSessionRoute } from './securite/jeton.js';
 
 type Service = ReturnType<typeof creerService>;
@@ -82,7 +83,7 @@ export function creerRouteur(service: Service = creerService(), services: Partia
     notifications: services.notifications ?? {},
   };
   const profilChamps = creerServiceProfilChamps('soc-lemoine');
-  const os = implement(contrat).$context<ContexteSession>();
+  const os = implement(contrat).$context<ContexteSession & ContexteProfil>();
   const jeuFrais = genererFrais();
   const routeur = os.router({
     ecritures: {
@@ -165,7 +166,7 @@ export function creerApp(service?: Service, options: OptionsApp = {}): FastifyIn
     if (refus) return reply.status(STATUT_ETAT_ACCES).send(corpsEtatAcces(refus));
     const verifiee = sessionDeRequete(request);
     const session = options.session?.(request.headers) ?? (verifiee ? versSessionRoute(verifiee) : undefined);
-    const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session } });
+    const { matched } = await handler.handle(request, reply, { prefix: '/', context: { session, sessionVerifiee: verifiee } });
     if (!matched) reply.status(404).send({ code: 'INTROUVABLE', status: 404 });
   });
   return app;

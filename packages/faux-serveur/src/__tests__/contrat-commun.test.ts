@@ -23,6 +23,8 @@ import { contexteDePersonne } from '../domaines/capacites.js';
 import type { ContexteAutorisation } from '../../../noyau/src/securite/autoriser.js';
 import { suiteFec } from './suite-fec.js';
 import { suiteSante } from './suite-sante.js';
+import { creerFauxSessions } from '../../../noyau/src/session/memoire.js';
+import type { Session } from '../../../noyau/src/session/port.js';
 import { suiteProfil } from './suite-profil.js';
 import { suiteTresorerie } from './suite-tresorerie.js';
 import { suiteBloquants } from './suite-bloquants.js';
@@ -51,6 +53,21 @@ const cibleVrai: Cible = async () => {
       headers: { ...(corps === undefined ? {} : json), ...entetes },
       ...(corps === undefined ? {} : { payload: corps as object }),
     });
+    return { status: r.statusCode, json: r.json() };
+  };
+  return { appeler, fermer: () => app.close() };
+};
+
+/** Vrai serveur avec jeton : session fictive de la société `soc-lemoine`, en-tête `authorization: Bearer` sur chaque appel. */
+const JETON_FICTIF = 'jeton-fictif-lemoine';
+const SESSION_FICTIVE: Session = {
+  personneId: 'personne-fictive-1', nature: 'personne', organisationId: 'org-fictive-1', organisations: ['org-fictive-1'],
+  societeId: 'soc-lemoine', societes: ['soc-lemoine'], roles: ['utilisateur'], permissions: ['compta-lire', 'compta-saisir'], revendications: {},
+};
+const cibleProfilVrai: Cible = async () => {
+  const app = creerApp(undefined, { securite: { jeton: { sessions: creerFauxSessions({ [JETON_FICTIF]: SESSION_FICTIVE }) } } });
+  const appeler: Appeler = async (methode, chemin, entetes, corps) => {
+    const r = await app.inject({ method: methode as 'GET', url: chemin, headers: { authorization: 'Bearer ' + JETON_FICTIF, ...(corps === undefined ? {} : json), ...entetes }, ...(corps === undefined ? {} : { payload: corps as object }) });
     return { status: r.statusCode, json: r.json() };
   };
   return { appeler, fermer: () => app.close() };
@@ -192,7 +209,7 @@ const cibleCapacitesFaux: CibleCapacites = async (role) => {
 suiteCapacites('vrai serveur (Fastify + oRPC)', cibleCapacitesVrai, false);
 suiteCapacites('faux serveur (MSW)', cibleCapacitesFaux, true);
 
-suiteProfil('vrai serveur (Fastify + oRPC)', cibleVrai);
+suiteProfil('vrai serveur (Fastify + oRPC)', cibleProfilVrai);
 suiteProfil('faux serveur (MSW)', cibleFaux);
 
 // Le vrai serveur ne sert que la SARL par défaut (app.ts hors périmètre) : la SCI passe par la procédure du serveur, appelée directement.

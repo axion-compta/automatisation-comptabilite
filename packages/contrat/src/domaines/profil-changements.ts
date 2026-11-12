@@ -1,8 +1,11 @@
 import { oc } from '@orpc/contract';
 import { z } from 'zod';
 import { EnTeteEcriture } from '../schemas.js';
+import { cheminSociete } from '../prefixe-routes.js';
 
 const Jour = z.iso.date();
+const sous = (suffixe: string) => cheminSociete(suffixe) as `/${string}`;
+const Societe = z.object({ s: z.string().min(1) });
 export const DemandeChangement = z.object({ cle: z.string().min(1), valeur: z.json(), effetDebut: Jour, motif: z.string().min(1) }).strict();
 export type DemandeChangement = z.infer<typeof DemandeChangement>;
 
@@ -23,15 +26,15 @@ export type ChangementConfirme = z.infer<typeof ChangementConfirme>;
 const erreurs = { PERIODE_DEPOSEE: { status: 409 }, APERCU_INCONNU: { status: 404 }, APERCU_PERIME: { status: 409 }, CLE_INCONNUE: { status: 404 } } as const;
 
 export const apercuChangement = oc
-  .route({ method: 'POST', path: '/profil/changements/apercu', inputStructure: 'detailed', operationId: 'apercuChangement' })
+  .route({ method: 'POST', path: sous('/profil/changements/apercu'), inputStructure: 'detailed', operationId: 'apercuChangement' })
   .errors(erreurs)
-  .input(z.object({ headers: EnTeteEcriture, body: DemandeChangement }))
+  .input(z.object({ params: Societe, headers: EnTeteEcriture, body: DemandeChangement }))
   .output(z.object({ body: Apercu }));
 
 export const confirmerChangement = oc
-  .route({ method: 'POST', path: '/profil/changements', inputStructure: 'detailed', operationId: 'confirmerChangement' })
+  .route({ method: 'POST', path: sous('/profil/changements'), inputStructure: 'detailed', operationId: 'confirmerChangement' })
   .errors(erreurs)
-  .input(z.object({ headers: EnTeteEcriture, body: CorpsConfirmationChangement }))
+  .input(z.object({ params: Societe, headers: EnTeteEcriture, body: CorpsConfirmationChangement }))
   .output(z.object({ body: ChangementConfirme }));
 
 export const profilChangements = { apercuChangement, confirmerChangement };
