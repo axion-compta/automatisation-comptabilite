@@ -34,8 +34,7 @@ function creerDepot(): DepotExercice & { objets: Map<string, Uint8Array>; depots
     objets: new Map<string, Uint8Array>(), depots: [] as string[], panneSur: null as string | null,
     deposer: async (cle: string, octets: Uint8Array): Promise<void> => {
       if (d.panneSur !== null && cle.endsWith(d.panneSur)) throw new Error('panne fictive du depot');
-      d.objets.set(cle, octets);
-      d.depots.push(cle);
+      d.objets.set(cle, octets); d.depots.push(cle);
     },
     lire: async (cle: string): Promise<Uint8Array | undefined> => d.objets.get(cle),
   };
@@ -125,8 +124,7 @@ describe('zip d’un exercice', () => {
   it('autre-exercice-exclu', async () => {
     const depot = creerDepot();
     await exporterExercice({ ...base(['pieces']), source: creerSource(), depot, suivi: creerSuivi() });
-    expect(cheminsDuDepot(depot).includes('pieces/2025/ancienne.pdf')).toBe(false);
-    expect(cheminsDuDepot(depot).length).toBe(100);
+    expect(cheminsDuDepot(depot)).toEqual(fichiers().filter((f) => f.exerciceId === 'ex-2026' && f.rayon === 'pieces').map((f) => f.chemin).sort());
   });
 
   it('refuse les entrées invalides', async () => {
