@@ -40,7 +40,7 @@ describe('échéances ancrées sur l’année comptable de la société', () => 
   it('cloture-au-30-juin-decale-les-echeances', () => {
     expect(dates(type, '2026-07-01', '2027-06-30')).toEqual(['2027-09-30']);
     // Ancrage « année civile » : l'année de la fin de l'année comptable, pas celle du début.
-    expect(dates(avec({ ancrage: 'annee_civile' }), '2026-07-01', '2027-06-30')).toEqual(['2027-03-31']);
+    expect(dates(avec({ ancrage: 'annee_civile' }), '2026-07-01', '2027-06-30')).toEqual(['2028-03-31']);
   });
   it('cloture-au-31-decembre-inchangee', () => {
     expect(dates(type, '2026-01-01', '2026-12-31')).toEqual(['2027-03-31']);
