@@ -186,4 +186,14 @@ Relevé du 12/11/2026 sur main à jour (en-têtes de fiches, API de recherche de
 - Décisions attendues pour les fiches bloquées : D29, J3a, D42, D43 (motif exact lu dans chaque fiche).
 - Mesures sans IA : 40 PR de fiches fusionnées (une par fiche), délai médian ouverture à fusion 22,1 min (`pilotage/calibrage.csv`, 40 lignes). Remises à jour de branche sur les fichiers communs du contrat, jetons, durée de CI, score Stryker : non mesurés.
 - Prochaine tranche : actions de E17 (« Qui a payé ? », Valider, Me rembourser), écrites contre une interface et un faux serveur.
+
+## Lot 04
+État lu sur `origin/main` (en-têtes des fiches), avec L04-T47 elle-même.
+- Fiches : 59 au total ; 56 `statut: fait` avant cette PR (la tranche planifiée de 49 est faite, L04-T47 comprise une fois fusionnée), restent L04-T49 et L04-T51.
+- Délai médian de fusion, sensible et non sensible : non mesuré (`pilotage/calibrage.csv` ne contient que l'en-tête).
+- Écart à la fiche : L04-T48, T50, T52 et T53 sont déjà `fait` ; elle les croyait bloquées.
+- L04-T49 : remplacée par L04-T56, T57 et T58 (faites, décision D88), ne jamais la planifier.
+- L04-T51 (routes préfixées par la société, permissions `compta-*`) : `a_faire`, sans `bloque_par` ; à planifier, elle n'attend pas de décision lue dans sa fiche.
+- Décisions encore ouvertes pour les fiches faites contre un faux serveur : réponse de la console (D29) et feu vert J3a avant toute mise en réel.
+- Prochaine tranche proposée : écran de correction, écran M02 photo, éclatement multi-factures en V1.
 - Aucune date de livraison annoncée.
