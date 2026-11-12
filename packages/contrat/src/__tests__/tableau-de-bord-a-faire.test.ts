@@ -36,6 +36,14 @@ describe('bloc À faire : même source que la pastille du menu', () => {
       const rep = await fetch(base + '/exercices/' + EXERCICE + '/tableau-de-bord?vue=mois');
       const corps = (await rep.json()) as { body: { blocs: { code: string; donnees?: Record<string, unknown> }[] } };
       expect(corps.body.blocs.find((b) => b.code === 'a_faire')?.donnees?.['nombre']).toBe(pastilles());
+      // les autres blocs gardent exactement les données du service (aucun `nombre` ajouté)
+      const ref = creerServiceTableauDeBord().lire(EXERCICE, { vue: 'mois' })!.blocs;
+      const autres = corps.body.blocs.filter((b) => b.code !== 'a_faire');
+      expect(autres.length).toBeGreaterThan(0);
+      for (const bloc of autres) {
+        expect(bloc.donnees).toEqual(ref.find((r) => r.code === bloc.code)?.donnees);
+        if (bloc.donnees) expect(bloc.donnees).not.toHaveProperty('nombre');
+      }
       const un = await fetch(base + '/exercices/' + EXERCICE + '/tableau-de-bord/a_faire?vue=mois');
       expect(((await un.json()) as { body: { donnees?: Record<string, unknown> } }).body.donnees?.['nombre']).toBe(pastilles());
     });
