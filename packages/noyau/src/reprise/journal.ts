@@ -53,7 +53,6 @@ export function ouvrirJournal(p: ParametresJournal): JournalReprise {
 }
 
 const avec = (j: JournalReprise, patch: Partial<JournalReprise>): JournalReprise => Object.freeze({ ...j, ...patch });
-
 export function ajouterLigne(j: JournalReprise, ligne: LigneJournal): JournalReprise {
   if (!texte(ligne.etape) || !empreinte(ligne.entreeEmpreinte) || !empreinte(ligne.sortieEmpreinte)) {
     throw new ErreurJournal('ligne_invalide', 'Étape non vide et deux empreintes sha256 en hexadécimal minuscule.');

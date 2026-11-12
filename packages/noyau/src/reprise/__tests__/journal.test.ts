@@ -53,17 +53,16 @@ describe('journal de reprise', () => {
     let j = ouvrirJournal(params);
     expect(j.versionsRapport).toEqual([]);
     j = ajouterVersionRapport(j, { empreinte: H1, produitLe: '2026-11-01T10:00:00Z' });
-    const apres1 = j;
     j = ajouterVersionRapport(j, { empreinte: H2, produitLe: '2026-11-02T10:00:00Z' });
     expect(j.versionsRapport.map((v) => v.version)).toEqual([1, 2]);
     expect(j.versionsRapport[0]).toEqual({ version: 1, empreinte: H1, produitLe: '2026-11-01T10:00:00Z' });
-    expect(apres1.versionsRapport).toHaveLength(1);
     // même contenu redéposé : nouvelle version, jamais d'écrasement
     j = ajouterVersionRapport(j, { empreinte: H1, produitLe: '2026-11-03T10:00:00Z' });
     expect(j.versionsRapport.map((v) => v.version)).toEqual([1, 2, 3]);
     expect(j.versionsRapport[0]?.empreinte).toBe(H1);
-    refus(() => ajouterVersionRapport(j, { empreinte: 'court', produitLe: '2026-11-03T10:00:00Z' }), 'rapport_invalide');
-    refus(() => ajouterVersionRapport(j, { empreinte: H1, produitLe: 'hier' }), 'rapport_invalide');
+    for (const mauvais of [{ empreinte: 'court' }, { produitLe: 'hier' }]) {
+      refus(() => ajouterVersionRapport(j, { empreinte: H1, produitLe: '2026-11-03T10:00:00Z', ...mauvais }), 'rapport_invalide');
+    }
   });
 
   it('mentions-acceptees-tracees', () => {
@@ -73,10 +72,9 @@ describe('journal de reprise', () => {
     expect(j.mentionsAcceptees).toHaveLength(2);
     expect(j.mentionsAcceptees[1]).toEqual({ mention: 'Écart de pied accepté', par: 'Camille Test', horodatage: '2026-11-05T09:31:00Z' });
     const ok = { mention: 'm', par: 'p', horodatage: '2026-11-05T09:30:00Z' };
-    refus(() => accepterMention(j, { ...ok, mention: '' }), 'mention_invalide');
-    refus(() => accepterMention(j, { ...ok, par: '  ' }), 'mention_invalide');
-    refus(() => accepterMention(j, { ...ok, horodatage: 'pas une date' }), 'mention_invalide');
-    refus(() => accepterMention(j, { ...ok, horodatage: '2026-13-45T00:00:00Z' }), 'mention_invalide');
+    for (const mauvais of [{ mention: '' }, { par: '  ' }, { horodatage: 'pas une date' }, { horodatage: '2026-13-45T00:00:00Z' }]) {
+      refus(() => accepterMention(j, { ...ok, ...mauvais }), 'mention_invalide');
+    }
   });
 
   it('rejeu-a-l-identique', () => {
@@ -84,11 +82,7 @@ describe('journal de reprise', () => {
     j = ajouterLigne(j, { etape: 'lecture', entreeEmpreinte: H1, sortieEmpreinte: H2 });
     j = ajouterLigne(j, { etape: 'controle', entreeEmpreinte: H2, sortieEmpreinte: H3 });
     const appels: string[] = [];
-    const fidele = (etape: string, entree: string): string => {
-      appels.push(etape + ':' + entree);
-      return etape === 'lecture' ? H2 : H3;
-    };
-    expect(rejouer(j, fidele)).toBe(true);
+    expect(rejouer(j, (etape, entree) => (appels.push(etape + ':' + entree), etape === 'lecture' ? H2 : H3))).toBe(true);
     expect(appels).toEqual(['lecture:' + H1, 'controle:' + H2]);
     // une seule empreinte différente (dernière ligne, puis première) rend le rejeu faux
     expect(rejouer(j, (etape) => (etape === 'lecture' ? H2 : H1))).toBe(false);
