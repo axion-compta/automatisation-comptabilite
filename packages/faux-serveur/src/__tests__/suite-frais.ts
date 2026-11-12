@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ReponseFrais, ReponseFraisDetail } from '../../../contrat/src/domaines/frais.js';
 import { creerServiceFrais } from '../../../contrat/src/domaines/frais-service.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import type { Cible } from './suite-contrat.js';
 
+const PREFIXE = PREFIXE_ROUTES_SOCIETE.replace('{s}', 'soc-lemoine');
 type Liste = { body: { id: string; statut: string }[]; decalage: number; total: number; totaux: Record<string, number> };
 
 /** Suite commune « frais en lecture » : jouée sur le vrai serveur et sur le faux. */
@@ -11,7 +13,7 @@ export function suiteFrais(nom: string, cible: Cible): void {
     const lire = async (chemin: string) => {
       const c = await cible();
       try {
-        return await c.appeler('GET', chemin);
+        return await c.appeler('GET', PREFIXE + chemin);
       } finally {
         await c.fermer();
       }

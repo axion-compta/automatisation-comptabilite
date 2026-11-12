@@ -1,4 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import { genererFrais } from '../../../donnees-fictives/src/frais.js';
 import { CompletementFrais, NouveauFrais } from '../../../contrat/src/domaines/frais-actions.js';
 import { creerServiceFraisActions, ErreurActions } from '../../../contrat/src/domaines/frais-actions-service.js';
@@ -7,6 +8,7 @@ import { creerServiceFraisValidation, ErreurValidation, type ConfigValidation } 
 import { CleIdempotence } from '../../../contrat/src/schemas.js';
 import type { ContexteFaux } from '../registres/types.js';
 
+const PREFIXE = PREFIXE_ROUTES_SOCIETE.replace('{s}', ':s');
 const STATUTS: Record<string, number> = { PERSONNE_DIFFERENTE: 403, FRAIS_INCONNU: 404, VERSION_PERIMEE: 412, ENTREE_INVALIDE: 400 };
 const VERSION = /^[1-9]\d{0,8}$/;
 const PERSONNE = /^.{1,50}$/;
@@ -45,31 +47,33 @@ export function handlersFraisActions(ctx: ContexteFaux): HttpHandler[] {
     const corps: unknown = await request.json().catch(() => undefined);
     return cle.success && (!avecPersonne || PERSONNE.test(personne)) ? { cle: cle.data, personne, corps } : undefined;
   };
+  /** Chaque route est servie sans préfixe et sous le préfixe de la société. */
+  const deux = (chemin: string) => [ctx.base + chemin, ctx.base + PREFIXE + chemin];
   return [
-    http.post(ctx.base + '/frais/valider', async ({ request }) => {
+    ...deux('/frais/valider').map((c) => http.post(c, async ({ request }) => {
       const e = await lire(request, true);
       const c = CorpsValidation.safeParse(e?.corps);
       return e && c.success ? dire(() => validation.valider(c.data, e.personne, e.cle)) : mauvaise();
-    }),
-    http.post(ctx.base + '/frais/:id/proposer', async ({ request, params }) => {
+    })),
+    ...deux('/frais/:id/proposer').map((c) => http.post(c, async ({ request, params }) => {
       const e = await lire(request, false);
       return e ? dire(() => validation.proposer(String(params['id']), e.cle)) : mauvaise();
-    }),
-    http.post(ctx.base + '/remboursements', async ({ request }) => {
+    })),
+    ...deux('/remboursements').map((c) => http.post(c, async ({ request }) => {
       const e = await lire(request, false);
       const c = CorpsRemboursement.safeParse(e?.corps);
       return e && c.success ? dire(() => validation.preparer(c.data, e.cle), 201) : mauvaise();
-    }),
-    http.post(ctx.base + '/frais', async ({ request }) => {
+    })),
+    ...deux('/frais').map((c) => http.post(c, async ({ request }) => {
       const e = await lire(request, true);
       const c = NouveauFrais.safeParse(e?.corps);
       return e && c.success ? dire(() => actions.creer(c.data, e.personne, e.cle), 201) : mauvaise();
-    }),
-    http.patch(ctx.base + '/frais/:id', async ({ request, params }) => {
+    })),
+    ...deux('/frais/:id').map((c) => http.patch(c, async ({ request, params }) => {
       const e = await lire(request, true);
       const version = request.headers.get('if-match') ?? '';
       const c = CompletementFrais.safeParse(e?.corps);
       return e && c.success && VERSION.test(version) ? dire(() => actions.completer(String(params['id']), c.data, Number(version), e.personne, e.cle)) : mauvaise();
-    }),
+    })),
   ];
 }
