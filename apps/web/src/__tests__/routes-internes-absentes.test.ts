@@ -23,8 +23,8 @@ function declarations(chemins: string[], motif: RegExp): string[] {
 const ROUTES = fichiers(ECRANS, (n) => n === 'route.tsx');
 const CHEMINS_ECRAN = declarations(ROUTES, /\b(?:id|chemin):\s*'[^']*'/g);
 const CHEMINS_CONTRAT = declarations(fichiers(CONTRAT, (n) => n.endsWith('.ts')), /\bpath:\s*'[^']*'/g);
-const ECRAN_Q = /'q0[1-3]'|\/q0[1-3](?:\/|'|$)|-q0[1-3]\b/;
-const PUBLICATION_PAQUET = /publi\w*[-_/]?paquet|paquet[-_/]?publi|publier-paquet/;
+const ECRAN_Q = /\bq0[1-3]\b/;
+const PUBLICATION_PAQUET = /publi[^']*paquets?|paquets?[^']*publi/;
 
 describe('produit client : aucune route interne de veille', () => {
   it('lit bien des routes et des chemins (le parcours n’est pas vide)', () => {
@@ -34,11 +34,11 @@ describe('produit client : aucune route interne de veille', () => {
   });
   it('aucune-route-ecran-q-cote-client', () => {
     for (const d of [...CHEMINS_ECRAN, ...CHEMINS_CONTRAT]) expect(d).not.toMatch(ECRAN_Q);
-    expect("chemin: '/q02'").toMatch(ECRAN_Q); // le motif détecte bien un écran Q
-    expect("id: 'q01'").toMatch(ECRAN_Q);
+    for (const d of ["chemin: '/q02'", "id: 'q01'", "id: 'q01-veille'", "id: 'ecran-q03'", "chemin: '/interne/q02?x'"]) expect(d).toMatch(ECRAN_Q);
+    expect("id: 'q04'").not.toMatch(ECRAN_Q);
   });
   it('aucune-route-publication-paquet-cote-client', () => {
     for (const d of [...CHEMINS_ECRAN, ...CHEMINS_CONTRAT]) expect(d).not.toMatch(PUBLICATION_PAQUET);
-    expect("path: '/paquets/publication-paquet'").toMatch(PUBLICATION_PAQUET);
+    for (const d of ["path: '/paquets/publier'", "path: '/paquets/{version}/publication'", "path: '/parametres/paquets/publier'", "path: '/publier-paquet'", "path: '/paquet-publication'"]) expect(d).toMatch(PUBLICATION_PAQUET);
   });
 });

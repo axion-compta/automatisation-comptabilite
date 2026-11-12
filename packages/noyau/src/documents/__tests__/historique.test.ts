@@ -139,7 +139,7 @@ describe('historique', () => {
     }
   });
   it('version-paquet-valide-acceptee', () => {
-    for (const versionPaquet of ['p', 'v1', 'v-fictive-1', '2026.03.1_a', 'a'.repeat(64)]) {
+    for (const versionPaquet of ['p', '1', 'V2', 'v1', 'v-fictive-1', '2026.03.1_a', 'a'.repeat(64)]) {
       expect(ajouterVersion([], nouveau({ versionPaquet }))[0]?.versionPaquet).toBe(versionPaquet);
     }
   });

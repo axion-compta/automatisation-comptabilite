@@ -9,11 +9,12 @@ describe('version de paquet sur tout document préparé', () => {
     const jeu = genererDeclarations();
     expect(jeu.declarations.length).toBeGreaterThan(0);
     expect(jeu.fec.length).toBeGreaterThan(0);
-    const version = `v${jeu.declarations[0]?.versionPaquet}`;
+    for (const d of jeu.declarations) expect(Number.isInteger(d.versionPaquet) && d.versionPaquet > 0).toBe(true);
+    const version = String(jeu.declarations[0]?.versionPaquet);
     let historique: DocumentProduit[] = [];
     const nouveaux: NouveauDocument[] = [
       ...jeu.fec.map((f) => ({ id: f.id, type: 'fec' as const, exerciceId: f.exerciceId, sha256: f.sha256, preparePar: f.preparePar, prepareLe: f.prepareLe, versionPaquet: version })),
-      ...jeu.declarations.map((d) => ({ id: d.id, type: 'declaration_tva' as const, exerciceId: d.periodeId, sha256: 'b'.repeat(64), preparePar: 'Assistant fictif', prepareLe: '2026-01-15T09:00:00Z', versionPaquet: `v${d.versionPaquet}` })),
+      ...jeu.declarations.map((d) => ({ id: d.id, type: 'declaration_tva' as const, exerciceId: d.periodeId, sha256: 'b'.repeat(64), preparePar: 'Assistant fictif', prepareLe: '2026-01-15T09:00:00Z', versionPaquet: String(d.versionPaquet) })),
       ...TYPES.filter((t) => t !== 'fec' && t !== 'declaration_tva').map((t) => ({ id: `doc-${t}`, type: t, exerciceId: 'EX2026', sha256: 'c'.repeat(64), preparePar: 'Assistant fictif', prepareLe: '2026-01-15T09:00:00Z', versionPaquet: version })),
     ].map((d) => ({ ...d, statut: 'a_valider' as const, versionLogiciel: '0.0.0-test', resultatControles: 'ok' as const }));
     for (const n of nouveaux) historique = ajouterVersion(historique, n);
