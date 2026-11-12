@@ -15,7 +15,6 @@ describe('securite/dernier-admin', () => {
   it('retrograder-le-dernier-administrateur-refuse', () => {
     expect(appliquerRoles(un, [{ personneId: 'alice@exemple.fr', role: 'utilisateur' }]))
       .toEqual({ ok: false, raison: 'dernier_administrateur' });
-    // Tout ou rien : un autre changement valide du même lot n'est pas appliqué.
     const r = appliquerRoles(un, [{ personneId: 'bruno@exemple.fr', role: 'comptable' }, { personneId: 'alice@exemple.fr', role: 'lecture' }]);
     expect(r).toEqual({ ok: false, raison: 'dernier_administrateur' });
     const ok = appliquerRoles(un, [{ personneId: 'alice@exemple.fr', role: 'utilisateur' }, { personneId: 'bruno@exemple.fr', role: 'administrateur' }]);
@@ -25,7 +24,6 @@ describe('securite/dernier-admin', () => {
   it('retrait-du-dernier-administrateur-refuse', () => {
     expect(appliquerRoles(un, [{ personneId: 'alice@exemple.fr', actif: false }]))
       .toEqual({ ok: false, raison: 'dernier_administrateur' });
-    // Un administrateur déjà inactif ne compte pas.
     const inactif = [m('alice@exemple.fr', 'administrateur'), m('carla@exemple.fr', 'administrateur', false)];
     expect(appliquerRoles(inactif, [{ personneId: 'alice@exemple.fr', actif: false }]))
       .toEqual({ ok: false, raison: 'dernier_administrateur' });
@@ -43,10 +41,14 @@ describe('securite/dernier-admin', () => {
     expect(appliquerRoles(un, [{ personneId: 'bruno@exemple.fr', actif: false }])).toMatchObject({ ok: true });
     expect(() => appliquerRoles(un, [{ personneId: 'inconnu@exemple.fr', role: 'lecture' }])).toThrow(ErreurSecurite);
     expect(() => appliquerRoles(un, [{ personneId: 'bruno@exemple.fr', role: 'roi' as never }])).toThrow(ErreurSecurite);
+    for (const actif of ['false', 0, null]) {
+      expect(() => appliquerRoles(un, [{ personneId: 'alice@exemple.fr', actif: actif as never }])).toThrow(ErreurSecurite);
+    }
+    for (const [e, c] of [[null, []], [un, null]]) expect(() => appliquerRoles(e as never, c as never)).toThrow(ErreurSecurite);
   });
 
   it('recuperation-sans-motif-refusee', () => {
-    for (const p of [{ motif: '' }, { motif: '   ' }, { reference: '' }, { reference: '  ' }]) {
+    for (const p of [{ motif: '' }, { motif: '   ' }, { reference: '' }, { reference: '  ' }, { motif: undefined }, { reference: null }, { motif: 3 }]) {
       expect(recupererAdministrateur(demande(p), un)).toMatchObject({ permis: false, raison: 'entree_invalide' });
     }
     for (const role of ['administrateur', 'utilisateur', 'lecture', 'comptable', 'invite_externe']) {
@@ -62,6 +64,7 @@ describe('securite/dernier-admin', () => {
       expect(recupererAdministrateur(demande({ canal }), un)).toMatchObject({ permis: true });
     }
     expect(() => recupererAdministrateur(demande({ canal: 'telepathie' }), un)).toThrow(ErreurSecurite);
+    for (const d of [demande({ role: 'roi' }), null as never]) expect(() => recupererAdministrateur(d, un)).toThrow(ErreurSecurite);
   });
 
   it('recuperation-tracee', () => {
