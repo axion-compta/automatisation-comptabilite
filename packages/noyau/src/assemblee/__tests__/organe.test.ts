@@ -102,8 +102,7 @@ describe("organe d'approbation des comptes", () => {
 
   it('entrées invalides refusées; EI sans mode', () => {
     expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: 0 }), sans, REGLES))).toBe('entree_invalide');
-    expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: Number.NaN }), sans, REGLES))).toBe('entree_invalide');
-    for (const n of [1.5, Infinity, -Infinity, -1]) expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: n }), sans, REGLES))).toBe('entree_invalide');
+    for (const n of [Number.NaN, 1.5, Infinity, -Infinity, -1]) expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: n }), sans, REGLES))).toBe('entree_invalide');
     expect(code(() => organeApprobation(soc({ forme: 'EURL', nbAssocies: 2 }), sans, REGLES))).toBe('entree_invalide');
     expect(code(() => organeApprobation(soc({ forme: 'SARL', dateReference: 'x' }), sans, REGLES))).toBe('entree_invalide');
     // SARL ou SAS à associé unique : aucune règle par défaut, refus prudent
