@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "entrees": [
+    { "id": "VI-001", "motif": "réserve légale attribuée à une forme qui n'en a pas", "motifRegex": "r[ée]serve\\s+l[ée]gale\\s+obligatoire", "formes": ["EI", "SNC"] },
+    { "id": "VI-002", "motif": "compte de l'exploitant attribué à une société de capitaux", "motifRegex": "compte\\s+108\\b", "formes": ["SAS", "SARL", "SA"] }
+  ]
+}
