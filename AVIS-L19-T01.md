@@ -1,29 +1,17 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1162 « L19-T01 Noyau : pile « À vérifier » ». Relecture Opus du 12/11/2026 (consigne LOT5, section R), au SHA de tête b0dad693d4c8d0c4a52b0145e24819b157969df0.
-Cet avis remplace, sur cette branche, l'avis précédent qui portait sur la PR de conception #1134.
+PR #1162 (L19-T01), seconde relecture Opus du 12/11/2026 (consigne LOT5, section R).
+SHA de tête relu : 6801557975ae7052034f664091f329fa1705c005
 
-## Vérifié
-- Diff limité aux 4 fichiers_autorises ; 226 lignes ajoutées pour 240 permises.
-- 9 tests verts (vitest, Node 22). CI de la tête verte.
-- Aucune horloge système, ordre stable par identifiant, fuseau de la société en paramètre, minuit de changement d'heure testé.
-- Journal : 9 lignes, commence par « # Journal L19-T01 ». Aucun mot interdit, aucun secret, aucun prix.
-- Mutations tuées : retrait du contrôle de tvaEnJeu, `tete.length === 1` → `>= 1`, inversion du tri TVA, voisin précédent/suivant, instant NaN, seconde passe du fuseau.
+## Défauts de l'avis précédent (tête b0dad693) : tous levés, vérifiés par mutation
+1. `masqueJusqu` non fini → `carte_invalide` (pile-a-verifier.ts:51). Retirer ce contrôle fait rougir un test.
+2. Cas Infinity testés : `Number.isNaN` à la place de `!Number.isFinite`/`!Number.isInteger` pour groupe, tvaEnJeu et confiance → un test rouge à chaque fois.
+3. `tvaEnJeu` entier exigé (`Number.isInteger`) : remplacer par `Number.isFinite` → un test rouge.
 
-## Défauts
-1. packages/noyau/src/interface/pile-a-verifier.ts:49-52 et 91 : `masqueJusqu` n'est pas contrôlé. Avec `masqueJusqu: NaN`, `maintenant >= NaN` est faux : la carte est masquée pour toujours, en silence (vérifié : pile vide en 2030).
-   Correction : `carte_invalide` si `masqueJusqu` est présent et n'est pas un nombre fini. Ajouter un test.
-2. pile-a-verifier.test.ts, test `entrees-invalides-refusees` : Infinity n'est jamais testé sur une carte. Ces mutations survivent (9 tests verts) :
-   - `!Number.isFinite(c.groupe)` → `Number.isNaN(c.groupe)` ;
-   - `!Number.isFinite(c.tvaEnJeu)` → `Number.isNaN(c.tvaEnJeu)` ;
-   - `!Number.isFinite(p.confiance)` → `Number.isNaN(p.confiance)`.
-   Or deux groupes à Infinity donnent `Infinity - Infinity = NaN` dans `ordre`, et le tri n'est plus stable.
-   Correction : un cas Infinity pour groupe, tvaEnJeu et confiance (`carte_invalide`).
-3. pile-a-verifier.ts:50 : `tvaEnJeu` est en centimes, mais 0,5 est accepté. Le cas « non entier » de la consigne manque.
-   Correction : `Number.isInteger(c.tvaEnJeu)`, avec un test.
+## Non-régression
+- Diff : 4 fichiers, tous dans fichiers_autorises ; 236 lignes pour 240 permises. Journal : 9 lignes, commence par « # Journal L19-T01 ».
+- 9/9 tests verts (Node 22). Mutations encore tuées : `tvaEnJeu < 0` retiré, `tete.length === 1` → `>= 1`.
+- Aucun mot interdit, aucun secret, aucun prix ; données fictives.
 
-## Remarques
-- `!(maintenant < c.masqueJusqu)` survit, mais cette mutation est équivalente : ce n'est pas un défaut.
-- Après correction, rester sous 240 lignes (226 aujourd'hui).
-
-SHA de tête relu : b0dad693d4c8d0c4a52b0145e24819b157969df0
+## Remarques (non bloquantes)
+- CI : `tests` (et donc `verifier`) rouge pour un seul test, `outils/exploitation/__tests__/ouverture.test.mjs > onze-cases-attendues` (en-tête CSV `porte` contre `porte_rgpd`). Il est rouge aussi sur origin/main (347401ab), hors périmètre de la PR : ce n'est pas un défaut de l'auteur.
