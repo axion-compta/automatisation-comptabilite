@@ -110,8 +110,7 @@ describe('serveur : événements des frais sur le bus', () => {
     expect(await lus()).toHaveLength(1);
   });
   it('regularisation-proposee-publiee', async () => {
-    // Constructeur seulement : aucune transition d'état de régularisation n'existe dans les fichiers autorisés.
-    const boite = creerBoiteEnvoiMemoire();
+    const boite = creerBoiteEnvoiMemoire(); // constructeur seul : aucune transition de régularisation dans les fichiers autorisés
     await boite.executer(async (tx) => { tx.boite.deposer(evenementRegularisationIk(CTX('cle-r'), { personneId: PER, annee: '2025', version: 1 })); });
     const [e] = await boite.enAttente(10);
     expect(e?.type).toBe('compta.ik.regularisation_proposee');
