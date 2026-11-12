@@ -127,4 +127,20 @@ describe('historique', () => {
     }
     expect(ajouterVersion([], nouveau({ statut: 'indicatif' }))[0]?.statut).toBe('indicatif');
   });
+
+  it('version-paquet-vide-refusee', () => {
+    for (const versionPaquet of ['', '   ', '\t']) {
+      expect(code(() => ajouterVersion([], nouveau({ versionPaquet })))).toBe('version_paquet_absente');
+    }
+  });
+  it('version-paquet-mal-formee-refusee', () => {
+    for (const versionPaquet of ['v 1', 'v1\n', ' v1', '-v1', '.v1', 'v/1', 'é', 'a'.repeat(65)]) {
+      expect(code(() => ajouterVersion([], nouveau({ versionPaquet })))).toBe('version_paquet_absente');
+    }
+  });
+  it('version-paquet-valide-acceptee', () => {
+    for (const versionPaquet of ['p', '1', 'V2', 'v1', 'v-fictive-1', '2026.03.1_a', 'a'.repeat(64)]) {
+      expect(ajouterVersion([], nouveau({ versionPaquet }))[0]?.versionPaquet).toBe(versionPaquet);
+    }
+  });
 });
