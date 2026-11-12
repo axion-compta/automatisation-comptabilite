@@ -12,7 +12,7 @@ function jeuPaye(delais: number[], extra: (m: PieceVenteFictive) => PieceVenteFi
   const s = j.societes.find((x) => x.profil === 'pleine');
   if (!s) throw new Error('société absente');
   const modele = s.pieces[0] as PieceVenteFictive;
-  s.pieces = delais.map((d, i) => ({
+  const payees = delais.map((d, i): PieceVenteFictive => ({
     ...modele,
     id: `T-${i}`,
     clientCode: 'CLI004',
@@ -22,7 +22,8 @@ function jeuPaye(delais: number[], extra: (m: PieceVenteFictive) => PieceVenteFi
     resteDuCentimes: 0,
     lettrage: 'total',
     paiements: [{ date: `2026-02-${String(1 + d).padStart(2, '0')}`, montantCentimes: modele.ttcCentimes }],
-  })).concat(extra(modele));
+  }));
+  s.pieces = [...payees, ...extra(modele)];
   return j;
 }
 
