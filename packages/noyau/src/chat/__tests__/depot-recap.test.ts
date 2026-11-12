@@ -21,7 +21,6 @@ describe('récapitulatif d’un dépôt de pièces', () => {
     expect(r.recapitulatif).toEqual({ total: 5, lues: 5, rangees: 5, proposees: 5 });
     expect(r.questions).toEqual([{ pieceId: 'p3', code: 'piece_douteuse', libelle: 'Facture fictive 3' }]);
     expect(r.message.code).toBe('bien_recu');
-    // compteurs distincts : une chaîne vide ne compte ni comme rangée ni comme proposée
     const mixte = recapDepot([
       piece(1, { rangeeDans: '' }),
       piece(2, { proposition: '' }),
@@ -30,7 +29,6 @@ describe('récapitulatif d’un dépôt de pièces', () => {
       piece(5, { proposition: undefined }),
     ]);
     expect(mixte.recapitulatif).toEqual({ total: 5, lues: 4, rangees: 3, proposees: 2 });
-    // quatre pièces sûres : récapitulatif sans question
     const quatre = recapDepot(lot(4));
     expect(quatre.recapitulatif?.total).toBe(4);
     expect(quatre.questions).toEqual([]);
@@ -47,7 +45,6 @@ describe('récapitulatif d’un dépôt de pièces', () => {
       { pieceId: 'p3', libelle: 'Facture fictive 3', lue: false, rangee: true, proposee: false },
     ]);
     expect(recapDepot([piece(1)]).cartes).toHaveLength(1);
-    // une pièce non lue est douteuse : une question, et rien n'est compté comme à valider pour elle
     const q = recapDepot([piece(1), piece(2, { lue: false })]);
     expect(q.questions.map((x) => x.pieceId)).toEqual(['p2']);
     expect(q.message.aValider).toBe(1);
@@ -58,7 +55,6 @@ describe('récapitulatif d’un dépôt de pièces', () => {
     expect(r.message).toEqual({ code: 'bien_recu', aValider: 4 });
     expect(recapDepot([piece(1)]).message).toEqual({ code: 'bien_recu', aValider: 1 });
     expect(recapDepot([piece(1, { lue: false })]).message.aValider).toBe(0);
-    // aucune validation automatique : le résultat ne porte aucun état « validé »
     expect(JSON.stringify(r)).not.toMatch(/valide[^r]/);
   });
 
