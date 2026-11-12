@@ -51,8 +51,7 @@ export function creerServiceEcritureTva(ports: Partial<Ports> = {}) {
       if (s === undefined) return { erreur: 'NON_AUTHENTIFIE' };
       if (!refusVus.has(cle)) {
         refusVus.add(cle);
-        const refus = demanderInclureSousReserve(s.acteur);
-        journal.ecrire({ type: refus.journal.type, par: refus.journal.par, le: horloge(), reglage: refus.journal.reglage });
+        const { type, par, reglage } = demanderInclureSousReserve(s.acteur).journal; journal.ecrire({ type, par, le: horloge(), reglage });
       }
       return { erreur: 'REGLAGE_VERROUILLE' };
     },
