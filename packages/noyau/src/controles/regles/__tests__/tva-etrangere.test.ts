@@ -68,7 +68,9 @@ describe('CC-T09 et CC-T14 TVA étrangère', () => {
     expect(q({ paysVendeur: 'FR' }).code).toBe('NATIONAL');
     expect(q({ paysVendeur: 'DE' }, UE, 'DE').code).toBe('NATIONAL');
     expect(q({ paysVendeur: 'ES', tvaFrancaise: true }).code).toBe('NATIONAL');
-    expect(q({ tvaFacturee: c(0) }).code).toBe('NATIONAL');
+    expect(q({ tvaFacturee: c(0) }).code).toBe('ACQUISITION_UE');
+    expect(q({ tvaFacturee: c(0), paysVendeur: 'FR' }).code).toBe('NATIONAL');
+    expect(q({ tvaFacturee: c(0), tvaFrancaise: true }).code).toBe('NATIONAL');
     expect(q({ tvaFacturee: c(1) }).code).toBe('NON_DEDUCTIBLE_ETRANGERE');
     expect(q({ paysVendeur: 'FR' })).toEqual({ code: 'NATIONAL', deduit: c(0), charge: c(0) });
     expect(regleCCT09.evaluer({ ...entree({ paysVendeur: 'FR' }) })).toEqual({ resultat: 'OK' });
@@ -107,6 +109,31 @@ describe('CC-T09 et CC-T14 TVA étrangère', () => {
     }
     expect(() => q({ tvaFacturee: c(12101), ttc: c(12100) })).toThrow(invalide);
     expect(q({ tvaFacturee: c(12100), ttc: c(12100) }).charge).toBe(12100);
-    expect(q({ tvaFacturee: c(0), ttc: c(0) }).code).toBe('NATIONAL');
+    expect(q({ tvaFacturee: c(0), ttc: c(0) }).code).toBe('ACQUISITION_UE');
+  });
+
+  it('fournisseur-ue-sans-tva-acquisition', () => {
+    const achat = origine({ paysVendeur: 'DE', tvaFacturee: c(0), ttc: c(50000) });
+    expect(qualifierOrigine(achat, UE, 'FR')).toEqual({ code: 'ACQUISITION_UE', deduit: c(0), charge: c(0) });
+    expect(qualifierOrigine(achat, UE, 'ES').code).toBe('ACQUISITION_UE');
+    expect(q({ paysVendeur: 'DE', tvaFacturee: c(0) }, UE, 'DE').code).toBe('NATIONAL');
+  });
+
+  it('fournisseur-ue-sans-tva-jamais-national', () => {
+    for (const pays of ['ES', 'DE', 'BE']) {
+      const r = q({ paysVendeur: pays, tvaFacturee: c(0), ttc: c(12100) });
+      expect(r.code).not.toBe('NATIONAL');
+      expect(r.code).toBe('ACQUISITION_UE');
+    }
+    // CC-T09 et CC-T14 ne se déclenchent pas sur une acquisition.
+    const e = entree({ tvaFacturee: c(0) });
+    expect(regleCCT09.evaluer(e)).toEqual({ resultat: 'OK' });
+    expect(regleCCT14.evaluer(e)).toEqual({ resultat: 'OK' });
+  });
+
+  it('meme-pays-sans-tva-national', () => {
+    expect(q({ paysVendeur: 'FR', tvaFacturee: c(0) })).toEqual({ code: 'NATIONAL', deduit: c(0), charge: c(0) });
+    expect(q({ paysVendeur: 'ES', tvaFacturee: c(0) }, UE, 'ES').code).toBe('NATIONAL');
+    expect(q({ paysVendeur: 'ES', tvaFacturee: c(0), tvaFrancaise: true }).code).toBe('NATIONAL');
   });
 });
