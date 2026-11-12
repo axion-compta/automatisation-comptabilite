@@ -39,6 +39,15 @@ describe('règles de la hiérarchie', () => {
     for (const mauvaise of ['2026-02-30', '2026-6-5', '', '2026-06-15T00:00']) {
       expect(verifierCitations([CITATION], reg, mauvaise)).toMatchObject({ valide: false, perimees: [CITATION] });
     }
+    // Ordre inversé : début postérieur à la fin, aucune date ne peut être couverte.
+    const inverse = [{ id: 'TEST-1', version: '2', lectures: 2, debutValidite: '2027-01-01', finValidite: '2026-01-01' }];
+    expect(verifierCitations([CITATION], inverse, '2026-06-15')).toMatchObject({ valide: false, perimees: [CITATION] });
+    // Deux entrées de même id@version, aucune ne couvre la date : périmée.
+    const deuxPerimees = [
+      { id: 'TEST-1', version: '2', lectures: 2, finValidite: '2026-01-01' },
+      { id: 'TEST-1', version: '2', lectures: 2, debutValidite: '2027-01-01' },
+    ];
+    expect(verifierCitations([CITATION], deuxPerimees, '2026-06-15')).toMatchObject({ valide: false, perimees: [CITATION] });
     for (const borne of ['n/a', '']) {
       const e = [{ id: 'TEST-1', version: '2', lectures: 2, finValidite: borne }];
       expect(verifierCitations([CITATION], e, '2026-06-15')).toMatchObject({ valide: false, perimees: [CITATION] });
@@ -50,6 +59,10 @@ describe('règles de la hiérarchie', () => {
     expect(verifierCitations([CITATION], reg, '2026-01-01')).toEqual({ valide: true });
     expect(verifierCitations([CITATION], reg, '2026-12-31')).toEqual({ valide: true });
     expect(verifierCitations([CITATION], reg)).toEqual({ valide: true });
+    // Deux entrées de même id@version : une périmée, une qui couvre la date.
+    const deux = [{ id: 'TEST-1', version: '2', lectures: 2, finValidite: '2026-01-01' }, ...reg];
+    expect(verifierCitations([CITATION], deux, '2026-06-15')).toEqual({ valide: true });
+    expect(verifierCitations([CITATION], [...reg].reverse().concat(deux.slice(0, 1)), '2026-06-15')).toEqual({ valide: true });
     const sansBornes = [{ id: 'TEST-1', version: '2', lectures: 2 }];
     expect(verifierCitations([CITATION], sansBornes, '1999-01-01')).toEqual({ valide: true });
   });
@@ -70,6 +83,6 @@ describe('règles de la hiérarchie', () => {
     const noms = Object.keys(CAS);
     const reussis = noms.filter((n) => CAS[n]!()).length;
     expect(noms.length).toBe(5);
-    expect(reussis / noms.length).toBe(1);
+    expect(reussis).toBe(noms.length);
   });
 });
