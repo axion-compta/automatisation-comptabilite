@@ -1,26 +1,44 @@
-VERDICT: A CORRIGER
-f12923489015c7f89ce39141615019ff6543bc44
+VERDICT: OK
+f402f26287029504a39e8240229f56878e7348dc
 
-PR #1081, fiche L14-T40 (sensible), SHA de tête relu : f12923489015c7f89ce39141615019ff6543bc44
-Seconde relecture, après l'avis A CORRIGER du SHA d336feae. Fiche lue sur origin/main ; aucune PR de pilotage ouverte ne la modifie.
+# Avis L14-T40, PR #1081 (troisième relecture, relecteur Opus, lot 5 section R, 12/11/2026)
 
-Le code reste juste. Le blocage vient toujours de la fiche : seul Will peut le lever.
+SHA de tête relu : f402f26287029504a39e8240229f56878e7348dc. L'avis précédent (A CORRIGER) portait sur le SHA f1292348.
+Fiche sensible : la fusion revient à Will seul. Fiche lue sur `origin/main`, qui contient l'amendement #1083.
 
-## Défaut bloquant : NON corrigé (défaut de fiche, geste de Will)
-1. `packages/contrat/src/__tests__/tva.test.ts:88`, cas `openapi-contient-les-routes-tva` : toujours rouge. Il attend `['get','get','get']` et reçoit en plus `put, post, post, put` (les 4 routes d'écriture demandées par la fiche). Reproduit en local (1 échec sur 6) et dans le job `tests` de la CI (seul échec du job), donc `verifier` rouge.
-   - Ce fichier n'est toujours pas dans `fichiers_autorises` de L14-T40 sur origin/main ; l'auteur a eu raison de ne pas le toucher.
-   - Correction : Will ajoute `packages/contrat/src/__tests__/tva.test.ts` aux `fichiers_autorises` (PR de pilotage). L'auteur filtre ensuite ce cas sur les routes de lecture et ajoute une assertion séparée pour les 4 routes d'écriture (ou met l'attente à `['get','get','get','put','post','post','put']`).
+## Défaut 1 (bloquant) : CORRIGÉ
+- #1083 a ajouté `packages/contrat/src/__tests__/tva.test.ts` aux `fichiers_autorises` de L14-T40.
+- `tva.test.ts:88-89`, cas `openapi-contient-les-routes-tva` : les lectures sont filtrées (`['get','get','get']`), et une assertion séparée vérifie les 4 écritures (`['put','post','post','put']`). Les assertions existantes sur les chemins, les operationId et la réponse 404 sont gardées. Le test n'est pas affaibli : un verbe en plus ou en moins le fait rougir.
+- Mutation : la route de rattachement passe de `PUT` à `POST` (`packages/contrat/src/domaines/tva-ecriture.ts`). Résultat : `openapi-contient-les-routes-tva` et `serveur-par-defaut-refuse-401` rougissent.
+- Mutation : `modifierInclureSousReserve` est retiré de `tvaEcriture`. Résultat : `t1-reglage-refuse-quel-que-soit-le-role` et les tests suivants rougissent.
+- Le job `tests`, rouge à cause de ce cas, est vert. `verifier` l'est aussi.
 
-## Défaut non bloquant de l'avis précédent : corrigé
-2. Identifiant vide : **corrigé**. `apps/serveur/src/__tests__/tva-ecriture.test.ts:99` et `:122` : ligne `''` et pièce `''` refusées en 400, sans ligne de journal ni changement d'état.
-   - Mutation : `Identifiant` accepte la chaîne vide (`{0,64}`, `packages/contrat/src/domaines/tva-ecriture.ts:4`) → `sous-reserve-ligne-solide-409` et `rattachement-periode-deposee-409` rougissent.
+## Défaut 2 (identifiant vide) : resté corrigé
+Les tests `tva-ecriture.test.ts` (ligne `''` et pièce `''` refusées en 400) sont inchangés depuis f1292348.
+
+## Commits depuis f1292348
+Une fusion de `main` (aa232d41). `d761613a` modifie le test. `651b94af` et `f402f262` compactent `apps/serveur/src/domaines/tva-ecriture.ts` pour tenir sous 300 lignes.
+- La refonte remplace les `if` par une table code → erreur. Le comportement ne change pas : un code inconnu donne `undefined`, et l'erreur est relancée comme avant.
+- Mutations (annulées ensuite) :
+  - ligne de refus retirée → `t1-reglage-refuse-quel-que-soit-le-role` et `reglage-valeur-false-aussi-refuse` rougissent (critère de la fiche) ;
+  - `transition_interdite` mal relié → `sous-reserve-ligne-solide-409` rougit ;
+  - `mois_identique` mal relié → `rattachement-ancien-et-nouveau-mois` rougit ;
+  - `piece_inconnue` retiré → `rattachement-periode-deposee-409` rougit.
 
 ## Vérifications au SHA de tête (Node 22)
-- `tva-ecriture.test.ts` : 13/13. `garde:perimetre` vert en local (8 fichiers, 299 lignes + 262 lignes d'openapi.json). Gardes vertes en CI. Fusion avec main sans conflit.
-- Le dernier commit ne touche que le test (et regroupe deux `creerApp(); apps.push(a);` sur une ligne). La fusion de main n'apporte que des fichiers déjà sur main.
-- Aucun mot interdit, aucun prix, aucun secret ; données fictives.
+- vitest sur `tva.test.ts`, `tva-ecriture.test.ts`, `routes-paiement-interdites`, `routes-sans-virement`, `routes-interdites` et `identite` : 64/64 verts. Les 13 tests nommés sont verts.
+- `pnpm contrat:diff` : identique.
+- Gardes en local :
+  - `perimetre.mjs` (avec `GITHUB_HEAD_REF=lot-14/L14-T40`) : vert, 9 fichiers, 300 lignes plus 262 lignes d'openapi.json ;
+  - `termine.mjs` et `fiches.mjs` : verts (1061 fiches).
+- Diff : 9 fichiers, tous autorisés, aucune ligne « - - ». La fiche passe à `statut: fait`. Le journal fait 4 lignes et commence par `# Journal L14-T40`.
+- CI : les 9 jobs sont verts.
+- Aucun mot interdit, aucun prix, aucun secret, données fictives.
 
-## Remarques (reprises)
-- État du service commun à tous les exercices (acceptable pour un état fictif injecté).
-- Même `Idempotency-Key` sur une autre route → `DEJA_FAIT` : à documenter.
-- Le test d'identifiant vide passe par `call()` (validation du contrat), pas par `inject` HTTP : suffisant pour la règle, l'URL `lignes//sous-reserve` n'est pas exercée.
+## Remarques (non bloquantes)
+- La taille est exactement à la limite (300/300). La moindre retouche future demandera un amendement de taille.
+- La ligne compactée `const { type, par, reglage } = ...; journal.ecrire(...)` met deux instructions sur une seule ligne. C'est lisible, mais ce n'est pas le style du dépôt.
+- Points repris des avis précédents :
+  - l'état du service est commun à tous les exercices ;
+  - la même `Idempotency-Key` sur une autre route donne `DEJA_FAIT`, ce qui est à documenter ;
+  - le test d'identifiant vide passe par `call()`, pas par `inject` HTTP.
