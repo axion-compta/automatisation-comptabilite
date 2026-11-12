@@ -2,6 +2,8 @@ import type { z } from 'zod';
 import { creerEnveloppe, type Enveloppe, type TypeActeur } from '../../../../packages/noyau/src/evenements/enveloppe.js';
 import type { BoiteEnvoi, UniteDeTravail } from '../../../../packages/noyau/src/evenements/publication.js';
 import type { Canal } from '../../../../packages/noyau/src/securite/types.js';
+import type { FraisDetail } from '../../../../packages/contrat/src/domaines/frais.js';
+import type { ServiceFraisActions } from '../../../../packages/contrat/src/domaines/frais-actions-service.js';
 import type { ServiceFraisValidation } from '../../../../packages/contrat/src/domaines/frais-validation-service.js';
 import type { CorpsRemboursement, CorpsValidation } from '../../../../packages/contrat/src/domaines/frais-validation.js';
 
@@ -54,15 +56,36 @@ export function ecrireEtPublier<R>(unite: UniteDeTravail, mutation: (tx: { boite
 }
 
 const VERSION_INITIALE = 1;
-/** Transitions de la validation des frais, chacune avec ses événements dans la même transaction. */
+/** Transitions de la validation et du remboursement, chacune avec ses événements dans la même transaction. `proposer` ne change aucun état : aucun événement. */
 export function creerFraisPublies(service: ServiceFraisValidation, unite: UniteDeTravail) {
   return {
-    proposer: (c: ContexteFrais, fraisId: string) =>
-      ecrireEtPublier(unite, async () => service.proposer(fraisId, c.cleIdempotence), () => [evenementFraisPropose(c, { fraisId, version: VERSION_INITIALE })]),
     valider: (c: ContexteFrais, corps: z.infer<typeof CorpsValidation>) =>
       ecrireEtPublier(unite, async () => service.valider(corps, c.acteur.id, c.cleIdempotence), (lot) =>
         lot.map((v) => evenementFraisValide(c, { fraisId: v.fraisId, ecritureId: v.ecritureId, version: VERSION_INITIALE }))),
     preparer: (c: ContexteFrais, corps: z.infer<typeof CorpsRemboursement>) =>
       ecrireEtPublier(unite, async () => service.preparer(corps, c.cleIdempotence), (r) => [evenementRemboursementPrepare(c, { remboursementId: r.id, personneId: r.personneId, version: VERSION_INITIALE })]),
+  };
+}
+
+/** Événement d'une écriture de frais : seulement si le statut change vers `propose` ou `exclu_paye_societe`. */
+const evenementsDuStatut = (c: ContexteFrais, avant: string | undefined, d: FraisDetail): Enveloppe[] => {
+  if (d.statut === avant) return [];
+  if (d.statut === 'propose') return [evenementFraisPropose(c, { fraisId: d.id, version: d.version })];
+  if (d.statut === 'exclu_paye_societe') return [evenementExcluPayeSociete(c, { fraisId: d.id, version: d.version })];
+  return [];
+};
+/** Création et complément : l'événement part avec le changement d'état. `statuts` retient le dernier statut vu (statut inconnu : l'événement part). */
+export function creerFraisActionsPublies(service: ServiceFraisActions, unite: UniteDeTravail) {
+  const statuts = new Map<string, string>();
+  const publier = (c: ContexteFrais, id: string | undefined, ecrire: () => FraisDetail) =>
+    ecrireEtPublier(unite, async () => ecrire(), (d) => {
+      const evts = evenementsDuStatut(c, statuts.get(id ?? d.id), d);
+      statuts.set(d.id, d.statut);
+      return evts;
+    });
+  return {
+    creer: (c: ContexteFrais, corps: Parameters<ServiceFraisActions['creer']>[0]) => publier(c, undefined, () => service.creer(corps, c.acteur.id, c.cleIdempotence)),
+    completer: (c: ContexteFrais, id: string, corps: Parameters<ServiceFraisActions['completer']>[1], version: number) =>
+      publier(c, id, () => service.completer(id, corps, version, c.acteur.id, c.cleIdempotence)),
   };
 }

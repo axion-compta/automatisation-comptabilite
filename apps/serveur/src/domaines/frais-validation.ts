@@ -41,7 +41,7 @@ export function routesFraisValidation(service: ReturnType<typeof creerServiceFra
     }
   };
   return {
-    proposerFrais: os.proposerFrais.handler(({ input: { params, headers: h }, errors, context }) => traduire(async () => (exigerSociete(context, params.s), { body: await publies.proposer(contexte(params.s, undefined, h['idempotency-key']), params.id) }), errors)),
+    proposerFrais: os.proposerFrais.handler(({ input: { params, headers: h }, errors, context }) => traduire(async () => (exigerSociete(context, params.s), { body: service.proposer(params.id, h['idempotency-key']) }), errors)),
     validerFrais: os.validerFrais.handler(({ input: { params, body, headers: h }, errors, context }) => traduire(async () => (exigerSociete(context, params.s), { body: await publies.valider(contexte(params.s, h['x-personne'], h['idempotency-key']), body) }), errors as never)),
     preparerRemboursement: os.preparerRemboursement.handler(({ input: { params, body, headers: h }, errors, context }) => traduire(async () => (exigerSociete(context, params.s), { body: await publies.preparer(contexte(params.s, undefined, h['idempotency-key']), body) }), errors)),
   };
