@@ -18,7 +18,7 @@ describe('gardien-sortie', () => {
     expect(verif({ outil: 'classer_ecriture', niveauOutil: 'B' })).toEqual({ permis: true });
     expect(verif({ sorteAgent: 'chat', outil: 'classer_ecriture', niveauOutil: 'B' })).toEqual({ permis: true });
     expect(verif({ sorteAgent: 'directeur' })).toEqual({ permis: true });
-    expect(SORTES_AGENT).toEqual(['chat', 'specialiste', 'chef_pole', 'directeur', 'lecteur']);
+    expect(SORTES_AGENT).toEqual(['chat', 'specialiste', 'chef_pole', 'directeur', 'lecteur', 'reprise']);
     expect(niveauxPermisAgent('chat')).toEqual(['L', 'B']);
     expect(niveauxPermisAgent('specialiste')).toEqual(['L', 'B']);
   });

@@ -2,7 +2,7 @@ import { estDans, NIVEAUX, type CodeErreur, type Niveau } from './types.js';
 
 // Gardien de sortie : après l'appel, l'outil demandé doit être permis à l'agent ET au rôle.
 // Le niveau de l'outil vient du registre, jamais du modèle. Le rôle est un argument.
-export const SORTES_AGENT = ['chat', 'specialiste', 'chef_pole', 'directeur', 'lecteur'] as const;
+export const SORTES_AGENT = ['chat', 'specialiste', 'chef_pole', 'directeur', 'lecteur', 'reprise'] as const;
 export type SorteAgent = (typeof SORTES_AGENT)[number];
 
 const NIVEAUX_PAR_SORTE: Record<SorteAgent, readonly Niveau[]> = {
@@ -11,6 +11,7 @@ const NIVEAUX_PAR_SORTE: Record<SorteAgent, readonly Niveau[]> = {
   chef_pole: ['L'],
   directeur: ['L'],
   lecteur: [],
+  reprise: ['L'],
 };
 
 /** Niveaux d'outil directs ; M ne passe que par une proposition. Sorte inconnue : aucun. */
