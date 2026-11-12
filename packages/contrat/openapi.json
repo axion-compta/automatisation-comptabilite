@@ -3001,6 +3001,9 @@
           "400": {
             "description": "Introuvable"
           },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           },
@@ -3079,6 +3082,9 @@
           "400": {
             "description": "Introuvable"
           },
+          "403": {
+            "description": "Interdit"
+          },
           "404": {
             "description": "Introuvable"
           },
@@ -3156,6 +3162,9 @@
           },
           "400": {
             "description": "Introuvable"
+          },
+          "403": {
+            "description": "Interdit"
           },
           "404": {
             "description": "Introuvable"

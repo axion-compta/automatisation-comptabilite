@@ -11,8 +11,8 @@ const Id = z.string().min(1).max(50);
 const sous = (suffixe: string) => cheminSociete(suffixe) as `/${string}`;
 const Societe = z.object({ s: z.string().min(1) });
 
-/** `x-personne` : identité fictive d'essai, remplacée par l'identité réelle plus tard (J3a). */
-const EnTetes = { 'idempotency-key': CleIdempotence, 'x-personne': Id };
+/** `x-personne` : facultatif, lu seulement par le faux serveur ; le vrai serveur prend l'identité de la session. */
+const EnTetes = { 'idempotency-key': CleIdempotence, 'x-personne': Id.optional() };
 const EnTetesModif = z.object({ ...EnTetes, 'if-match': z.string().regex(/^[1-9]\d{0,8}$/) });
 
 const Commun = { personneId: Id, date: z.iso.date() };
@@ -23,7 +23,7 @@ export const NouveauFrais = z.discriminatedUnion('nature', [
 export type NouveauFrais = z.infer<typeof NouveauFrais>;
 export const CompletementFrais = z.object({ declaration: Declaration.optional(), motifSansJustificatif: Texte.optional(), partPersoTtcCentimes: Centimes.optional(), vehiculeId: Id.optional(), pieceId: Id.optional() });
 export type CompletementFrais = z.infer<typeof CompletementFrais>;
-const ErreursCommunes = { PERSONNE_DIFFERENTE: { status: 403 }, DOUBLON_PIECE: { status: 409 }, VEHICULE_SOCIETE: { status: 409 }, CLE_REUTILISEE: { status: 409 }, ENTREE_INVALIDE: { status: 400 } } as const;
+const ErreursCommunes = { PERSONNE_DIFFERENTE: { status: 403 }, DROIT_REFUSE: { status: 403 }, DOUBLON_PIECE: { status: 409 }, VEHICULE_SOCIETE: { status: 409 }, CLE_REUTILISEE: { status: 409 }, ENTREE_INVALIDE: { status: 400 } } as const;
 export const creerFrais = oc
   .route({ method: 'POST', path: sous('/frais'), inputStructure: 'detailed', operationId: 'creerFrais', successStatus: 201 })
   .errors(ErreursCommunes)

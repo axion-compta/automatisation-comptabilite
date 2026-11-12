@@ -17,17 +17,17 @@ export const CorpsRemboursement = z.object({ personneId: Id, fraisIds: z.array(I
 /** Remboursement préparé seulement : aucun champ d'ordre émis. */
 export const RemboursementPrepare = z.object({ id: z.string(), personneId: Id, fraisIds: z.array(Id), montantCentimes: Centimes, statut: z.literal('propose') });
 export type RemboursementPrepare = z.infer<typeof RemboursementPrepare>;
-const Erreurs = { FRAIS_INCONNU: { status: 404 }, ENTREE_INVALIDE: { status: 400 }, CLE_REUTILISEE: { status: 409 }, FRAIS_PAYE_SOCIETE: { status: 409 } } as const;
+const Erreurs = { DROIT_REFUSE: { status: 403 }, FRAIS_INCONNU: { status: 404 }, ENTREE_INVALIDE: { status: 400 }, CLE_REUTILISEE: { status: 409 }, FRAIS_PAYE_SOCIETE: { status: 409 } } as const;
 export const proposerFrais = oc
   .route({ method: 'POST', path: sous('/frais/{id}/proposer'), inputStructure: 'detailed', operationId: 'proposerFrais' })
   .errors({ ...Erreurs, JUSTIFICATIF_MANQUANT: { status: 409 }, BAREME_A_VERIFIER: { status: 409 } })
   .input(z.object({ params: Societe.extend({ id: Id }), headers: z.object(Cle) }))
   .output(z.object({ body: EcritureProposee }));
-/** `x-personne` obligatoire : la validation est faite par une personne. */
+/** `x-personne` facultatif (faux serveur) : le vrai serveur prend la personne de la session. */
 export const validerFrais = oc
   .route({ method: 'POST', path: sous('/frais/valider'), inputStructure: 'detailed', operationId: 'validerFrais' })
   .errors({ ...Erreurs, JUSTIFICATIF_MANQUANT: { status: 409 }, BAREME_A_VERIFIER: { status: 409 }, RECAPITULATIF_A_CONFIRMER: { status: 409, data: z.object({ totalCentimes: Centimes }) } })
-  .input(z.object({ params: Societe, headers: z.object({ ...Cle, 'x-personne': Id }), body: CorpsValidation }))
+  .input(z.object({ params: Societe, headers: z.object({ ...Cle, 'x-personne': Id.optional() }), body: CorpsValidation }))
   .output(z.object({ body: z.array(ValidationFrais) }));
 export const preparerRemboursement = oc
   .route({ method: 'POST', path: sous('/remboursements'), inputStructure: 'detailed', operationId: 'preparerRemboursement', successStatus: 201 })
