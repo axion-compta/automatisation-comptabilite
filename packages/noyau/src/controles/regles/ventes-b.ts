@@ -24,6 +24,15 @@ export interface ObjetClientUe {
   pays: string;
   statutVies: StatutVies;
   paysUe: readonly string[];
+  /** Vente intracommunautaire exonérée : la trace de vérification doit alors être « valide ». */
+  exoneree?: boolean;
+  verification?: TraceVerification;
+}
+export interface TraceVerification {
+  etat: 'valide' | 'invalide' | 'a_confirmer';
+  idRequete: string;
+  horodatage: string;
+  empreinteReponse: string | null;
 }
 
 const ARRIVEE: Declencheur[] = ['arrivee', 'a_la_demande'];
@@ -53,10 +62,25 @@ export const regleCCV15 = regle<ObjetIdentifiantClient>('CC-V15', 'm', [], ARRIV
   return signal(o.nature === 'professionnel' && sansSiren && sansTva);
 });
 export const regleCCV16 = regle<EntreeEcritureFacture>('CC-V16', 'B', ['tva'], ARRIVEE_TVA, (o) => signal(ecritureFacture(o).cartes.includes('A16')));
+const ETATS_TRACE: readonly string[] = ['valide', 'invalide', 'a_confirmer'];
+const rempli = (v: unknown): boolean => typeof v === 'string' && v.trim() !== '';
+function traceExoneration(o: ObjetClientUe): SortieRegle {
+  const v: unknown = o.verification;
+  if (v === undefined || v === null) return alerte(undefined, 'sans_trace');
+  if (typeof v !== 'object') return invalide();
+  const t = v as Record<string, unknown>;
+  if (typeof t.etat !== 'string' || !ETATS_TRACE.includes(t.etat)) return invalide();
+  const trace = [t.etat, t.idRequete, t.horodatage, t.empreinteReponse].map((x) => (typeof x === 'string' ? x : '')).join('|');
+  const complete = rempli(t.idRequete) && rempli(t.horodatage) && rempli(t.empreinteReponse);
+  return t.etat === 'valide' && complete ? ok() : alerte(undefined, trace);
+}
 export const regleCCV17 = regle<ObjetClientUe>('CC-V17', 'M', [], ARRIVEE, (o) => {
   const listeValide = Array.isArray(o.paysUe) && o.paysUe.every((p) => typeof p === 'string');
   if (typeof o.pays !== 'string' || !listeValide || !STATUTS_VIES.includes(o.statutVies)) return invalide();
-  return signal(o.paysUe.includes(o.pays) && o.statutVies !== 'verifie');
+  if (o.exoneree !== undefined && typeof o.exoneree !== 'boolean') return invalide();
+  const historique = o.paysUe.includes(o.pays) && o.statutVies !== 'verifie';
+  if (o.exoneree === true) return historique ? alerte(undefined, `statut_vies:${o.statutVies}`) : traceExoneration(o);
+  return signal(historique);
 });
 export const regleCCV18 = regle<EntreeEcritureEncaissement>('CC-V18', 'M', [], ARRIVEE, (o) => signal(ecritureEncaissement(o).cartes.includes('A18')));
 export const regleCCV19 = regle<EntreeBalanceAgee>('CC-V19', 'B', ['cloture'], ARRIVEE, (o) => {

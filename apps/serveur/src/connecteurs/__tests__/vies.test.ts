@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { ErreurVies, verifierVies, type PortVies } from '../vies.js';
+import { ErreurVies, verifierVies, verifierViesTracee, type PortVies } from '../vies.js';
 
 const BON = 'FR11123456782';
 const CLE_FAUSSE = 'FR12123456782';
@@ -65,5 +66,55 @@ describe('connecteur VIES', () => {
 
   it('espaces et minuscules acceptés', async () => {
     expect(await lancer(faux({ valide: true }), { ouvert: true, numero: ' fr 11 123456782 ' })).toEqual({ issue: 'valide' });
+  });
+});
+
+describe('connecteur VIES : trace de la requête', () => {
+  const BRUT = '{"valid":true,"requestIdentifier":"FICTIF"}';
+  const sha = (t: string) => createHash('sha256').update(t).digest('hex');
+  const horloge = () => new Date('2027-03-04T10:11:12.000Z');
+  const tracer = (port: PortVies, o: { ouvert?: boolean; numero?: string } = {}) =>
+    verifierViesTracee({ port, numero: o.numero ?? BON, delaiMs: DELAI, ouvert: o.ouvert ?? true, maintenant: horloge, idRequete: () => 'req-0001' });
+
+  it('reponse-tracee-id-horodatage-empreinte', async () => {
+    const port: PortVies = { verifier: () => Promise.resolve({ valide: true, reponseBrute: BRUT }) };
+    const t = await tracer(port);
+    expect(t).toEqual({ etat: 'valide', idRequete: 'req-0001', horodatage: '2027-03-04T10:11:12.000Z', empreinteReponse: sha(BRUT) });
+    expect(JSON.stringify(t)).not.toContain('FICTIF');
+    const autre = await tracer({ verifier: () => Promise.resolve({ valide: true, reponseBrute: BRUT + ' ' }) });
+    expect(autre.empreinteReponse).not.toBe(t.empreinteReponse);
+    const invalide = await tracer({ verifier: () => Promise.resolve({ valide: false, reponseBrute: '{"valid":false}' }) });
+    expect(invalide.etat).toBe('invalide');
+    expect(invalide.empreinteReponse).toBe(sha('{"valid":false}'));
+    // Sans réponse brute fournie, l'empreinte porte sur la forme canonique du verdict.
+    expect((await tracer(faux({ valide: true }).port)).empreinteReponse).toBe(sha('{"valide":true}'));
+    // La projection historique reste inchangée.
+    expect(await verifierVies({ port, numero: BON, delaiMs: DELAI, ouvert: true })).toEqual({ issue: 'valide' });
+  });
+
+  it('panne-a-confirmer', async () => {
+    const t = await tracer(faux('serveur').port);
+    expect(t).toEqual({ etat: 'a_confirmer', idRequete: 'req-0001', horodatage: '2027-03-04T10:11:12.000Z', empreinteReponse: null });
+    const mal: PortVies = { verifier: () => Promise.resolve({ valide: 'oui' } as unknown as { valide: boolean }) };
+    expect((await tracer(mal)).etat).toBe('a_confirmer');
+  });
+
+  it('delai-depasse-a-confirmer', async () => {
+    const t = await tracer(faux('pendu').port);
+    expect(t.etat).toBe('a_confirmer');
+    expect(t.empreinteReponse).toBeNull();
+    expect(t.idRequete).toBe('req-0001');
+  });
+
+  it('jamais-valide-par-defaut', async () => {
+    const f = faux({ valide: true });
+    for (const o of [{ ouvert: false }, { numero: CLE_FAUSSE }, { numero: 'DE123456789' }, { numero: REMPLISSAGE }]) {
+      const t = await tracer(f.port, o);
+      expect(t.etat, JSON.stringify(o)).not.toBe('valide');
+      expect(t.empreinteReponse).toBeNull();
+    }
+    expect((await tracer(f.port, { ouvert: false })).etat).toBe('a_confirmer');
+    expect((await tracer(f.port, { numero: CLE_FAUSSE })).etat).toBe('invalide');
+    expect(f.appels).toEqual([]);
   });
 });

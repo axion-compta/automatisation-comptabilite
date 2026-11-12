@@ -106,6 +106,39 @@ describe('CC-V17 client UE sans numero de TVA verifie (A17)', () => {
     expect(res(V17, o('BE', 'invalide'))).toBe('ALERTE');
     expect(res(V17, o('BE', 'invalide', [...UE].reverse()))).toBe('ALERTE');
   });
+  const trace = (etat: string) => ({ etat, idRequete: 'req-0001', horodatage: '2027-03-04T10:11:12.000Z', empreinteReponse: 'ab'.repeat(32) });
+  const exo = (verification: unknown, extra: Record<string, unknown> = {}) => ({ ...o('DE', 'verifie'), exoneree: true, verification, ...extra });
+  it('a-confirmer-bloque-exoneration', () => {
+    for (const etat of ['a_confirmer', 'invalide']) {
+      const r = ev(V17, exo(trace(etat)));
+      expect(r.resultat, etat).toBe('ALERTE');
+      expect(r.valeur, etat).toBe(`${etat}|req-0001|2027-03-04T10:11:12.000Z|${'ab'.repeat(32)}`);
+    }
+    expect(ev(V17, exo(undefined)).resultat).toBe('ALERTE');
+    expect(ev(V17, exo(undefined)).valeur).toBe('sans_trace');
+    // Même hors de la liste des pays : une vente exonérée non confirmée lève le contrôle.
+    expect(res(V17, exo(trace('a_confirmer'), { paysUe: [] }))).toBe('ALERTE');
+    // Non exonérée : comportement historique inchangé.
+    expect(res(V17, { ...o('DE', 'verifie'), exoneree: false, verification: trace('a_confirmer') })).toBe('OK');
+  });
+  it('valide-trace-permet-exoneration', () => {
+    expect(res(V17, exo(trace('valide')))).toBe('OK');
+    // Le statut enregistré reste contrôlé : une trace valide ne l'emporte pas sur un statut non vérifié.
+    for (const statut of ['invalide', 'non_verifie']) expect(res(V17, exo(trace('valide'), { statutVies: statut }))).toBe('ALERTE');
+    // Une trace valide mais incomplète ne permet pas l'exonération.
+    for (const manque of ['idRequete', 'horodatage', 'empreinteReponse']) {
+      expect(res(V17, exo({ ...trace('valide'), [manque]: '' })), manque).toBe('ALERTE');
+      expect(res(V17, exo({ ...trace('valide'), [manque]: null })), manque).toBe('ALERTE');
+      // Un champ réduit à des espaces compte comme vide.
+      expect(res(V17, exo({ ...trace('valide'), [manque]: '  ' })), manque).toBe('ALERTE');
+      expect(res(V17, exo({ ...trace('valide'), [manque]: ' x ' })), manque).toBe('OK');
+    }
+    // Champ manquant : valeur = état|id|horodatage|empreinte, le champ absent restant vide.
+    expect(ev(V17, exo({ ...trace('valide'), idRequete: null })).valeur).toBe(`valide||2027-03-04T10:11:12.000Z|${'ab'.repeat(32)}`);
+    expect(() => ev(V17, exo(trace('probablement')))).toThrow();
+    expect(() => ev(V17, exo('x'))).toThrow();
+    expect(() => ev(V17, exo(trace('valide'), { exoneree: 'oui' }))).toThrow();
+  });
 });
 
 describe('CC-V18 client crediteur (A18)', () => {

@@ -1,9 +1,10 @@
 // Connecteur VIES (CC-K09) : appelé seulement si la clé est juste, interrupteur fermé par défaut.
 // Écrit contre une interface : aucun appel réseau réel ici. Service indisponible = IMPOSSIBLE, jamais valide.
+import { createHash, randomUUID } from 'node:crypto';
 import { analyserNumeroTva } from '../../../../packages/noyau/src/controles/regles/numero-tva.js';
 
 export interface PortVies {
-  verifier(pays: string, numero: string, signal: AbortSignal): Promise<{ valide: boolean }>;
+  verifier(pays: string, numero: string, signal: AbortSignal): Promise<{ valide: boolean; reponseBrute?: string }>;
 }
 
 export class ErreurVies extends Error {
@@ -16,14 +17,26 @@ export type ResultatVies = {
 
 export type ParametresVies = { port: PortVies; numero: string; delaiMs: number; ouvert?: boolean };
 
-const LONGUEUR_PAYS = 2;
-const resultat = (issue: ResultatVies['issue']): ResultatVies => ({ issue });
+/** Trace archivable d'une vérification : la réponse brute n'y figure jamais, seulement son empreinte SHA-256. */
+export type TraceVies = {
+  etat: 'valide' | 'invalide' | 'a_confirmer';
+  idRequete: string;
+  horodatage: string;
+  empreinteReponse: string | null;
+};
+export type ParametresViesTraces = ParametresVies & { maintenant?: () => Date; idRequete?: () => string };
 
-export async function verifierVies(p: ParametresVies): Promise<ResultatVies> {
-  if (p.ouvert !== true) return resultat('interrupteur-ferme');
+const LONGUEUR_PAYS = 2;
+const empreinte = (texte: string): string => createHash('sha256').update(texte).digest('hex');
+
+type Sortie = { issue: ResultatVies['issue']; empreinteReponse: string | null };
+const sans = (issue: ResultatVies['issue']): Sortie => ({ issue, empreinteReponse: null });
+
+async function interroger(p: ParametresVies): Promise<Sortie> {
+  if (p.ouvert !== true) return sans('interrupteur-ferme');
   const { statut } = analyserNumeroTva(p.numero);
-  if (statut === 'hors_france') return resultat('hors-perimetre');
-  if (statut !== 'cle_juste') return resultat('cle-invalide');
+  if (statut === 'hors_france') return sans('hors-perimetre');
+  if (statut !== 'cle_juste') return sans('cle-invalide');
   const net = p.numero.replace(/\s+/g, '').toUpperCase();
   const controle = new AbortController();
   let minuterie: ReturnType<typeof setTimeout> | undefined;
@@ -35,11 +48,34 @@ export async function verifierVies(p: ParametresVies): Promise<ResultatVies> {
   });
   try {
     const rep = await Promise.race([p.port.verifier(net.slice(0, LONGUEUR_PAYS), net.slice(LONGUEUR_PAYS), controle.signal), delai]);
-    if (typeof rep?.valide !== 'boolean') return resultat('indisponible-impossible');
-    return resultat(rep.valide ? 'valide' : 'invalide');
+    if (typeof rep?.valide !== 'boolean') return sans('indisponible-impossible');
+    const brut = typeof rep.reponseBrute === 'string' ? rep.reponseBrute : JSON.stringify({ valide: rep.valide });
+    return { issue: rep.valide ? 'valide' : 'invalide', empreinteReponse: empreinte(brut) };
   } catch {
-    return resultat('indisponible-impossible');
+    return sans('indisponible-impossible');
   } finally {
     clearTimeout(minuterie);
   }
+}
+
+/** Projection historique : seule l'issue est rendue. */
+export async function verifierVies(p: ParametresVies): Promise<ResultatVies> {
+  return { issue: (await interroger(p)).issue };
+}
+
+const ETAT_PAR_ISSUE: Record<ResultatVies['issue'], TraceVies['etat']> = {
+  valide: 'valide',
+  invalide: 'invalide',
+  'cle-invalide': 'invalide',
+  'indisponible-impossible': 'a_confirmer',
+  'interrupteur-ferme': 'a_confirmer',
+  'hors-perimetre': 'a_confirmer',
+};
+
+/** Vérification tracée : identifiant de requête, horodatage UTC, empreinte ; tout ce qui n'est pas une réponse claire = à confirmer. */
+export async function verifierViesTracee(p: ParametresViesTraces): Promise<TraceVies> {
+  const idRequete = (p.idRequete ?? randomUUID)();
+  const horodatage = (p.maintenant ?? (() => new Date()))().toISOString();
+  const sortie = await interroger(p);
+  return { etat: ETAT_PAR_ISSUE[sortie.issue], idRequete, horodatage, empreinteReponse: sortie.empreinteReponse };
 }
