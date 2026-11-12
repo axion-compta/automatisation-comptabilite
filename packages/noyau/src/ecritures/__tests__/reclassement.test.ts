@@ -20,7 +20,8 @@ const base: readonly Ecriture[] = [
   ecr('e5', '2027-03-13', 'valide', '606', { contrePassee: true }),
   ecr('e6', '2027-03-14', 'propose'),
 ];
-const verrous = [{ debut: '2027-01-01', fin: '2027-01-31' }];
+const verrous = { periodesVerrouillees: ['2027-01'], exerciceCloture: false };
+const libre = { periodesVerrouillees: [], exerciceCloture: false };
 const filtre = { compteSource: '606' };
 const code = (fn: () => unknown): string => {
   try { fn(); } catch (e) { if (e instanceof ErreurReclassement) return e.code; throw e; }
@@ -40,7 +41,8 @@ describe('correction en masse guidée', () => {
     expect(apercuReclassement(base, { ...filtre, dateDebut: '2027-03-10', dateFin: '2027-03-11' }, '625', verrous).nombre).toBe(2);
     expect(code(() => apercuReclassement(base, filtre, '606', verrous))).toBe('cible_identique');
     expect(code(() => apercuReclassement(base, filtre, '', verrous))).toBe('compte_invalide');
-    expect(code(() => apercuReclassement(base, { compteSource: ' ' }, '625', verrous))).toBe('compte_invalide');
+    expect(code(() => apercuReclassement(base, filtre, '606 ', verrous))).toBe('compte_invalide');
+    expect(code(() => apercuReclassement(base, { compteSource: '606 ' }, '625', verrous))).toBe('compte_invalide');
     expect(code(() => apercuReclassement(base, { ...filtre, dateDebut: '2027-02-30' }, '625', verrous))).toBe('date_invalide');
   });
 
@@ -52,7 +54,7 @@ describe('correction en masse guidée', () => {
     expect(e1?.apres.map((l) => [l.debit, l.credit])).toEqual([[5000, 0], [0, 5000]]); // montants intacts
     // Plusieurs lignes du compte source : toutes reclassées, les autres non.
     const deux: Ecriture = { ...ecr('e7', '2027-03-15', 'brouillon'), lignes: [...ecr('x', '2027-03-15', 'brouillon').lignes.slice(0, 1), { compte: '606', libelle: 'b', debit: c(100), credit: c(0) }, { compte: '401', libelle: 'b', debit: c(0), credit: c(5100) }] };
-    expect(apercuReclassement([deux], filtre, '625', []).elements[0]?.apres.map((l) => l.compte)).toEqual(['625', '625', '401']);
+    expect(apercuReclassement([deux], filtre, '625', libre).elements[0]?.apres.map((l) => l.compte)).toEqual(['625', '625', '401']);
   });
 
   it('validees-par-contre-passation', () => {
@@ -91,11 +93,16 @@ describe('correction en masse guidée', () => {
     expect(a.verrouillees).toBe(1);
     const r = appliquer(a, { nombre: 2, date: '2027-04-01', motif: 'm' });
     expect(r.brouillons.some((e) => e.id.includes('e4') || e.lienOriginale === 'e4')).toBe(false);
-    // Bornes incluses du verrou.
+    // Mois verrouillé entier (premier et dernier jour), voisins libres.
     const bornes = [ecr('d', '2027-01-01', 'valide'), ecr('f', '2027-01-31', 'valide'), ecr('h', '2027-02-01', 'valide'), ecr('g', '2026-12-31', 'valide')];
     const b = apercuReclassement(bornes, filtre, '625', verrous);
     expect(b.verrouillees).toBe(2);
     expect(b.elements.map((x) => x.ecritureId)).toEqual(['h', 'g']);
-    expect(apercuReclassement(bornes, filtre, '625', []).verrouillees).toBe(0);
+    expect(apercuReclassement(bornes, filtre, '625', libre).verrouillees).toBe(0);
+    // Exercice clos : tout est exclu.
+    const clos = apercuReclassement(base, filtre, '625', { ...libre, exerciceCloture: true });
+    expect([clos.nombre, clos.verrouillees]).toEqual([0, 5]);
+    // La date de la contre-passation ne peut pas tomber dans une période verrouillée.
+    expect(code(() => appliquer(a, { nombre: 2, date: '2027-01-20', motif: 'm' }))).toBe('periode_verrouillee');
   });
 });

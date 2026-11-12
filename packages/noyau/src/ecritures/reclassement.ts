@@ -1,6 +1,7 @@
 // Correction en masse guidée : aperçu avant / après, nombre annoncé, puis brouillons seulement.
 // Une écriture validée n'est jamais modifiée : contre-passation et nouvelle écriture. Fonctions pures.
 import { estDateValide } from '../dates/civiles.js';
+import { estVerrouillee, type EtatVerrou } from '../exercices/exercices.js';
 import { corriger } from './correction.js';
 import type { Ecriture, LigneEcriture } from './modele.js';
 
@@ -10,7 +11,8 @@ export type CodeErreurReclassement =
   | 'date_invalide'
   | 'confirmation_differente'
   | 'rien_a_appliquer'
-  | 'motif_obligatoire';
+  | 'motif_obligatoire'
+  | 'periode_verrouillee';
 
 export class ErreurReclassement extends Error {
   override name = 'ErreurReclassement';
@@ -20,7 +22,6 @@ export class ErreurReclassement extends Error {
 }
 
 export type FiltreReclassement = { readonly compteSource: string; readonly dateDebut?: string; readonly dateFin?: string };
-export type Verrou = { readonly debut: string; readonly fin: string };
 export type ElementApercu = {
   readonly ecritureId: string;
   readonly statut: Ecriture['statut'];
@@ -31,6 +32,7 @@ export type ElementApercu = {
 export type ApercuReclassement = {
   readonly compteSource: string;
   readonly compteCible: string;
+  readonly verrou: EtatVerrou;
   /** Nombre d'écritures qui seront touchées, annoncé avant tout geste. */
   readonly nombre: number;
   readonly elements: readonly ElementApercu[];
@@ -42,13 +44,13 @@ export type ApercuReclassement = {
 export type Confirmation = { readonly nombre: number; readonly date: string; readonly motif: string };
 export type ResultatReclassement = { readonly brouillons: readonly Ecriture[]; readonly marquees: readonly Ecriture[] };
 
-const compteValide = (c: string): boolean => c.trim() !== '' && /^\d+$/.test(c.trim());
+const compteValide = (c: string): boolean => /^\d+$/.test(c);
 
 export function apercuReclassement(
   ecritures: readonly Ecriture[],
   filtre: FiltreReclassement,
   compteCible: string,
-  verrous: readonly Verrou[] = [],
+  verrou: EtatVerrou,
 ): ApercuReclassement {
   if (!compteValide(filtre.compteSource) || !compteValide(compteCible)) throw new ErreurReclassement('compte_invalide');
   if (filtre.compteSource === compteCible) throw new ErreurReclassement('cible_identique');
@@ -60,7 +62,7 @@ export function apercuReclassement(
     if (!e.lignes.some((l) => l.compte === filtre.compteSource)) continue;
     if (filtre.dateDebut !== undefined && e.date < filtre.dateDebut) continue;
     if (filtre.dateFin !== undefined && e.date > filtre.dateFin) continue;
-    if (verrous.some((v) => e.date >= v.debut && e.date <= v.fin)) {
+    if (estVerrouillee(e.date, verrou)) {
       verrouillees += 1;
       continue;
     }
@@ -71,7 +73,7 @@ export function apercuReclassement(
     const apres = e.lignes.map((l) => (l.compte === filtre.compteSource ? { ...l, compte: compteCible } : { ...l }));
     elements.push({ ecritureId: e.id, statut: e.statut, avant: e.lignes.map((l) => ({ ...l })), apres, ecriture: e });
   }
-  return { compteSource: filtre.compteSource, compteCible, nombre: elements.length, elements, verrouillees, ignorees };
+  return { compteSource: filtre.compteSource, compteCible, verrou, nombre: elements.length, elements, verrouillees, ignorees };
 }
 
 /** Brouillons seulement : un brouillon est modifié, une validée donne contre-passation et nouvelle écriture. */
@@ -81,6 +83,7 @@ export function appliquer(apercu: ApercuReclassement, confirmation: Confirmation
   const motif = confirmation.motif.trim();
   if (motif === '') throw new ErreurReclassement('motif_obligatoire');
   if (!estDateValide(confirmation.date)) throw new ErreurReclassement('date_invalide');
+  if (estVerrouillee(confirmation.date, apercu.verrou)) throw new ErreurReclassement('periode_verrouillee');
   const brouillons: Ecriture[] = [];
   const marquees: Ecriture[] = [];
   for (const el of apercu.elements) {
