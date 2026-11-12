@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "entrees": [
+    {
+      "id": "VI-001",
+      "motif": "règle de réserve légale attribuée à une forme qui n'en a pas",
+      "motifRegex": "r[ée]serve\\s+l[ée]gale\\s+obligatoire",
+      "formes": ["EI", "SNC"]
+    },
+    {
+      "id": "VI-002",
+      "motif": "compte de capital social attribué à une forme sans capital",
+      "motifRegex": "compte\\s+101\\b",
+      "formes": ["EI"]
+    }
+  ]
+}
