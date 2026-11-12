@@ -1,21 +1,24 @@
 VERDICT: A CORRIGER
+SHA: e2167600419f6397883eb49e3300add992e5181d
+PR: #1091
 
-PR #1091, fiche L08-T53 (sensible : fusion par Will seul), relue au SHA de tête 4d782f7cd451adb42c329f567b3fa70836d1e751 (première relecture, relecteur Opus).
+Fiche L08-T53 (sensible : fusion par Will seul), deuxième relecture (relecteur Opus), au SHA de tête e2167600419f6397883eb49e3300add992e5181d. L'avis précédent (A CORRIGER au SHA 4d782f7cd451adb42c329f567b3fa70836d1e751) relevait 1 défaut. `pilotage/ARRET` absent sur origin/main.
 
-## Défauts
+## Défaut de l'avis précédent : vérifié par mutation
+1. Corps de refus non vérifié : CORRIGÉ. Les 4 tests (`chaque-route-sans-identite-401`, `sans-permission-403-sur-chaque-route`, `acces-et-portabilite-exigent-reauth`, `sans-double-facteur-401`) vérifient le corps entier par `toEqual({ defined: false, code, status, message: code })`. Mutation `personnes-acces.ts:33` (`message: 'detail ' + JSON.stringify(verdict)`) : 4 tests rouges sur 9.
 
-1. La fiche exige un message de refus égal au code, sans aucun détail sur la demande ni sur la personne (« À faire » 2 `refusPersonnes`, et le piège « Le motif d'un refus ne va dans aucun message d'erreur »). Aucun test ne le vérifie. Mutation faite sur `apps/serveur/src/domaines/personnes-acces.ts:33` : `message: verdict.code` remplacé par `message: 'detail ' + JSON.stringify(verdict)`. Les 9 tests restent verts.
-   Correction demandée : dans `apps/serveur/src/__tests__/personnes-acces.test.ts:46`, `:53`, puis dans les tests 401 `REAUTHENTIFICATION_REQUISE` et `MFA_REQUIS`, vérifier le corps entier par `toEqual({ defined: false, code: X, status: S, message: X })` et pas seulement par `toMatchObject` sur une partie des clés.
+## Défaut restant (bloquant)
+1. `apps/serveur/src/__tests__/personnes-acces.test.ts:92` : le test `rectification-sans-reauth` ne vérifie rien. Il envoie l'issue `'rectification_faite'`, qui n'existe pas (`ISSUES_PAR_DROIT.rectification` = `['rectifiee', 'renvoi_societe']`). Le serveur répond 400 sur l'entrée, et `not.toBe(401)` passe. Le correcteur l'a constaté (réponse 400).
+   Preuve par mutation : `personnes-acces.ts:10`, `TYPES_AVEC_REAUTH` étendu à `'rectification'` (et même à tous les types) : les 9 tests restent verts. Une réauthentification exigée à tort pour une rectification ne serait donc pas vue, alors que la fiche dit « même vieille connexion → 200 ».
+   Correction demandée (dans le fichier de test seulement, déjà autorisé) : utiliser l'issue `'rectifiee'` et attendre `toBe(200)`. Essai local : avec ce changement, les 9 tests passent sur le code actuel, et la mutation ci-dessus fait rougir `rectification-sans-reauth`.
 
-## Vérifié et correct
-- Périmètre : 7 fichiers, tous dans `fichiers_autorises` ; diff de 212 lignes pour une limite de 260. `app.ts`, `handlers.ts`, le contrat, `securite/` et `OPERATIONS_SENSIBLES` ne sont pas touchés.
-- 9 tests nommés verts, `commun-personnes.test.ts` vert ; `node outils/gardes/fiches.mjs` : 1061 fiches cohérentes. Les tests de branchement existants (serveur et faux serveur) restent verts.
-- L'identité vient seulement de `options.exploitation.identite` ; l'en-tête `x-role` est ignoré (401). Le contrôle se fait avant le service et avant `REGLAGE_ABSENT`. Dans `traiterDemande`, la permission est contrôlée avant la lecture du type : un refus est identique que la demande existe ou non.
-- Ordre de `verifierAccesPersonnes` : 401 sans identité, puis 403 pour `personnel_axion` même avec la permission, puis 403 sans permission, puis 503 sans réglages, puis `exigerNiveau`. Une valeur invalide donne un refus, jamais 200.
-- Mutations tuées : retrait du test `personnel_axion`, réauthentification neutralisée, `portabilite` retirée de `TYPES_AVEC_REAUTH`, 503 retiré, contrôle retiré de `traiterDemande`, `rechercherPersonne` ou `enregistrerDemande`.
-- Données fictives (`JEU_SECURITE`, réglages inventés) ; aucun délai en dur dans le code. Journal de 9 lignes.
+## Vérifié et correct au SHA de tête
+- Fusion de `origin/main` sans rebase ni force-push ; le code n'a pas changé depuis la première relecture.
+- Périmètre : 7 fichiers, tous dans `fichiers_autorises` ; diff de 212 lignes pour une limite de 260 ; aucune ligne « - - ».
+- `personnes-acces.test.ts` 9/9 verts ; `commun-personnes.test.ts` 20 verts ; `node outils/gardes/fiches.mjs` : 1063 fiches cohérentes ; `node scripts/verifier.mjs --gardes` : 22 étapes vertes ; `tsc --noEmit` de `apps/serveur` : rien.
+- CI au SHA de tête : les 9 jobs sont verts.
+- Données fictives, aucun délai en dur dans le code, aucun prix, aucun mot interdit. Journal de 9 lignes.
 
 ## Remarques (non bloquantes)
-- `rectification-sans-reauth` (`:92`) attend `not.toBe(401)` ; la fiche dit 200. Un `toBe(200)` serait plus juste.
-- « `maintenantMs` non entier » est joué avec une horloge illisible (NaN, `:116`), pas avec une vraie valeur décimale. Ce cas n'est pas atteignable par `Date.parse`, c'est acceptable.
-- La fiche passe à `fait`, mais elle reste sensible : pas de mise en production sans J10.
+- « `maintenantMs` non entier » est joué avec NaN (horloge illisible). C'est acceptable.
+- Fiche sensible : pas de mise en production sans J10.
