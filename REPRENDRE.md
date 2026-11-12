@@ -180,8 +180,8 @@ Limite : le texte de la spec 15 n'est pas dans ce dépôt public (le journal de 
 ## Lot 08
 - Fiches : 57 (L08-T00 à T56). État lu sur main : `fait` pour T00 à T40, T42 à T52, T55, T56 ; `a_faire` : T41 (cette fiche), T53, T54.
 - T53 : aucun blocage écrit, dépendances faites : libre. T54 : PR #1085 ouverte (relecture Opus, fiche sensible), pas encore fusionnée.
-- Correction : T42 à T52 sont faites (les anciens blocages D29, J3a, D42, D43 ont été levés le 07/11/2026). Ce qui attend encore la console (D29, réponse attendue le 21/11/2026) : le vrai schéma `a_compta`, T-EXP-2, 3, 4 et 6, R15.
-- Mesures (API REST, sans IA) : `pilotage/calibrage.csv`, 70 PR fusionnées titrées L08-T* (fiche, lignes, minutes d'écriture, minutes d'ouverture à fusion) ; médiane 36,0 min. En-tête remplacé : l'ancien (décision, raisons) n'avait aucune ligne.
+- Correction : T42 à T52 sont faites (les anciens blocages D29, J3a, D42, D43 ont été levés le 07/11/2026). Ce qui attend encore la console (D29) : le vrai schéma `a_compta`, T-EXP-2, 3, 4 et 6, R15.
+- Mesures (API REST, sans IA) : `pilotage/calibrage.csv`, 70 PR fusionnées titrées L08-T* (en-tête commun conservé ; lignes, minutes d'écriture et d'ouverture à fusion dans la colonne raisons) ; médiane 36,0 min.
 - Limite : « minutes d'écriture » = premier à dernier commit de la PR ; la PR #139 (création des fiches) pèse 1842 lignes.
 - Prochaine action : fusion de T41 par le portier, #1085 par Will, puis T53 ; le reste attend la console.
 
@@ -212,3 +212,14 @@ Cas de la spec 08 (tests sous `packages/noyau/src/` sauf mention ; « bloqué pa
 | T-EXP-12 | `export-complet/__tests__/parties.test.ts` : t-exp-12-quatre-parties ; export-complet-reel : t-exp-12-reprise-reelle |
 | T-EXP-13 | `apps/serveur/src/exploitation/__tests__/export-complet-reel.test.ts` : t-exp-13 |
 | T-EXP-14 | `rgpd/__tests__/violations.test.ts` : exercice-t-exp-14 ; compte rendu d'exercice sur la société témoin : L08-T54 (PR #1085, non fusionnée) |
+
+## Lot 04
+État lu sur `origin/main` (en-têtes des fiches), avec L04-T47 elle-même.
+- Fiches : 59 au total ; 56 `statut: fait` avant cette PR (la tranche planifiée de 49 est faite, L04-T47 comprise une fois fusionnée), restent L04-T49 et L04-T51.
+- Délai médian de fusion, sensible et non sensible : non mesuré (`pilotage/calibrage.csv` ne contient que l'en-tête).
+- Écart à la fiche : L04-T48, T50, T52 et T53 sont déjà `fait` ; elle les croyait bloquées.
+- L04-T49 : remplacée par L04-T56, T57 et T58 (faites, décision D88), ne jamais la planifier.
+- L04-T51 (routes préfixées par la société, permissions `compta-*`) : `a_faire`, sans `bloque_par` ; à planifier, elle n'attend pas de décision lue dans sa fiche.
+- Décisions encore ouvertes pour les fiches faites contre un faux serveur : réponse de la console (D29) et feu vert J3a avant toute mise en réel.
+- Prochaine tranche proposée : écran de correction, écran M02 photo, éclatement multi-factures en V1.
+- Aucune date de livraison annoncée.
