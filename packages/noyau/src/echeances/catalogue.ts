@@ -26,6 +26,10 @@ export interface TypeEcheance {
   rappelsJours: number[];
   alerteJours?: number;
   legale: boolean;
+  /** Source de la date (lien ou référence) ; absente = rien n'est affirmé. */
+  source?: string;
+  /** Date (AAAA-MM-JJ) à laquelle la source a été relevée ; absente = « date à vérifier ». */
+  releveLe?: string;
 }
 
 export interface ProfilEcheances {
@@ -49,6 +53,8 @@ export interface Echeance {
   rappels: string[];
   alerte?: string;
   niveau: NiveauEcheance;
+  source?: string;
+  releveLe?: string;
 }
 
 const ANCRAGES: readonly string[] = ['creation', 'cloture', 'annee_civile', 'periode'];
@@ -66,6 +72,8 @@ function verifierType(t: TypeEcheance): void {
   if (!ok || !REPORTS.includes(t.report) || !SOURCES.includes(t.statutSource) || typeof t.legale !== 'boolean') {
     throw new ErreurCatalogue('type_invalide');
   }
+  if (t.source !== undefined && t.source === '') throw new ErreurCatalogue('source_invalide');
+  if (t.releveLe !== undefined && !estDateValide(t.releveLe)) throw new ErreurCatalogue('releve_invalide');
   if (!Number.isSafeInteger(t.decalage.mois) || !Number.isSafeInteger(t.decalage.jours)) {
     throw new ErreurCatalogue('decalage_invalide');
   }
@@ -74,7 +82,7 @@ function verifierType(t: TypeEcheance): void {
   }
 }
 
-function conditionRemplie(c: TypeEcheance['condition'], p: ProfilEcheances): boolean {
+export function conditionRemplie(c: TypeEcheance['condition'], p: ProfilEcheances): boolean {
   const dans = (l: string[] | undefined, v: string | undefined) => l === undefined || (v !== undefined && l.includes(v));
   const egal = (a: boolean | undefined, b: boolean) => a === undefined || a === b;
   return (
@@ -115,6 +123,8 @@ export function echeancesDe(
       const dateLimite = reporter(ajouterJours(ajouterMois(ancre, t.decalage.mois), t.decalage.jours), t.report, calendrier);
       const rappels = t.rappelsJours.map((j) => ajouterJours(dateLimite, -j)).sort(comparer);
       const e: Echeance = { code: t.code, dateLimite, dateAVerifier: t.statutSource === 'non_verifie', rappels, niveau: t.niveau };
+      if (t.source !== undefined) e.source = t.source;
+      if (t.releveLe !== undefined) e.releveLe = t.releveLe;
       if (t.alerteJours !== undefined) e.alerte = ajouterJours(dateLimite, -t.alerteJours);
       sortie.push(e);
     }
