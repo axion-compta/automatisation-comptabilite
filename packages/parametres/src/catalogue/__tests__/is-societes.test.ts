@@ -30,6 +30,7 @@ const ATTENDU: [string, string, string, string | null, string, string][] = [
   ['facture_electronique.reception', '2026-09-01', '2026-01-01', null, AV, 'https://www.economie.gouv.fr/'],
   ['references.cibs', 'articles du CIBS remplaçant les articles du CGI (269, 293 B, 289 bis, etc.)', '2027-01-01', null, AV, 'https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006069577'],
   ['tva.franchise.mention', 'TVA non applicable, art. 293 B du CGI', '2026-01-01', '2027-01-01', AV, F + 'F21746'],
+  ['tva.franchise.mention_toleree', 'TVA non applicable, art. 293 B du CGI', '2027-01-01', '2028-07-01', AV, F + 'F21746'],
   ['tva.franchise.mention', 'TVA non applicable, article L. 233-3 du CIBS', '2027-01-01', null, AV, L + 'LEGIARTI000054524584/2027-01-01'],
 ];
 
@@ -62,10 +63,11 @@ describe('catalogue is-societes', () => {
         'facture_electronique.reception',
         'references.cibs',
         'tva.franchise.mention',
+        'tva.franchise.mention_toleree',
       ].sort(),
     );
     expect(C.filter((l) => l.cle === 'tva.franchise.mention')).toHaveLength(2);
-    expect(C).toHaveLength(14);
+    expect(C).toHaveLength(15);
   });
 
   it('aucune-ligne-valide', () => {
@@ -100,6 +102,16 @@ describe('catalogue is-societes', () => {
       expect(titre).toContain('L. 223-3');
     }
     expect(a.effet_fin).toBe('2027-01-01');
+  });
+
+  it('mention-toleree-fin-datee-exclue', () => {
+    const t = (d: string) => parametreAuJour(C, 'tva.franchise.mention_toleree', 'FR', d);
+    expect(t('2027-01-01').valeur).toContain('CGI');
+    expect(t('2027-01-01').statut).toBe('a_verifier');
+    expect(t('2028-06-30').valeur).toContain('CGI');
+    expect(() => t('2028-07-01')).toThrow();
+    expect(() => t('2026-12-31')).toThrow();
+    expect(ligne('tva.franchise.mention_toleree').valeur).toBe(C.find((l) => l.cle === 'tva.franchise.mention' && l.effet_fin !== null)!.valeur);
   });
 
   it('plafond-prorata-sans-montant', () => {
