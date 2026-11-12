@@ -10,6 +10,7 @@ import { regleCCK08, type EntreeDestinataire, type PieceDestinataire } from '../
 import { regleCCK01, regleCCK02, regleCCK03, type SoldesCompte } from '../regles/equilibre.js';
 import { regleCCT06 } from '../regles/multi-taux.js';
 import { regleCCK12, type ObjetNature } from '../regles/nature.js';
+import { regleCCK13 } from '../regles/paiement-sans-piece.js';
 import { regleCCK05, regleCCK06 } from '../regles/pied-de-facture.js';
 import { regleCCT02, type PieceTva } from '../regles/tva-en-doute.js';
 
@@ -23,7 +24,7 @@ const HORODATAGE = '2026-01-20T00:00:00Z';
 const exercice = { id: 'EX-BANC', debut: '2025-01-01', fin: '2025-12-31' };
 const ouvert: EtatVerrou = { periodesVerrouillees: [], exerciceCloture: false };
 
-export type Famille = 'equilibre' | 'arithmetique' | 'societe' | 'dates' | 'natures' | 'tva';
+export type Famille = 'equilibre' | 'arithmetique' | 'societe' | 'dates' | 'natures' | 'tva' | 'montants' | 'paiements';
 export interface Anomalie { id: string; famille: Famille; regleAttendue: string; executer(exclues: readonly string[]): TraceControle[] }
 
 function alea(graine: number): () => number {
@@ -126,6 +127,16 @@ export function genererAnomalies(): Anomalie[] {
     an('A18', 'tva', regleCCT02, { periode: '2025', pieces: [tvaPiece('T1', { lue: false })] }),
     an('A19', 'tva', regleCCT06, { piece: { ...p0, lignes: lignesDouble }, comptesDepot: ['275'], naturesCaution: [] }),
     an('A20', 'tva', regleCCT06, { piece: faux('tva'), comptesDepot: ['275'], naturesCaution: [] }),
+  ];
+}
+
+/** Deux erreurs connues, hors des 20 anomalies : HT pris pour TTC, remboursement non lié à une pièce. */
+export function genererCasConnus(): Anomalie[] {
+  return [
+    // La pièce est payée à hauteur du HT alors que le TTC est plus élevé : aucune qualification n'explique l'écart.
+    an('K01', 'montants', regleCCK06, { piece: { ...p0, montantDu: p0.totaux.ht }, qualifications: [] }),
+    // Un remboursement versé (achat) sans rapprochement ni qualification.
+    an('K02', 'paiements', regleCCK13, [{ id: 'RMB-1', montant: centimes(4500), type: 'achat' as const, rapproche: false }]),
   ];
 }
 
