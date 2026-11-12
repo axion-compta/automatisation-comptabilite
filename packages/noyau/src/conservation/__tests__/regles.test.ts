@@ -96,7 +96,17 @@ describe('conservation', () => {
     expect(etendues.filter((x) => x.categorie === 'releves_bancaires')).toEqual([explicite]);
     expect(etendues.filter((x) => x.categorie === 'rapprochements')).toHaveLength(1);
   });
+  it('categorie-releves-regle-explicite-par-pays', () => {
+    const explicite = r({ categorie: 'releves_bancaires', pays: 'BB', dureeAnnees: 10 });
+    const etendues = etendreReglesBancaires([r(), r({ pays: 'BB', dureeAnnees: 3 }), explicite]);
+    const releves = etendues.filter((x) => x.categorie === 'releves_bancaires');
+    expect(releves).toHaveLength(2);
+    expect(releves).toContainEqual(explicite);
+    expect(releves).toContainEqual(r({ categorie: 'releves_bancaires', pays: 'AA' }));
+  });
   it('categorie-rapprochements', () => {
+    for (const c of ['fec_declarations', 'etats_pv', 'ecritures_livres'] as const) expect(estCategorieComptable(c)).toBe(true);
+    for (const c of ['journal_actions', 'sauvegardes', 'signalements'] as const) expect(estCategorieComptable(c)).toBe(false);
     expect(estCategorieComptable('rapprochements')).toBe(true);
     expect(estCategorieComptable('pieces')).toBe(true);
     expect(etendreReglesBancaires([])).toEqual([]);

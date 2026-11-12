@@ -101,8 +101,9 @@ const DERIVEES: readonly CategorieConservation[] = ['releves_bancaires', 'rappro
 export function etendreReglesBancaires(regles: readonly RegleConservation[]): RegleConservation[] {
   const derivees: RegleConservation[] = [];
   for (const categorie of DERIVEES) {
-    if (regles.some((r) => r.categorie === categorie)) continue;
-    for (const r of regles) if (r.categorie === 'pieces') derivees.push({ ...r, categorie });
+    for (const r of regles) {
+      if (r.categorie === 'pieces' && !regles.some((x) => x.categorie === categorie && x.pays === r.pays)) derivees.push({ ...r, categorie });
+    }
   }
   return [...regles, ...derivees];
 }
