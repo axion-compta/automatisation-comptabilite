@@ -19,13 +19,9 @@ type Memoire = ReturnType<typeof stockageMemoire>;
 const SAISIE = { libelle: 'Achat de fournitures Dupond-Exemple', montant: '1234,56' };
 const nouveau = (m: Memoire, societeId = 's1', personneId = 'p1', formulaire = 'ecriture') => creerBrouillon({ formulaire, societeId, personneId, stockage: m.stockage });
 const finir = async () => {
-  const fin = Date.now() + 100;
-  while (Date.now() < fin) await new Promise<void>((r) => setImmediate(r));
+  for (const fin = Date.now() + 100; Date.now() < fin; ) await new Promise<void>((r) => setImmediate(r));
 };
-const attendre = async (ms: number) => {
-  await vi.advanceTimersByTimeAsync(ms);
-  await finir();
-};
+const attendre = async (ms: number) => (await vi.advanceTimersByTimeAsync(ms), await finir());
 beforeEach(() => void vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }));
 afterEach(() => void vi.useRealTimers());
 describe('brouillon local chiffré', () => {
@@ -96,11 +92,9 @@ describe('brouillon local chiffré', () => {
     abime[abime.length - 1] = abime[abime.length - 1]! ^ 0xff;
     m.brouillons.set(cle, abime);
     const b = nouveau(m);
-    expect(await b.reprendre()).toBeNull();
-    expect(m.brouillons.size).toBe(0);
+    expect([await b.reprendre(), m.brouillons.size]).toEqual([null, 0]);
     m.brouillons.set(cle, new Uint8Array(3));
-    expect(await b.reprendre()).toBeNull();
-    expect(m.brouillons.size).toBe(0);
+    expect([await b.reprendre(), m.brouillons.size]).toEqual([null, 0]);
   });
   it('efface-apres-envoi', async () => {
     const m = stockageMemoire();
@@ -115,8 +109,7 @@ describe('brouillon local chiffré', () => {
   it('efface-pendant-le-chiffrement', async () => {
     const m = stockageMemoire();
     const b = nouveau(m);
-    b.modifier(SAISIE); await vi.advanceTimersByTimeAsync(2000);
-    await b.effacer(); await finir();
+    b.modifier(SAISIE); await vi.advanceTimersByTimeAsync(2000); await b.effacer(); await finir();
     expect(m.brouillons.size).toBe(0);
   });
 });
