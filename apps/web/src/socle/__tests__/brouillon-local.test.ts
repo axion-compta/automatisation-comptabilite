@@ -74,13 +74,19 @@ describe('brouillon local chiffré', () => {
   });
   it('deux-formulaires-une-seule-cle', async () => {
     const m = stockageMemoire();
-    const [a, b] = [nouveau(m), nouveau(m, 's1', 'p1', 'facture')];
-    a.modifier(SAISIE); b.modifier({ ...SAISIE, montant: '9' }); await attendre(2000);
-    expect(m.cles.size).toBe(1);
+    let ecritures = 0;
+    const lent: StockageBrouillon = {
+      ...m.stockage,
+      lireCle: async (cle) => { await new Promise<void>((r) => setImmediate(r)); return m.cles.get(cle) ?? null; },
+      ecrireCle: async (cle, valeur) => { ecritures += 1; m.cles.set(cle, valeur); },
+    };
+    const [a, b] = ['ecriture', 'facture'].map((formulaire) => creerBrouillon({ formulaire, societeId: 's1', personneId: 'p1', stockage: lent }));
+    a!.modifier(SAISIE); b!.modifier({ ...SAISIE, montant: '9' }); await attendre(2000);
+    expect([ecritures, m.cles.size]).toEqual([1, 1]);
     const cle = [...m.cles.values()][0];
-    a.modifier(SAISIE); await attendre(2000);
-    expect([...m.cles.values()]).toEqual([cle]);
-    expect([await a.reprendre(), await b.reprendre()]).toEqual([SAISIE, { ...SAISIE, montant: '9' }]);
+    a!.modifier(SAISIE); await attendre(2000);
+    expect([...m.cles.values(), ecritures]).toEqual([cle, 1]);
+    expect([await a!.reprendre(), await b!.reprendre()]).toEqual([SAISIE, { ...SAISIE, montant: '9' }]);
   });
   it('brouillon-altere-efface', async () => {
     const m = stockageMemoire();
