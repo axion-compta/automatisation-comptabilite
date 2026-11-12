@@ -7,7 +7,7 @@ const carte = (id: string, o: Partial<CartePile> = {}): CartePile => ({
   id, fait: 'fait-' + id, groupe: 1, echeance: '2026-12-01', tvaEnJeu: 1000, datePiece: '2026-10-01', propositions: [], ...o,
 });
 const ids = (p: readonly { id: string }[]): string[] => p.map((c) => c.id);
-const pile = (c: CartePile[], t = T) => construirePile(c, t, UTC);
+const pile = (c: CartePile[], t = T) => construirePile(c, t);
 const prop = (id: string, confiance: number) => ({ id, confiance });
 const code = (f: () => unknown): string | undefined => {
   try { f(); } catch (e) { if (e instanceof ErreurPile) return e.code; throw e; }
@@ -42,6 +42,8 @@ describe('pile « À vérifier »', () => {
     const g = p.find((c) => c.fait === 'F')!;
     expect([g.nombre, g.ids, g.tvaEnJeu, g.echeance]).toEqual([2, ['a', 'b'], 500, '2026-11-30']);
     expect(p.find((c) => c.fait === 'G')!.nombre).toBe(1);
+    const d = pile([carte('a', { fait: 'D', datePiece: '2026-10-09' }), carte('b', { fait: 'D', datePiece: '2026-10-03' })]);
+    expect(d[0]!.datePiece).toBe('2026-10-03');
     expect(pile([carte('x', { fait: 'H', groupe: 3 }), carte('y', { fait: 'H', groupe: 2 })])[0]!.groupe).toBe(2);
   });
 
@@ -54,7 +56,7 @@ describe('pile « À vérifier »', () => {
     expect(pile([carte('a', { propositions: [prop('p1', 0.9), prop('p2', 0.9), prop('p3', 0.1)] })])[0]!.preselection).toBeUndefined();
     expect(pile([carte('b')])[0]!.preselection).toBeUndefined();
     // La même proposition vue deux fois dans un groupe n'est pas une égalité.
-    const g = pile([carte('c', { fait: 'F', propositions: [prop('p1', 0.8)] }), carte('d', { fait: 'F', propositions: [prop('p1', 0.8), prop('p2', 0.3)] })]);
+    const g = pile([carte('c', { fait: 'F', propositions: [prop('p1', 0.9)] }), carte('d', { fait: 'F', propositions: [prop('p1', 0.2), prop('p2', 0.5)] })]);
     expect(g[0]!.preselection).toBe('p1');
   });
 
@@ -63,6 +65,9 @@ describe('pile « À vérifier »', () => {
     expect(a.masqueJusqu).toBe(Date.UTC(2026, 10, 13));
     expect(ids(pile([a, carte('b')]))).toEqual(['b']);
     expect(pile([a], Date.UTC(2026, 10, 12, 23, 59, 59))).toEqual([]);
+    expect(reporter(carte('a'), T + 500, UTC).masqueJusqu).toBe(Date.UTC(2026, 10, 13));
+    // Nuit du passage à l'heure d'hiver à Paris (25/10/2026) : minuit local = 23:00 UTC.
+    expect(reporter(carte('h'), Date.UTC(2026, 9, 24, 22, 30), 'Europe/Paris').masqueJusqu).toBe(Date.UTC(2026, 9, 25, 23));
     // Fuseau de la société : à 23:30 UTC le 12, il est déjà le 13 à Paris (UTC+1 en novembre).
     expect(reporter(carte('p'), Date.UTC(2026, 10, 12, 23, 30), 'Europe/Paris').masqueJusqu).toBe(Date.UTC(2026, 10, 13, 23));
   });
@@ -86,6 +91,7 @@ describe('pile « À vérifier »', () => {
     expect(code(() => pile([carte('a', { tvaEnJeu: -1 })]))).toBe('carte_invalide');
     expect(code(() => pile([carte('a', { tvaEnJeu: Number.NaN })]))).toBe('carte_invalide');
     expect(code(() => pile([carte('a', { tvaEnJeu: 0 })]))).toBeUndefined();
+    expect(code(() => pile([carte('a', { groupe: Number.NaN })]))).toBe('carte_invalide');
     expect(code(() => pile([carte('a', { propositions: [prop('p', Number.NaN)] })]))).toBe('carte_invalide');
   });
 });

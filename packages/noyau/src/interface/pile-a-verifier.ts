@@ -83,9 +83,8 @@ function raison(a: Brouillon, b: Brouillon): RaisonPile {
 const ordre = (a: Brouillon, b: Brouillon): number =>
   a.groupe - b.groupe || cmpEch(a.echeance, b.echeance) || b.tvaEnJeu - a.tvaEnJeu || cmp(a.datePiece, b.datePiece) || cmp(a.id, b.id);
 
-export function construirePile(cartes: readonly CartePile[], maintenant: number, fuseau: string): CarteRendue[] {
+export function construirePile(cartes: readonly CartePile[], maintenant: number): CarteRendue[] {
   instantOk(maintenant);
-  fuseauOk(fuseau);
   const parFait = new Map<string, CartePile[]>();
   for (const c of cartes) {
     carteOk(c);
