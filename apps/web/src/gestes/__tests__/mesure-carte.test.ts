@@ -15,7 +15,6 @@ describe('mesure du temps humain par carte', () => {
     b.avancer(4_200);
     await m.resoudre();
     expect(b.emis).toEqual([{ type: 'carte_resolue', ecran_code: 'e17', duree_ms: 4_200 }]);
-    // une seconde résolution de la même mesure n'émet rien de plus
     await m.resoudre();
     expect(b.emis).toHaveLength(1);
   });
@@ -38,15 +37,13 @@ describe('mesure du temps humain par carte', () => {
   });
 
   it('duree-hors-bornes-non-emise', async () => {
-    const cas: [string, number][] = [['negative', -1], ['au-dessus du maximum', DUREE_MAX_MS + 1], ['NaN', NaN], ['infinie', Infinity]];
-    for (const [nom, delta] of cas) {
+    for (const delta of [-1, DUREE_MAX_MS + 1, NaN, Infinity]) {
       const b = banc();
       const m = demarrerMesure('e17', () => (b.horloge() === 1_000 ? 1_000 : 1_000 + delta), b.options);
       b.avancer(1);
       await m.resoudre();
-      expect(b.emis, nom).toEqual([]);
+      expect(b.emis, String(delta)).toEqual([]);
     }
-    // bornes incluses : 0 et le maximum sont émis
     for (const delta of [0, DUREE_MAX_MS]) {
       const b = banc();
       const m = demarrerMesure('e17', b.horloge, b.options);

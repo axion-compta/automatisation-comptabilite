@@ -21,7 +21,6 @@ describe('temps humain', () => {
     const r = rapporter(dix, { medianeMs: 5500, p90Ms: 9000 });
     expect(r.mediane).toBe(5500);
     expect(r.p90).toBe(9000);
-    // frontière : égal au seuil = au-dessous
     expect(r.medianeVsSeuil).toBe('au-dessous');
     expect(r.p90VsSeuil).toBe('au-dessous');
     const serre = rapporter(dix, { medianeMs: 5499, p90Ms: 8999 });
@@ -40,16 +39,13 @@ describe('temps humain', () => {
     const sous = lance('--seuil-mediane-ms=999999', '--seuil-p90-ms=999999');
     expect(sous.status).toBe(0);
     expect(sous.stdout).toContain('au-dessous');
-    // seuil absent ou invalide : erreur d'usage, pas de constante cachée
     expect(lance('--seuil-mediane-ms=abc', '--seuil-p90-ms=1').status).not.toBe(0);
     expect(lance('--seuil-mediane-ms=-1', '--seuil-p90-ms=1').status).not.toBe(0);
     expect(lance().status).not.toBe(0);
-    // fichier mal formé
     writeFileSync(fichier, '{pas du json');
     expect(lance('--seuil-mediane-ms=1', '--seuil-p90-ms=1').status).not.toBe(0);
-    expect(() => lireMesures('[{"duree_ms":-1,"factureSimple":true}]')).toThrow();
-    expect(() => lireMesures('[{"duree_ms":1.5,"factureSimple":true}]')).toThrow();
-    expect(() => lireMesures('[{"duree_ms":1,"factureSimple":"oui"}]')).toThrow();
-    expect(() => lireMesures('{}')).toThrow();
+    for (const t of ['[{"duree_ms":-1,"factureSimple":true}]', '[{"duree_ms":1.5,"factureSimple":true}]', '[{"duree_ms":1,"factureSimple":"oui"}]', '{}']) {
+      expect(() => lireMesures(t), t).toThrow();
+    }
   });
 });

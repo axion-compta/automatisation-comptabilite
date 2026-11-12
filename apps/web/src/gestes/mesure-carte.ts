@@ -4,9 +4,8 @@ import { ecrire, nouvelleCle } from '../api.js';
 
 export type EvenementCarte = { type: 'carte_resolue'; ecran_code: string; duree_ms: number };
 export type OptionsMesure = {
-  /** Vrai si la mesure d'usage est active (réglage de la personne et de l'installation). Défaut : désactivée. */
+  /** Défaut : mesure désactivée. */
   mesureActive?: () => boolean;
-  /** Envoi de l'événement ; par défaut POST /usage par la couche d'appels. */
   envoyer?: (e: EvenementCarte) => Promise<unknown>;
 };
 
