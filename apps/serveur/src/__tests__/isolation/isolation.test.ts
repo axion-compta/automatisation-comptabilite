@@ -1,8 +1,9 @@
+import { creerApp } from '../../app.js';
 import { describe, expect, it } from 'vitest';
 import { contrat } from '../../../../../packages/contrat/src/routes.js';
 import { listerRoutes, type RouteLue } from '../../../../../packages/contrat/src/verifier-securite.js';
 import { ROLES } from '../../../../../packages/noyau/src/securite/types.js';
-import { cleDe, genererCas, routesSansTest } from './generateur.js';
+import { appelerRoutes, cleDe, fournisseurDeRoles, genererCas, reponsesDeuxCents, routesSansTest, type Appel } from './generateur.js';
 
 const routes = listerRoutes(contrat);
 const cas = genererCas(routes);
@@ -26,8 +27,31 @@ describe('générateur d’isolation @isolation', () => {
     const ouverts = cas.filter((c) => c.verdict.ok).map((c) => c.cle);
     expect(ouverts).toEqual([]);
     for (const c of cas) {
-      expect(c.verdict.ok === false && [400, 404]).toContain(c.verdict.ok === false ? c.verdict.statut : 0);
+      expect(c.verdict.ok).toBe(false);
+      if (!c.verdict.ok) expect([400, 404]).toContain(c.verdict.statut);
     }
+  });
+
+  it('T-ISO-1-reponses-http', async () => {
+    const app = creerApp(undefined, { session: fournisseurDeRoles });
+    const appels = await appelerRoutes(app, routes);
+    await app.close();
+    expect(appels.length).toBeGreaterThan(0);
+    expect(new Set(appels.map((a) => a.role))).toEqual(new Set(ROLES));
+    expect(reponsesDeuxCents(appels)).toEqual([]);
+    for (const a of appels) expect([a.route, a.statut >= 400 && a.statut < 500]).toEqual([a.route, true]);
+    // Même corps pour l'objet d'une autre société, d'un autre client et un objet inexistant.
+    for (const a of appels.filter((x) => x.nature !== 'inexistant')) {
+      const ref = appels.find((x) => x.route === a.route && x.role === a.role && x.nature === 'inexistant')!;
+      expect([a.route, a.statut, a.corps]).toEqual([a.route, ref.statut, ref.corps]);
+    }
+  });
+
+  it('un-200-sur-un-objet-etranger-rougit', () => {
+    // Mutation d'une route qui a perdu sa garde : sa réponse 200 doit être relevée.
+    const fuite: Appel = { route: 'GET /pieces/{id}', role: 'lecture', nature: 'autre-societe', statut: 200, corps: '{}' };
+    const ok: Appel = { ...fuite, nature: 'inexistant', statut: 404 };
+    expect(reponsesDeuxCents([ok, fuite])).toEqual(['GET /pieces/{id} | lecture | autre-societe']);
   });
 
   it('C01', () => {

@@ -1,7 +1,9 @@
+import type { FastifyInstance } from 'fastify';
 import { cheminSociete } from '../../../../../packages/contrat/src/prefixe-routes.js';
 import type { RouteLue } from '../../../../../packages/contrat/src/verifier-securite.js';
 import { ROLES, type Permission, type Role } from '../../../../../packages/noyau/src/securite/types.js';
 import type { Session } from '../../../../../packages/noyau/src/session/port.js';
+import type { FournisseurSession } from '../../domaines/controles-actions.js';
 import { verifierRequeteSociete, type VerdictRequete } from '../../securite/societe.js';
 
 export type Nature = 'autre-societe' | 'autre-client' | 'inexistant';
@@ -52,13 +54,46 @@ export function routesSansTest(routes: readonly RouteLue[], cas: readonly Cas[])
     .filter((cle) => ROLES.some((role) => !(['autre-societe', 'autre-client'] as Nature[]).every((n) => cas.some((c) => c.route === cle && c.role === role && c.nature === n))));
 }
 
+export type Appel = { route: string; role: Role; nature: Nature; statut: number; corps: string };
+export const OBJETS: Record<Nature, string> = { 'autre-societe': 'obj-soc-2', 'autre-client': 'obj-cl-9', inexistant: 'obj-zz' };
+const ROLE_ENTETE = 'x-role-isolation';
+
+/** Session du rôle demandé par l'en-tête : à passer comme `session` de `creerApp`. */
+export const fournisseurDeRoles: FournisseurSession = (entetes) => {
+  const role = ROLES.find((r) => r === entetes[ROLE_ENTETE]) ?? 'lecture';
+  return { sorte: 'personne', par: `pers-${role}`, permissions: sessionDuRole(role).permissions, reauthentifie: true };
+};
+
+export const urlReelle = (route: RouteLue, objet: string): string => route.chemin.replace('{s}', SOC_MIENNE).replace(/\{[^}]+\}/g, objet);
+export const aUnObjet = (route: RouteLue): boolean => /\{(?!s\})[^}]+\}/.test(route.chemin);
+
+/** Un appel HTTP réel (`inject`) par route à identifiant, par rôle et par nature d'objet. */
+export async function appelerRoutes(app: FastifyInstance, routes: readonly RouteLue[]): Promise<Appel[]> {
+  const appels: Appel[] = [];
+  for (const route of routes.filter(aUnObjet)) {
+    for (const role of ROLES) {
+      for (const nature of Object.keys(OBJETS) as Nature[]) {
+        const rep = await app.inject({ method: route.methode as 'GET', url: urlReelle(route, OBJETS[nature]), headers: { [ROLE_ENTETE]: role } });
+        appels.push({ route: cleDe(route), role, nature, statut: rep.statusCode, corps: rep.body });
+      }
+    }
+  }
+  return appels;
+}
+
+/** Réponses HTTP 2xx : une route qui livre un objet d'une autre société ou inexistant apparaît ici. */
+export const reponsesDeuxCents = (appels: readonly Appel[]): string[] =>
+  appels.filter((a) => a.statut >= 200 && a.statut < 300).map((a) => `${a.route} | ${a.role} | ${a.nature}`);
+
 // Cas C01 à C25 : L06-T35 en rejoue une partie ; le reste est écrit ici ou renvoyé à sa fiche.
 export const COUVERTURE: Readonly<Record<string, string>> = Object.freeze({
   C01: 'ici', C03: 'ici', C22: 'ici',
-  C16: 'renvoi: énoncé absent du dépôt', C18: 'renvoi: énoncé absent du dépôt',
-  C21: 'renvoi: énoncé absent du dépôt', C23: 'renvoi: énoncé absent du dépôt',
+  C23: 'ici',
   C02: 'L06-T35', C04: 'L06-T35', C05: 'L06-T35', C06: 'L06-T35', C07: 'L06-T35', C09: 'L06-T35', C11: 'L06-T35',
   C12: 'L06-T35', C13: 'L06-T35', C14: 'L06-T35', C17: 'L06-T35', C19: 'L06-T35', C24: 'L06-T35', C25: 'L06-T35',
-  C10: 'renvoi lot 05 (outils du chat)', C20: 'renvoi L06-T43 (passerelle)',
-  C08: 'renvoi: énoncé absent du dépôt', C15: 'renvoi: énoncé absent du dépôt',
+  C10: 'renvoi lot 05', C20: 'renvoi L06-T43',
+  C08: 'enonce-absent', C15: 'enonce-absent', C16: 'enonce-absent', C18: 'enonce-absent', C21: 'enonce-absent',
 });
+
+/** Défaut de fiche : sans l'énoncé de 08-cas-de-test.md, ces cas n'ont ni test ni fiche cible. */
+export const ENONCE_ABSENT = Object.entries(COUVERTURE).filter(([, v]) => v === 'enonce-absent').map(([k]) => k).sort();

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { verifierRequeteSociete } from '../../securite/societe.js';
 import { describe, expect, it } from 'vitest';
-import { COUVERTURE } from './generateur.js';
+import { COUVERTURE, ENONCE_ABSENT, SOC_MIENNE, SOC_SOEUR, sessionDuRole } from './generateur.js';
 
 const sql = readFileSync(new URL('../../base/migrations/092-securite.sql', import.meta.url), 'utf8').replace(/--[^\n]*/g, '');
 
@@ -8,7 +9,22 @@ describe('cas C01 à C25 @isolation', () => {
   it('chaque-cas-est-couvert-ou-renvoye-par-ecrit', () => {
     const attendus = Array.from({ length: 25 }, (_, i) => `C${String(i + 1).padStart(2, '0')}`);
     expect(Object.keys(COUVERTURE).sort()).toEqual(attendus);
-    for (const v of Object.values(COUVERTURE)) expect(v).toMatch(/^(ici|L06-T35|renvoi.+)$/);
+    const VALIDE = /^(ici|L06-T35|renvoi (L\d\d-T\d+|lot \d\d))$/;
+    const sansCible = Object.entries(COUVERTURE).filter(([, v]) => !VALIDE.test(v)).map(([k]) => k).sort();
+    // Renvoi sans fiche cible : listé explicitement (défaut de fiche), jamais accepté en silence.
+    expect(sansCible).toEqual(ENONCE_ABSENT);
+    expect(ENONCE_ABSENT).toEqual(['C08', 'C15', 'C16', 'C18', 'C21']);
+  });
+
+  for (const c of ENONCE_ABSENT) it.todo(`${c} : énoncé absent du dépôt (défaut de fiche, Will doit le fournir)`);
+
+  it('C23', () => {
+    const e = { session: sessionDuRole('comptable'), chemin: `/api/compta/v1/societes/${SOC_MIENNE}/ecritures` };
+    // Un appel qui mélange deux sociétés est refusé net, avec ou sans la société de la session.
+    for (const societesDuCorps of [[SOC_MIENNE, SOC_SOEUR], [SOC_SOEUR]]) {
+      expect(verifierRequeteSociete({ ...e, societesDuCorps })).toEqual({ ok: false, statut: 400, corps: { code: 'societe_unique' } });
+    }
+    expect(verifierRequeteSociete({ ...e, societesDuCorps: [SOC_MIENNE] }).ok).toBe(true);
   });
 
   it('C03', () => {
