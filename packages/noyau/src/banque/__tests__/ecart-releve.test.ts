@@ -49,6 +49,9 @@ describe('ecart-releve', () => {
     expect(ouvrirEcart(c(12345), c(12345), '2026-03-31')).toBeNull();
     expect(ouvrirEcart(c(0), c(0), '2026-03-31')).toBeNull();
     expect(() => ouvrirEcart(NaN as never, c(0), '2026-03-31')).toThrow();
+    expect(() => ouvrirEcart(1.5 as never, 0.5 as never, '2026-03-31')).toThrow();
+    expect(() => ouvrirEcart(Infinity as never, c(0), '2026-03-31')).toThrow();
+    expect(() => ouvrirEcart(c(0), -Infinity as never, '2026-03-31')).toThrow();
     expect(() => ouvrirEcart(c(1), c(0), '2026-02-30')).toThrow(ErreurEcart);
     expect(() => ouvrirEcart(c(1), c(0), 'hier')).toThrow(ErreurEcart);
   });
