@@ -30,7 +30,6 @@ export function creerServiceVentesActions(jeu: JeuVentes = genererVentes(), conf
   const ventes = new Map((societe?.pieces ?? []).map((p) => [p.id, { piece: structuredClone(p), version: 1, natures: [] } as Vente]));
   const clients = new Set((societe?.clients ?? []).map((c) => c.code));
   const rejeux = new Map<string, { empreinte: string; reponse: unknown }>();
-
   const unefois = <T>(cle: string, empreinte: string, calcul: () => T): T => {
     const vu = rejeux.get(cle);
     if (vu !== undefined) return vu.empreinte === empreinte ? (vu.reponse as T) : refuser('CLE_REUTILISEE');
@@ -50,7 +49,6 @@ export function creerServiceVentesActions(jeu: JeuVentes = genererVentes(), conf
     natures: v.natures.map((n) => ({ ...n })),
     ...(v.piece.factureOrigineId !== undefined ? { factureOrigineId: v.piece.factureOrigineId } : {}),
   });
-
   return {
     lireVersion: (id: string): number | undefined => ventes.get(id)?.version,
     corriger(id: string, corps: CorpsCorrection, version: number, personne: string, cle: string): VenteCorrigee {
