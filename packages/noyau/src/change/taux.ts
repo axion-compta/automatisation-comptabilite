@@ -1,5 +1,6 @@
 // Choix du taux de change : parité fixe, puis taux BCE, puis taux saisi (à vérifier). Aucun délai en dur.
-import { ajouterJours, comparerDates, estDateValide } from '../dates/civiles.js';
+import { fraction } from '../argent/index.js';
+import { ajouterJours, comparerDates, estDateValide, jourDeSemaine } from '../dates/civiles.js';
 
 export type CodeErreurChange =
   | 'date_invalide'
@@ -7,7 +8,8 @@ export type CodeErreurChange =
   | 'taux_invalide'
   | 'devise_invalide'
   | 'source_obligatoire'
-  | 'saisie_anonyme';
+  | 'saisie_anonyme'
+  | 'regle_invalide';
 
 export class ErreurChange extends Error {
   readonly code: CodeErreurChange;
@@ -102,4 +104,79 @@ export function saisirTaux(entree: {
 
 export function validationAutorisee(taux: Extract<TauxResolu, { ok: true }>): boolean {
   return taux.aVerifier === false;
+}
+
+// Règle du taux de la BCE, lue d'un paramètre daté (heure de publication en UTC, arrondi, jour sans cotation).
+export type ModeArrondi = 'demi_loin_de_zero' | 'demi_pair';
+export type RegleChange = {
+  heurePublicationUtc: string;
+  arrondi: ModeArrondi;
+  jourSansCotation: 'veille_ouvree';
+};
+const MODES_ARGENT = { demi_loin_de_zero: 'demi-superieur', demi_pair: 'demi-pair' } as const;
+const MODES: readonly string[] = Object.keys(MODES_ARGENT);
+const UNITE_E8 = 10 ** 8; // échelle des huit décimales
+const HEURE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function exigerRegle(regle: RegleChange): void {
+  if (
+    typeof regle !== 'object' ||
+    regle === null ||
+    typeof regle.heurePublicationUtc !== 'string' ||
+    !HEURE.test(regle.heurePublicationUtc) ||
+    !MODES.includes(regle.arrondi) ||
+    regle.jourSansCotation !== 'veille_ouvree'
+  ) {
+    throw new ErreurChange('regle_invalide');
+  }
+}
+const estOuvre = (date: string): boolean => jourDeSemaine(date) <= 5;
+function veilleOuvree(date: string): string {
+  let d = ajouterJours(date, -1);
+  while (!estOuvre(d)) d = ajouterJours(d, -1);
+  return d;
+}
+
+/** Date du taux de la BCE à appliquer : le dernier jour coté publié à l'instant de consultation (UTC, AAAA-MM-JJTHH:MMZ). */
+export function dateDuTauxApplicable(dateOperation: string, instantConsultation: string, regle: RegleChange): string {
+  exigerDate(dateOperation);
+  exigerRegle(regle);
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})Z$/.exec(instantConsultation);
+  if (m === null || !estDateValide(m[1]!) || !HEURE.test(m[2]!)) throw new ErreurChange('date_invalide');
+  const jourCote = estOuvre(dateOperation) ? dateOperation : veilleOuvree(dateOperation);
+  const instant = `${m[1]!}T${m[2]!}`;
+  const publication = `${jourCote}T${regle.heurePublicationUtc}`;
+  return instant < publication ? veilleOuvree(jourCote) : jourCote;
+}
+
+/** Montant en centimes de devise x taux (8 décimales) → centimes d'euro, arrondi selon la règle. */
+export function convertirAuCentime(montantDevise: number, tauxE8: number, regle: RegleChange): number {
+  if (!Number.isSafeInteger(montantDevise)) throw new ErreurChange('parametre_invalide');
+  if (!tauxValide(tauxE8)) throw new ErreurChange('taux_invalide');
+  exigerRegle(regle);
+  return fraction(BigInt(montantDevise), tauxE8, UNITE_E8, MODES_ARGENT[regle.arrondi]);
+}
+
+type LigneRegle = { cle: string; pays: string; effet_debut: string; effet_fin: string | null; statut: string; valeur: string };
+
+/** Règle en vigueur à `date` dans une liste de lignes datées (clé `change.bce.regle`, fin exclue, lignes retirées ignorées). */
+export function regleChangeAuJour(lignes: readonly LigneRegle[], pays: string, date: string): RegleChange {
+  exigerDate(date);
+  const trouvees = lignes.filter(
+    (l) =>
+      l.cle === 'change.bce.regle' &&
+      l.pays === pays &&
+      l.statut !== 'retire' &&
+      l.effet_debut <= date &&
+      (l.effet_fin === null || date < l.effet_fin),
+  );
+  if (trouvees.length !== 1) throw new ErreurChange('regle_invalide');
+  let regle: RegleChange;
+  try {
+    regle = JSON.parse(trouvees[0]!.valeur) as RegleChange;
+  } catch {
+    throw new ErreurChange('regle_invalide');
+  }
+  exigerRegle(regle);
+  return regle;
 }
