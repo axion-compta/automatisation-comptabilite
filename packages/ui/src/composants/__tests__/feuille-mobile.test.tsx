@@ -17,6 +17,8 @@ function Essai({ ouverteAuDepart = true }: { ouverteAuDepart?: boolean }) {
       <FeuilleMobile ouverte={ouverte} titre="Filtres" libelleFermer="Fermer" onFermer={() => { surFermer(); setOuverte(false); }}>
         <button id="premier" type="button">un</button>
         <button id="dernier" type="button">deux</button>
+        <button type="button" disabled>inactif</button>
+        <span tabIndex={-1}>muet</span>
       </FeuilleMobile>
     </div>
   );
@@ -49,6 +51,11 @@ describe("FeuilleMobile", () => {
     expect(document.activeElement).toBe(fermer);
     await touche(fermer, "Tab", true);
     expect(document.activeElement).toBe(dernier);
+    const sens = (cible: Element, shiftKey: boolean) => { const v = new KeyboardEvent("keydown", { key: "Tab", shiftKey, bubbles: true, cancelable: true }); cible.dispatchEvent(v); return v.defaultPrevented; };
+    fermer.focus();
+    expect(sens(fermer, false)).toBe(false);
+    dernier.focus();
+    expect(sens(dernier, true)).toBe(false);
     const milieu = el.querySelector("#premier") as HTMLButtonElement;
     milieu.focus();
     const evt = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
