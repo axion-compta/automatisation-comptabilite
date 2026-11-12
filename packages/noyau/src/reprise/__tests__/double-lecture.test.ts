@@ -32,6 +32,9 @@ describe('double lecture', () => {
     expect(illisible).toEqual([{ champ: 'a', statut: 'a_arbitrer' }]);
     const moitie = comparerEtats(lecture({ a: ['abc', FR] }), lecture({ a: ['3,00', FR] }));
     expect(moitie).toEqual([{ champ: 'a', statut: 'a_arbitrer', valeurB: 300 }]);
+    // champ hérité du prototype (« constructor ») présent dans une seule lecture : jamais lu comme une valeur
+    const herite = comparerEtats(lecture({ constructor: ['1,00', FR] }), lecture({ a: ['1,00', FR] }));
+    expect(herite).toEqual([{ champ: 'a', statut: 'a_arbitrer', valeurB: 100 }, { champ: 'constructor', statut: 'a_arbitrer', valeurA: 100 }]);
   });
 
   it('pied-d-etat-faux-signale', () => {
@@ -43,6 +46,10 @@ describe('double lecture', () => {
     expect(controlerPied({ postes: [centimes(500), centimes(-200)], total: centimes(300) })).toEqual({ coherent: true, ecart: 0 });
     expect(() => controlerPied({ postes: [Number.NaN as never], total: centimes(0) })).toThrow();
     expect(() => controlerPied({ postes: [1.5 as never], total: centimes(0) })).toThrow();
+    expect(() => controlerPied({ postes: [centimes(0)], total: Number.NaN as never })).toThrow();
+    expect(() => controlerPied({ postes: [centimes(0)], total: 1.5 as never })).toThrow();
+    // total hors entiers sûrs, mais écart à 1 centime : seul le contrôle du total le refuse
+    expect(() => controlerPied({ postes: [centimes(Number.MAX_SAFE_INTEGER)], total: (Number.MAX_SAFE_INTEGER + 1) as never })).toThrow();
   });
 
   it('nombres-multilingues', () => {
@@ -69,5 +76,6 @@ describe('double lecture', () => {
     expect(pagesARelire([{ page: 1, statut: 'ok' }])).toEqual([]);
     expect(pagesARelire([])).toEqual([]);
     expect(pagesARelire([{ page: 9, statut: 'echec' }, { page: 4, statut: 'echec' }])).toEqual([4, 9]);
+    expect(pagesARelire([{ page: 10, statut: 'echec' }, { page: 2, statut: 'echec' }])).toEqual([2, 10]);
   });
 });
