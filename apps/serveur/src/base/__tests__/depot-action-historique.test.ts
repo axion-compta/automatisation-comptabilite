@@ -44,6 +44,16 @@ describe('depot-action-historique', () => {
       expect(() => d.ajouter('s1', { ...ligneDepuisAction(action()), avant: mauvais } as never)).toThrow(expect.objectContaining({ code: 'forme_invalide' }) as Error);
     expect(() => d.ajouter('s1', { ...ligneDepuisAction(action()), apres: 'x' } as never)).toThrow(ErreurHistorique);
     expect(() => d.ajouter('', ligneDepuisAction(action()))).toThrow(expect.objectContaining({ code: 'forme_invalide' }) as Error);
+    for (const champ of ['auteurId', 'objetType', 'objetId'] as const)
+      for (const vide of ['', undefined])
+        expect(() => d.ajouter('s1', { ...ligneDepuisAction(action()), [champ]: vide } as never)).toThrow(expect.objectContaining({ code: 'forme_invalide' }) as Error);
+    // l'appelant ne peut pas réécrire l'historique en modifiant son objet après l'ajout
+    const e = action({ avant: { compte: '606100', detail: { n: 1 } } });
+    const ligne = ligneDepuisAction(e);
+    d.ajouter('s2', ligne);
+    (ligne.avant as { compte: string }).compte = 'MODIFIE';
+    (ligne.avant.detail as { n: number }).n = 99;
+    expect(d.lister({ societeId: 's2' })[0]?.avant).toEqual({ compte: '606100', detail: { n: 1 } });
     expect(() => d.ajouter('s1', ligneDepuisAction(action({ le: 'pas-une-date' })))).toThrow(expect.objectContaining({ code: 'forme_invalide' }) as Error);
     expect(d.lister({ societeId: 's1' })).toHaveLength(1 + CANAUX.length);
   });
