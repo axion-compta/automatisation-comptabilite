@@ -71,5 +71,13 @@ describe('banc de conversation', () => {
     await expect(rejouer({ tours: [tour('a', 1)], modele: modele(), plafonds: { mediane: -3 } })).rejects.toThrow('plafond_invalide');
     for (const reel of [-1, 2.5, Number.NaN])
       await expect(rejouer({ tours: [tour('a', 1, reel)], modele: modele(), plafonds: {} })).rejects.toThrow('jetons_invalides');
+    // Plafond au-delà de 2^53 : refusé.
+    await expect(rejouer({ tours: [tour('a', 1)], modele: modele(), plafonds: { tour: 2 ** 53 } })).rejects.toThrow('plafond_invalide');
+    // Estimation invalide : refus avant tout appel du modèle.
+    for (const estimation of [Number.NaN, -1, 2.5, undefined]) {
+      const m = { ...modele(), estimer: () => estimation };
+      await expect(rejouer({ tours: [tour('a', 1)], modele: m, plafonds: { tour: 10 } })).rejects.toThrow('jetons_invalides');
+      expect(m.appels).toEqual([]);
+    }
   });
 });
