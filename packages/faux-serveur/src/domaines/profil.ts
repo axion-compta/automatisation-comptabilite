@@ -1,4 +1,5 @@
 import { http, HttpResponse, type HttpHandler } from 'msw';
+import { PREFIXE_ROUTES_SOCIETE } from '../../../contrat/src/prefixe-routes.js';
 import { QueryProfil, ReponseProfil } from '../../../contrat/src/domaines/profil.js';
 import { creerServiceProfilChamps } from '../../../contrat/src/domaines/profil-champs-service.js';
 import { creerHandlersProfilEcriture } from './profil-ecriture.js';
@@ -11,6 +12,7 @@ import { SirenInvalide, creerServiceIdentite } from '../../../contrat/src/domain
 import { verifierTvaFrancaise } from '../../../noyau/src/profil/identifiants.js';
 
 const SOCIETE = 'soc-lemoine';
+const PREFIXE = PREFIXE_ROUTES_SOCIETE.replace('{s}', ':s');
 const NUMERO_TVA = /^FR[0-9]{11}$/;
 const SIREN = /^[0-9]{9}$/;
 
@@ -37,12 +39,12 @@ export function creerHandlersProfil(base = '', attendre: () => Promise<void> = a
     });
 
   return [
-    lecture('/profil', (request) => {
+    ...['/profil', PREFIXE + '/profil'].map((chemin) => lecture(chemin, (request) => {
       const q = query(request.url);
       const p = q === null ? null : QueryProfil.safeParse(q);
       if (!p?.success) return requete400();
       return HttpResponse.json(ReponseProfil.parse({ body: champs.lire(p.data.au, aujourdhui()) }));
-    }),
+    })),
     ...creerHandlersProfilEcriture(base, attendre, champs),
     lecture('/profil/regimes/tva', () => HttpResponse.json(ReponseRegimesTva.parse({ body: regimes.listerTva() }))),
     lecture('/profil/regimes/imposition', () => HttpResponse.json(ReponseRegimesImposition.parse({ body: regimes.listerImposition() }))),

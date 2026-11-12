@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { genererOpenapi, routesEcritureSansEnTete } from '../openapi.js';
 import { CLES_PROFIL, CorpsConfirmation, CorpsValeurChamp } from '../domaines/profil-champs.js';
 import { creerServiceProfilChamps, ErreurChamp } from '../domaines/profil-champs-service.js';
+import { PREFIXE_ROUTES_SOCIETE } from '../prefixe-routes.js';
+const SOC = PREFIXE_ROUTES_SOCIETE;
 
 const JOUR = '2026-06-15';
 const AOUT = '2026-08-01';
@@ -52,8 +54,8 @@ describe('profil : écriture des champs (service)', () => {
 
   it('openapi-contient-les-ecritures', () => {
     const doc = genererOpenapi() as { paths: Record<string, Record<string, { operationId?: string }>> };
-    expect(doc.paths['/profil/champs/{cle}']?.post?.operationId).toBe('ajouterValeurChamp');
-    expect(doc.paths['/profil/champs/{cle}/confirmer']?.post?.operationId).toBe('confirmerChamp');
+    expect(doc.paths[SOC + '/profil/champs/{cle}']?.post?.operationId).toBe('ajouterValeurChamp');
+    expect(doc.paths[SOC + '/profil/champs/{cle}/confirmer']?.post?.operationId).toBe('confirmerChamp');
     expect(routesEcritureSansEnTete()).toEqual([]);
   });
 });

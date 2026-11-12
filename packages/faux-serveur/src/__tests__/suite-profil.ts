@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { ProfilV1 } from '../../../contrat/src/domaines/profil.js';
 import { ReponseRegimesImposition, ReponseRegimesTva } from '../../../contrat/src/domaines/regimes.js';
-import type { Cible } from './suite-contrat.js';
+import { cheminSociete } from '../../../contrat/src/prefixe-routes.js';
+import type { Appeler, Cible } from './suite-contrat.js';
+
+/** Les chemins du profil (hors régimes) sont joués sous le préfixe de la société fictive `soc-lemoine`. */
+const sousSociete = (a: Appeler): Appeler => (m, ch, ...r) => a(m, /^\/profil(?!\/regimes)/.test(ch) ? cheminSociete(ch).replace('{s}', 'soc-lemoine') : ch, ...r);
 
 const corps = (r: { json: unknown }) => (r.json as { body: Record<string, unknown> }).body;
 
@@ -11,7 +15,7 @@ export function suiteProfil(nom: string, cible: Cible): void {
     const avec = async (f: (a: Awaited<ReturnType<Cible>>['appeler']) => Promise<void>) => {
       const c = await cible();
       try {
-        await f(c.appeler);
+        await f(sousSociete(c.appeler));
       } finally {
         await c.fermer();
       }

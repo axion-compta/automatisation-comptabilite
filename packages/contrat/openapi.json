@@ -1862,7 +1862,7 @@
         }
       }
     },
-    "/profil": {
+    "/api/compta/v1/societes/{s}/profil": {
       "get": {
         "operationId": "lireProfil",
         "parameters": [
@@ -1875,6 +1875,15 @@
               "format": "date",
               "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
             }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         ],
         "responses": {
@@ -1884,7 +1893,7 @@
         }
       }
     },
-    "/profil/champs/{cle}": {
+    "/api/compta/v1/societes/{s}/profil/champs/{cle}": {
       "post": {
         "operationId": "ajouterValeurChamp",
         "parameters": [
@@ -1896,6 +1905,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -1987,7 +2005,7 @@
         }
       }
     },
-    "/profil/champs/{cle}/confirmer": {
+    "/api/compta/v1/societes/{s}/profil/champs/{cle}/confirmer": {
       "post": {
         "operationId": "confirmerChamp",
         "parameters": [
@@ -1999,6 +2017,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           },
           {
@@ -2046,7 +2073,7 @@
         }
       }
     },
-    "/profil/changements/apercu": {
+    "/api/compta/v1/societes/{s}/profil/changements/apercu": {
       "post": {
         "operationId": "apercuChangement",
         "parameters": [
@@ -2058,6 +2085,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -2143,7 +2179,7 @@
         }
       }
     },
-    "/profil/changements": {
+    "/api/compta/v1/societes/{s}/profil/changements": {
       "post": {
         "operationId": "confirmerChangement",
         "parameters": [
@@ -2155,6 +2191,15 @@
               "type": "string",
               "minLength": 8,
               "maxLength": 128
+            }
+          },
+          {
+            "name": "s",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
