@@ -24,7 +24,7 @@ export function lireTableau(texte) {
     const [ecran, metrique, seuil, unite] = c;
     if (!NOM.test(ecran)) throw new Error(`ligne ${n} : ecran invalide`);
     if (!NOM.test(metrique)) throw new Error(`ligne ${n} : metrique invalide`);
-    if (!/^\d+(\.\d+)?$/.test(seuil) || Number(seuil) <= 0) throw new Error(`ligne ${n} : seuil invalide « ${seuil} »`);
+    if (!/^\d+(\.\d+)?$/.test(seuil) || Number(seuil) <= 0 || !Number.isFinite(Number(seuil))) throw new Error(`ligne ${n} : seuil invalide « ${seuil} »`);
     if (!UNITES.includes(unite)) throw new Error(`ligne ${n} : unite invalide « ${unite} »`);
     const cle = `${ecran}/${metrique}`;
     if (vus.has(cle)) throw new Error(`ligne ${n} : seuil en double pour « ${cle} »`);
@@ -34,8 +34,9 @@ export function lireTableau(texte) {
 }
 
 /** `fichiersBanc` : [{ chemin, texte }]. Renvoie la liste des erreurs. */
-export function analyser(_lignes, fichiersBanc) {
+export function analyser(lignes, fichiersBanc) {
   const erreurs = [];
+  if (!lignes.some((l) => l.ecran === 'banc-volume' && l.metrique === 'p95')) erreurs.push('banc-volume/p95 absent du tableau (lu par outils/banc/volume.mjs)');
   for (const { chemin, texte } of fichiersBanc) {
     texte.split(/\r?\n/).forEach((l, i) => {
       if (SEUIL_EN_DUR.test(l)) erreurs.push(`${chemin}:${i + 1} : seuil numérique en dur (le lire dans docs/budgets-performance.csv)`);
@@ -55,7 +56,7 @@ export function main(racine = '.') {
   }
   const dossier = `${racine}/outils/banc`;
   const fichiers = existsSync(dossier)
-    ? readdirSync(dossier).filter((f) => f.endsWith('.mjs')).map((f) => ({ chemin: `outils/banc/${f}`, texte: readFileSync(`${dossier}/${f}`, 'utf8') }))
+    ? readdirSync(dossier, { recursive: true }).map((f) => String(f).replaceAll('\\', '/')).filter((f) => f.endsWith('.mjs')).map((f) => ({ chemin: `outils/banc/${f}`, texte: readFileSync(`${dossier}/${f}`, 'utf8') }))
     : [];
   erreurs.push(...analyser(lignes, fichiers));
   return erreurs;

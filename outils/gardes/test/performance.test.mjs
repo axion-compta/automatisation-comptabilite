@@ -1,11 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { ENTETE, analyser, lireTableau } from '../performance.mjs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { ENTETE, analyser, lireTableau, main } from '../performance.mjs';
 import { SEUIL_P95_MS, lireSeuil, mesurer } from '../../banc/volume.mjs';
 
 const csv = (...l) => [ENTETE, ...l].join('\n') + '\n';
 const ok = csv('banc-volume,p95,800,ms', 'tableau-de-bord,p95,500,ms');
+const racine = (fichiers) => {
+  const r = mkdtempSync(join(tmpdir(), 'perf-'));
+  for (const [chemin, texte] of Object.entries(fichiers)) {
+    mkdirSync(dirname(join(r, chemin)), { recursive: true });
+    writeFileSync(join(r, chemin), texte);
+  }
+  return r;
+};
+const CSV = 'docs/budgets-performance.csv';
 const banc = (texte) => [{ chemin: 'outils/banc/x.mjs', texte }];
 
 test('tableau-valide-vert', () => {
@@ -26,7 +37,7 @@ test('ligne-mal-formee-rouge', () => {
   for (const [l, motif] of [
     ['e,p95,800', /colonnes/], ['e,p95,800,ms,x', /colonnes/], [',p95,800,ms', /ecran/], ['e,,800,ms', /metrique/],
     ['e,p95,abc,ms', /seuil/], ['e,p95,0,ms', /seuil/], ['e,p95,-5,ms', /seuil/], ['e,p95,NaN,ms', /seuil/], ['e,p95,1e3,ms', /seuil/],
-    ['e,p95,800,euros', /unite/], ['e,p95,800,', /unite/], ['E x,p95,800,ms', /ecran/], ['e,p95,800, ms', /unite/],
+    ['e,p95,800,euros', /unite/], [`e,p95,${'9'.repeat(400)},ms`, /seuil/], ['e,p95,800,', /unite/], ['E x,p95,800,ms', /ecran/], ['e,p95,800, ms', /unite/],
   ]) assert.throws(() => lireTableau(csv(l)), motif, l);
   assert.throws(() => lireTableau('a,b\n'), /en-tête/);
   assert.throws(() => lireTableau(''), /en-tête/);
@@ -44,7 +55,21 @@ test('seuil-en-dur-dans-le-banc-rouge', () => {
   }
 });
 
+test('seuil-en-dur-dans-le-banc-rouge (parcours du dépôt)', () => {
+  assert.deepEqual(main(racine({ [CSV]: ok, 'outils/banc/x.mjs': 'const a = 1;\n' })), []);
+  const e = main(racine({ [CSV]: ok, 'outils/banc/x.mjs': 'const seuil = 800;\n' }));
+  assert.equal(e.length, 1);
+  assert.match(e[0], /outils\/banc\/x\.mjs:1/);
+  // sous-dossier, y compris les tests
+  assert.match(main(racine({ [CSV]: ok, 'outils/banc/test/y.test.mjs': 'const seuil = 5;\n' })).join(), /outils\/banc\/test\/y\.test\.mjs/);
+  // autre extension : ignorée
+  assert.deepEqual(main(racine({ [CSV]: ok, 'outils/banc/x.md': 'seuil = 800\n' })), []);
+});
+
 test('banc-lit-le-tableau', () => {
+  // le couple banc-volume/p95 est obligatoire
+  assert.match(analyser(lireTableau(csv('e,p95,1,ms')), []).join(), /banc-volume/);
+  assert.match(analyser([], []).join(), /banc-volume/);
   const reel = lireTableau(readFileSync('docs/budgets-performance.csv', 'utf8')).find((l) => l.ecran === 'banc-volume' && l.metrique === 'p95');
   assert.equal(SEUIL_P95_MS, reel.seuil);
   assert.equal(lireSeuil(csv('banc-volume,p95,123,ms')), 123);
@@ -54,6 +79,8 @@ test('banc-lit-le-tableau', () => {
 });
 
 test('tableau-absent-rouge', () => {
+  assert.match(main(racine({ 'outils/banc/x.mjs': 'const a = 1;\n' })).join(), /absent/);
+  assert.match(main(racine({ [CSV]: 'a,b\n' })).join(), /en-tête/);
   assert.throws(() => lireTableau(undefined), /absent/);
   assert.throws(() => lireTableau(null), /absent/);
 });
