@@ -9,9 +9,9 @@
     },
     {
       "id": "VI-002",
-      "motif": "compte de capital social attribué à une forme sans capital",
-      "motifRegex": "compte\\s+101\\b",
-      "formes": ["EI"]
+      "motif": "compte de l'exploitant attribué à une forme de société de capitaux",
+      "motifRegex": "compte\\s+108\\b",
+      "formes": ["SAS", "SARL", "SA"]
     }
   ]
 }

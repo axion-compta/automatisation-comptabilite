@@ -38,7 +38,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.log('specs-alignees ignoré : SPECS_DOSSIER absent (L22-T33).');
   } else {
     const { entrees } = JSON.parse(readFileSync(LISTE, 'utf8'));
-    const ecarts = analyser(dossier, entrees);
+    const forme = process.env.SPECS_FORME || undefined;
+    let ecarts;
+    try {
+      ecarts = analyser(dossier, entrees, { forme });
+    } catch {
+      console.log('specs-alignees : dossier illisible (L22-T33).');
+      process.exit(1);
+    }
     for (const e of ecarts) console.log(`${e.fichier}:${e.ligne} ${e.id}`);
     process.exitCode = ecarts.length > 0 ? 1 : 0;
   }

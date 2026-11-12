@@ -47,17 +47,21 @@ describe('specs alignées', () => {
     expect(analyser(d, interdites, { forme: 'SARL' })).toEqual([{ fichier: 'a.md', ligne: 1, id: 'T-1' }]);
     expect(analyser(d, interdites, { forme: 'SAS' })).toEqual([{ fichier: 'a.md', ligne: 2, id: 'T-2' }]);
     expect(analyser(d, interdites, { forme: 'EI' })).toEqual([]);
+    const reel = dossier({ 'a.md': 'compte 108\n' });
+    const lancer = (forme) => spawnSync(process.execPath, [SCRIPT], { env: { ...process.env, SPECS_DOSSIER: reel, SPECS_FORME: forme }, encoding: 'utf8' });
+    expect(lancer('EI').status).toBe(0);
+    expect(lancer('SARL').status).toBe(1);
   });
 
   it('sortie-sans-extrait', () => {
-    const d = dossier({ 'a.md': 'secret-fictif compte 101 fin\n' });
+    const d = dossier({ 'a.md': 'secret-fictif compte 108 fin\n' });
     const env = { ...process.env, SPECS_DOSSIER: d };
     const r = spawnSync(process.execPath, [SCRIPT], { env, encoding: 'utf8' });
     expect(r.status).toBe(1);
     expect(r.stdout).toContain('a.md');
     expect(r.stdout).toContain(':1');
     expect(r.stdout + r.stderr).not.toContain('secret-fictif');
-    expect(r.stdout + r.stderr).not.toContain('compte 101');
+    expect(r.stdout + r.stderr).not.toContain('compte 108');
     const sain = spawnSync(process.execPath, [SCRIPT], { env: { ...env, SPECS_DOSSIER: dossier({ 'a.md': 'ok\n' }) }, encoding: 'utf8' });
     expect(sain.status).toBe(0);
   });
@@ -67,6 +71,11 @@ describe('specs alignées', () => {
     expect(r.status).toBe(0);
     expect(r.stdout).toContain('L22-T33');
     expect(r.stdout).toContain('ignoré');
+    const env = { ...process.env, SPECS_DOSSIER: join(tmpdir(), 'dossier-absent-xyz') };
+    const absent = spawnSync(process.execPath, [SCRIPT], { env, encoding: 'utf8' });
+    expect(absent.status).toBe(1);
+    expect(absent.stdout).toContain('L22-T33');
+    expect(absent.stderr).toBe('');
   });
 
   it('json-bien-forme', () => {
@@ -87,6 +96,6 @@ describe('specs alignées', () => {
 
   it.skipIf(!process.env.SPECS_DOSSIER)('specs-hors-depot : aucun écart (L22-T33)', () => {
     const j = JSON.parse(readFileSync(JSON_INTERDITES, 'utf8'));
-    expect(analyser(process.env.SPECS_DOSSIER, j.entrees)).toEqual([]);
+    expect(analyser(process.env.SPECS_DOSSIER, j.entrees, { forme: process.env.SPECS_FORME || undefined })).toEqual([]);
   });
 });
