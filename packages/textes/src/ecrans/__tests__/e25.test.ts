@@ -61,6 +61,13 @@ describe('textes E25 discussion', () => {
     expect(e25.modeSansModele).toBe("L'assistant est indisponible ; les commandes restent utilisables");
   });
 
+  it('libelles-de-la-carte-d-action', () => {
+    const { valider, modifier, refuser, plusTard } = e25.carte;
+    expect([valider, modifier, refuser, plusTard]).toEqual(['Valider', 'Modifier', 'Refuser', 'Plus tard']);
+    expect(e25.carte.appliquer).toBe(valider);
+    expect(new Set([valider, modifier, refuser, plusTard]).size).toBe(4);
+  });
+
   it('validee-par-formate', () => {
     expect(valideePar('Alice Exemple', '07/11/2026')).toBe('Préparé par IA, validé par Alice Exemple le 07/11/2026');
   });

@@ -58,3 +58,19 @@ describe('refusFixe', () => {
     expect(refusFixe(avec({ ...faux, niveau: 'I' }))).toEqual(refusFixe(avec({ niveau: 'I' })));
   });
 });
+
+describe('refus acte juridique', () => {
+  it('chat-redige-acte-refus-avec-renvoi', () => {
+    expect(refusFixe(avec({ demandeActeJuridique: true }))).toEqual({ motif: 'acte_juridique', alternative: 'professionnel_choisi' });
+    expect(refusFixe(avec({ demandeActeJuridique: false }))).toBeNull();
+    // les refus de rang supérieur (autre société, consignes, suppression, facture) restent prioritaires
+    expect(refusFixe(avec({ demandeActeJuridique: true, creeFacture: true }))?.motif).toBe('facture_hors_produit');
+    expect(refusFixe(avec({ demandeActeJuridique: true, cibleValidee: true }))?.motif).toBe('acte_juridique');
+  });
+  it('refus-existants-inchanges', () => {
+    const tout = { autreSociete: true, demandeConsignes: true, suppressionDefinitive: true, creeFacture: true, cibleValidee: true, periodeCloturee: true };
+    expect(refusFixe(avec({ ...tout, demandeActeJuridique: false }))?.motif).toBe('autre_societe');
+    expect(refusFixe(avec({ cibleValidee: true, periodeCloturee: true }))).toEqual({ motif: 'ecriture_validee', alternative: 'contre_passation' });
+    expect(refusFixe(avec({ niveau: 'I' }))).toEqual({ motif: 'geste_irreversible_requis', alternative: 'ouvrir_ecran' });
+  });
+});
