@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { datesIndicatives, filigranes, mentionDocument, messagesDeclarations, piecesARegarder } from '../declarations.js';
 
 const CODES = [
-  'siren_absent', 'mode_saisie_seule', 'exercice_non_cloture', 'autre_entreprise', 'doublon', 'fichier_de_travail', 'prorata',
+  'siren_absent', 'chaine_rompue', 'mode_saisie_seule', 'exercice_non_cloture', 'autre_entreprise', 'doublon', 'fichier_de_travail', 'prorata',
   'lien_expire', 'tva_en_doute', 'regime_non_traite', 'ligne_absente', 'base_negative', 'controle_bloquant_ouvert', 'conserver_originaux',
 ] as const;
 
