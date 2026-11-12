@@ -41,9 +41,7 @@ describe("FeuilleMobile", () => {
   it("feuille-focus-piege", async () => {
     const el = await monter();
     const f = feuille(el);
-    expect(f.getAttribute("aria-modal")).toBe("true");
-    expect(f.getAttribute("aria-label")).toBe("Filtres");
-    expect(f.contains(document.activeElement)).toBe(true);
+    expect([f.getAttribute("aria-modal"), f.getAttribute("aria-label"), f.contains(document.activeElement)]).toEqual(["true", "Filtres", true]);
     const fermer = f.querySelector("button") as HTMLButtonElement;
     const dernier = el.querySelector("#dernier") as HTMLButtonElement;
     dernier.focus();
@@ -51,16 +49,11 @@ describe("FeuilleMobile", () => {
     expect(document.activeElement).toBe(fermer);
     await touche(fermer, "Tab", true);
     expect(document.activeElement).toBe(dernier);
-    const sens = (cible: Element, shiftKey: boolean) => { const v = new KeyboardEvent("keydown", { key: "Tab", shiftKey, bubbles: true, cancelable: true }); cible.dispatchEvent(v); return v.defaultPrevented; };
-    fermer.focus();
-    expect(sens(fermer, false)).toBe(false);
-    dernier.focus();
-    expect(sens(dernier, true)).toBe(false);
+    const sens = (cible: HTMLElement, shiftKey: boolean) => { cible.focus(); const v = new KeyboardEvent("keydown", { key: "Tab", shiftKey, bubbles: true, cancelable: true }); cible.dispatchEvent(v); return v.defaultPrevented; };
+    expect([sens(fermer, false), sens(dernier, true)]).toEqual([false, false]);
     const milieu = el.querySelector("#premier") as HTMLButtonElement;
     milieu.focus();
-    const evt = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
-    milieu.dispatchEvent(evt);
-    expect(evt.defaultPrevented).toBe(false);
+    expect(sens(milieu, false)).toBe(false);
   });
   it("feuille-echap-ferme", async () => {
     const el = await monter();
