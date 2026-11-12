@@ -44,7 +44,7 @@ describe('proposition de lettrage', () => {
   });
 
   it('comptes-401-411-455-seulement', () => {
-    for (const compte of ['401', '411', '455']) {
+    for (const compte of ['401', '411', '455', '4011', '4551']) {
       expect(proposerLettrages([l('a', 100, 0, { compte }), l('b', 0, 100, { compte })])).toHaveLength(1);
     }
     for (const compte of ['512', '706', '400', '41', '6411', '5401']) {
@@ -81,6 +81,7 @@ describe('proposition de lettrage', () => {
   it('cas-limites-montants', () => {
     expect(proposerLettrages([])).toEqual([]);
     expect(proposerLettrages([l('a', 0, 0), l('b', 0, 0)])).toEqual([]);
+    expect(proposerLettrages([l('a', 0, 0, { reference: 'R' }), l('b', 0, 0, { reference: 'R' })])).toEqual([]);
     expect(proposerLettrages([lb('a', Number.NaN, 0), lb('b', 0, Number.NaN)])).toEqual([]);
     expect(proposerLettrages([lb('a', 10.5, 0), lb('b', 0, 10.5)])).toEqual([]);
     expect(proposerLettrages([lb('a', -100, 0), lb('b', 0, -100)])).toEqual([]);
