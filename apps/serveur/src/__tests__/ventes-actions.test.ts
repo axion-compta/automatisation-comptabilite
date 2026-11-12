@@ -24,6 +24,8 @@ it('serveur-corrige-et-valide', async () => {
   const v = await post('VP-1-009', 'valider', h('cle-fictive-6', '2'));
   expect([v.statusCode, v.json().body]).toMatchObject([200, { version: 3, ecriture: { statut: 'valide' } }]);
   expect((await post('VP-1-009', 'valider', h('cle-fictive-6', '2'))).json()).toEqual(v.json());
+  const tard = await post('VP-1-009', 'corrections', h('cle-fictive-7', '3'), { dateOperation: '2020-01-01' });
+  expect([tard.statusCode, tard.json().code]).toEqual([409, 'VENTE_VALIDEE']);
 });
 
 it('delai-lu-dans-la-configuration', () => {

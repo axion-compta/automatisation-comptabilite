@@ -31,9 +31,8 @@ describe('actions sur les ventes (service en mémoire)', () => {
     expect(a).toMatchObject({ id: PROPOSEE, version: 2, dateOperation: '2026-01-15' });
     const b = s.corriger(PROPOSEE, { clientCode: 'CLI001', natures: [{ ligne: 0, nature: 'service' }] }, 2, 'p', clef(2));
     expect(b).toMatchObject({ version: 3, clientCode: 'CLI001', dateOperation: '2026-01-15', natures: [{ ligne: 0, nature: 'service' }] });
-    expect(code(() => s.corriger(PROPOSEE, { clientCode: 'CLI999' }, 3, 'p', clef(3)))).toEqual(['ENTREE_INVALIDE', undefined]);
-    expect(code(() => s.corriger(PROPOSEE, { natures: [{ ligne: 99, nature: 'service' }] }, 3, 'p', clef(4)))).toEqual(['ENTREE_INVALIDE', undefined]);
-    expect(code(() => s.corriger(PROPOSEE, { factureOrigineId: PROPOSEE }, 3, 'p', clef(5)))).toEqual(['ENTREE_INVALIDE', undefined]);
+    [{ clientCode: 'CLI999' }, { natures: [{ ligne: 99, nature: 'service' }] }, { factureOrigineId: PROPOSEE }].forEach((m, i) =>
+      expect(code(() => s.corriger(PROPOSEE, m, 3, 'p', clef(3 + i)))).toEqual(['ENTREE_INVALIDE', undefined]));
     expect(code(() => s.corriger('VP-9-999', { dateOperation: '2026-01-15' }, 1, 'p', clef(6)))).toEqual(['VENTE_INCONNUE', undefined]);
   });
 
@@ -65,7 +64,7 @@ describe('actions sur les ventes (service en mémoire)', () => {
   });
 
   it('cle-absente-400', () => {
-        expect(routesEcritureSansEnTete()).toEqual([]);
+    expect(routesEcritureSansEnTete()).toEqual([]);
     const ops = (genererOpenapiLot('10') as { paths: Record<string, { post?: { parameters?: { name: string; required: boolean }[] } }> }).paths;
     for (const chemin of ['/corrections', '/valider'].map((x) => `/api/compta/v1/societes/{s}/ventes/{id}${x}`)) {
       expect(ops[chemin]).toBeDefined();
@@ -93,6 +92,9 @@ describe('actions sur les ventes (service en mémoire)', () => {
     const s = creer();
     expect(s.valider(PROPOSEE, 1, 'p', clef(1))).toEqual({ id: PROPOSEE, version: 2, ecriture: { statut: 'valide' }, annulableJusqua: T0 + DELAI });
     expect(code(() => s.valider(PROPOSEE, 2, 'p', clef(2)))).toEqual(['VALIDATION_REFUSEE', 'ecriture_non_proposee']);
+    expect(code(() => s.corriger(PROPOSEE, { clientCode: 'CLI001', dateOperation: '2020-01-01' }, 2, 'p', clef(3)))).toEqual(['VENTE_VALIDEE', undefined]);
+    expect(code(() => s.corriger('VP-1-003', { dateOperation: '2020-01-01' }, 1, 'p', clef(4)))).toEqual(['VENTE_VALIDEE', undefined]);
+    expect([s.lireVersion(PROPOSEE), s.lireVersion('VP-1-003')]).toEqual([2, 1]);
   });
 
   it('corps-vide-400', () => {

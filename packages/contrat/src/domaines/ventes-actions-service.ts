@@ -3,7 +3,7 @@ import { demanderValidation } from '../../../noyau/src/ecritures/etats.js';
 import { peutValiderFacture } from '../../../noyau/src/ventes/clients.js';
 import type { CorpsCorrection, VenteCorrigee, VenteValidee } from './ventes-actions.js';
 
-export type CodeActions = 'VENTE_INCONNUE' | 'VERSION_PERIMEE' | 'VALIDATION_REFUSEE' | 'CLE_REUTILISEE' | 'ENTREE_INVALIDE';
+export type CodeActions = 'VENTE_INCONNUE' | 'VERSION_PERIMEE' | 'VALIDATION_REFUSEE' | 'VENTE_VALIDEE' | 'CLE_REUTILISEE' | 'ENTREE_INVALIDE';
 export type MotifRefus = 'doublon' | 'a_relire' | 'client_absent' | 'ecriture_non_proposee';
 export class ErreurActions extends Error {
   override name = 'ErreurActions';
@@ -56,12 +56,11 @@ export function creerServiceVentesActions(jeu: JeuVentes = genererVentes(), conf
     corriger(id: string, corps: CorpsCorrection, version: number, personne: string, cle: string): VenteCorrigee {
       return unefois(cle, JSON.stringify(['corriger', id, version, personne, corps]), () => {
         const v = trouver(id, version);
+        if (v.piece.statutEcriture === 'valide' || v.piece.statut === 'validee') refuser('VENTE_VALIDEE');
         if (corps.clientCode !== undefined && !clients.has(corps.clientCode)) refuser('ENTREE_INVALIDE');
         if (corps.natures?.some((n) => n.ligne >= v.piece.lignes.length)) refuser('ENTREE_INVALIDE');
         if (corps.factureOrigineId !== undefined && (corps.factureOrigineId === id || !ventes.has(corps.factureOrigineId))) refuser('ENTREE_INVALIDE');
-        if (corps.clientCode !== undefined) v.piece.clientCode = corps.clientCode;
-        if (corps.dateOperation !== undefined) v.piece.dateOperation = corps.dateOperation;
-        if (corps.factureOrigineId !== undefined) v.piece.factureOrigineId = corps.factureOrigineId;
+        for (const k of ['clientCode', 'dateOperation', 'factureOrigineId'] as const) if (corps[k] !== undefined) v.piece[k] = corps[k];
         for (const n of corps.natures ?? []) v.natures = [...v.natures.filter((x) => x.ligne !== n.ligne), n].sort((a, b) => a.ligne - b.ligne);
         v.version += 1;
         return vue(v);

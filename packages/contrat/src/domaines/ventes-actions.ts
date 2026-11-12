@@ -33,7 +33,7 @@ const Params = z.object({ s: Mot, id: Mot });
 /** `If-Match` = version lue de la vente. Aucune création, numérotation ni envoi de facture. */
 export const corrigerVente = oc
   .route({ method: 'POST', path: sous('/ventes/{id}/corrections'), inputStructure: 'detailed', operationId: 'corrigerVente' })
-  .errors(Erreurs)
+  .errors({ ...Erreurs, VENTE_VALIDEE: { status: 409 } })
   .input(z.object({ params: Params, headers: z.object(EnTetes), body: CorpsCorrection }))
   .output(z.object({ body: VenteCorrigee }));
 
