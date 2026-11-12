@@ -8,7 +8,7 @@ import { validerImage } from '../lancer.mjs';
 
 const fabriquer = (fichiers) => {
   const d = mkdtempSync(join(tmpdir(), 'captures-'));
-  for (const [nom, octets] of Object.entries(fichiers)) writeFileSync(join(d, nom), Buffer.from(octets));
+  for (const [nom, octets] of Object.entries(fichiers)) writeFileSync(join(d, nom), new Uint8Array(octets));
   return d;
 };
 const avec = (a, b, verifier) => {
@@ -42,18 +42,17 @@ test('dossier-absent-refuse', () => {
 });
 
 test('autres-fichiers-ignores', () => {
-  const dossier = fabriquer(base);
-  mkdirSync(join(dossier, 'sous-dossier'));
-  writeFileSync(join(dossier, 'notes.txt'), 'x');
-  assert.deepEqual(comparerDossiers(dossier, dossier), []);
-  rmSync(dossier, { recursive: true });
+  const a = fabriquer({ ...base, 'notes.txt': [120] });
+  const b = fabriquer({ ...base, 'notes.txt': [121] });
+  mkdirSync(join(b, 'piege.png'));
+  try { assert.deepEqual(comparerDossiers(a, b), []); } finally { rmSync(a, { recursive: true }); rmSync(b, { recursive: true }); }
 });
 
 test('image-sans-empreinte-refusee', () => {
   const empreinte = '0123456789abcdef'.repeat(4);
   const ok = `exemple.fr/playwright:v1@sha256:${empreinte}`;
   assert.equal(validerImage(`${ok}\n`), ok);
-  for (const mauvaise of ['', '  ', 'exemple.fr/playwright:v1', `exemple.fr/playwright:v1@sha256:${empreinte.slice(1)}`, `exemple.fr/playwright:v1@sha256:${empreinte.toUpperCase()}`, `${ok}\nautre`, 'image@sha256:' + 'g'.repeat(64), undefined, 42]) {
+  for (const mauvaise of ['', '  ', 'exemple.fr/playwright:v1', `exemple.fr/playwright:v1@sha256:${empreinte.slice(1)}`, `exemple.fr/playwright:v1@sha256:${empreinte.toUpperCase()}`, `${ok}\nautre`, ` ${ok}`, `a@b ${ok}`, 'image@sha256:' + 'g'.repeat(64), undefined, 42]) {
     assert.throws(() => validerImage(mauvaise), /empreinte|image/, String(mauvaise));
   }
 });
