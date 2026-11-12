@@ -138,6 +138,18 @@ describe('E44', () => {
     expect(document.querySelector('section')?.getAttribute('aria-labelledby')).toBe(document.querySelector('h1')?.id);
   });
 });
+describe('lien vers la fiche', () => {
+  it('client-mene-a-sa-fiche', async () => {
+    await monter();
+    for (const l of lignes()) {
+      const lien = l.querySelector<HTMLAnchorElement>('td:nth-child(2) a');
+      const code = l.querySelector('td')!.textContent!;
+      if (l.textContent!.includes(e44.tableau.fournisseur)) expect(lien).toBeNull();
+      else expect([lien?.getAttribute('href'), lien?.textContent]).toEqual(['/reglages/entreprise/client?code=' + code, l.querySelectorAll('td')[1]!.textContent]);
+    }
+    expect(document.querySelectorAll('tbody a')).toHaveLength(6);
+  });
+});
 describe('cheminTiers', () => {
   it('construit-la-requete', () => {
     expect(cheminTiers('tous', '', 0)).toBe('/tiers?limite=50&decalage=0');

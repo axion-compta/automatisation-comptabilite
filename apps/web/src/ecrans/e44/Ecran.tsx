@@ -6,6 +6,7 @@ import { Tableau } from '../../../../../packages/ui/src/composants/Tableau.js';
 import { BoutonExporter } from '../../socle/BoutonExporter.js';
 import { useLecture } from '../../donnees/lecture.js';
 const LIMITE = 50;
+const CHEMIN_CLIENT = '/reglages/entreprise/client?code=';
 const MAX_RECHERCHE = 50;
 type Filtre = 'tous' | 'client' | 'fournisseur';
 const ONGLETS: { id: Filtre; texte: string }[] = [
@@ -58,7 +59,7 @@ export function Ecran() {
         legende={e44.tableau.legende}
         colonnes={[
           { cle: 'code', entete: e44.tableau.code, rendu: (t) => t.code },
-          { cle: 'nom', entete: e44.tableau.nom, rendu: (t) => t.nom },
+          { cle: 'nom', entete: e44.tableau.nom, rendu: (t) => (t.type === 'client' ? <a href={CHEMIN_CLIENT + encodeURIComponent(t.code)}>{t.nom}</a> : t.nom) },
           { cle: 'type', entete: e44.tableau.type, rendu: (t) => (t.type === 'client' ? e44.tableau.client : e44.tableau.fournisseur) },
           { cle: 'email', entete: e44.tableau.email, rendu: (t) => t.email },
         ]}
