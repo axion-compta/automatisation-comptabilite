@@ -1,21 +1,22 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR n°1151, fiche L22-T09, relue au SHA de tête 37359a5b696913d56990c5b1c346d0bda8754a88.
+PR n°1151, fiche L22-T09 (sensible : fusion par Will seul). Seconde relecture Opus du 12/11/2026 (consigne LOT5, section R), au SHA de tête e073ce2806f8ab4427417ccca97b02f672f77a74.
+Avis précédent : A CORRIGER au SHA 37359a5b696913d56990c5b1c346d0bda8754a88.
 
-## Défauts
-1. `packages/noyau/src/tva/part-non-deductible.ts:45` : le mutant qui retire `!entierPositif(ttc) ||` survit à tous les tests.
-   - Cause : dans le test, les TTC invalides (`100.5`, `-1`, ligne 72 du fichier de test) sont tous inférieurs au HT. Ils sont donc refusés par `ttc < ht` et jamais par le contrôle du TTC lui-même.
-   - Effet mesuré sur le mutant : un TTC de `12000.5`, `NaN` ou `Infinity` remonte une `ErreurArgent` sans code, et non `montant_invalide`.
-   - Correction demandée : dans `part-non-deductible.test.ts`, ajouter des TTC invalides supérieurs au HT, par exemple `12000.5`, `Number.NaN` et `Number.POSITIVE_INFINITY`, avec l'attente `'montant_invalide'`.
-2. `packages/noyau/src/tva/__tests__/part-non-deductible.test.ts` : aucun cas `NaN` ni `Infinity` sur les montants de `lignesAvecPartPerdue`, alors que la consigne de relecture les exige.
-   - Correction demandée : les ajouter pour `htCentimes`, `ttcCentimes`, `effet.deductible` et `effet.perdue` (attente `montant_invalide`). Le défaut 1 peut être couvert par la même boucle.
+## Défauts précédents : levés
+1. Un TTC invalide supérieur au HT est maintenant testé (`12000.5`, `NaN`, `Infinity`, attente `montant_invalide`). La mutation qui retire `!entierPositif(ttc) ||` est TUÉE.
+2. NaN, Infinity et 0.5 sont maintenant testés sur `htCentimes`, `ttcCentimes`, `effet.deductible` et `effet.perdue`. Les quatre mutations qui retirent chacune un contrôle `entierPositif(...)` sont TUÉES.
 
-## Vérifications
-- Périmètre : 6 fichiers, tous dans `fichiers_autorises`. Taille : 199 + 1 lignes, sous la limite de 200 (juste en dessous).
-- La fiche correspond au code réel : la TVA perdue est ajoutée à la charge, la TVA déductible va à son compte et le TTC au fournisseur. Aucun calcul de part : l'effet vient de `effetTraitement`. L'écriture est équilibrée au centime quelle que soit la part (0 à 10000).
-- Tests ciblés : noyau 5/5, textes 2/2. `node scripts/verifier.mjs` : tests (862 fichiers) et gardes verts. L'étape `types` échoue seulement à cause du Node 22 du cloud. La CI est verte (9/9).
-- Mutations : 22 faites, 21 tuées (bornes `>= 0`, `ttc < ht`, `aVerifier`, `collectee`, `sousReserve`, contrôle de la somme, `deductible > 0`, `.trim()`, `<= 0` de la carte, gabarit `{motif}`).
-- Aucun secret, aucun prix, aucun mot interdit. Données fictives seulement.
+## Aucune régression
+- Le diff contre main ne contient que les 6 fichiers de la fiche, pour 199 + 1 lignes, sous la limite de 200. Le correctif ne touche que le fichier de test, et le code est inchangé.
+- Tests ciblés : noyau 5 sur 5 et textes 2 sur 2, verts en local.
+- Journal : 7 lignes, il commence par `# Journal L22-T09`. Aucun mot interdit, aucun secret, aucun prix.
+- La remarque sur le sixième test nommé, placé dans `textes`, reste acceptée.
 
-## Remarques (non bloquantes)
-- La fiche demande « les 6 tests nommés de part-non-deductible.test.ts ». Le sixième (`carte-tva-perdue-produite-si-perdue`) est dans `textes/src/cartes/__tests__/tva-perdue.test.ts`. L'écart est signalé par l'auteur et il est cohérent, puisque la carte est dans `textes`. Il est accepté.
+## CI de la tête (hors périmètre de la PR)
+- Les jobs `tests` et `verifier` sont rouges, et tous les autres jobs sont verts.
+- Cause : un seul test échoue, `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`). L'en-tête attendu contient `porte` et l'en-tête lu `porte_rgpd`.
+- Ce test échoue aussi sur `origin/main` (347401abb6fcba29b100aa6ba04d8ded5387684a), vérifié en local. Il vient du croisement des PR fusionnées n°1215 (L22-T30) et n°1146 (L25-T01).
+- Ce n'est pas un défaut de l'auteur. Il faut une CI verte, après la réparation de main et une mise à niveau, avant la fusion.
+
+SHA de tête relu : e073ce2806f8ab4427417ccca97b02f672f77a74
