@@ -1,4 +1,5 @@
-import { test } from 'node:test';
+// Lancé par `node --test` (critère de la fiche) ; vitest, qui ramasse aussi ce fichier, fournit le même `test`.
+const { test } = process.env.VITEST ? await import('vitest') : await import('node:test');
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ENTETE, cloturer, evaluer, lireRapport, lireSeuils, tableau } from '../parcours.mjs';
