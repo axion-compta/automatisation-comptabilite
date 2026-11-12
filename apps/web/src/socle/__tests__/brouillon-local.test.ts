@@ -15,8 +15,7 @@ function stockageMemoire() {
   };
   return { stockage, brouillons, cles };
 }
-type Memoire = ReturnType<typeof stockageMemoire>;
-const SAISIE = { libelle: 'Achat de fournitures Dupond-Exemple', montant: '1234,56' };
+type Memoire = ReturnType<typeof stockageMemoire>;const SAISIE = { libelle: 'Achat de fournitures Dupond-Exemple', montant: '1234,56' };
 const nouveau = (m: Memoire, societeId = 's1', personneId = 'p1') => creerBrouillon({ formulaire: 'ecriture', societeId, personneId, stockage: m.stockage });
 // WebCrypto reste réel (hors horloges simulées) : on laisse finir ses promesses après l'avance du temps.
 const finir = async () => {
@@ -27,10 +26,8 @@ const attendre = async (ms: number) => {
   await vi.advanceTimersByTimeAsync(ms);
   await finir();
 };
-
 beforeEach(() => void vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }));
 afterEach(() => void vi.useRealTimers());
-
 describe('brouillon local chiffré', () => {
   it('rien-avant-2-s', async () => {
     const m = stockageMemoire();

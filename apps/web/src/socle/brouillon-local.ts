@@ -1,6 +1,5 @@
 // Brouillon local chiffré (AES-GCM 256) : écrit 2 s après la dernière modification, repris après fermeture.
-// Fiche L25-T08. La clé est non extractible, gardée par le stockage, une par personne et par société.
-
+// Fiche L25-T08. Clé non extractible, gardée par le stockage, une par personne et par société.
 export const DELAI_ECRITURE_MS = 2000;
 const OCTETS_NONCE = 12;
 
@@ -35,7 +34,6 @@ async function operer<R>(magasin: 'brouillons' | 'cles', mode: IDBTransactionMod
     base.close();
   }
 }
-
 /** Adaptateur IndexedDB par défaut. */
 export function stockageIndexedDb(): StockageBrouillon {
   return {
@@ -46,7 +44,6 @@ export function stockageIndexedDb(): StockageBrouillon {
     ecrireCle: async (cle, valeur) => void (await operer('cles', 'readwrite', (m) => m.put(valeur, cle))),
   };
 }
-
 async function cleDe(stockage: StockageBrouillon, idCle: string): Promise<CryptoKey> {
   const existante = await stockage.lireCle(idCle);
   if (existante) return existante;
@@ -54,7 +51,6 @@ async function cleDe(stockage: StockageBrouillon, idCle: string): Promise<Crypto
   await stockage.ecrireCle(idCle, nouvelle);
   return nouvelle;
 }
-
 export function creerBrouillon<T = unknown>({ formulaire, societeId, personneId, stockage = stockageIndexedDb() }: OptionsBrouillon): Brouillon<T> {
   const idCle = JSON.stringify([societeId, personneId]);
   const idBrouillon = JSON.stringify([societeId, personneId, formulaire]);
