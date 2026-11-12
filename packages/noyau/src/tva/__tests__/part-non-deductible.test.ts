@@ -69,6 +69,15 @@ describe('part non déductible passée en charge', () => {
     // Un effet qui ne rend pas la TVA de la facture est refusé.
     expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...effet(CARBURANT), perdue: c(1) }, COMPTES))).toBe('effet_incoherent');
     expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, ttcCentimes: c(9999) }, effet(CARBURANT), COMPTES))).toBe('montant_invalide');
+    const e = effet(CARBURANT);
+    expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...e, deductible: c(-100), perdue: c(2100) }, COMPTES))).toBe('montant_invalide');
+    expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...e, deductible: c(2100), perdue: c(-100) }, COMPTES))).toBe('montant_invalide');
+    expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, htCentimes: 10000.5 as typeof e.perdue }, e, COMPTES))).toBe('montant_invalide');
+    expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, ttcCentimes: 12000.5 as typeof e.perdue }, e, COMPTES))).toBe('montant_invalide');
+    const marge = effetTraitement({ code: 'MARGE', sens: 'achat', base: c(10000), tvaLue: c(0), franchise: false });
+    expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, ttcCentimes: CARBURANT.htCentimes }, marge, COMPTES))).toBe('effet_incoherent');
+    expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...e, collectee: c(1) }, COMPTES))).toBe('effet_incoherent');
+    expect(code(() => lignesAvecPartPerdue(CARBURANT, { ...e, sousReserve: c(1) }, COMPTES))).toBe('effet_incoherent');
     expect(code(() => lignesAvecPartPerdue({ ...CARBURANT, htCentimes: c(-1) }, effet(CARBURANT), COMPTES))).toBe('montant_invalide');
   });
 

@@ -45,6 +45,9 @@ export function lignesAvecPartPerdue(facture: FacturePartPerdue, effet: EffetTra
   if (!entierPositif(ht) || !entierPositif(ttc) || !entierPositif(effet.deductible) || !entierPositif(effet.perdue) || ttc < ht) {
     throw new ErreurPartNonDeductible('montant_invalide', 'Les montants doivent être des entiers positifs ou nuls, TTC au moins égal au HT.');
   }
+  if (effet.aVerifier || effet.collectee !== 0 || effet.sousReserve !== 0) {
+    throw new ErreurPartNonDeductible('effet_incoherent', 'Un effet à vérifier, collecté ou sous réserve ne se met pas en écriture ici.');
+  }
   const tva = soustraire(ttc, ht);
   if (ajouter(effet.deductible, effet.perdue) !== tva) {
     throw new ErreurPartNonDeductible('effet_incoherent', 'La TVA déductible et la TVA perdue ne rendent pas la TVA de la facture.');
