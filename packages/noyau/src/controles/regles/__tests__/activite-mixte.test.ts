@@ -41,7 +41,7 @@ describe('CC-T20 activité mixte ou ventes exonérées', () => {
     expect(regleCCT20.evaluer(objet())).toEqual({ resultat: 'OK' });
     expect(regleCCT20.evaluer(objet({ ventes: [] }))).toEqual({ resultat: 'OK' });
     expect(regleCCT20.evaluer(objet({ ventes: [{ codeTva: 'FRANCHISE' }, { codeTva: 'A_VERIFIER' }] }))).toEqual({ resultat: 'OK' });
-    const mal = [{ ...objet(), activiteMixte: 'oui' }, { ...objet(), ventes: [{ codeTva: 1 }] }, { ...objet(), ventes: null }, { ...objet(), codesExoneres: undefined }];
+    const mal = [{ ...objet(), activiteMixte: 'oui' }, { ...objet(), ventes: [{ codeTva: 1 }] }, { ...objet(), ventes: null }, { ...objet(), codesExoneres: undefined }, { ...objet(), ventes: [], codesExoneres: undefined }, { ...objet(), ventes: [{ codeTva: 'EXONEREE' }], codesExoneres: 'EXONEREE_FICTIVE' }];
     for (const m of mal) {
       const t = executerControles([regleCCT20], [{ type: 'periode', id: 'P', donnee: m as unknown as ObjetActiviteMixte }], 'avant_tva', 'h');
       expect(t.map((x) => x.resultat)).toEqual(['IMPOSSIBLE']);
