@@ -42,7 +42,6 @@ test('critique-decrite-sans-test-rouge', () => {
     assert.equal(r.critiquesSansTest, 1, extra);
     assert.ok(r.problemes.some((p) => p.includes('ATK-31')), extra);
   }
-  // test en commentaire, ou nom aliasé / méthode : pas un test
   for (const texte of ["// it('cas-un', () => {});", "/* test('cas-un', () => {}); */", "xit('cas-un', () => {});", "obj.it('cas-un', () => {});", "$test('cas-un', () => {});"]) {
     const r = analyserCatalogue(catalogue({ 'ATK-31': `ATK-31,Fichier actif,critique,decrite,cas-un,${FICHIER}` }), () => texte);
     assert.equal(r.critiquesSansTest, 1, texte);
@@ -60,7 +59,6 @@ test('a-decrire-compte-sans-rougir', () => {
   assert.deepEqual(r.problemes, []);
   assert.equal(r.aDecrire, 33);
   assert.equal(r.decrites, 0);
-  // un titre renseigné pour une attaque à décrire est refusé
   assert.ok(analyserCatalogue(catalogue({ 'ATK-02': 'ATK-02,Titre,majeure,a_decrire,,' }), lire).problemes.some((p) => p.includes('ATK-02')));
   // un critique à décrire n'est pas « sans test »
   const c = analyserCatalogue(catalogue({ 'ATK-02': 'ATK-02,,critique,a_decrire,,' }), lire);
