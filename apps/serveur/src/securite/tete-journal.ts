@@ -4,7 +4,6 @@ import type { Planificateur } from '../../../../packages/noyau/src/exploitation/
 import type { EntreeJournal } from '../../../../packages/noyau/src/journal/chaine.js';
 import { documentTete, verifierTeteSignee, type TeteChaine, type VerificateurSignature } from '../../../../packages/noyau/src/journal/tete-signee.js';
 import { verifierChaine, type DefautChaine } from '../../../../packages/noyau/src/journal/verifier.js';
-
 export interface CoffreSignature { signer(document: string): Promise<string> } // lève si le coffre est indisponible
 export interface DepotsTete {
   deposer(chemin: string, contenu: string): Promise<'cree' | 'existant'>; // jamais d'écrasement
@@ -24,46 +23,42 @@ export type ControleExport =
   | { autorise: true; tete: TeteChaine }
   | { autorise: false; raison: 'chaine_rompue'; defaut: DefautChaine }
   | { autorise: false; raison: 'coffre_indisponible' };
-
 const FORME_SOCIETE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 const FORME_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const JOUR_MS = 86_400_000;
-
 export function cheminTete(societeId: string, date: string): string {
   if (!FORME_SOCIETE.test(societeId) || !FORME_DATE.test(date) || Number.isNaN(Date.parse(date))) throw new Error('chemin_invalide');
   return `a_compta/journal/${societeId}/${date}.json`;
 }
-
 const jourDe = (instant: string): string => {
   if (Number.isNaN(Date.parse(instant))) throw new Error('instant_invalide');
   return new Date(Date.parse(instant)).toISOString().slice(0, 10);
 };
 const veilleDe = (instant: string): string => new Date(Date.parse(instant) - JOUR_MS).toISOString().slice(0, 10);
-
 type FichierTete = { tete: TeteChaine; horodatage: string; evenement: EvenementTete; signature: string };
-
-/** Lit la tête de la veille : null si absente, 'invalide' si elle ne porte pas une signature valable. */
-async function teteVeille(d: DepsTete, societeId: string, instant: string): Promise<TeteChaine | null | 'invalide'> {
-  const brut = await d.depots.lire(cheminTete(societeId, veilleDe(instant)));
-  if (brut === null) return null;
-  try {
-    const f = JSON.parse(brut) as FichierTete;
-    const ok = verifierTeteSignee(documentTete(f.tete, f.horodatage), f.signature, d.verificateur) && f.tete.societeId === societeId;
-    return ok ? f.tete : 'invalide';
-  } catch {
-    return 'invalide';
+/** Dernière tête signée trouvée en remontant de la veille jusqu'au jour de création : null si aucune, 'invalide' si sa signature ne vaut rien. */
+async function teteVeille(d: DepsTete, societeId: string, instant: string, creeLe: string): Promise<TeteChaine | null | 'invalide'> {
+  for (let jour = veilleDe(instant); jour >= jourDe(creeLe); jour = veilleDe(`${jour}T00:00:00Z`)) {
+    const brut = await d.depots.lire(cheminTete(societeId, jour));
+    if (brut === null) continue;
+    try {
+      const f = JSON.parse(brut) as FichierTete;
+      const ok = verifierTeteSignee(documentTete(f.tete, f.horodatage), f.signature, d.verificateur) && f.tete.societeId === societeId;
+      return ok ? f.tete : 'invalide';
+    } catch {
+      return 'invalide';
+    }
   }
+  return null;
 }
-
 type Relecture = { ok: true; tete: TeteChaine } | { ok: false; defaut: DefautChaine };
-
 async function relire(d: DepsTete, societeId: string, instant: string): Promise<Relecture> {
-  const [entrees, creeLe, veille] = await Promise.all([d.source.entrees(societeId), d.source.creeLe(societeId), teteVeille(d, societeId, instant)]);
+  const [entrees, creeLe] = await Promise.all([d.source.entrees(societeId), d.source.creeLe(societeId)]);
+  const veille = await teteVeille(d, societeId, instant, creeLe);
   if (veille === 'invalide') return { ok: false, defaut: 'tete_divergente' };
   const r = verifierChaine(entrees, { societeId, creeLe, ...(veille === null ? {} : { teteSignee: { sequence: veille.sequence, empreinte: veille.empreinte } }) });
   return r.ok ? { ok: true, tete: r.tete } : { ok: false, defaut: r.defaut };
 }
-
 /** Relit la chaîne, signe la tête avec le coffre, la dépose une seule fois par jour. Lève si rompue ou si le coffre manque. */
 export async function signerEtDeposer(d: DepsTete, societeId: string, evenement: EvenementTete, instant: string): Promise<{ depot: 'cree' | 'existant'; tete: TeteChaine }> {
   const chemin = cheminTete(societeId, jourDe(instant));
@@ -76,7 +71,6 @@ export async function signerEtDeposer(d: DepsTete, societeId: string, evenement:
   const fichier: FichierTete = { tete: r.tete, horodatage: instant, evenement, signature };
   return { depot: await d.depots.deposer(chemin, JSON.stringify(fichier)), tete: r.tete };
 }
-
 /** À appeler avant tout export officiel : chaîne rompue ou coffre absent = pas d'export. */
 export async function controlerAvantExport(d: DepsTete, societeId: string, instant: string): Promise<ControleExport> {
   const r = await relire(d, societeId, instant);
@@ -91,7 +85,6 @@ export async function controlerAvantExport(d: DepsTete, societeId: string, insta
     return { autorise: false, raison: 'coffre_indisponible' };
   }
 }
-
 /** Même relecture au démarrage : renvoie les sociétés dont la chaîne est rompue. */
 export async function verifierAuDemarrage(d: DepsTete, instant: string): Promise<string[]> {
   const rompues: string[] = [];
@@ -100,7 +93,6 @@ export async function verifierAuDemarrage(d: DepsTete, instant: string): Promise
   }
   return rompues;
 }
-
 /** Signature à l'heure (minute en réglage) et relecture + signature chaque nuit, en UTC. */
 export function inscrireTachesTete(p: Planificateur, d: DepsTete, reglage: { minuteHoraire: number }): void {
   const pourChaque = (evenement: EvenementTete) => async (passage: { prevuLe: string }): Promise<void> => {
