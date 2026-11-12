@@ -37,12 +37,19 @@ test('outil-inconnu-rouge', () => {
   rouge((m) => { m.manifeste[0].route = 'mois'; }, 'route sans /');
 });
 
+test('ligne-sans-nom-rouge', () => {
+  rouge((m) => { delete m.manifeste[0].ecran; }, 'ligne sans nom');
+  rouge((m) => { m.manifeste[0].ecran = '  '; }, 'ligne sans nom');
+  rouge((m) => { m.manifeste[0].ecran = 42; }, 'ligne sans nom');
+});
+
 test('jeu-propre-rouge', () => {
   for (const jeu of ['propre', '', undefined, 'Commun']) rouge((m) => { m.manifeste[0].jeu = jeu; }, 'jeu différent de commun');
 });
 
 test('entrees-illisibles-rouges', () => {
   assert.ok(analyserManifeste(null, [], []).length > 0);
+  assert.ok(analyserManifeste([], null, ['vue.ouvrir']).some((p) => p.includes('illisibles')));
   assert.ok(analyserManifeste([], ['e01'], ['vue.ouvrir']).some((p) => p.includes('écran sans ligne')));
   assert.ok(analyserManifeste([{ ecran: 'e01', route: '/a', outil_chat: 'vue.ouvrir', jeu: 'commun' }], ['e01'], []).length > 0);
 });
