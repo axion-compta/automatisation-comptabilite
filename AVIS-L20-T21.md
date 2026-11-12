@@ -1,14 +1,15 @@
-VERDICT: A CORRIGER
-PR #1175, fiche L20-T21, tête 102d9a3812acf5a1bd9f476b5e89d0c05e76f133
+VERDICT: OK
+PR #1175, fiche L20-T21, tête f9e8a2332f3354115c30d867ba5c82560946f602 (seconde relecture, relecteur Opus, lot 5). Avis précédent : A CORRIGER sur 102d9a3812acf5a1bd9f476b5e89d0c05e76f133.
 
-Contrôles passés : 4 fichiers modifiés, tous dans fichiers_autorises ; 249 lignes ajoutées pour une limite de 250 ; les 5 tests nommés sont présents et passent (7/7 en local) ; `node scripts/verifier.mjs --gardes` est vert ; `tsc --noEmit` passe sur noyau ; aucun secret, prix ni mot interdit ; données fictives. Fiche sensible : fusion par Will seul.
-J'ai fait 13 mutations à la main : 10 font échouer un test, 3 survivent.
+## Défauts précédents : levés (vérifiés par mutation)
+1. Frontière basse de la classe (`a-nouveaux.ts:75`) : les comptes `012000` et `901000` sont testés. `classe >= 0` fait rougir 1 test ; `classe <= 9` en fait rougir 5.
+2. Statut de N+1 (`a-nouveaux.ts:128`) : supprimer `statutConnu(exerciceN1.statut)` fait rougir 1 test.
 
-## Défauts
-1. `packages/noyau/src/exercices/a-nouveaux.ts:75`, frontière basse de la classe non testée. La mutation `classe >= 1` en `classe >= 0` survit : un compte de classe 0 serait alors repris en à-nouveaux sans qu'aucun test ne rougisse. Les tests ne couvrent que la classe 8 (`801000`). Correction demandée : dans `refus-balance-desequilibree-compte-hors-plan-montant-invalide`, ajouter un compte de classe 0 (ex. `012000`) et un compte de classe 9 (ex. `901000`), présents dans le plan, qui doivent rendre `compte_invalide`.
-2. `packages/noyau/src/exercices/a-nouveaux.ts:127`, statut de N+1 non testé. Supprimer `statutConnu(exerciceN1.statut)` ne fait rougir aucun test. Correction demandée : dans `fec-officiel-n-plus-1-refuse-n-ouvert`, ajouter `fecOfficielAutorise({ debut: '2027-01-01', statut: 'x' as never }, undefined)`, qui doit rendre `statut_inconnu`.
+## Régressions : aucune
+- `a-nouveaux.ts` est inchangé depuis la tête précédente. Seul le test a changé, et seulement par ajout : l'ancien cas `8x` et `801000` est toujours dans la boucle.
+- Autres mutations rouges : `fin >= debut` remplacé par `>` ; le résultat écrase le solde 120/129 au lieu de s'y ajouter.
+- 4 fichiers, tous dans `fichiers_autorises` ; 250 lignes pour un maximum de 250 ; 7/7 tests en local ; journal de 4 lignes ; aucun mot interdit, aucun prix, aucun secret.
 
 ## Remarques
-- Mutation équivalente, sans action à prévoir : `resultat < 0` en `resultat <= 0` (ligne 82), parce que la ligne est déjà gardée par `resultat !== 0`.
-- Le job CI `gitleaks` est rouge pour une cause d'environnement (licence absente), sans rapport avec le diff. Ce n'est pas un défaut de l'auteur.
-- `verifier` était encore en file d'attente pendant la relecture.
+- CI : `tests` est rouge à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`), qui rougit aussi sur origin/main 347401ab. `verifier` est rouge parce qu'il en dépend. Ce n'est pas un défaut de l'auteur. Les autres jobs sont verts, `gitleaks` compris.
+- La fiche est sensible : fusion par Will seul.
