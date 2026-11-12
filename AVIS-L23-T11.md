@@ -1,27 +1,28 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR n°1223, fiche L23-T11 (sensible), relue au SHA de tête dd0789486967de9b72f427dd5d63bf65c1c567df.
+PR n°1223, fiche L23-T11 (sensible : fusion par Will seul). Seconde relecture Opus du 12/11/2026 (consigne LOT5, section R).
+SHA de tête relu : 2907abcc2d4915e34be4ce3b85321c0edc5515b0
+Avis précédent : A CORRIGER au SHA dd0789486967de9b72f427dd5d63bf65c1c567df.
 
-## Défaut
-1. Une mutation survit sur la condition qui autorise l'exonération, dans `packages/noyau/src/controles/regles/ventes-b.ts:66` (`rempli`). Si l'on remplace `v.trim() !== ''` par `v !== ''`, une trace `valide` dont `idRequete`, `horodatage` ou `empreinteReponse` ne contient que des espaces autorise l'exonération, et les 301 tests de `controles/regles` restent verts. Pour une fiche sensible, une garde d'exonération sans test n'est pas acceptable.
-   Correction : dans `packages/noyau/src/controles/regles/__tests__/ventes-b.test.ts`, test `valide-trace-permet-exoneration` (ou un test voisin), vérifier qu'une trace `valide` dont l'un des trois champs vaut `'  '` donne `ALERTE`, pour chacun des trois champs.
+## Défaut précédent : levé (vérifié par mutation)
+1. `ventes-b.ts:66` (`rempli`) : si l'on remplace `v.trim() !== ''` par `v !== ''`, un test rougit (1 en échec sur 27). Le test met chacun des trois champs (`idRequete`, `horodatage`, `empreinteReponse`) à `'  '` et attend `ALERTE`. Il met aussi chaque champ à `' x '` et attend `OK`.
 
-## Vérifié sans défaut
-- Les 6 fichiers modifiés sont tous dans `fichiers_autorises`. Le diff fait 170 lignes, sous le maximum de 220. Rien dans `.github/`, aucune dépendance ajoutée, aucun octet NUL.
-- Aucun test ni assertion n'a été supprimé. Les 6 tests nommés sont présents. 39 tests sur 39 passent (`vies.test.ts`, `ventes-b.test.ts`).
-- Les mutations suivantes sont tuées :
-  - `hors-perimetre`, `interrupteur-ferme` ou une panne qui donneraient `valide` ou `invalide` ;
-  - une empreinte qui ignore la réponse ;
-  - une horloge non injectée ;
-  - `etat !== 'invalide'` ;
-  - une empreinte non exigée ;
-  - un statut enregistré ignoré.
-- La réponse brute n'apparaît jamais en clair. `verifierVies` garde sa forme historique.
-- Aucun taux, seuil, prix ou secret, aucun mot interdit, uniquement des données fictives. Le journal fait 7 lignes avec le bon en-tête.
+## Remarque précédente prise en compte
+- `ventes-b.ts:73` : le format de `valeur` est maintenant testé quand `idRequete` vaut null. La mutation qui remplace un champ manquant par `'z'` est tuée.
 
-## Remarques (non bloquantes)
-- `ventes-b.ts:73` : le format de `valeur` quand un champ manque n'est pas vérifié par les tests. Une mutation qui remplace un champ non texte par `'z'` survit. Ajouter une assertion sur `valeur` avec `empreinteReponse: null`.
-- `ventes-b.ts:82` : quand le statut enregistré n'est pas `verifie`, la preuve est `statut_vies:<statut>`, sans la trace VIES. La fiche demande « avec la trace en preuve » ; il serait utile de la joindre.
-- `apps/serveur/src/connecteurs/vies.ts:78` : l'horodatage est pris avant l'appel. À préciser en commentaire.
-- `vies.ts:72` : un numéro hors périmètre donne `a_confirmer`. Ce choix est prudent mais n'est pas documenté.
-- `pnpm verifier` en local : `types` ne tourne pas (le cloud a Node 22) ; `tsc --noEmit` donne 0 erreur sur `apps/serveur` et `packages/noyau`. Une mesure de temps instable dans `filtre-sortie.test.ts` (hors PR) passe quand on la relance seule.
+## Régressions : aucune
+- Le commit de correction ne touche que `ventes-b.test.ts`. Le code n'a pas changé depuis la première relecture, à part la fusion de main.
+- `git diff origin/main...HEAD` : 6 fichiers, tous dans `fichiers_autorises`. 163 lignes ajoutées et 12 retirées, pour un maximum de 220. Aucune ligne « - - ».
+- Tests : 310 sur 310 pour `controles/regles`, 12 sur 12 pour `vies.test.ts`. Aucune assertion n'a été retirée.
+- Autres mutations rejouées, toutes tuées :
+  - empreinte non exigée ;
+  - état ignoré (`complete` seul suffit).
+- Aucun mot interdit, aucun prix, aucun secret. Le journal fait 7 lignes et commence par l'en-tête attendu.
+
+## CI (à signaler, ce n'est pas un défaut de l'auteur)
+- `tests` et `verifier` sont rouges à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Le même échec se reproduit sur `origin/main` 6181242502ba460ea74a102050ff6bbd1dbd2bb0 (conflit entre #1146 et #1215). Ce fichier est hors du diff de la PR.
+- `gardes`, `types`, `lint`, `e2e`, `gitleaks`, `licences` et `stryker` sont verts.
+
+## Remarques (non bloquantes, inchangées)
+- `ventes-b.ts:82` : quand le statut enregistré n'est pas `verifie`, la preuve est `statut_vies:<statut>`, sans la trace VIES.
+- `vies.ts` : l'horodatage est pris avant l'appel, et un numéro hors périmètre donne `a_confirmer`. Ces deux choix ne sont pas documentés en commentaire.
