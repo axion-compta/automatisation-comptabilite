@@ -176,3 +176,14 @@ Limite : le texte de la spec 15 n'est pas dans ce dépôt public (le journal de 
 - Total : 41 + 26 + 19 + 25 = 111.
 - Cas de sécurité (S), cités par les critères de L15-T60 : R02, R03, R04, R06b, R07, R07b, R11, R12, R15, X04 à X06, X10, X11, X13, X13b, X14, X14b, X21, T31, P24. Tous restent « en attente » : T60 est faite contre des interfaces et des faux, pas contre l'isolation réelle ; le serveur en mémoire imite ces cas sans les prouver.
 - Suite : L15-T68 donne un test par cas, nommé par son identifiant, et met ce tableau à jour.
+
+## Lot 04
+État lu sur `origin/main` (en-têtes des fiches), avec L04-T47 elle-même.
+- Fiches : 59 au total ; 56 `statut: fait` avant cette PR (la tranche planifiée de 49 est faite, L04-T47 comprise une fois fusionnée), restent L04-T49 et L04-T51.
+- Délai médian de fusion, sensible et non sensible : non mesuré (`pilotage/calibrage.csv` ne contient que l'en-tête).
+- Écart à la fiche : L04-T48, T50, T52 et T53 sont déjà `fait` ; elle les croyait bloquées.
+- L04-T49 : remplacée par L04-T56, T57 et T58 (faites, décision D88), ne jamais la planifier.
+- L04-T51 (routes préfixées par la société, permissions `compta-*`) : `a_faire`, sans `bloque_par` ; à planifier, elle n'attend pas de décision lue dans sa fiche.
+- Décisions encore ouvertes pour les fiches faites contre un faux serveur : réponse de la console (D29) et feu vert J3a avant toute mise en réel.
+- Prochaine tranche proposée : écran de correction, écran M02 photo, éclatement multi-factures en V1.
+- Aucune date de livraison annoncée.
