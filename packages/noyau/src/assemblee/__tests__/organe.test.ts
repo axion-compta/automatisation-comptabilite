@@ -87,6 +87,7 @@ describe("organe d'approbation des comptes", () => {
   it('regle_non_sourcee: une règle sans source ou sans date valide est refusée', () => {
     const avec = (p: Partial<RegleOrgane>): RegleOrgane[] => [...REGLES, r({ forme: 'SARL', cas: 'defaut', organe: 'assemblee_generale', ...p })];
     expect(code(() => organeApprobation(soc({ forme: 'SARL' }), sans, avec({ source: '' })))).toBe('regle_non_sourcee');
+    expect(code(() => organeApprobation(soc({ forme: 'SARL' }), sans, avec({ source: '   ' })))).toBe('regle_non_sourcee');
     expect(code(() => organeApprobation(soc({ forme: 'SARL' }), sans, avec({ valableAPartir: '' })))).toBe('regle_non_sourcee');
     expect(code(() => organeApprobation(soc({ forme: 'SARL' }), sans, avec({ valableAPartir: '2026-02-30' })))).toBe('regle_non_sourcee');
   });
@@ -100,9 +101,16 @@ describe("organe d'approbation des comptes", () => {
     expect(code(() => organeApprobation(soc({ forme: 'SARL' }), sans, []))).toBe('regle_absente');
   });
 
+  it('SARL ou SAS à associé unique: aucune règle par défaut, refus prudent', () => {
+    expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: 1 }), sans, REGLES))).toBe('regle_absente');
+    expect(code(() => organeApprobation(soc({ forme: 'SAS', nbAssocies: 1, dirigeantAssocie: true }), sans, REGLES))).toBe('regle_absente');
+    expect(organeApprobation(soc({ forme: 'SARL', nbAssocies: 2 }), sans, REGLES).organe).toBe('assemblee_generale');
+  });
+
   it('entrées invalides refusées; EI sans mode', () => {
     expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: 0 }), sans, REGLES))).toBe('entree_invalide');
     expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: Number.NaN }), sans, REGLES))).toBe('entree_invalide');
+    for (const n of [1.5, Infinity, -Infinity, -1]) expect(code(() => organeApprobation(soc({ forme: 'SARL', nbAssocies: n }), sans, REGLES))).toBe('entree_invalide');
     expect(code(() => organeApprobation(soc({ forme: 'EURL', nbAssocies: 2 }), sans, REGLES))).toBe('entree_invalide');
     expect(code(() => organeApprobation(soc({ forme: 'SARL', dateReference: 'x' }), sans, REGLES))).toBe('entree_invalide');
     const ei = organeApprobation(soc({ forme: 'EI', nbAssocies: 1 }), { visioconference: true }, REGLES);
