@@ -22,7 +22,6 @@ export interface RegleOrgane {
   valableAPartir: string;
   source: string;
 }
-
 export interface SocieteOrgane {
   forme: Forme;
   nbAssocies: number;
@@ -30,20 +29,17 @@ export interface SocieteOrgane {
   dirigeantAssocie?: boolean;
   dateReference: string;
 }
-
 export interface StatutsOrgane {
   modesPrevus?: ModeApprobation[];
   agPrevue?: boolean;
   visioconference?: boolean;
 }
-
 export interface ResultatOrgane {
   organe: Organe;
   modes: ModeApprobation[];
   depotVautApprobation: boolean;
   source: string;
 }
-
 export class ErreurOrgane extends Error {
   readonly code: 'entree_invalide' | 'regle_non_sourcee' | 'regle_absente';
   constructor(code: ErreurOrgane['code']) {
