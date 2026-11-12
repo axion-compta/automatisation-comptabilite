@@ -10,7 +10,6 @@ import { creerFraisActionsPublies, creerFraisPublies, evenementRegularisationIk,
 const SOCIETE = 'soc-lemoine';
 const PER = 'PER-01';
 const CTX = (cle: string): ContexteFrais => ({ societeId: SOCIETE, acteur: { type: 'personne', id: PER }, canal: 'api', correlationId: 'corr-essai-1', cleIdempotence: cle, horodatage: '2026-11-12T08:00:00.000Z' });
-
 function jeu(): JeuFrais {
   const j = genererFrais();
   for (const v of j.vehicules.slice(0, 2)) Object.assign(v, { carteGrisePieceId: 'PIE-CG' + v.id });
@@ -49,7 +48,6 @@ describe('serveur : événements des frais sur le bus', () => {
     expect(tous[0]?.version).toBe(t.version);
     expect(new Set(tous.map((e) => e.id)).size).toBe(3);
   });
-
   it('echec-de-transaction-aucun-evenement', async () => {
     const { frais, actions, lus } = monter();
     await expect(frais.valider(CTX('cle-1'), { ids: ['FRA-005', 'FRA-999'] })).rejects.toThrow();
@@ -58,22 +56,16 @@ describe('serveur : événements des frais sur le bus', () => {
     await expect(actions.creer({ ...CTX('cle-3'), horodatage: 'pas-utc' }, TRAJET)).rejects.toThrow('horodatage_non_utc');
     expect(await lus()).toEqual([]);
   });
-
   it('version-reelle-des-evenements', async () => {
     const { frais, actions, lus, jeuCommun } = monter();
     const b = await actions.creer(CTX('cle-0'), DEPENSE);
     const p = await actions.completer(CTX('cle-1'), b.id, { declaration: 'personne', pieceId: 'PIE-ESSAI' }, b.version);
-    expect([b.statut, p.statut]).toEqual(['a_completer', 'propose']);
-    expect(p.version).toBeGreaterThan(1);
     const t = await actions.creer(CTX('cle-3'), TRAJET);
     await frais.valider(CTX('cle-2'), { ids: [t.id] });
-    const [propose, , valide] = await lus();
     const reelle = jeuCommun.frais.find((f) => f.id === t.id)?.version;
-    expect([propose?.type, propose?.objet_id, propose?.version]).toEqual(['compta.frais.propose', p.id, p.version]);
-    expect([valide?.type, valide?.version]).toEqual(['compta.frais.valide', reelle]);
-    expect(reelle).toBeGreaterThan(t.version);
+    expect([b.statut, p.statut, p.version > 1, (reelle ?? 0) > t.version]).toEqual(['a_completer', 'propose', true, true]);
+    expect((await lus()).map((e) => [e.type, e.version])).toEqual([['compta.frais.propose', p.version], ['compta.frais.propose', t.version], ['compta.frais.valide', reelle]]);
   });
-
   it('idempotence-pas-de-double-evenement', async () => {
     const { actions, lus } = monter();
     const un = await actions.creer(CTX('cle-rejeu'), TRAJET);
@@ -81,7 +73,6 @@ describe('serveur : événements des frais sur le bus', () => {
     expect(deux).toEqual(un);
     expect(types(await lus())).toEqual(['compta.frais.propose']);
   });
-
   it('charge-sans-montant-ni-donnee-personnelle', async () => {
     const { frais, actions, lus } = monter();
     const t = await actions.creer(CTX('cle-1'), TRAJET);
@@ -101,7 +92,6 @@ describe('serveur : événements des frais sur le bus', () => {
     }
     expect(tous[0]?.charge).toEqual({ frais_id: t.id, statut: 'propose' });
   });
-
   it('exclu-paye-societe-publie', async () => {
     const { actions, lus } = monter();
     const c = await actions.creer(CTX('cle-x'), SOCIETE_PAYE);
@@ -112,7 +102,6 @@ describe('serveur : événements des frais sur le bus', () => {
     await actions.completer(CTX('cle-y'), c.id, { declaration: 'personne' }, c.version);
     expect(await lus()).toHaveLength(1);
   });
-
   it('regularisation-proposee-publiee', async () => {
     // Constructeur seulement : aucune transition d'état de régularisation n'existe dans les fichiers autorisés.
     const boite = creerBoiteEnvoiMemoire();
