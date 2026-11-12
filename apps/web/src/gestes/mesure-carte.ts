@@ -1,5 +1,4 @@
-// Temps humain par carte (V3-QUA-007) : mesure la durée de résolution d'une carte et émet « carte_resolue ».
-// Sans contenu : seulement le code d'écran et la durée. Aucun appel réseau ici : tout passe par api.ts.
+// Temps humain par carte (V3-QUA-007) : émet « carte_resolue » avec la durée, sans contenu ; réseau par api.ts.
 import { ecrire, nouvelleCle } from '../api.js';
 
 export type EvenementCarte = { type: 'carte_resolue'; ecran_code: string; duree_ms: number };

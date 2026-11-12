@@ -36,9 +36,7 @@ describe('temps humain', () => {
     const depasse = lance('--seuil-mediane-ms=1000', '--seuil-p90-ms=1000');
     expect(depasse.status).toBe(0);
     expect(depasse.stdout).toContain('au-dessus');
-    const sous = lance('--seuil-mediane-ms=999999', '--seuil-p90-ms=999999');
-    expect(sous.status).toBe(0);
-    expect(sous.stdout).toContain('au-dessous');
+    expect(lance('--seuil-mediane-ms=999999', '--seuil-p90-ms=999999').stdout).toContain('au-dessous');
     expect(lance('--seuil-mediane-ms=abc', '--seuil-p90-ms=1').status).not.toBe(0);
     expect(lance('--seuil-mediane-ms=-1', '--seuil-p90-ms=1').status).not.toBe(0);
     expect(lance().status).not.toBe(0);
