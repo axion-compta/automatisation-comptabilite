@@ -29,7 +29,7 @@ const construire = (type: TypeEvenementProfil, c: ContexteEvenement, objetId: st
   });
 
 export const evenementChampModifie = (c: ContexteEvenement, p: { cle: string; version: number }): Enveloppe =>
-  construire('compta.profil.champ_modifie', c, c.societeId, p.version, { cle: p.cle });
+  construire('compta.profil.champ_modifie', c, p.cle, p.version, { cle: p.cle });
 
 /** Rend null tant que l'état ne change pas. */
 export const evenementEtatChange = (c: ContexteEvenement, p: { avant: EtatProfil; apres: EtatProfil; version: number }): Enveloppe | null =>

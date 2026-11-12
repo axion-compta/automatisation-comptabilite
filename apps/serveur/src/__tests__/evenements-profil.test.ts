@@ -65,6 +65,24 @@ describe('événements du profil', () => {
     expect(faux.recus).toHaveLength(1);
   });
 
+  it('deux-champs-meme-ecriture-deux-publications', async () => {
+    const { b, faux, vider } = monter();
+    await ecrireEtPublier(b, async () => 7, (v) => [
+      evenementChampModifie(ctx('k'), { cle: 'forme_juridique', version: v }),
+      evenementChampModifie(ctx('k'), { cle: 'activite', version: v }),
+    ]);
+    await vider();
+    expect(faux.recus.map((e) => e.charge)).toEqual([{ cle: 'forme_juridique' }, { cle: 'activite' }]);
+  });
+
+  it('meme-champ-deux-cles-deux-publications', async () => {
+    const { b, faux, vider } = monter();
+    await ecrireEtPublier(b, async () => 7, (v) => [evenementChampModifie(ctx('cle-a'), { cle: 'activite', version: v })]);
+    await ecrireEtPublier(b, async () => 8, (v) => [evenementChampModifie(ctx('cle-b'), { cle: 'activite', version: v })]);
+    await vider();
+    expect(faux.recus).toHaveLength(2);
+  });
+
   it('echec-d-enregistrement-rien-publie', async () => {
     const { b, faux, vider } = monter();
     await expect(
