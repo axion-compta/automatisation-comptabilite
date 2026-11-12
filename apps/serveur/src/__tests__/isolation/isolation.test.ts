@@ -1,9 +1,10 @@
 import { creerApp } from '../../app.js';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { contrat } from '../../../../../packages/contrat/src/routes.js';
 import { listerRoutes, type RouteLue } from '../../../../../packages/contrat/src/verifier-securite.js';
-import { ROLES } from '../../../../../packages/noyau/src/securite/types.js';
-import { appelerRoutes, cleDe, fournisseurDeRoles, genererCas, reponsesDeuxCents, routesSansTest, type Appel } from './generateur.js';
+import { ROLES, type Role } from '../../../../../packages/noyau/src/securite/types.js';
+import { aUnObjet, appelerRoutes, arretsDeValidation, cleDe, estErreurClient, exemple, fournisseurDeRoles, genererCas, reponsesDeuxCents, routesSansTest, urlReelle, VALIDATION_NON_REMPLIE, type Appel } from './generateur.js';
 
 const routes = listerRoutes(contrat);
 const cas = genererCas(routes);
@@ -19,6 +20,11 @@ describe('générateur d’isolation @isolation', () => {
     // Un rôle manquant sur une route suffit aussi.
     const sansLecture = cas.filter((c) => !(c.role === 'lecture' && c.route === cleDe(routes[0]!)));
     expect(routesSansTest(routes, sansLecture)).toEqual([cleDe(routes[0]!)]);
+    const sansClient = cas.filter((c) => !(c.nature === 'autre-client' && c.role === 'comptable' && c.route === cleDe(routes[0]!)));
+    expect(routesSansTest(routes, sansClient)).toEqual([cleDe(routes[0]!)]);
+    const sansSociete = cas.filter((c) => !(c.nature === 'autre-societe' && c.route === cleDe(routes[0]!)));
+    expect(routesSansTest(routes, sansSociete)).toEqual([cleDe(routes[0]!)]);
+    expect(routesSansTest([], [])).toEqual([]);
   });
 
   it('T-ISO-1-zero-200', () => {
@@ -32,26 +38,51 @@ describe('générateur d’isolation @isolation', () => {
     }
   });
 
-  it('T-ISO-1-reponses-http', async () => {
-    const app = creerApp(undefined, { session: fournisseurDeRoles });
+  it('T-ISO-1-reponses-http-uniformes', async () => {
+    // Pas une preuve d'isolation : creerApp ne laisse pas injecter d'objet étranger (défaut de fiche), donc les trois natures répondent « inconnu ».
+    const vus: Role[] = [];
+    const app = creerApp(undefined, { session: fournisseurDeRoles(vus) });
     const appels = await appelerRoutes(app, routes);
     await app.close();
-    expect(appels.length).toBeGreaterThan(0);
+    expect(appels.length).toBe(routes.filter(aUnObjet).length * ROLES.length * 3);
     expect(new Set(appels.map((a) => a.role))).toEqual(new Set(ROLES));
+    // Le rôle de chaque appel est bien celui lu par le serveur.
+    expect(vus).toEqual(appels.map((a) => a.role));
+    // Les trois natures visent trois objets différents.
+    for (const a of appels.filter((x) => x.nature !== 'inexistant')) {
+      const ref = appels.find((x) => x.route === a.route && x.role === a.role && x.nature === 'inexistant')!;
+      expect([a.route, a.url === ref.url]).toEqual([a.route, false]);
+    }
+    // Aucun appel ne s'arrête à la validation, sauf la liste figée.
+    expect(arretsDeValidation(appels)).toEqual([...VALIDATION_NON_REMPLIE].sort());
     expect(reponsesDeuxCents(appels)).toEqual([]);
-    for (const a of appels) expect([a.route, a.statut >= 400 && a.statut < 500]).toEqual([a.route, true]);
-    // Même corps pour l'objet d'une autre société, d'un autre client et un objet inexistant.
+    for (const a of appels) expect([a.route, estErreurClient(a.statut)]).toEqual([a.route, true]);
     for (const a of appels.filter((x) => x.nature !== 'inexistant')) {
       const ref = appels.find((x) => x.route === a.route && x.role === a.role && x.nature === 'inexistant')!;
       expect([a.route, a.statut, a.corps]).toEqual([a.route, ref.statut, ref.corps]);
     }
   });
 
-  it('un-200-sur-un-objet-etranger-rougit', () => {
-    // Mutation d'une route qui a perdu sa garde : sa réponse 200 doit être relevée.
-    const fuite: Appel = { route: 'GET /pieces/{id}', role: 'lecture', nature: 'autre-societe', statut: 200, corps: '{}' };
-    const ok: Appel = { ...fuite, nature: 'inexistant', statut: 404 };
-    expect(reponsesDeuxCents([ok, fuite])).toEqual(['GET /pieces/{id} | lecture | autre-societe']);
+  it('bornes-des-statuts', () => {
+    const rep = (statut: number): Appel => ({ route: 'r', role: 'lecture', nature: 'inexistant', url: 'u', statut, corps: '' });
+    const cas2xx = [-1, 0, 199, 200, 299, 300, NaN].map((st) => reponsesDeuxCents([rep(st)]).length);
+    expect(cas2xx).toEqual([0, 0, 0, 1, 1, 0, 0]);
+    expect([-1, 0, 399, 400, 499, 500, NaN].map(estErreurClient)).toEqual([false, false, false, true, true, false, false]);
+  });
+
+  it('arrets-de-validation-detectes', () => {
+    const rep = (route: string, statut: number, corps: string): Appel => ({ route, role: 'lecture', nature: 'inexistant', url: 'u', statut, corps });
+    const mauvais = '{"code":"BAD_REQUEST"}';
+    expect(arretsDeValidation([rep('b', 400, mauvais), rep('a', 400, mauvais), rep('a', 400, mauvais)])).toEqual(['a', 'b']);
+    expect(arretsDeValidation([rep('a', 404, mauvais), rep('b', 400, '{"code":"AUTRE"}'), rep('c', NaN, mauvais), rep('d', 0, mauvais)])).toEqual([]);
+  });
+
+  it('exemple-minimal-lu-dans-le-schema', () => {
+    const schema = z.object({ cle: z.string(), n: z.number(), ok: z.boolean(), type: z.enum(['a', 'b']), liste: z.array(z.string()), facultatif: z.string().optional() });
+    expect(exemple(schema as never)).toEqual({ cle: 'cle-isolation-0001', n: 1, ok: true, type: 'a', liste: [] });
+    expect(exemple(undefined)).toBeUndefined();
+    expect(urlReelle({ chemin: '/exercices/{exercice}/alertes/{id}', methode: 'GET', operationId: 'x', tags: [], entree: undefined }, 'obj-1')).toBe('/exercices/seg-1/alertes/obj-1');
+    expect(urlReelle({ chemin: '/api/compta/v1/societes/{s}/frais/{id}', methode: 'GET', operationId: 'x', tags: [], entree: undefined }, 'obj-1')).toBe('/api/compta/v1/societes/soc-1/frais/obj-1');
   });
 
   it('C01', () => {
