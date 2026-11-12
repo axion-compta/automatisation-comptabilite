@@ -20,8 +20,8 @@ const base = (surcharge = {}) => ({
 describe('bloc TVA et impôts', () => {
   it('estimation-egale-ma-tva', () => {
     const appels: string[] = [];
-    const r = blocTvaImpots(base({ estimer: (id: string) => { appels.push(id); return EST; } }));
-    expect(appels).toEqual(['ex-1']);
+    const r = blocTvaImpots(base({ exerciceId: 'ex-2', estimer: (id: string) => { appels.push(id); return EST; } }));
+    expect(appels).toEqual(['ex-2']);
     expect(r.etat).toBe('ok');
     expect(r.donnees).toMatchObject({ estimation: EST });
     const nc: EstimationLue = { exerciceId: 'ex-1', etat: 'non_calculee', motif: 'regime_non_traite' };
@@ -31,13 +31,15 @@ describe('bloc TVA et impôts', () => {
 
   it('seuil-lu-dans-parametres-dates', () => {
     const dates: string[] = [];
-    const avec = (ventes: string, majore: string, statut: ParametreLu['statut'] = 'valide', ca = 5000000) =>
-      blocTvaImpots(base({ franchise: { caVentes: centimes(ca), caServices: centimes(0), alertePdb: 9000, seuilsAu: (d: string) => { dates.push(d); return seuils(ventes, majore, statut); } } })).donnees;
+    const avec = (ventes: string, majore: string, statut: ParametreLu['statut'] = 'valide', ca = 5000000, caServices = 0, pdb = 9000) =>
+      blocTvaImpots(base({ franchise: { caVentes: centimes(ca), caServices: centimes(caServices), alertePdb: pdb, seuilsAu: (d: string) => { dates.push(d); return seuils(ventes, majore, statut); } } })).donnees;
     expect(avec('10000000', '12000000')).toMatchObject({ franchise: 'sous' });
     expect(dates).toEqual(['2026-03-31']);
     expect(avec('4000000', '4500000')).toMatchObject({ franchise: 'depasse_majore' });
     expect(avec('5500000', '9000000')).toMatchObject({ franchise: 'alerte' });
     expect(avec('10000000', '12000000', 'a_verifier')).toMatchObject({ franchise: 'a_verifier' });
+    expect(avec('5500000', '9000000', 'valide', 5000000, 0, 8000)).toMatchObject({ franchise: 'sous' });
+    expect(avec('10000000', '12000000', 'valide', 0, 13000000)).toMatchObject({ franchise: 'depasse_majore' });
     expect(blocTvaImpots(base()).donnees).toMatchObject({ franchise: null });
   });
 
