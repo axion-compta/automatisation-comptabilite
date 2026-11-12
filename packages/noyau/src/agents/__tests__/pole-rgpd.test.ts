@@ -13,6 +13,11 @@ describe('pôle RGPD', () => {
     // chaîne vide ou blanche : jamais acceptée, même si le registre contient une finalité vide
     expect(verifierTraitement('   ', registre).accepte).toBe(false);
     expect(verifierTraitement('', [{ ...registre[0]!, finalite: '' }]).accepte).toBe(false);
+    // préfixe strict et sous-chaîne d'une finalité inscrite : refusés et escaladés vers le dpo
+    expect(connue.length).toBeGreaterThan(8);
+    for (const partielle of [connue.slice(0, Math.floor(connue.length / 2)), connue.slice(0, -1), connue.slice(1), connue.slice(2, -2)]) {
+      expect(verifierTraitement(partielle, registre)).toEqual({ accepte: false, escalade: { role: 'dpo', motif: 'traitement_hors_registre', finalite: partielle } });
+    }
   });
 
   it('escalade-dpo', () => {

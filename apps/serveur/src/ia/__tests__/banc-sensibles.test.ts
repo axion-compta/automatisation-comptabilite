@@ -14,7 +14,18 @@ const MODELES = [
   (m: string) => `Pièce jointe : ${m.toUpperCase()} de Bruno Inventé`,
   (m: string) => `Facture F-2026-001\nTotal TTC : 112,34\nAnnexe : ${m}`,
 ];
-const BANC = MOTS.flatMap((m) => MODELES.map((f) => f(m)));
+const GENERE = MOTS.flatMap((m) => MODELES.map((f) => f(m)));
+// Écrit à la main, indépendamment de MOTIFS_SENSIBLES : retirer un motif de la liste fait rougir le banc.
+const MAIN = [
+  "Carte nationale d'identité de Alice Fictive", 'Passport de Bruno Inventé', 'Passeport de Alice Fictive', 'Titre de séjour de Bruno Inventé',
+  'Identity card of Alice Fictive', 'Residence permit of Bruno Inventé', 'Bulletin de paie de novembre, Alice Fictive', 'Bulletin de salaire de Bruno Inventé',
+  'Payslip for Alice Fictive', 'Arrêt de travail de Bruno Inventé', 'Feuille de soins de Alice Fictive', 'Ordonnance médicale de Bruno Inventé', 'Medical certificate for Alice Fictive',
+];
+// MRZ fictive (ligne TD3 de 44 caractères, numéro L898902C3, chiffre de contrôle 6) et NIR fictif à clé valide.
+const MRZ = `Alice Fictive\n${'L898902C36'.padEnd(44, '<')}`;
+const completerNir = (n13: string): string => n13 + String(97n - (BigInt(n13) % 97n)).padStart(2, '0');
+const NIR = `Salarié Bruno Inventé, numéro ${completerNir('1920312345678')}`;
+const BANC = [...GENERE, ...MAIN, MRZ, NIR];
 
 const reglage = { seuilNettete: 100, texteCache: { ecartCouleurMax: 30, taillePoliceMin: 4 } };
 
@@ -44,6 +55,7 @@ function monter() {
 describe('banc des pièces sensibles', () => {
   it('banc-zero-donnee-sensible-envoyee', async () => {
     expect(BANC.length).toBeGreaterThanOrEqual(30);
+    expect(MAIN.length).toBeGreaterThanOrEqual(10);
     const { appel, envoyer } = monter();
     for (const texte of BANC) {
       const r = await envoyer(texte);
