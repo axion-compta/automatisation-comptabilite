@@ -61,7 +61,7 @@ describe('lien pièce-écriture', () => {
   it('doublon-exact-refuse', () => {
     const base = ajouterLien([], lien('p1', 'e1'));
     expect(code(() => ajouterLien(base, lien('p1', 'e1')))).toBe('lien_en_double');
-    // même couple mais empreinte différente : pas un doublon exact
+    expect(code(() => ajouterLien(base, lien('p2', 'e1')))).toBeUndefined();
     expect(code(() => ajouterLien(base, lien('p1', 'e1', EMPREINTE_B)))).toBeUndefined();
     // entrée non modifiée
     expect(base).toHaveLength(1);
