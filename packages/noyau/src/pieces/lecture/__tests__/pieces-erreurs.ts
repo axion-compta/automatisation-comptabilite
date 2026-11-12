@@ -79,3 +79,9 @@ export function fabriquerPiece(i: number, erreur?: TypeErreur): PieceErreur {
 /** 100 pièces, 20 par type d'erreur. */
 export const PIECES_ERREURS: PieceErreur[] = Array.from({ length: 100 }, (_, i) => fabriquerPiece(i, TYPES_ERREUR[i % TYPES_ERREUR.length]));
 export const PIECES_SAINES: PieceErreur[] = Array.from({ length: 20 }, (_, i) => fabriquerPiece(i + 200));
+
+/** 12 pièces dont les valeurs concordent mais dont la citation du lecteur A est absente du texte extrait. */
+export const PIECES_CITATION_ABSENTE: PieceErreur[] = Array.from({ length: 12 }, (_, i) => {
+  const p = fabriquerPiece(i + 300);
+  return { ...p, champ: 'ttc', champsA: p.champsA.map((c) => (c.nom === 'ttc' ? { ...c, citation: 'montant introuvable dans le texte' } : c)) };
+});
