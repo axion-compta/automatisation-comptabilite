@@ -1,18 +1,21 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1183, fiche L22-T23, tête 0bab11d716f8f466943bbd3ffe6d88f01f803fb7 (seconde relecture, relecteur Opus, lot 5). Avis précédent : A CORRIGER sur ca2bacb09e65ace28955818d822224fc3111e34e.
+PR #1183, fiche L22-T23. Troisième relecture Opus du 12/11/2026 (consigne LOT5, section R). Avis précédent : A CORRIGER sur 0bab11d716f8f466943bbd3ffe6d88f01f803fb7.
+SHA de tête relu : 833f7d1090016b4a8dbf19227d990b97a7835554
 
 ## Défauts précédents
-1. Levé. La validation au centime dans `compare` (`banc-reel.mjs:30`) est maintenant couverte par le test `valeurs-non-entieres-des-deux-cotes-en-ecart`. La retirer fait rougir 1 test.
-2. Levé en partie seulement. Le test `reimport-reel-sur-doublons-noyau` construit un importeur sur `numeroterOccurrences` et `lignesNouvelles` de `doublons.ts` et le vérifie sur un relevé fictif : 2 lignes identiques le même jour, 0 ligne au réimport, 1 nouvelle occurrence créée. C'est bien. En revanche, cet importeur n'est pas injecté dans le test du banc réel. `outils/banc/test/banc-reel.test.mjs:35` appelle toujours `lancerBancReel(process.env)` sans `{ importeur }`. Sur la machine du banc, la vérification `reimport` passe donc encore par l'import simulé par identifiant (`banc-reel.mjs:34-43`) : un `Set` neuf, 0 ligne créée par construction. Elle ne peut toujours pas échouer, alors que la fiche demande de vérifier sur le banc réel qu'un réimport du même relevé crée 0 ligne.
-   Correction demandée : sortir `importeur` de `reimport-reel-sur-doublons-noyau` et le placer au niveau du module du test, puis appeler `lancerBancReel(process.env, { importeur })` à la ligne 35. Le changement est presque neutre en lignes (le diff est à 300 pour un maximum de 300).
+1. Validation au centime dans `compare` : levé, sans régression (la retirer fait rougir `valeurs-non-entieres-des-deux-cotes-en-ecart`).
+2. Importeur du banc réel : levé. `importeur`, construit sur `numeroterOccurrences` et `lignesNouvelles` de `packages/noyau/src/banque/doublons.ts`, est défini au niveau du module (`banc-reel.test.mjs:27-32`). Le test réel appelle `lancerBancReel(process.env, { importeur })` (l. 41). Les mutations de l'importeur (lignes connues non mémorisées, `numeroterOccurrences` retiré) font rougir `reimport-reel-sur-doublons-noyau`.
 
-## Régressions : aucune
-- `banc-reel.mjs` est inchangé depuis la tête précédente. Les tests ont seulement reçu des ajouts.
-- La remarque précédente sur `lignesCreees === 0` remplacé par `<= 0` est levée : le test `reimport-importeur-aberrant-ecart` rougit.
-- 6 fichiers, tous dans `fichiers_autorises` ; 300 lignes pour un maximum de 300 ; 17 tests réussis et 1 ignoré (banc réel absent) en local ; journal de 6 lignes ; aucun mot interdit, aucun prix, aucun chemin réel.
+## Vérifié
+- 6 fichiers, tous dans `fichiers_autorises` ; 300 lignes pour un maximum de 300 ; aucune ligne « - - » ; aucune dépendance ajoutée.
+- Les 7 tests nommés sont présents. Le test du banc réel est ignoré hors de la machine du banc, avec un titre qui cite L22-T23. 17 tests réussis et 1 ignoré.
+- Journal de 6 lignes, commence par « # Journal L22-T23 ». Aucun secret, prix, nom réel ni mot interdit. Gardes locales vertes.
+- 13 mutations sur 15 sont tuées : tolérance d'un centime, `isSafeInteger` remplacé par `isFinite`, `lignesCreees <= 0`, importeur ignoré, réimport toujours `ok`, K01 au TTC, K02 rapproché, etc.
 
 ## Remarques (non bloquantes)
-- Toujours ouvertes : `?? NaN` remplacé par `?? 0` (ligne 79) survit, et supprimer le dédoublonnage `unique` (lignes 62-69) survit aussi.
-- Une fois l'importeur réel branché, `unique` filtre par `id` avant l'importeur. Si le vrai relevé n'a pas d'`id`, toutes les lignes ont `id` indéfini et une seule passe au réimport. À confirmer avec le format du vrai banc (hypothèse déclarée dans la PR).
-- CI : `tests` est rouge à cause de `outils/exploitation/__tests__/ouverture.test.mjs` (`onze-cases-attendues`), qui rougit aussi sur origin/main 347401ab. `verifier` est rouge parce qu'il en dépend. Ce n'est pas un défaut de l'auteur.
+- `banc-reel.mjs:79` : le mutant `?? NaN` remplacé par `?? 0` survit toujours (déjà connu).
+- `banc-reel.mjs:71` : le mutant `m < 0` remplacé par `m <= 0` survit, mais il est équivalent (un montant nul ne change pas la somme).
+- Le dédoublonnage `unique` par `id` reste à confirmer avec le format du vrai banc.
+- La taille est exactement au plafond : tout ajout le dépassera.
+- CI : `tests` et `verifier` sont rouges à cause de `outils/exploitation/__tests__/ouverture.test.mjs`, rouge aussi sur main. Ce n'est pas un défaut de l'auteur.
