@@ -1,20 +1,25 @@
 VERDICT: OK
-PR #1114, SHA de tête 1e31a407b2abe294a815afe5fec861a075e3ed37
+PR #1130, SHA de tête b9a8f141ae30646ac1656697004d002defeb700d
 
-Amendement de la fiche L15-T62 (branche `pilotage/amende-L15-T62`). La fiche est sensible (argent) : fusion par Will seul.
+Fiche L15-T62 (sensible : argent). Fusion par Will seul.
 
 ## Contrôles
-- Un seul fichier change : `pilotage/fiches/L15-T62.md` (+15, -10). La CI est verte au SHA de tête (verifier, gardes, tests, types, lint, e2e, stryker, gitleaks, licences). `node outils/gardes/fiches.mjs` est vert en local.
-- J'ai vérifié sur main chaque fait cité par la nouvelle fiche :
-  - `packages/contrat/src/chat/outils.json` compte bien 7 outils ; aucun ne couvre les 11 `actionPrincipale` de `CATALOGUE_MVP` (ALR-01 à ALR-11, `payer_facture` = ALR-09, nature `argent`) ;
-  - la branche `bloque/L15-T62` existe ;
-  - les symboles et valeurs cités existent : `lecturesParPostLot15` (vide), tags `lecture-par-post` / `sans-effet` / `acces:lecture` (modèle : `recherche.ts`), `OptionsModules`, `creerServiceAlertes` (avec `lister()` et `journal()`), état `resolue_auto`, codes `ALERTE_INCONNUE`, `ROLE_INSUFFISANT`, `CONFLIT_VERSION`, `ALERTE_INACTIVE`, `EXERCICE_INCONNU` ;
-  - les permissions `compta-lire` et `compta-valider` sont celles du noyau des alertes.
-- Le périmètre se réduit sans perdre de sécurité : `actions/registre.json` sort des `fichiers_autorises`, aucune écriture, aucun paiement, aucun envoi. ALR-09 reste une proposition avec `compta-valider` exigé. Un critère vérifiable interdit de toucher `chat/outils.*`, `registre.json` et `.github/`.
-- Chaque critère est vérifiable : tests nommés avec ce qui doit les faire rougir, `contrat:openapi` sans écart, `pnpm verifier`.
-- Aucun mot interdit, aucun prix, aucun nom réel, aucune adresse ni aucun secret.
+- 8 fichiers, tous dans `fichiers_autorises` ; 292 ajouts et 7 retraits, soit 299 lignes (plafond 300). Le diff ne cite ni `chat/outils.*`, ni `actions/registre.json`, ni `.github/`. Aucune dépendance.
+- CI verte au SHA de tête (9/9). Les 9 tests nommés sont verts en local.
+- `pnpm contrat:openapi` rejoué : aucun écart sur `packages/contrat/openapi`.
+- Le handler ne lit que `lister()` (port `Pick<…, 'lister'>`) : aucune écriture possible. ALR-09 (`payer_facture`) rend `mode: 'proposition'` et `aValider: true`, et exige `compta-valider` en plus de `compta-lire`. Le lien est relatif et validé par le schéma de sortie (`^/`, sans `//` ni `://`).
+- Mutations faites à la main, chacune rougit puis est annulée :
+  - `ACTIONS_PROPOSITION` vidé : 3 tests rouges (dont `paiement-proposition-seulement`) ;
+  - contrôle `compta-valider` retiré : `role-insuffisant-403` rouge ;
+  - contrôle `compta-lire` retiré : `role-insuffisant-403` rouge ;
+  - contrôle de version retiré : `version-perimee-409` rouge ;
+  - contrôle d'alerte active retiré : `alerte-inactive-409` et `resolution-par-code` rouges ;
+  - lien rendu absolu : 3 tests rouges ;
+  - écriture (`reporter`) ajoutée dans `lire` : `aucune-ecriture` rouge.
+- Journal : 6 lignes, commence par `# Journal L15-T62`. Données fictives. Aucun mot interdit, aucun prix, aucun secret, aucune adresse de serveur.
 
 ## Remarques (non bloquantes)
-- Décision à confirmer par Will à la fusion : AL-R4 (exécution par le circuit des outils, `avant`/`apres`, auteur, annulation de 10 s) est remplacé par un lien d'ouverture. La fiche dit que Will a « laissé le concepteur trancher le 12/11/2026 » ; le relecteur ne peut pas le vérifier. V3-UX-103 n'est couvert qu'en partie, et la reprise de l'exécution n'a pas encore de fiche suivante.
-- `creerServiceAlertes` n'a pas de méthode `lire(id)` : le port `lire(id)` par défaut doit être un adaptateur sur `lister()`, dans `apps/serveur/src/domaines/alertes-resoudre.ts`, sans toucher `alertes-service.ts`. On peut l'écrire tel quel dans la fiche pour éviter que l'auteur se bloque de nouveau.
-- `garde:fiches` avertit : L15-T62 et L16-T10 partagent les registres du lot 15 (lots différents, simple avertissement).
+- Les permissions viennent du port (fixées au démarrage, par défaut `compta-lire` et `compta-valider`), pas de la session de l'appelant. C'est ce que dit la fiche, et c'est le même modèle que `alertes-service.ts`. Mais tant que le port de session n'est pas branché, tout appelant passe le contrôle `compta-valider` d'ALR-09. Ce n'est pas grave ici puisque rien n'est exécuté ; il faudra le brancher sur la session avant toute exécution réelle.
+- `resolution-par-code` : dans le jeu fictif, 4 codes sur 11 sont inactifs (ALR-03, ALR-06, ALR-07, ALR-11). Pour ces codes, on vérifie seulement le 409, pas le mode ni l'écran. Ailleurs, on ne vérifie que le préfixe `/<entreeMenu>/`, pas le sous-écran de `SOUS_ECRAN`. On peut ajouter un contrôle direct de `RESOLUTIONS[action].ecran` pour les 11 codes.
+- `lien-interne` : `not.toMatch(/\d{3}/)` est un test faible contre un montant. Il suffit ici, car les liens sont figés.
+- Décision déjà notée sur l'amendement (#1114) : AL-R4 est réduit à un lien d'ouverture. V3-UX-103 n'est couvert qu'en partie, et c'est à confirmer par Will à la fusion.
