@@ -131,4 +131,11 @@ describe('estCasSur', () => {
       expect.objectContaining({ code: 'proposition_invalide' }),
     );
   });
+  it('paiement non prouvé : jamais sûre ; champ absent ou vrai : inchangé', () => {
+    expect(estCasSur({ ...sure('q'), paiementProuve: false }, ctxVide(), params)).toEqual({ sur: false, raisons: ['paiement_non_prouve'] });
+    expect(estCasSur({ ...sure('q'), paiementProuve: true }, ctxVide(), params)).toEqual({ sur: true, raisons: [] });
+    expect(estCasSur(sure('q'), ctxVide(), params)).toEqual({ sur: true, raisons: [] });
+    // Cumul : la raison s'ajoute en dernier aux autres.
+    expect(estCasSur({ ...sure('q'), paiementProuve: false, tvaEnDoute: true }, ctxVide(), params).raisons).toEqual(['tva_en_doute', 'paiement_non_prouve']);
+  });
 });
