@@ -6,29 +6,21 @@ import { balance } from '../livres/balance.js';
 import { periodeComparaison, periodeDeVue, type Comparaison, type ExerciceBorne } from './periodes.js';
 
 export interface DefinitionsFlux {
-  recettes: { prefixes: string[] };
-  depenses: { prefixes: string[] };
+  recettes: { prefixes: string[] }; depenses: { prefixes: string[] };
   categories: { nom: string; prefixes: string[] }[];
-  ca: { prefixes: string[]; deduire: string[] };
-  achatsConsommes: { prefixes: string[] };
+  ca: { prefixes: string[]; deduire: string[] }; achatsConsommes: { prefixes: string[] };
 }
 export interface PeriodeFlux { debut: string; fin: string }
 export interface Flux {
-  periode: PeriodeFlux;
-  recettes: Centimes;
-  depenses: Centimes;
-  resultat: Centimes;
-  ca: Centimes;
-  achatsConsommes: Centimes;
-  marge: Centimes;
+  periode: PeriodeFlux; recettes: Centimes; depenses: Centimes; resultat: Centimes;
+  ca: Centimes; achatsConsommes: Centimes; marge: Centimes;
 }
 export type FluxComparaison =
-  | { periode: PeriodeFlux; recettes: Centimes; depenses: Centimes; resultat: Centimes }
+  | { periode: PeriodeFlux; recettes: Centimes; depenses: Centimes; resultat: Centimes; tronquee?: true }
   | { vide: 'pas_d_exercice_precedent' | 'precedent_trop_court' };
 export interface CategorieDepense { nom: string; montant: Centimes }
 export interface ResultatFlux {
-  mois: Flux;
-  exerciceADate: Flux;
+  mois: Flux; exerciceADate: Flux;
   comparaison: { mois: FluxComparaison; exerciceADate: FluxComparaison };
   categories: CategorieDepense[];
 }
@@ -38,9 +30,7 @@ export const CATEGORIE_RESTE = 'non_classe';
 export class ErreurFlux extends Error {
   override name = 'ErreurFlux';
   readonly code = 'definitions_invalides';
-  constructor() {
-    super('definitions_invalides');
-  }
+  constructor() { super('definitions_invalides'); }
 }
 
 const listeValide = (l: readonly string[], vide = false): boolean => (vide || l.length > 0) && l.every((p) => p !== '');
@@ -63,13 +53,11 @@ const dans = (ecritures: readonly Ecriture[], p: PeriodeFlux): Ecriture[] => ecr
 function solde(ecritures: readonly Ecriture[], retenir: (compte: string) => boolean): Centimes {
   return balance(ecritures).lignes.reduce((s, l) => (retenir(l.compte) ? ajouter(s, l.solde) : s), centimes(0));
 }
-const recettesSur = (e: readonly Ecriture[], d: DefinitionsFlux): Centimes => oppose(solde(e, (c) => correspond(c, d.recettes.prefixes)));
-const depensesSur = (e: readonly Ecriture[], d: DefinitionsFlux): Centimes => solde(e, (c) => correspond(c, d.depenses.prefixes));
 
 function fluxSur(ecritures: readonly Ecriture[], periode: PeriodeFlux, d: DefinitionsFlux): Flux {
   const e = dans(ecritures, periode);
-  const recettes = recettesSur(e, d);
-  const depenses = depensesSur(e, d);
+  const recettes = oppose(solde(e, (c) => correspond(c, d.recettes.prefixes)));
+  const depenses = solde(e, (c) => correspond(c, d.depenses.prefixes));
   const ventes = solde(e, (c) => correspond(c, d.ca.prefixes) && !correspond(c, d.ca.deduire));
   const deduit = solde(e, (c) => correspond(c, d.ca.deduire));
   const ca = soustraire(oppose(ventes), deduit);
@@ -79,11 +67,8 @@ function fluxSur(ecritures: readonly Ecriture[], periode: PeriodeFlux, d: Defini
 
 function comparer(ecritures: readonly Ecriture[], c: Comparaison, d: DefinitionsFlux): FluxComparaison {
   if ('vide' in c) return { vide: c.vide };
-  const periode = { debut: c.debut, fin: c.fin };
-  const e = dans(ecritures, periode);
-  const recettes = recettesSur(e, d);
-  const depenses = depensesSur(e, d);
-  return { periode, recettes, depenses, resultat: soustraire(recettes, depenses) };
+  const { periode, recettes, depenses, resultat } = fluxSur(ecritures, { debut: c.debut, fin: c.fin }, d);
+  return { periode, recettes, depenses, resultat, ...(c.tronquee === true ? { tronquee: true as const } : {}) };
 }
 
 /** Dépenses par catégorie : le premier regroupement qui correspond gagne ; le reste va dans `non_classe`. */
