@@ -1,13 +1,14 @@
-VERDICT: A CORRIGER
+VERDICT: OK
 
-PR #1189 (L25-T07), relue au SHA e9969ed766b39112d47fe6cae2179a7bc5969919.
+PR n°1189 (L25-T07), seconde relecture au SHA de tête 49ac4c28277f8b35cf3100d3b313bdf4c83ac8df.
 
-Vérifié : fichiers dans fichiers_autorises (5), 145 lignes <= 220, 7 tests nommés présents et verts, documents.ts inchangé, aucun mot interdit, aucun secret, aucun prix, données fictives. CI verte.
-Mutations tuées : compte des clés de réponse, règle SCI, Object.freeze, refus document_absent, date d'approbation, tri des clés, organisation vide.
+## Défaut précédent
+1. Levé : `qualification.ts:55` gèle maintenant `reponses`, le tableau `documents` et chacun de ses éléments. Le test vérifie que les 4 objets sont gelés. Trois mutations font chacune échouer le test : retirer le gel de `reponses`, retirer celui du tableau `documents`, retirer celui des éléments.
 
-## Défaut
-1. packages/noyau/src/abonnement/qualification.ts:56 : `Object.freeze` est superficiel. L'enregistrement « en ajout seul » reste modifiable après calcul de l'empreinte : `a.documents.push(...)` et `a.reponses.forme = 'SAS'` passent (vérifié : `Object.isFrozen(a.documents) === false`, `Object.isFrozen(a.reponses) === false`). L'empreinte ne correspond alors plus au contenu.
-   Correction : geler aussi `reponses`, le tableau `documents` et chaque élément de `documents`. Test (dans `reponse-archivee-datee-avec-empreinte`) : `Object.isFrozen(a.reponses)`, `Object.isFrozen(a.documents)`, `Object.isFrozen(a.documents[0])` vrais ; le test doit rougir si l'on revient au gel superficiel.
+## Remarque précédente
+- Prise en compte : les entrées invalides attendent maintenant une cause exacte, `parametre_invalide` ou `horodatage_invalide`.
 
-## Remarques (non bloquantes)
-- qualification.test.ts:59 : la boucle finale accepte n'importe quelle erreur (`not.toBeUndefined()`), même une erreur non métier (`autre`). Mieux : attendre `parametre_invalide` pour organisation et personne vides.
+## Pas de régression
+- 7 tests sur 7 réussissent en local. Le diff fait 146 lignes pour un maximum de 220. Les fichiers sont dans `fichiers_autorises`. Le journal fait 4 lignes. Aucun mot interdit.
+- CI : tous les jobs sont verts sauf `tests` (et donc `verifier`). Le seul test en échec est `outils/exploitation/__tests__/ouverture.test.mjs` (en-tête `porte` attendu, `porte_rgpd` reçu). Il échoue de la même façon sur `origin/main` (conflit entre L22-T30 n°1215 et L25-T01 n°1146) : ce n'est pas un défaut de l'auteur. Il faut réparer main, puis relancer la CI.
+- La fiche est sensible : seul Will peut la fusionner.
