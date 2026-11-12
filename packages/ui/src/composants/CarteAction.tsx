@@ -59,7 +59,7 @@ export function CarteAction({ proposition, libelles, etat, contexte = "chat", va
     if (e.key === "Enter" && niveau !== "B") e.preventDefault();
   };
   return (
-    <div className={`axion-carte-action axion-carte-action--${contexte}`} onKeyDown={surTouche}>
+    <div className={["axion-carte-action", `axion-carte-action--${contexte}`].join(" ")} onKeyDown={surTouche}>
       <div className="axion-carte-action__resume" aria-live="polite" data-etat={effectif}>
         {objetsValides && <p className="axion-carte-action__objets">{libelles.objets(nombreObjets)}</p>}
         {periode !== undefined && periode !== "" && <p className="axion-carte-action__periode">{libelles.periode(periode)}</p>}
