@@ -52,7 +52,7 @@ describe('serveur : événements des frais sur le bus', () => {
     const { frais, actions, lus } = monter();
     await expect(frais.valider(CTX('cle-1'), { ids: ['FRA-005', 'FRA-999'] })).rejects.toThrow();
     await expect(actions.completer(CTX('cle-2'), 'FRA-999', {}, 1)).rejects.toThrow();
-    // La mutation réussit (bon acteur) puis la construction de l'événement échoue (horodatage non UTC) : l'appel rejette, la boîte reste vide.
+    // Mutation faite (bon acteur), puis construction de l'événement en échec (horodatage non UTC) : rejet, boîte vide.
     await expect(actions.creer({ ...CTX('cle-3'), horodatage: 'pas-utc' }, TRAJET)).rejects.toThrow('horodatage_non_utc');
     expect(await lus()).toEqual([]);
   });
@@ -65,6 +65,13 @@ describe('serveur : événements des frais sur le bus', () => {
     const reelle = jeuCommun.frais.find((f) => f.id === t.id)?.version;
     expect([b.statut, p.statut, p.version > 1, (reelle ?? 0) > t.version]).toEqual(['a_completer', 'propose', true, true]);
     expect((await lus()).map((e) => [e.type, e.version])).toEqual([['compta.frais.propose', p.version], ['compta.frais.propose', t.version], ['compta.frais.valide', reelle]]);
+  });
+  it('version-inconnue-valider-aboutit-sans-evenement', async () => {
+    const boite = creerBoiteEnvoiMemoire();
+    const j = jeu();
+    const t = await creerFraisActionsPublies(creerServiceFraisActions({ jeu: j }), boite).creer(CTX('cle-0'), TRAJET);
+    const lot = await creerFraisPublies(creerServiceFraisValidation(j, configEssai()), boite).valider(CTX('cle-1'), { ids: [t.id] });
+    expect([lot.length, j.frais.find((f) => f.id === t.id)?.statut, types(await boite.enAttente(100))]).toEqual([1, 'valide', ['compta.frais.propose']]);
   });
   it('idempotence-pas-de-double-evenement', async () => {
     const { actions, lus } = monter();

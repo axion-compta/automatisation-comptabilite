@@ -8,19 +8,13 @@ import type { ServiceFraisValidation } from '../../../../packages/contrat/src/do
 import type { CorpsRemboursement, CorpsValidation } from '../../../../packages/contrat/src/domaines/frais-validation.js';
 
 /** Événements des frais sur le bus : la charge ne porte que des identifiants et des statuts, jamais un montant ni une donnée personnelle. */
-export type TypeEvenementFrais =
-  | 'compta.frais.propose'
-  | 'compta.frais.valide'
-  | 'compta.frais.exclu_paye_societe'
-  | 'compta.remboursement.prepare'
-  | 'compta.ik.regularisation_proposee';
+export type TypeEvenementFrais = 'compta.frais.propose' | 'compta.frais.valide' | 'compta.frais.exclu_paye_societe' | 'compta.remboursement.prepare' | 'compta.ik.regularisation_proposee';
 
 export type ContexteFrais = {
   readonly societeId: string;
   readonly acteur: { readonly type: TypeActeur; readonly id: string };
   readonly canal: Canal;
   readonly correlationId: string;
-  /** Clé d'idempotence de l'écriture : un rejeu rend le même identifiant d'événement. */
   readonly cleIdempotence: string;
   readonly horodatage: string;
 };
